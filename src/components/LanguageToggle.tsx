@@ -13,7 +13,8 @@ export function LanguageToggle() {
   const switchLanguage = (newLocale: string) => {
     // Remove current locale from pathname and add new one
     const segments = pathname.split('/');
-    if (routing.locales.includes(segments[1] as any)) {
+    const currentSegment = segments[1];
+    if (currentSegment && routing.locales.includes(currentSegment as typeof routing.locales[number])) {
       segments[1] = newLocale;
     } else {
       segments.splice(1, 0, newLocale);
