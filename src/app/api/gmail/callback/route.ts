@@ -12,6 +12,13 @@ export async function GET(req: NextRequest) {
     const oauth2Client = getOAuth2Client();
     const { tokens } = await oauth2Client.getToken(code);
     await storeTokens(tokens);
+    
+    // Log the encrypted refresh token for manual env var update
+    const { encrypt } = await import("../../../../lib/gmail");
+    const serialized = JSON.stringify(tokens);
+    const encrypted = encrypt(serialized);
+    console.log(`GMAIL_REFRESH_TOKEN=${encrypted}`);
+    
     // optional: fetch profile
     const oauth2 = google.oauth2({ version: "v2", auth: oauth2Client });
     const me = await oauth2.userinfo.get().catch(() => null);

@@ -15,7 +15,7 @@ import crypto from "crypto";
 const KV_TOKEN_KEY = process.env.GMAIL_TOKENS_KV_KEY || "gmail:oauth:tokens";
 const ENCRYPTION_KEY = process.env.GMAIL_ENCRYPTION_KEY || "default-key-change-in-production";
 
-function encrypt(text: string): string {
+export function encrypt(text: string): string {
   const cipher = crypto.createCipher('aes-256-cbc', ENCRYPTION_KEY);
   let encrypted = cipher.update(text, 'utf8', 'hex');
   encrypted += cipher.final('hex');
