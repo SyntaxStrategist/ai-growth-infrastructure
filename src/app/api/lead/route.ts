@@ -1,4 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable prefer-const, @typescript-eslint/prefer-as-const */
 import { NextRequest } from "next/server";
 import { google } from "googleapis";
 
