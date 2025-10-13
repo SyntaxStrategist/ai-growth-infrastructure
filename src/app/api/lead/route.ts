@@ -154,9 +154,15 @@ export async function POST(req: NextRequest) {
 			try {
 				const gmail = await getAuthorizedGmail();
 				
-				// Fetch current Gmail profile to get updated sender identity
-				const profile = await getGmailProfile();
-				const profileEmail = profile?.emailAddress || process.env.GMAIL_FROM_ADDRESS || "contact@aveniraisolutions.ca";
+				// Force refresh Gmail profile to get current sender identity and avatar
+				const profile = await retry(async () => await gmail.users.getProfile({ userId: 'me' }), { maxAttempts: 3, baseMs: 200 });
+				const profileEmail = profile.data?.emailAddress || process.env.GMAIL_FROM_ADDRESS || "contact@aveniraisolutions.ca";
+				
+				console.log('Using Gmail profile for sender identity:', {
+					email: profile.data?.emailAddress,
+					messagesTotal: profile.data?.messagesTotal,
+					threadsTotal: profile.data?.threadsTotal
+				});
 				
 				const subject = isFrench 
 					? "Merci d'avoir contacté Avenir AI Solutions"
@@ -170,10 +176,14 @@ export async function POST(req: NextRequest) {
 					locale: locale,
 					profileEmail: profileEmail // Use profile email for proper sender identity
 				});
+				
+				// Send with explicit reference to current profile
 				await retry(async () => await gmail.users.messages.send({
 					userId: "me",
 					requestBody: { raw },
 				}), { maxAttempts: 5, baseMs: 300 });
+				
+				console.log('Email sent successfully with refreshed sender identity');
 			} catch (mailErr) {
 				// non-fatal: log-like response for debugging
 				console.error("gmail_send_error", mailErr);

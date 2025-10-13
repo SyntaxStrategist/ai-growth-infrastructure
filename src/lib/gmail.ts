@@ -194,6 +194,8 @@ export function buildHtmlEmail(opts: { to: string; from: string; subject: string
     "MIME-Version: 1.0",
     "Content-Type: text/html; charset=UTF-8",
     "Content-Transfer-Encoding: base64",
+    "X-Gmail-Source: avenir-ai-solutions",
+    "Reply-To: contact@aveniraisolutions.ca",
   ].join("\r\n");
 
   const raw = `${headers}\r\n\r\n${html}`;
