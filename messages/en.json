@@ -1,8 +1,33 @@
 {
   "hero": {
     "badge": "Avenir AI Solutions",
-    "title": "Build smarter, faster with AI",
-    "subtitle": "We help teams ship AI-powered experiences that delight users and drive growth."
+    "title": "We build AI growth infrastructures that think, respond, and scale your business.",
+    "subtitle": "From lead capture to conversion, Avenir AI Solutions designs intelligent systems that automate growth, eliminate bottlenecks, and future-proof your operations.",
+    "button": "Talk to the AI Assistant"
+  },
+  "framework": {
+    "title": "Our Infrastructure Framework",
+    "cards": {
+      "acquisition": {
+        "title": "1️⃣ Acquisition Intelligence",
+        "description": "AI-powered lead capture and intent detection. Every visitor becomes a qualified opportunity."
+      },
+      "conversion": {
+        "title": "2️⃣ Conversion Intelligence", 
+        "description": "Adaptive follow-ups and multilingual automations that turn conversations into clients."
+      },
+      "retention": {
+        "title": "3️⃣ Retention Intelligence",
+        "description": "AI-driven client nurturing and engagement systems that strengthen loyalty automatically."
+      },
+      "operational": {
+        "title": "4️⃣ Operational Intelligence",
+        "description": "Back-end automations, analytics, and internal AI agents that keep your team focused on growth."
+      }
+    }
+  },
+  "positioning": {
+    "tagline": "We don't build chatbots — we build infrastructures that turn every lead into a response, every response into a sale, and every sale into a loyal client."
   },
   "chat": {
     "title": "Try the AI Assistant",

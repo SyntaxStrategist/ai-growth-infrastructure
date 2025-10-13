@@ -1,8 +1,33 @@
 {
   "hero": {
     "badge": "Avenir AI Solutions",
-    "title": "Construisez plus intelligemment, plus rapidement avec l'IA",
-    "subtitle": "Nous aidons les équipes à livrer des expériences alimentées par l'IA qui ravissent les utilisateurs et stimulent la croissance."
+    "title": "Nous concevons des infrastructures de croissance alimentées par l'IA.",
+    "subtitle": "De la capture de leads à la conversion, Avenir AI Solutions crée des systèmes intelligents qui automatisent la croissance, éliminent les goulots d'étranglement et préparent votre entreprise pour l'avenir.",
+    "button": "Parler à l'assistant IA"
+  },
+  "framework": {
+    "title": "Notre cadre d'infrastructure",
+    "cards": {
+      "acquisition": {
+        "title": "1️⃣ Intelligence d'acquisition",
+        "description": "Capture de leads alimentée par l'IA et détection d'intention. Chaque visiteur devient une opportunité qualifiée."
+      },
+      "conversion": {
+        "title": "2️⃣ Intelligence de conversion",
+        "description": "Suivis adaptatifs et automatisations multilingues qui transforment les conversations en clients."
+      },
+      "retention": {
+        "title": "3️⃣ Intelligence de rétention",
+        "description": "Systèmes de fidélisation et d'engagement alimentés par l'IA qui renforcent automatiquement la loyauté."
+      },
+      "operational": {
+        "title": "4️⃣ Intelligence opérationnelle",
+        "description": "Automatisations backend, analyses et agents IA internes qui maintiennent votre équipe concentrée sur la croissance."
+      }
+    }
+  },
+  "positioning": {
+    "tagline": "Nous ne créons pas de simples chatbots — nous concevons des infrastructures qui transforment chaque prospect en réponse, chaque réponse en vente et chaque vente en client fidèle."
   },
   "chat": {
     "title": "Essayez l'assistant IA",

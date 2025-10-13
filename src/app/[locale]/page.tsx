@@ -66,7 +66,7 @@ export default function Home() {
           <LanguageToggle />
         </div>
 
-        <section className="flex flex-col gap-4 text-center items-center">
+        <section className="flex flex-col gap-6 text-center items-center">
           <div className="inline-flex items-center gap-2 rounded-full border border-black/10 dark:border-white/20 px-3 py-1 text-xs font-medium">
             {t('hero.badge')}
           </div>
@@ -76,9 +76,39 @@ export default function Home() {
               {t('hero.title')}
             </h1>
           </div>
-          <p className="text-base sm:text-lg text-black/70 dark:text-white/70 max-w-2xl">
+          <p className="text-base sm:text-lg text-black/70 dark:text-white/70 max-w-3xl">
             {t('hero.subtitle')}
           </p>
+        </section>
+
+        <section className="flex flex-col gap-6">
+          <h2 className="text-2xl font-semibold text-center">{t('framework.title')}</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="rounded-lg border border-black/10 dark:border-white/20 p-6 bg-gradient-to-br from-blue-50/5 to-purple-50/5">
+              <h3 className="text-lg font-semibold mb-2">{t('framework.cards.acquisition.title')}</h3>
+              <p className="text-sm text-black/70 dark:text-white/70">{t('framework.cards.acquisition.description')}</p>
+            </div>
+            <div className="rounded-lg border border-black/10 dark:border-white/20 p-6 bg-gradient-to-br from-blue-50/5 to-purple-50/5">
+              <h3 className="text-lg font-semibold mb-2">{t('framework.cards.conversion.title')}</h3>
+              <p className="text-sm text-black/70 dark:text-white/70">{t('framework.cards.conversion.description')}</p>
+            </div>
+            <div className="rounded-lg border border-black/10 dark:border-white/20 p-6 bg-gradient-to-br from-blue-50/5 to-purple-50/5">
+              <h3 className="text-lg font-semibold mb-2">{t('framework.cards.retention.title')}</h3>
+              <p className="text-sm text-black/70 dark:text-white/70">{t('framework.cards.retention.description')}</p>
+            </div>
+            <div className="rounded-lg border border-black/10 dark:border-white/20 p-6 bg-gradient-to-br from-blue-50/5 to-purple-50/5">
+              <h3 className="text-lg font-semibold mb-2">{t('framework.cards.operational.title')}</h3>
+              <p className="text-sm text-black/70 dark:text-white/70">{t('framework.cards.operational.description')}</p>
+            </div>
+          </div>
+        </section>
+
+        <section className="flex flex-col gap-4 text-center">
+          <div className="max-w-4xl mx-auto">
+            <p className="text-lg sm:text-xl text-blue-400 dark:text-blue-300 font-medium leading-relaxed">
+              {t('positioning.tagline')}
+            </p>
+          </div>
         </section>
 
         <section className="flex flex-col gap-4">
