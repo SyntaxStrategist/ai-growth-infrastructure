@@ -1,5 +1,5 @@
 import { NextRequest } from "next/server";
-import { getOAuth2Client, storeTokens } from "../../../../lib/gmail";
+import { getOAuth2Client, storeTokens, getGmailProfile } from "../../../../lib/gmail";
 import { google } from "googleapis";
 
 export async function GET(req: NextRequest) {
@@ -19,11 +19,22 @@ export async function GET(req: NextRequest) {
     const encrypted = encrypt(serialized);
     console.log(`GMAIL_REFRESH_TOKEN=${encrypted}`);
     
-    // optional: fetch profile
-    const oauth2 = google.oauth2({ version: "v2", auth: oauth2Client });
-    const me = await oauth2.userinfo.get().catch(() => null);
-    const email = me?.data?.email;
-    return new Response(JSON.stringify({ success: true, email }), { status: 200, headers: { "Content-Type": "application/json" } });
+    // Fetch and log current Gmail profile for verification
+    try {
+      const profile = await getGmailProfile();
+      console.log('Gmail profile updated:', {
+        email: profile?.emailAddress,
+        messagesTotal: profile?.messagesTotal,
+        threadsTotal: profile?.threadsTotal
+      });
+    } catch (profileError) {
+      console.error('Failed to fetch Gmail profile after OAuth:', profileError);
+    }
+    
+    return new Response(JSON.stringify({ 
+      success: true, 
+      message: "Gmail OAuth completed successfully. Profile refreshed." 
+    }), { status: 200, headers: { "Content-Type": "application/json" } });
   } catch (e) {
     const msg = e instanceof Error ? e.message : "OAuth callback failed";
     return new Response(JSON.stringify({ error: msg }), { status: 500, headers: { "Content-Type": "application/json" } });

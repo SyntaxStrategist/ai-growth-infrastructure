@@ -135,15 +135,30 @@ export async function getAuthorizedGmail() {
   return google.gmail({ version: "v1", auth: oauth2Client });
 }
 
+export async function getGmailProfile() {
+  const gmail = await getAuthorizedGmail();
+  try {
+    const profile = await gmail.users.getProfile({ userId: 'me' });
+    return profile.data;
+  } catch (error) {
+    console.error('Failed to fetch Gmail profile:', error);
+    return null;
+  }
+}
+
 export function toBase64Url(input: string) {
   // Ensure proper UTF-8 encoding for international characters
   const utf8Buffer = Buffer.from(input, 'utf8');
   return utf8Buffer.toString("base64").replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
 }
 
-export function buildHtmlEmail(opts: { to: string; from: string; subject: string; name: string; aiSummary: string; locale?: string; }) {
-  const { to, from, subject, name, aiSummary, locale = 'en' } = opts;
+export function buildHtmlEmail(opts: { to: string; from: string; subject: string; name: string; aiSummary: string; locale?: string; profileEmail?: string; }) {
+  const { to, from, subject, name, aiSummary, locale = 'en', profileEmail } = opts;
   const isFrench = locale === 'fr';
+  
+  // Use consistent sender identity
+  const senderEmail = profileEmail || from;
+  const senderName = "Avenir AI Solutions";
   const greeting = isFrench ? `Merci, <span class="gradient">${name}</span> — nous avons reçu votre demande` : `Thanks, <span class="gradient">${name}</span> — we got your request`;
   const bodyText = isFrench ? `Un stratège Avenir vous contactera sous peu. En attendant, voici un résumé IA de vos objectifs :` : `An Avenir strategist will reach out shortly. Meanwhile, here's an AI summary of your goals:`;
   const aiSummaryLabel = isFrench ? `Résumé IA` : `AI Summary`;
@@ -173,7 +188,7 @@ export function buildHtmlEmail(opts: { to: string; from: string; subject: string
   const encodedSubject = `=?UTF-8?B?${Buffer.from(subject, 'utf8').toString('base64')}?=`;
   
   const headers = [
-    `From: Avenir AI Solutions <${from}>`,
+    `From: ${senderName} <${senderEmail}>`,
     `To: ${to}`,
     `Subject: ${encodedSubject}`,
     "MIME-Version: 1.0",

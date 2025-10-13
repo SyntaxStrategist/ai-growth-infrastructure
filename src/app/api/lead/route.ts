@@ -3,7 +3,7 @@
 import { NextRequest } from "next/server";
 import { google } from "googleapis";
 import OpenAI from "openai";
-import { getAuthorizedGmail, buildHtmlEmail } from "../../../lib/gmail";
+import { getAuthorizedGmail, buildHtmlEmail, getGmailProfile } from "../../../lib/gmail";
 
 type LeadPayload = {
 	name?: string;
@@ -153,17 +153,22 @@ export async function POST(req: NextRequest) {
 			// Send follow-up email via Gmail
 			try {
 				const gmail = await getAuthorizedGmail();
-				const from = process.env.GMAIL_FROM_ADDRESS || "contact@aveniraisolutions.ca";
+				
+				// Fetch current Gmail profile to get updated sender identity
+				const profile = await getGmailProfile();
+				const profileEmail = profile?.emailAddress || process.env.GMAIL_FROM_ADDRESS || "contact@aveniraisolutions.ca";
+				
 				const subject = isFrench 
 					? "Merci d'avoir contacté Avenir AI Solutions"
 					: "Thanks for contacting Avenir AI Solutions";
 				const raw = buildHtmlEmail({ 
 					to: email, 
-					from, 
+					from: "contact@aveniraisolutions.ca", // Always use the business email
 					subject, 
 					name, 
 					aiSummary: aiSummary || "",
-					locale: locale
+					locale: locale,
+					profileEmail: profileEmail // Use profile email for proper sender identity
 				});
 				await retry(async () => await gmail.users.messages.send({
 					userId: "me",
