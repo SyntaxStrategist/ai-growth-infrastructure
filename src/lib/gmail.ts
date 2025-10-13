@@ -10,8 +10,24 @@
 /* eslint-disable @typescript-eslint/no-unsafe-argument */
 import { google } from "googleapis";
 import { kv } from "@vercel/kv";
+import crypto from "crypto";
 
 const KV_TOKEN_KEY = process.env.GMAIL_TOKENS_KV_KEY || "gmail:oauth:tokens";
+const ENCRYPTION_KEY = process.env.GMAIL_ENCRYPTION_KEY || "default-key-change-in-production";
+
+function encrypt(text: string): string {
+  const cipher = crypto.createCipher('aes-256-cbc', ENCRYPTION_KEY);
+  let encrypted = cipher.update(text, 'utf8', 'hex');
+  encrypted += cipher.final('hex');
+  return encrypted;
+}
+
+function decrypt(encryptedText: string): string {
+  const decipher = crypto.createDecipher('aes-256-cbc', ENCRYPTION_KEY);
+  let decrypted = decipher.update(encryptedText, 'hex', 'utf8');
+  decrypted += decipher.final('utf8');
+  return decrypted;
+}
 
 export function getOAuth2Client() {
   const clientId = process.env.GMAIL_CLIENT_ID || "";
@@ -25,15 +41,28 @@ export function getOAuth2Client() {
 }
 
 export async function getStoredTokens(): Promise<any | null> {
-  // Prefer KV; fallback to env var for read-only environments
+  // Try encrypted env var first (most reliable for Vercel)
+  try {
+    const encryptedTokens = process.env.GMAIL_REFRESH_TOKEN;
+    if (encryptedTokens) {
+      const decrypted = decrypt(encryptedTokens);
+      return JSON.parse(decrypted);
+    }
+  } catch {
+    // ignore and try KV fallback
+  }
+  
+  // Fallback to KV
   try {
     if (kv) {
       const t = await kv.get<string>(KV_TOKEN_KEY);
       if (t) return JSON.parse(t);
     }
   } catch {
-    // ignore and try env fallback
+    // ignore
   }
+  
+  // Last resort: plain env var
   try {
     const envTokens = process.env.GMAIL_TOKENS_JSON;
     if (envTokens) return JSON.parse(envTokens);
@@ -46,14 +75,19 @@ export async function getStoredTokens(): Promise<any | null> {
 export async function storeTokens(tokens: any) {
   const serialized = JSON.stringify(tokens);
   if (!serialized) return;
-  // Prefer KV for persistence
+  
+  // Encrypt and store in env var (for Vercel compatibility)
   try {
+    const encrypted = encrypt(serialized);
+    // Note: In production, you'd need to update the env var via Vercel API
+    // For now, we'll store in KV as backup
     if (kv) {
       await kv.set(KV_TOKEN_KEY, serialized);
-      return;
     }
+    // Log the encrypted token for manual env var update
+    console.log(`GMAIL_REFRESH_TOKEN=${encrypted}`);
   } catch {
-    // ignore; no alternative writable store in serverless
+    // ignore
   }
 }
 
