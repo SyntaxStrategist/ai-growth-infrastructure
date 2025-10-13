@@ -2,6 +2,8 @@
 /* eslint-disable prefer-const, @typescript-eslint/prefer-as-const */
 import { NextRequest } from "next/server";
 import { google } from "googleapis";
+import OpenAI from "openai";
+import { getAuthorizedGmail, buildHtmlEmail } from "../../../lib/gmail";
 
 type LeadPayload = {
 	name?: string;
@@ -13,6 +15,31 @@ type LeadPayload = {
 // Google Sheets config
 const spreadsheetId = "1Zlkx2lDsLIz594ALHOCQNs7byMAaAXcj_wyZSp67GEA"; // provided by user
 const sheetRange = "Sheet1!A:D"; // [Name, Email, Message, Timestamp]
+
+async function sleep(ms: number) {
+	return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+async function retry<T>(fn: () => Promise<T>, opts?: { maxAttempts?: number; baseMs?: number; jitter?: boolean }) {
+	const max = Math.max(1, opts?.maxAttempts ?? 3);
+	const base = Math.max(50, opts?.baseMs ?? 200);
+	const jitter = opts?.jitter ?? true;
+	let attempt = 0;
+	let lastErr: unknown;
+	while (attempt < max) {
+		try {
+			return await fn();
+		} catch (err) {
+			lastErr = err;
+			attempt++;
+			if (attempt >= max) break;
+			const backoff = base * Math.pow(2, attempt - 1);
+			const wait = jitter ? Math.floor(backoff * (0.8 + Math.random() * 0.4)) : backoff;
+			await sleep(wait);
+		}
+	}
+	throw lastErr instanceof Error ? lastErr : new Error("Operation failed after retries");
+}
 
 export async function POST(req: NextRequest) {
 	try {
@@ -64,12 +91,74 @@ export async function POST(req: NextRequest) {
 				scopes: ["https://www.googleapis.com/auth/spreadsheets"],
 			});
 			const sheets = google.sheets({ version: "v4", auth });
-			await sheets.spreadsheets.values.append({
+			const appendRes = await retry(async () => await sheets.spreadsheets.values.append({
 				spreadsheetId,
 				range: sheetRange,
 				valueInputOption: "USER_ENTERED",
 				requestBody: { values: [[name, email, message, timestamp]] },
-			});
+			}), { maxAttempts: 5, baseMs: 200 });
+
+			// Summarize and score via OpenAI
+			if (!process.env.OPENAI_API_KEY) {
+				throw new Error("Missing OPENAI_API_KEY env var");
+			}
+			const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+			const prompt = `You are a sales assistant. Read this lead message and produce a concise summary of their intent (<= 30 words) and a confidence score from 0 to 100 about how likely they are a qualified lead.\n\nReturn ONLY JSON with fields: {\n  "summary": string,\n  "confidence": number\n}\n\nLead message:\n${message}`;
+			const ai = await retry(async () => await openai.chat.completions.create({
+				model: "gpt-4o-mini",
+				messages: [
+					{ role: "system", content: "You format outputs as strict JSON without extra text." },
+					{ role: "user", content: prompt },
+				],
+				temperature: 0.2,
+			}), { maxAttempts: 3, baseMs: 300 });
+			let aiSummary = "";
+			let aiConfidence: number | null = null;
+			try {
+				const raw = ai.choices?.[0]?.message?.content ?? "";
+				const parsed = JSON.parse(raw);
+				aiSummary = (parsed?.summary ?? "").toString();
+				const c = Number(parsed?.confidence);
+				aiConfidence = Number.isFinite(c) ? Math.max(0, Math.min(100, Math.round(c))) : null;
+			} catch {
+				aiSummary = "";
+				aiConfidence = null;
+			}
+
+			// Determine the appended row index
+			const updatedRange = appendRes.data.updates?.updatedRange; // e.g., "Sheet1!A123:D123"
+			if (!updatedRange) {
+				throw new Error("Unable to determine appended row range from Sheets response");
+			}
+			const rowMatch = updatedRange.match(/!(?:[A-Z]+)(\d+):/);
+			const rowNumber = rowMatch ? parseInt(rowMatch[1], 10) : NaN;
+			if (!Number.isFinite(rowNumber)) {
+				throw new Error("Failed parsing appended row number");
+			}
+
+			// Write AI Summary (E) and Confidence (F)
+			const targetRange = `Sheet1!E${rowNumber}:F${rowNumber}`;
+			await retry(async () => await sheets.spreadsheets.values.update({
+				spreadsheetId,
+				range: targetRange,
+				valueInputOption: "USER_ENTERED",
+				requestBody: { values: [[aiSummary, aiConfidence ?? ""]] },
+			}), { maxAttempts: 5, baseMs: 200 });
+
+			// Send follow-up email via Gmail
+			try {
+				const gmail = await getAuthorizedGmail();
+				const from = process.env.GMAIL_FROM_ADDRESS || "contact@aveniraisolutions.ca";
+				const subject = "Thanks for contacting Avenir AI Solutions";
+				const raw = buildHtmlEmail({ to: email, from, subject, name, aiSummary: aiSummary || "" });
+				await retry(async () => await gmail.users.messages.send({
+					userId: "me",
+					requestBody: { raw },
+				}), { maxAttempts: 5, baseMs: 300 });
+			} catch (mailErr) {
+				// non-fatal: log-like response for debugging
+				console.error("gmail_send_error", mailErr);
+			}
 		} catch (sheetsError) {
 			const msg = sheetsError instanceof Error ? sheetsError.message : "Failed to append to Google Sheet";
 			return new Response(
