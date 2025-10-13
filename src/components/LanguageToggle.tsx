@@ -2,6 +2,7 @@
 
 import { useLocale, useTranslations } from 'next-intl';
 import { useRouter, usePathname } from 'next/navigation';
+import { routing } from '../i18n/routing';
 
 export function LanguageToggle() {
   const t = useTranslations('language');
@@ -12,7 +13,7 @@ export function LanguageToggle() {
   const switchLanguage = (newLocale: string) => {
     // Remove current locale from pathname and add new one
     const segments = pathname.split('/');
-    if (segments[1] === 'en' || segments[1] === 'fr') {
+    if (routing.locales.includes(segments[1] as any)) {
       segments[1] = newLocale;
     } else {
       segments.splice(1, 0, newLocale);
