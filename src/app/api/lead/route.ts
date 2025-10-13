@@ -63,10 +63,18 @@ export async function POST(req: NextRequest) {
 		let savedVia = "sheets" as "sheets" | "file";
 		const timestamp = providedTimestamp || new Date().toISOString();
 		try {
-			if (!process.env.GOOGLE_APPLICATION_CREDENTIALS) {
-				throw new Error("Missing GOOGLE_APPLICATION_CREDENTIALS env var");
+			const credsEnv = process.env.GOOGLE_CREDENTIALS_JSON;
+			if (!credsEnv) {
+				throw new Error("Missing GOOGLE_CREDENTIALS_JSON env var");
 			}
-			const auth = await google.auth.getClient({
+			let credentials: unknown;
+			try {
+				credentials = JSON.parse(credsEnv);
+			} catch {
+				throw new Error("GOOGLE_CREDENTIALS_JSON is not valid JSON");
+			}
+			const auth = new google.auth.GoogleAuth({
+				credentials: credentials as any,
 				scopes: ["https://www.googleapis.com/auth/spreadsheets"],
 			});
 			const sheets = google.sheets({ version: "v4", auth });
