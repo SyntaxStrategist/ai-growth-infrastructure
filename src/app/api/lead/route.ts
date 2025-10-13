@@ -6,7 +6,8 @@ import { google } from "googleapis";
 type LeadPayload = {
 	name?: string;
 	email?: string;
-	context?: string;
+	message?: string;
+	timestamp?: string; // ISO string from client; if missing, server will set
 };
 
 const dataDir = path.join(process.cwd(), "data");
@@ -14,7 +15,7 @@ const leadsFile = path.join(dataDir, "leads.json");
 
 // Google Sheets config
 const spreadsheetId = "1Zlkx2lDsLIz594ALHOCQNs7byMAaAXcj_wyZSp67GEA"; // provided by user
-const sheetRange = "Sheet1!A:C"; // [name, email, timestamp]
+const sheetRange = "Sheet1!A:D"; // [Name, Email, Message, Timestamp]
 
 async function ensureDataFile() {
 	try {
@@ -39,11 +40,12 @@ export async function POST(req: NextRequest) {
 
 		const name = (body.name || "").toString().trim();
 		const email = (body.email || "").toString().trim();
-		const context = (body.context || "").toString().trim();
+		const message = (body.message || "").toString().trim();
+		const providedTimestamp = (body.timestamp || "").toString().trim();
 
-		if (!name || !email) {
+		if (!name || !email || !message) {
 			return new Response(
-				JSON.stringify({ error: "'name' and 'email' are required" }),
+				JSON.stringify({ error: "'name', 'email', and 'message' are required" }),
 				{ status: 400, headers: { "Content-Type": "application/json" } }
 			);
 		}
@@ -59,7 +61,7 @@ export async function POST(req: NextRequest) {
 
 		// Try Google Sheets first; if misconfigured, fall back to local JSON storage
 		let savedVia = "sheets" as "sheets" | "file";
-		const timestamp = new Date().toISOString();
+		const timestamp = providedTimestamp || new Date().toISOString();
 		try {
 			if (!process.env.GOOGLE_APPLICATION_CREDENTIALS) {
 				throw new Error("Missing GOOGLE_APPLICATION_CREDENTIALS env var");
@@ -72,7 +74,7 @@ export async function POST(req: NextRequest) {
 				spreadsheetId,
 				range: sheetRange,
 				valueInputOption: "USER_ENTERED",
-				requestBody: { values: [[name, email, timestamp]] },
+				requestBody: { values: [[name, email, message, timestamp]] },
 			});
 			savedVia = "sheets";
 		} catch (sheetsError) {
@@ -90,7 +92,7 @@ export async function POST(req: NextRequest) {
 				id: `${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
 				name,
 				email,
-				context,
+				message,
 				createdAt: timestamp,
 			};
 			leads.push(entry);

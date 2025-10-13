@@ -17,6 +17,7 @@ export default function Home() {
   const [leadSubmitted, setLeadSubmitted] = useState(false);
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
+  const [leadMessage, setLeadMessage] = useState("");
 
   async function handleSend(e: React.FormEvent) {
     e.preventDefault();
@@ -109,8 +110,8 @@ export default function Home() {
               onSubmit={async (e) => {
                 e.preventDefault();
                 setError(null);
-                if (!name.trim() || !email.trim()) {
-                  setError("Please enter your name and email.");
+                if (!name.trim() || !email.trim() || !leadMessage.trim()) {
+                  setError("Please enter your name, email, and a short message.");
                   return;
                 }
                 const emailOk = /.+@.+\..+/.test(email.trim());
@@ -125,7 +126,8 @@ export default function Home() {
                     body: JSON.stringify({
                       name: name.trim(),
                       email: email.trim(),
-                      context: `User asked: ${input.trim()}`,
+                      message: leadMessage.trim(),
+                      timestamp: new Date().toISOString(),
                     }),
                   });
                   if (!res.ok) {
@@ -135,6 +137,7 @@ export default function Home() {
                   setLeadSubmitted(true);
                   setName("");
                   setEmail("");
+                  setLeadMessage("");
                 } catch (err) {
                   const msg = err instanceof Error ? err.message : "Failed to save lead";
                   setError(msg);
@@ -144,7 +147,7 @@ export default function Home() {
               <div className="text-sm opacity-80">
                 Interested in a custom AI plan or a free strategy call? Share your details:
               </div>
-              <div className="flex flex-col sm:flex-row gap-2">
+              <div className="flex flex-col gap-2">
                 <input
                   className="flex-1 rounded-md border border-black/10 dark:border-white/20 bg-transparent px-3 py-2"
                   placeholder="Your name"
@@ -157,6 +160,12 @@ export default function Home() {
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
+                />
+                <textarea
+                  className="flex-1 rounded-md border border-black/10 dark:border-white/20 bg-transparent px-3 py-2 min-h-[80px]"
+                  placeholder="Your message or goals (optional but recommended)"
+                  value={leadMessage}
+                  onChange={(e) => setLeadMessage(e.target.value)}
                 />
                 <button
                   type="submit"
