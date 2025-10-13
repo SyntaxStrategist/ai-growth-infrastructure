@@ -1,7 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { NextRequest } from "next/server";
-import { promises as fs } from "fs";
-import path from "path";
 import { google } from "googleapis";
 
 type LeadPayload = {
@@ -11,23 +9,9 @@ type LeadPayload = {
 	timestamp?: string; // ISO string from client; if missing, server will set
 };
 
-const dataDir = path.join(process.cwd(), "data");
-const leadsFile = path.join(dataDir, "leads.json");
-
 // Google Sheets config
 const spreadsheetId = "1Zlkx2lDsLIz594ALHOCQNs7byMAaAXcj_wyZSp67GEA"; // provided by user
 const sheetRange = "Sheet1!A:D"; // [Name, Email, Message, Timestamp]
-
-async function ensureDataFile() {
-	try {
-		await fs.mkdir(dataDir, { recursive: true });
-		await fs.access(leadsFile).catch(async () => {
-			await fs.writeFile(leadsFile, JSON.stringify([], null, 2), "utf8");
-		});
-	} catch {
-		// swallow; will be handled during write
-	}
-}
 
 export async function POST(req: NextRequest) {
 	try {
@@ -60,8 +44,8 @@ export async function POST(req: NextRequest) {
 			);
 		}
 
-		// Try Google Sheets first; if misconfigured, fall back to local JSON storage
-		let savedVia = "sheets" as "sheets" | "file";
+		// Append to Google Sheets
+		let savedVia = "sheets" as "sheets";
 		const timestamp = providedTimestamp || new Date().toISOString();
 		try {
 			const credsEnv = process.env.GOOGLE_CREDENTIALS_JSON;
@@ -85,27 +69,12 @@ export async function POST(req: NextRequest) {
 				valueInputOption: "USER_ENTERED",
 				requestBody: { values: [[name, email, message, timestamp]] },
 			});
-			savedVia = "sheets";
 		} catch (sheetsError) {
-			// Fallback to local file if Sheets write fails
-			savedVia = "file";
-			await ensureDataFile();
-			let existing: unknown = [];
-			try {
-				existing = JSON.parse(await fs.readFile(leadsFile, "utf8"));
-			} catch {
-				existing = [];
-			}
-			const leads = Array.isArray(existing) ? existing : [];
-			const entry = {
-				id: `${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
-				name,
-				email,
-				message,
-				createdAt: timestamp,
-			};
-			leads.push(entry);
-			await fs.writeFile(leadsFile, JSON.stringify(leads, null, 2), "utf8");
+			const msg = sheetsError instanceof Error ? sheetsError.message : "Failed to append to Google Sheet";
+			return new Response(
+				JSON.stringify({ error: msg }),
+				{ status: 500, headers: { "Content-Type": "application/json" } }
+			);
 		}
 
 		return new Response(
