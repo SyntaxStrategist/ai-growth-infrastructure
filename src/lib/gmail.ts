@@ -15,16 +15,34 @@ import crypto from "crypto";
 const KV_TOKEN_KEY = process.env.GMAIL_TOKENS_KV_KEY || "gmail:oauth:tokens";
 const ENCRYPTION_KEY = process.env.GMAIL_ENCRYPTION_KEY || "default-key-change-in-production";
 
+// Generate a 32-byte key from the encryption key
+function getKey(): Buffer {
+  return crypto.createHash('sha256').update(ENCRYPTION_KEY).digest();
+}
+
 export function encrypt(text: string): string {
-  const cipher = crypto.createCipher('aes-256-cbc', ENCRYPTION_KEY);
+  const key = getKey();
+  const iv = crypto.randomBytes(16); // 16 bytes for AES-256-CBC
+  const cipher = crypto.createCipheriv('aes-256-cbc', key, iv);
+  
   let encrypted = cipher.update(text, 'utf8', 'hex');
   encrypted += cipher.final('hex');
-  return encrypted;
+  
+  // Prepend IV to encrypted data and base64 encode
+  const combined = iv.toString('hex') + encrypted;
+  return Buffer.from(combined, 'hex').toString('base64');
 }
 
 function decrypt(encryptedText: string): string {
-  const decipher = crypto.createDecipher('aes-256-cbc', ENCRYPTION_KEY);
-  let decrypted = decipher.update(encryptedText, 'hex', 'utf8');
+  const key = getKey();
+  
+  // Decode from base64 and extract IV
+  const combined = Buffer.from(encryptedText, 'base64').toString('hex');
+  const iv = Buffer.from(combined.slice(0, 32), 'hex'); // First 16 bytes (32 hex chars)
+  const encrypted = combined.slice(32); // Rest is the encrypted data
+  
+  const decipher = crypto.createDecipheriv('aes-256-cbc', key, iv);
+  let decrypted = decipher.update(encrypted, 'hex', 'utf8');
   decrypted += decipher.final('utf8');
   return decrypted;
 }
