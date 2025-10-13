@@ -13,6 +13,10 @@ export default function Home() {
   const [assistantReply, setAssistantReply] = useState<string>("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [leadAsked, setLeadAsked] = useState(false);
+  const [leadSubmitted, setLeadSubmitted] = useState(false);
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
 
   async function handleSend(e: React.FormEvent) {
     e.preventDefault();
@@ -39,6 +43,8 @@ export default function Home() {
       const data = await res.json();
       const content: string = data?.message?.content || "";
       setAssistantReply(content);
+      // After the first successful assistant reply, prompt for lead info
+      setLeadAsked(true);
     } catch (err) {
       const msg = err instanceof Error ? err.message : "Something went wrong";
       setError(msg);
@@ -94,6 +100,77 @@ export default function Home() {
           {assistantReply && (
             <div className="rounded-md border border-black/10 dark:border-white/20 p-4 whitespace-pre-wrap">
               {assistantReply}
+            </div>
+          )}
+
+          {leadAsked && !leadSubmitted && (
+            <form
+              className="mt-2 flex flex-col gap-3"
+              onSubmit={async (e) => {
+                e.preventDefault();
+                setError(null);
+                if (!name.trim() || !email.trim()) {
+                  setError("Please enter your name and email.");
+                  return;
+                }
+                const emailOk = /.+@.+\..+/.test(email.trim());
+                if (!emailOk) {
+                  setError("Please enter a valid email address.");
+                  return;
+                }
+                try {
+                  const res = await fetch("/api/lead", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                      name: name.trim(),
+                      email: email.trim(),
+                      context: `User asked: ${input.trim()}`,
+                    }),
+                  });
+                  if (!res.ok) {
+                    const d = await res.json().catch(() => ({}));
+                    throw new Error(d?.error || `Failed to save lead (${res.status})`);
+                  }
+                  setLeadSubmitted(true);
+                  setName("");
+                  setEmail("");
+                } catch (err) {
+                  const msg = err instanceof Error ? err.message : "Failed to save lead";
+                  setError(msg);
+                }
+              }}
+            >
+              <div className="text-sm opacity-80">
+                Interested in a custom AI plan or a free strategy call? Share your details:
+              </div>
+              <div className="flex flex-col sm:flex-row gap-2">
+                <input
+                  className="flex-1 rounded-md border border-black/10 dark:border-white/20 bg-transparent px-3 py-2"
+                  placeholder="Your name"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                />
+                <input
+                  className="flex-1 rounded-md border border-black/10 dark:border-white/20 bg-transparent px-3 py-2"
+                  placeholder="Email address"
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                />
+                <button
+                  type="submit"
+                  className="rounded-md px-4 py-2 bg-black text-white dark:bg-white dark:text-black"
+                >
+                  Submit
+                </button>
+              </div>
+            </form>
+          )}
+
+          {leadSubmitted && (
+            <div className="text-sm mt-2 text-green-600">
+              ✅ Thanks! A team member from Avenir AI Solutions will reach out shortly.
             </div>
           )}
         </section>
