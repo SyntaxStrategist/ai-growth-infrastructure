@@ -139,8 +139,14 @@ export function toBase64Url(input: string) {
   return Buffer.from(input).toString("base64").replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
 }
 
-export function buildHtmlEmail(opts: { to: string; from: string; subject: string; name: string; aiSummary: string; }) {
-  const { to, from, subject, name, aiSummary } = opts;
+export function buildHtmlEmail(opts: { to: string; from: string; subject: string; name: string; aiSummary: string; locale?: string; }) {
+  const { to, from, subject, name, aiSummary, locale = 'en' } = opts;
+  const isFrench = locale === 'fr';
+  const greeting = isFrench ? `Merci, <span class="gradient">${name}</span> — nous avons reçu votre demande` : `Thanks, <span class="gradient">${name}</span> — we got your request`;
+  const bodyText = isFrench ? `Un stratège Avenir vous contactera sous peu. En attendant, voici un résumé IA de vos objectifs :` : `An Avenir strategist will reach out shortly. Meanwhile, here's an AI summary of your goals:`;
+  const aiSummaryLabel = isFrench ? `Résumé IA` : `AI Summary`;
+  const footerText = isFrench ? `Si ce n'était pas vous, veuillez ignorer cet e-mail.` : `If this wasn't you, please ignore this email.`;
+
   const html = `<!DOCTYPE html><html><head><meta charset="UTF-8" />
   <meta name="color-scheme" content="dark light"><meta name="supported-color-schemes" content="dark light">
   <style>
@@ -155,10 +161,10 @@ export function buildHtmlEmail(opts: { to: string; from: string; subject: string
   </style></head><body>
   <div class="container">
     <div class="badge">Avenir AI Solutions</div>
-    <h1 class="h1">Thanks, <span class="gradient">${name}</span> — we got your request</h1>
-    <p class="muted">An Avenir strategist will reach out shortly. Meanwhile, here’s an AI summary of your goals:</p>
-    <div class="card"><strong>AI Summary</strong><div style="margin-top:6px; white-space:pre-wrap;">${escapeHtml(aiSummary || "(unavailable)")}</div></div>
-    <p class="muted" style="margin-top:16px;">If this wasn’t you, please ignore this email.</p>
+    <h1 class="h1">${greeting}</h1>
+    <p class="muted">${bodyText}</p>
+    <div class="card"><strong>${aiSummaryLabel}</strong><div style="margin-top:6px; white-space:pre-wrap;">${escapeHtml(aiSummary || "(unavailable)")}</div></div>
+    <p class="muted" style="margin-top:16px;">${footerText}</p>
   </div></body></html>`;
 
   const headers = [

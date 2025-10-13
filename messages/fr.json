@@ -1,0 +1,42 @@
+{
+  "hero": {
+    "badge": "Avenir AI Solutions",
+    "title": "Construisez plus intelligemment, plus rapidement avec l'IA",
+    "subtitle": "Nous aidons les équipes à livrer des expériences alimentées par l'IA qui ravissent les utilisateurs et stimulent la croissance."
+  },
+  "chat": {
+    "title": "Essayez l'assistant IA",
+    "placeholder": "Tapez un message...",
+    "send": "Envoyer",
+    "sending": "Envoi en cours...",
+    "error": "Quelque chose s'est mal passé"
+  },
+  "lead": {
+    "prompt": "Intéressé par un plan IA personnalisé ou un appel stratégique gratuit ? Partagez vos détails :",
+    "namePlaceholder": "Votre nom",
+    "emailPlaceholder": "Adresse e-mail",
+    "messagePlaceholder": "Votre message ou objectifs (optionnel mais recommandé)",
+    "submit": "Soumettre",
+    "success": "✅ Merci ! Un membre de l'équipe d'Avenir AI Solutions vous contactera sous peu.",
+    "validation": {
+      "required": "Veuillez entrer votre nom, e-mail et un court message.",
+      "email": "Veuillez entrer une adresse e-mail valide."
+    }
+  },
+  "email": {
+    "subject": "Merci d'avoir contacté Avenir AI Solutions",
+    "greeting": "Merci, {name} — nous avons reçu votre demande",
+    "body": "Un stratège Avenir vous contactera sous peu. En attendant, voici un résumé IA de vos objectifs :",
+    "aiSummary": "Résumé IA",
+    "footer": "Si ce n'était pas vous, veuillez ignorer cet e-mail."
+  },
+  "ai": {
+    "systemPrompt": "Vous êtes un assistant utile pour Avenir AI Solutions, une entreprise de conseil en IA. Répondez en {language}.",
+    "leadAnalysisPrompt": "Vous êtes un assistant commercial pour Avenir AI Solutions. Lisez ce message de prospect et produisez un résumé concis de leur intention (≤ 30 mots) et un score de confiance de 0 à 100 sur la probabilité qu'ils soient un prospect qualifié.\n\nRetournez SEULEMENT du JSON avec les champs : {\n  \"summary\": string,\n  \"confidence\": number\n}\n\nMessage du prospect :\n{message}"
+  },
+  "language": {
+    "toggle": "Langue",
+    "en": "English",
+    "fr": "Français"
+  }
+}

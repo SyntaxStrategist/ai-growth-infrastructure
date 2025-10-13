@@ -1,0 +1,42 @@
+{
+  "hero": {
+    "badge": "Avenir AI Solutions",
+    "title": "Build smarter, faster with AI",
+    "subtitle": "We help teams ship AI-powered experiences that delight users and drive growth."
+  },
+  "chat": {
+    "title": "Try the AI Assistant",
+    "placeholder": "Type a message...",
+    "send": "Send",
+    "sending": "Sending...",
+    "error": "Something went wrong"
+  },
+  "lead": {
+    "prompt": "Interested in a custom AI plan or a free strategy call? Share your details:",
+    "namePlaceholder": "Your name",
+    "emailPlaceholder": "Email address",
+    "messagePlaceholder": "Your message or goals (optional but recommended)",
+    "submit": "Submit",
+    "success": "✅ Thanks! A team member from Avenir AI Solutions will reach out shortly.",
+    "validation": {
+      "required": "Please enter your name, email, and a short message.",
+      "email": "Please enter a valid email address."
+    }
+  },
+  "email": {
+    "subject": "Thanks for contacting Avenir AI Solutions",
+    "greeting": "Thanks, {name} — we got your request",
+    "body": "An Avenir strategist will reach out shortly. Meanwhile, here's an AI summary of your goals:",
+    "aiSummary": "AI Summary",
+    "footer": "If this wasn't you, please ignore this email."
+  },
+  "ai": {
+    "systemPrompt": "You are a helpful assistant for Avenir AI Solutions, an AI consulting company. Respond in {language}.",
+    "leadAnalysisPrompt": "You are a sales assistant for Avenir AI Solutions. Read this lead message and produce a concise summary of their intent (<= 30 words) and a confidence score from 0 to 100 about how likely they are a qualified lead.\n\nReturn ONLY JSON with fields: {\n  \"summary\": string,\n  \"confidence\": number\n}\n\nLead message:\n{message}"
+  },
+  "language": {
+    "toggle": "Language",
+    "en": "English",
+    "fr": "Français"
+  }
+}

@@ -10,6 +10,7 @@ type LeadPayload = {
 	email?: string;
 	message?: string;
 	timestamp?: string; // ISO string from client; if missing, server will set
+	locale?: string; // 'en' or 'fr'
 };
 
 // Google Sheets config
@@ -55,6 +56,7 @@ export async function POST(req: NextRequest) {
 		const email = (body.email || "").toString().trim();
 		const message = (body.message || "").toString().trim();
 		const providedTimestamp = (body.timestamp || "").toString().trim();
+		const locale = (body.locale || "en").toString().trim();
 
 		if (!name || !email || !message) {
 			return new Response(
@@ -103,7 +105,10 @@ export async function POST(req: NextRequest) {
 				throw new Error("Missing OPENAI_API_KEY env var");
 			}
 			const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
-			const prompt = `You are a sales assistant. Read this lead message and produce a concise summary of their intent (<= 30 words) and a confidence score from 0 to 100 about how likely they are a qualified lead.\n\nReturn ONLY JSON with fields: {\n  "summary": string,\n  "confidence": number\n}\n\nLead message:\n${message}`;
+			const isFrench = locale === 'fr';
+			const prompt = isFrench 
+				? `Vous êtes un assistant commercial pour Avenir AI Solutions. Lisez ce message de prospect et produisez un résumé concis de leur intention (≤ 30 mots) et un score de confiance de 0 à 100 sur la probabilité qu'ils soient un prospect qualifié.\n\nRetournez SEULEMENT du JSON avec les champs : {\n  "summary": string,\n  "confidence": number\n}\n\nMessage du prospect :\n${message}`
+				: `You are a sales assistant for Avenir AI Solutions. Read this lead message and produce a concise summary of their intent (<= 30 words) and a confidence score from 0 to 100 about how likely they are a qualified lead.\n\nReturn ONLY JSON with fields: {\n  "summary": string,\n  "confidence": number\n}\n\nLead message:\n${message}`;
 			const ai = await retry(async () => await openai.chat.completions.create({
 				model: "gpt-4o-mini",
 				messages: [
@@ -149,8 +154,17 @@ export async function POST(req: NextRequest) {
 			try {
 				const gmail = await getAuthorizedGmail();
 				const from = process.env.GMAIL_FROM_ADDRESS || "contact@aveniraisolutions.ca";
-				const subject = "Thanks for contacting Avenir AI Solutions";
-				const raw = buildHtmlEmail({ to: email, from, subject, name, aiSummary: aiSummary || "" });
+				const subject = isFrench 
+					? "Merci d'avoir contacté Avenir AI Solutions"
+					: "Thanks for contacting Avenir AI Solutions";
+				const raw = buildHtmlEmail({ 
+					to: email, 
+					from, 
+					subject, 
+					name, 
+					aiSummary: aiSummary || "",
+					locale: locale
+				});
 				await retry(async () => await gmail.users.messages.send({
 					userId: "me",
 					requestBody: { raw },
