@@ -9,11 +9,9 @@
 /* eslint-disable @typescript-eslint/no-unsafe-return */
 /* eslint-disable @typescript-eslint/no-unsafe-argument */
 import { google } from "googleapis";
-import { promises as fs } from "fs";
-import path from "path";
+import { kv } from "@vercel/kv";
 
-const tokenDir = path.join(process.cwd(), "data");
-const tokenFile = path.join(tokenDir, "gmail_tokens.json");
+const KV_TOKEN_KEY = process.env.GMAIL_TOKENS_KV_KEY || "gmail:oauth:tokens";
 
 export function getOAuth2Client() {
   const clientId = process.env.GMAIL_CLIENT_ID || "";
@@ -27,17 +25,36 @@ export function getOAuth2Client() {
 }
 
 export async function getStoredTokens(): Promise<any | null> {
+  // Prefer KV; fallback to env var for read-only environments
   try {
-    const raw = await fs.readFile(tokenFile, "utf8");
-    return JSON.parse(raw);
+    if (kv) {
+      const t = await kv.get<string>(KV_TOKEN_KEY);
+      if (t) return JSON.parse(t);
+    }
   } catch {
-    return null;
+    // ignore and try env fallback
   }
+  try {
+    const envTokens = process.env.GMAIL_TOKENS_JSON;
+    if (envTokens) return JSON.parse(envTokens);
+  } catch {
+    // ignore
+  }
+  return null;
 }
 
 export async function storeTokens(tokens: any) {
-  await fs.mkdir(tokenDir, { recursive: true });
-  await fs.writeFile(tokenFile, JSON.stringify(tokens, null, 2), "utf8");
+  const serialized = JSON.stringify(tokens);
+  if (!serialized) return;
+  // Prefer KV for persistence
+  try {
+    if (kv) {
+      await kv.set(KV_TOKEN_KEY, serialized);
+      return;
+    }
+  } catch {
+    // ignore; no alternative writable store in serverless
+  }
 }
 
 export function getAuthUrl() {
