@@ -70,9 +70,9 @@ export default function Home() {
           <div className="inline-flex items-center gap-2 rounded-full border border-black/10 dark:border-white/20 px-3 py-1 text-xs font-medium">
             {t('hero.badge')}
           </div>
-          <div className="flex items-center gap-3">
-            <AvenirLogo className="h-10 w-10" />
-            <h1 className="text-3xl sm:text-5xl font-semibold tracking-tight">
+          <div className="flex flex-col items-center gap-4">
+            <AvenirLogo className="h-14 w-14 sm:h-16 sm:w-16 max-w-[80px] sm:max-w-[120px]" />
+            <h1 className="text-3xl sm:text-5xl font-semibold tracking-tight text-center">
               {t('hero.title')}
             </h1>
           </div>
