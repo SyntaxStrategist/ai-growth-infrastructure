@@ -136,7 +136,9 @@ export async function getAuthorizedGmail() {
 }
 
 export function toBase64Url(input: string) {
-  return Buffer.from(input).toString("base64").replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+  // Ensure proper UTF-8 encoding for international characters
+  const utf8Buffer = Buffer.from(input, 'utf8');
+  return utf8Buffer.toString("base64").replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
 }
 
 export function buildHtmlEmail(opts: { to: string; from: string; subject: string; name: string; aiSummary: string; locale?: string; }) {
@@ -167,12 +169,16 @@ export function buildHtmlEmail(opts: { to: string; from: string; subject: string
     <p class="muted" style="margin-top:16px;">${footerText}</p>
   </div></body></html>`;
 
+  // Encode subject line for proper UTF-8 handling
+  const encodedSubject = `=?UTF-8?B?${Buffer.from(subject, 'utf8').toString('base64')}?=`;
+  
   const headers = [
     `From: Avenir AI Solutions <${from}>`,
     `To: ${to}`,
-    `Subject: ${subject}`,
+    `Subject: ${encodedSubject}`,
     "MIME-Version: 1.0",
     "Content-Type: text/html; charset=UTF-8",
+    "Content-Transfer-Encoding: base64",
   ].join("\r\n");
 
   const raw = `${headers}\r\n\r\n${html}`;
