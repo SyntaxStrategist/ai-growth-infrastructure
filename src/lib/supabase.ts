@@ -203,7 +203,7 @@ export async function saveLeadToSupabase(data: {
         
         if (sqlResponse.ok || sqlResponse.status === 200 || sqlResponse.status === 201) {
           console.log('[Supabase] ✅ Lead saved via direct SQL');
-          return { id, ...record };
+          return record;
         } else {
           const errorText = await sqlResponse.text();
           console.error('[Supabase] Direct SQL INSERT failed:', errorText);
