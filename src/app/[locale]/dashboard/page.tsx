@@ -269,7 +269,7 @@ export default function Dashboard() {
               href={`/${locale}/dashboard/insights`}
               className="px-4 py-2 rounded-lg bg-cyan-500/20 border border-cyan-500/40 text-cyan-400 hover:bg-cyan-500/30 transition-all duration-300 text-sm font-medium"
             >
-              {locale === 'fr' ? '📊 Insights' : '📊 Insights'}
+              {locale === 'fr' ? '📊 Aperçus' : '📊 Insights'}
             </a>
             <button
               onClick={() => {
