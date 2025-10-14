@@ -18,6 +18,7 @@ export default function ClientsPage() {
   const [contactEmail, setContactEmail] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [copiedKey, setCopiedKey] = useState<string | null>(null);
+  const [rotatingKey, setRotatingKey] = useState<string | null>(null);
 
   const t = {
     title: locale === 'fr' ? 'Gestion des Clients' : 'Client Management',
@@ -29,9 +30,12 @@ export default function ClientsPage() {
     contactEmail: locale === 'fr' ? 'Email de contact' : 'Contact Email',
     apiKey: locale === 'fr' ? 'Clé API' : 'API Key',
     createdAt: locale === 'fr' ? 'Créé le' : 'Created',
+    lastRotated: locale === 'fr' ? 'Dernière rotation' : 'Last Rotated',
     actions: locale === 'fr' ? 'Actions' : 'Actions',
     copy: locale === 'fr' ? 'Copier' : 'Copy',
     copied: locale === 'fr' ? 'Copié!' : 'Copied!',
+    rotate: locale === 'fr' ? 'Régénérer' : 'Regenerate',
+    rotating: locale === 'fr' ? '...' : '...',
     delete: locale === 'fr' ? 'Supprimer' : 'Delete',
     cancel: locale === 'fr' ? 'Annuler' : 'Cancel',
     create: locale === 'fr' ? 'Créer' : 'Create',
@@ -43,6 +47,9 @@ export default function ClientsPage() {
     authError: locale === 'fr' ? 'Mot de passe incorrect' : 'Incorrect password',
     authSuccess: locale === 'fr' ? 'Authentifié ✓' : 'Authenticated ✓',
     logout: locale === 'fr' ? 'Déconnexion' : 'Logout',
+    rotateConfirm: locale === 'fr' 
+      ? 'Êtes-vous sûr de vouloir régénérer cette clé API? L\'ancienne clé sera immédiatement invalidée.'
+      : 'Are you sure you want to regenerate this API key? The old key will be immediately invalidated.',
   };
 
   useEffect(() => {
@@ -140,6 +147,32 @@ export default function ClientsPage() {
     navigator.clipboard.writeText(key);
     setCopiedKey(key);
     setTimeout(() => setCopiedKey(null), 2000);
+  }
+
+  async function handleRotateKey(clientId: string) {
+    if (!confirm(t.rotateConfirm)) {
+      return;
+    }
+
+    setRotatingKey(clientId);
+    try {
+      const res = await fetch('/api/rotate-key', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ client_id: clientId }),
+      });
+      const json = await res.json();
+      if (json.success) {
+        // Update the client in the list
+        setClients(clients.map(c => c.id === clientId ? json.data : c));
+        // Copy new key to clipboard
+        handleCopyKey(json.data.api_key);
+      }
+    } catch (err) {
+      console.error('Failed to rotate API key:', err);
+    } finally {
+      setRotatingKey(null);
+    }
   }
 
   if (!authorized) {
@@ -344,36 +377,46 @@ export default function ClientsPage() {
                 transition={{ duration: 0.4, delay: idx * 0.05 }}
                 className="rounded-lg border border-white/10 p-5 bg-white/5 hover:bg-white/10 hover:border-blue-400/30 transition-all"
               >
-                <div className="grid grid-cols-1 md:grid-cols-4 gap-4 items-center">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 items-start">
                   <div>
                     <span className="text-white/50 text-xs block mb-1">{t.companyName}</span>
                     <p className="font-semibold">{client.company_name}</p>
                   </div>
                   <div>
                     <span className="text-white/50 text-xs block mb-1">{t.contactEmail}</span>
-                    <p className="text-blue-400">{client.contact_email}</p>
+                    <p className="text-blue-400 text-sm">{client.contact_email}</p>
                   </div>
                   <div>
                     <span className="text-white/50 text-xs block mb-1">{t.apiKey}</span>
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2 flex-wrap">
                       <code className="text-xs font-mono bg-white/10 px-2 py-1 rounded">
                         {client.api_key.slice(0, 16)}...
                       </code>
                       <button
                         onClick={() => handleCopyKey(client.api_key)}
-                        className="px-3 py-1 text-xs rounded bg-blue-500/20 border border-blue-500/40 text-blue-400 hover:bg-blue-500/30 transition-all"
+                        className="px-2 py-1 text-xs rounded bg-blue-500/20 border border-blue-500/40 text-blue-400 hover:bg-blue-500/30 transition-all"
                       >
                         {copiedKey === client.api_key ? t.copied : t.copy}
                       </button>
+                      <button
+                        onClick={() => handleRotateKey(client.id)}
+                        disabled={rotatingKey === client.id}
+                        className="px-2 py-1 text-xs rounded bg-purple-500/20 border border-purple-500/40 text-purple-400 hover:bg-purple-500/30 transition-all disabled:opacity-50"
+                      >
+                        {rotatingKey === client.id ? t.rotating : t.rotate}
+                      </button>
                     </div>
                   </div>
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <span className="text-white/50 text-xs block mb-1">{t.createdAt}</span>
-                      <p className="text-sm">
-                        {new Date(client.created_at).toLocaleDateString(locale === 'fr' ? 'fr-CA' : 'en-US')}
-                      </p>
-                    </div>
+                  <div>
+                    <span className="text-white/50 text-xs block mb-1">{t.lastRotated}</span>
+                    <p className="text-xs">
+                      {new Date(client.last_rotated).toLocaleDateString(locale === 'fr' ? 'fr-CA' : 'en-US')}
+                    </p>
+                    <p className="text-xs text-white/40">
+                      {new Date(client.last_rotated).toLocaleTimeString(locale === 'fr' ? 'fr-CA' : 'en-US', { hour: '2-digit', minute: '2-digit' })}
+                    </p>
+                  </div>
+                  <div className="flex items-center justify-end gap-2">
                     <button
                       onClick={() => handleDeleteClient(client.id)}
                       className="px-3 py-1 text-sm rounded bg-red-500/20 border border-red-500/40 text-red-400 hover:bg-red-500/30 transition-all"

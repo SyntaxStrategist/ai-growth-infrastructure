@@ -23,6 +23,15 @@ export type ClientRecord = {
   contact_email: string;
   api_key: string;
   created_at: string;
+  last_rotated: string;
+};
+
+export type ApiKeyLog = {
+  id: string;
+  client_id: string;
+  old_key: string;
+  new_key: string;
+  rotated_at: string;
 };
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL || 'https://placeholder.supabase.co';
@@ -340,6 +349,77 @@ export async function deleteClient(clientId: string): Promise<void> {
     console.log('[Supabase] Client deleted successfully');
   } catch (err) {
     console.error('[Supabase] Failed to delete client:', err instanceof Error ? err.message : err);
+    throw err;
+  }
+}
+
+export async function rotateApiKey(clientId: string, newApiKey: string): Promise<ClientRecord> {
+  try {
+    // First, get the old API key for logging
+    const { data: oldClient, error: fetchError } = await supabase
+      .from('clients')
+      .select('api_key')
+      .eq('id', clientId)
+      .single();
+    
+    if (fetchError) {
+      throw fetchError;
+    }
+    
+    const oldKey = oldClient?.api_key || '';
+    
+    // Update the client with new API key and timestamp
+    const { data, error } = await supabase
+      .from('clients')
+      .update({
+        api_key: newApiKey,
+        last_rotated: new Date().toISOString(),
+      })
+      .eq('id', clientId)
+      .select()
+      .single();
+    
+    if (error) {
+      throw error;
+    }
+    
+    // Log the rotation event
+    const { error: logError } = await supabase
+      .from('api_key_logs')
+      .insert({
+        client_id: clientId,
+        old_key: oldKey,
+        new_key: newApiKey,
+      });
+    
+    if (logError) {
+      console.error('[Supabase] Failed to log API key rotation:', logError);
+      // Don't throw - rotation succeeded even if logging failed
+    }
+    
+    console.log('[Supabase] API key rotated successfully');
+    return data as ClientRecord;
+  } catch (err) {
+    console.error('[Supabase] Failed to rotate API key:', err instanceof Error ? err.message : err);
+    throw err;
+  }
+}
+
+export async function getApiKeyLogs(clientId: string): Promise<ApiKeyLog[]> {
+  try {
+    const { data, error } = await supabase
+      .from('api_key_logs')
+      .select('*')
+      .eq('client_id', clientId)
+      .order('rotated_at', { ascending: false });
+    
+    if (error) {
+      throw error;
+    }
+    
+    return (data || []) as ApiKeyLog[];
+  } catch (err) {
+    console.error('[Supabase] Failed to fetch API key logs:', err instanceof Error ? err.message : err);
     throw err;
   }
 }
