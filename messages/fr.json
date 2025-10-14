@@ -40,7 +40,36 @@
       "tone": "Ton",
       "urgency": "Urgence",
       "confidence": "Confiance"
-    }
+    },
+    "examples": [
+      {
+        "name": "Sophie Martin",
+        "message": "Nous avons besoin d'automatisation IA pour notre équipe de support client",
+        "summary": "Demande B2B d'entreprise pour intégration IA",
+        "intent": "Partenariat B2B pour mise à l'échelle IA",
+        "tone": "Professionnel et direct",
+        "urgency": "Élevée",
+        "confidence": 0.92
+      },
+      {
+        "name": "Alexandre Dubois",
+        "message": "Cherche à automatiser la qualification des leads pour notre pipeline de vente",
+        "summary": "Besoins en automatisation des ventes et scoring de leads",
+        "intent": "Optimisation du pipeline de vente",
+        "tone": "Stratégique et analytique",
+        "urgency": "Élevée",
+        "confidence": 0.89
+      },
+      {
+        "name": "Camille Rousseau",
+        "message": "Intéressé par l'exploration de solutions IA pour notre équipe marketing",
+        "summary": "Demande d'exploration IA pour le marketing",
+        "intent": "Intérêt pour l'automatisation marketing",
+        "tone": "Curieux et exploratoire",
+        "urgency": "Moyenne",
+        "confidence": 0.78
+      }
+    ]
   },
   "chat": {
     "title": "Essayez l'assistant IA",

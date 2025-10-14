@@ -258,52 +258,40 @@ export default function Home() {
           whileInView={{ opacity: 1 }}
           viewport={{ once: true }}
           transition={{ duration: 0.6 }}
-          className="flex flex-col gap-6"
+          className="flex flex-col gap-8 relative"
         >
-          <div className="flex items-center justify-center gap-2">
-            <h2 className="text-2xl font-semibold text-center letter-spacing-wide">{t('demo.title')}</h2>
-            <span className="text-xs px-2 py-1 rounded-full bg-blue-500/10 text-blue-400 border border-blue-400/20">
+          {/* Blur gradient background for depth */}
+          <div className="absolute inset-0 -z-10 bg-gradient-to-b from-blue-500/5 via-purple-500/5 to-transparent blur-3xl opacity-30"></div>
+          
+          <div className="flex flex-col items-center gap-2">
+            <motion.h2
+              initial={{ opacity: 0, y: -10 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.6 }}
+              className="text-3xl font-bold text-center letter-spacing-wide"
+            >
+              {t('demo.title')}
+            </motion.h2>
+            <p className="text-sm text-gray-400">
               {t('demo.subtitle')}
-            </span>
+            </p>
+            <div className="w-32 h-px bg-gradient-to-r from-transparent via-blue-400/50 to-transparent mt-2"></div>
           </div>
 
           <div className="grid grid-cols-1 gap-4">
-            {[
-              {
-                name: "Sarah Chen",
-                message: "We need AI automation for our customer support team",
-                summary: "Enterprise B2B inquiry for AI integration",
-                intent: "B2B partnership for AI scaling",
-                tone: "Professional and direct",
-                urgency: "High",
-                confidence: 0.92
-              },
-              {
-                name: "Marc Dubois",
-                message: "Intéressé par vos solutions d'IA pour e-commerce",
-                summary: "E-commerce AI solution interest",
-                intent: "E-commerce AI implementation",
-                tone: "Curious and engaged",
-                urgency: "Medium",
-                confidence: 0.85
-              },
-              {
-                name: "Alex Rivera",
-                message: "Looking to automate lead qualification for our sales pipeline",
-                summary: "Sales automation and lead scoring needs",
-                intent: "Sales pipeline optimization",
-                tone: "Strategic and analytical",
-                urgency: "High",
-                confidence: 0.89
-              }
-            ].map((demo, idx) => (
+            {(t.raw('demo.examples') as any[]).map((demo, idx) => (
               <motion.div
                 key={idx}
                 initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
-                transition={{ duration: 0.5, delay: idx * 0.15 }}
-                className="rounded-lg border border-black/10 dark:border-white/20 p-5 bg-gradient-to-br from-blue-50/5 to-purple-50/5 hover:border-blue-400/30 transition-all"
+                transition={{ duration: 0.5, delay: idx * 0.1 }}
+                whileHover={{ 
+                  y: -4,
+                  boxShadow: "0 0 40px rgba(0, 191, 255, 0.15), 0 0 80px rgba(139, 92, 246, 0.1)"
+                }}
+                className="rounded-lg border border-black/10 dark:border-white/20 p-5 bg-gradient-to-br from-blue-50/5 to-purple-50/5 hover:border-blue-400/40 transition-all cursor-pointer"
               >
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
                   <div>
@@ -328,7 +316,11 @@ export default function Home() {
                   </div>
                   <div>
                     <span className="text-black/50 dark:text-white/50 text-xs">{t('demo.fields.urgency')}</span>
-                    <p className={demo.urgency === 'High' ? 'text-red-400 font-semibold' : demo.urgency === 'Medium' ? 'text-yellow-400' : 'text-green-400'}>
+                    <p className={
+                      (demo.urgency === 'High' || demo.urgency === 'Élevée') ? 'text-red-400 font-semibold' : 
+                      (demo.urgency === 'Medium' || demo.urgency === 'Moyenne') ? 'text-yellow-400' : 
+                      'text-green-400'
+                    }>
                       {demo.urgency}
                     </p>
                   </div>
@@ -336,10 +328,13 @@ export default function Home() {
                     <span className="text-black/50 dark:text-white/50 text-xs">{t('demo.fields.confidence')}</span>
                     <div className="flex items-center gap-2">
                       <div className="flex-1 h-2 bg-black/10 dark:bg-white/10 rounded-full overflow-hidden">
-                        <div 
-                          className="h-full bg-gradient-to-r from-blue-500 to-purple-500 rounded-full transition-all"
-                          style={{ width: `${demo.confidence * 100}%` }}
-                        ></div>
+                        <motion.div 
+                          initial={{ width: 0 }}
+                          whileInView={{ width: `${demo.confidence * 100}%` }}
+                          viewport={{ once: true }}
+                          transition={{ duration: 1, delay: idx * 0.1 + 0.3, ease: "easeOut" }}
+                          className="h-full bg-gradient-to-r from-blue-500 to-purple-500 rounded-full"
+                        ></motion.div>
                       </div>
                       <span className="text-xs font-mono">{(demo.confidence * 100).toFixed(0)}%</span>
                     </div>
