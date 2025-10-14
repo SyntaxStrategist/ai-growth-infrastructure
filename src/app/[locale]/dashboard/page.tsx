@@ -2,18 +2,39 @@
 
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
+import { useTranslations } from 'next-intl';
+import { supabase } from "../../../lib/supabase";
 import type { LeadMemoryRecord } from "../../../lib/supabase";
 
 export default function Dashboard() {
+  const t = useTranslations();
+  const [authorized] = useState(true); // Placeholder auth - set to false to block access
   const [leads, setLeads] = useState<LeadMemoryRecord[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState({ urgency: 'all', language: 'all', minConfidence: 0 });
-  const [stats, setStats] = useState({ total: 0, avgConfidence: 0, topIntent: '' });
+  const [stats, setStats] = useState({ total: 0, avgConfidence: 0, topIntent: '', highUrgency: 0 });
+  const [isLive, setIsLive] = useState(false);
 
   useEffect(() => {
     fetchLeads();
-    const interval = setInterval(fetchLeads, 10000); // Refresh every 10s
-    return () => clearInterval(interval);
+    
+    // Set up real-time subscription
+    const channel = supabase
+      .channel('lead_memory_changes')
+      .on('postgres_changes', 
+        { event: 'INSERT', schema: 'public', table: 'lead_memory' },
+        (payload) => {
+          console.log('[Dashboard] New lead received:', payload.new);
+          setIsLive(true);
+          setTimeout(() => setIsLive(false), 2000);
+          fetchLeads();
+        }
+      )
+      .subscribe();
+    
+    return () => {
+      supabase.removeChannel(channel);
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -36,6 +57,7 @@ export default function Dashboard() {
   function calculateStats(leadsData: LeadMemoryRecord[]) {
     const total = leadsData.length;
     const avgConfidence = leadsData.reduce((sum, l) => sum + (l.confidence_score || 0), 0) / total || 0;
+    const highUrgency = leadsData.filter(l => l.urgency === 'High' || l.urgency === 'Élevée').length;
     const intentCounts: Record<string, number> = {};
     leadsData.forEach(l => {
       if (l.intent) {
@@ -43,7 +65,7 @@ export default function Dashboard() {
       }
     });
     const topIntent = Object.keys(intentCounts).sort((a, b) => intentCounts[b] - intentCounts[a])[0] || 'N/A';
-    setStats({ total, avgConfidence, topIntent });
+    setStats({ total, avgConfidence, topIntent, highUrgency });
   }
 
   const filteredLeads = leads.filter(lead => {
@@ -53,12 +75,22 @@ export default function Dashboard() {
     return true;
   });
 
+  if (!authorized) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-black text-white">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold mb-2">{t('dashboard.accessDenied')}</h1>
+        </div>
+      </div>
+    );
+  }
+
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center bg-black text-white">
         <div className="text-center">
           <div className="animate-spin h-8 w-8 border-4 border-blue-500 border-t-transparent rounded-full mx-auto mb-4"></div>
-          <p>Loading dashboard...</p>
+          <p>Loading...</p>
         </div>
       </div>
     );
@@ -71,10 +103,22 @@ export default function Dashboard() {
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6 }}
-          className="mb-8"
+          className="mb-8 flex items-center justify-between"
         >
-          <h1 className="text-3xl font-bold mb-2">Intelligence Dashboard</h1>
-          <p className="text-white/60">Real-time lead intelligence from Supabase</p>
+          <div>
+            <h1 className="text-3xl font-bold mb-2">{t('dashboard.title')}</h1>
+            <p className="text-white/60">Real-time lead intelligence from Supabase</p>
+          </div>
+          {isLive && (
+            <motion.div
+              initial={{ scale: 0.8, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              className="flex items-center gap-2 px-3 py-2 rounded-full bg-green-500/20 border border-green-500/40"
+            >
+              <div className="h-2 w-2 rounded-full bg-green-400 animate-pulse"></div>
+              <span className="text-xs text-green-400 font-medium">{t('dashboard.liveUpdates')}</span>
+            </motion.div>
+          )}
         </motion.div>
 
         {/* Stats Summary */}
@@ -82,19 +126,23 @@ export default function Dashboard() {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 0.6, delay: 0.2 }}
-          className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8"
+          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8"
         >
-          <div className="rounded-lg border border-white/10 p-4 bg-gradient-to-br from-blue-500/10 to-purple-500/10">
-            <div className="text-sm text-white/60 mb-1">Total Leads</div>
+          <div className="rounded-lg border border-white/10 p-4 bg-gradient-to-br from-blue-500/10 to-purple-500/10 hover:border-blue-400/30 transition-all">
+            <div className="text-sm text-white/60 mb-1">{t('dashboard.stats.totalLeads')}</div>
             <div className="text-3xl font-bold">{stats.total}</div>
           </div>
-          <div className="rounded-lg border border-white/10 p-4 bg-gradient-to-br from-blue-500/10 to-purple-500/10">
-            <div className="text-sm text-white/60 mb-1">Avg Confidence</div>
+          <div className="rounded-lg border border-white/10 p-4 bg-gradient-to-br from-blue-500/10 to-purple-500/10 hover:border-blue-400/30 transition-all">
+            <div className="text-sm text-white/60 mb-1">{t('dashboard.stats.avgConfidence')}</div>
             <div className="text-3xl font-bold">{(stats.avgConfidence * 100).toFixed(0)}%</div>
           </div>
-          <div className="rounded-lg border border-white/10 p-4 bg-gradient-to-br from-blue-500/10 to-purple-500/10">
-            <div className="text-sm text-white/60 mb-1">Top Intent</div>
+          <div className="rounded-lg border border-white/10 p-4 bg-gradient-to-br from-blue-500/10 to-purple-500/10 hover:border-blue-400/30 transition-all">
+            <div className="text-sm text-white/60 mb-1">{t('dashboard.stats.topIntent')}</div>
             <div className="text-xl font-semibold truncate">{stats.topIntent}</div>
+          </div>
+          <div className="rounded-lg border border-white/10 p-4 bg-gradient-to-br from-blue-500/10 to-purple-500/10 hover:border-blue-400/30 transition-all">
+            <div className="text-sm text-white/60 mb-1">{t('dashboard.stats.highUrgency')}</div>
+            <div className="text-3xl font-bold text-red-400">{stats.highUrgency}</div>
           </div>
         </motion.div>
 
@@ -108,34 +156,38 @@ export default function Dashboard() {
           <select
             value={filter.urgency}
             onChange={(e) => setFilter({ ...filter, urgency: e.target.value })}
-            className="px-3 py-2 rounded-md bg-white/5 border border-white/10 text-sm"
+            className="px-3 py-2 rounded-md bg-white/5 border border-white/10 text-sm hover:border-blue-400/40 transition-all"
           >
-            <option value="all">All Urgency</option>
-            <option value="High">High</option>
-            <option value="Medium">Medium</option>
-            <option value="Low">Low</option>
+            <option value="all">{t('dashboard.filters.all')} {t('dashboard.filters.urgency')}</option>
+            <option value="High">{t('dashboard.filters.high')}</option>
+            <option value="Medium">{t('dashboard.filters.medium')}</option>
+            <option value="Low">{t('dashboard.filters.low')}</option>
           </select>
 
           <select
             value={filter.language}
             onChange={(e) => setFilter({ ...filter, language: e.target.value })}
-            className="px-3 py-2 rounded-md bg-white/5 border border-white/10 text-sm"
+            className="px-3 py-2 rounded-md bg-white/5 border border-white/10 text-sm hover:border-blue-400/40 transition-all"
           >
-            <option value="all">All Languages</option>
+            <option value="all">{t('dashboard.filters.all')} {t('dashboard.filters.language')}</option>
             <option value="en">English</option>
             <option value="fr">Français</option>
           </select>
 
-          <input
-            type="range"
-            min="0"
-            max="1"
-            step="0.1"
-            value={filter.minConfidence}
-            onChange={(e) => setFilter({ ...filter, minConfidence: parseFloat(e.target.value) })}
-            className="flex-1 max-w-xs"
-          />
-          <span className="text-sm text-white/60">Min Confidence: {(filter.minConfidence * 100).toFixed(0)}%</span>
+          <div className="flex items-center gap-2 flex-1 max-w-xs">
+            <input
+              type="range"
+              min="0"
+              max="1"
+              step="0.1"
+              value={filter.minConfidence}
+              onChange={(e) => setFilter({ ...filter, minConfidence: parseFloat(e.target.value) })}
+              className="flex-1"
+            />
+            <span className="text-sm text-white/60 whitespace-nowrap">
+              {t('dashboard.filters.minConfidence')}: {(filter.minConfidence * 100).toFixed(0)}%
+            </span>
+          </div>
         </motion.div>
 
         {/* Leads Table */}
@@ -155,57 +207,59 @@ export default function Dashboard() {
             >
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 text-sm">
                 <div>
-                  <span className="text-white/50 text-xs block mb-1">Name</span>
+                  <span className="text-white/50 text-xs block mb-1">{t('dashboard.table.name')}</span>
                   <p className="font-semibold">{lead.name}</p>
                 </div>
                 <div>
-                  <span className="text-white/50 text-xs block mb-1">Email</span>
+                  <span className="text-white/50 text-xs block mb-1">{t('dashboard.table.email')}</span>
                   <p className="text-blue-400">{lead.email}</p>
                 </div>
                 <div>
-                  <span className="text-white/50 text-xs block mb-1">Language</span>
+                  <span className="text-white/50 text-xs block mb-1">{t('dashboard.table.language')}</span>
                   <p className="uppercase text-xs font-mono">{lead.language}</p>
                 </div>
                 <div className="md:col-span-2 lg:col-span-3">
-                  <span className="text-white/50 text-xs block mb-1">Message</span>
+                  <span className="text-white/50 text-xs block mb-1">{t('dashboard.table.message')}</span>
                   <p className="text-white/80 italic">&quot;{lead.message}&quot;</p>
                 </div>
                 <div className="md:col-span-2 lg:col-span-3">
-                  <span className="text-white/50 text-xs block mb-1">AI Summary</span>
+                  <span className="text-white/50 text-xs block mb-1">{t('dashboard.table.summary')}</span>
                   <p className="text-white/90">{lead.ai_summary || 'N/A'}</p>
                 </div>
                 <div>
-                  <span className="text-white/50 text-xs block mb-1">Intent</span>
+                  <span className="text-white/50 text-xs block mb-1">{t('dashboard.table.intent')}</span>
                   <p className="text-blue-300 font-medium">{lead.intent || 'N/A'}</p>
                 </div>
                 <div>
-                  <span className="text-white/50 text-xs block mb-1">Tone</span>
+                  <span className="text-white/50 text-xs block mb-1">{t('dashboard.table.tone')}</span>
                   <p>{lead.tone || 'N/A'}</p>
                 </div>
                 <div>
-                  <span className="text-white/50 text-xs block mb-1">Urgency</span>
+                  <span className="text-white/50 text-xs block mb-1">{t('dashboard.table.urgency')}</span>
                   <p className={
-                    lead.urgency === 'High' ? 'text-red-400 font-semibold' :
-                    lead.urgency === 'Medium' ? 'text-yellow-400' :
+                    (lead.urgency === 'High' || lead.urgency === 'Élevée') ? 'text-red-400 font-semibold' :
+                    (lead.urgency === 'Medium' || lead.urgency === 'Moyenne') ? 'text-yellow-400' :
                     'text-green-400'
                   }>
                     {lead.urgency || 'N/A'}
                   </p>
                 </div>
                 <div className="md:col-span-2 lg:col-span-3">
-                  <span className="text-white/50 text-xs block mb-1">Confidence</span>
+                  <span className="text-white/50 text-xs block mb-1">{t('dashboard.table.confidence')}</span>
                   <div className="flex items-center gap-2">
                     <div className="flex-1 h-2 bg-white/10 rounded-full overflow-hidden">
-                      <div 
+                      <motion.div 
+                        initial={{ width: 0 }}
+                        animate={{ width: `${(lead.confidence_score || 0) * 100}%` }}
+                        transition={{ duration: 0.8, delay: idx * 0.05 }}
                         className="h-full bg-gradient-to-r from-blue-500 to-purple-500 rounded-full"
-                        style={{ width: `${(lead.confidence_score || 0) * 100}%` }}
-                      ></div>
+                      ></motion.div>
                     </div>
                     <span className="text-xs font-mono">{((lead.confidence_score || 0) * 100).toFixed(0)}%</span>
                   </div>
                 </div>
                 <div className="md:col-span-2 lg:col-span-3">
-                  <span className="text-white/50 text-xs block mb-1">Timestamp</span>
+                  <span className="text-white/50 text-xs block mb-1">{t('dashboard.table.timestamp')}</span>
                   <p className="text-xs font-mono text-white/60">{new Date(lead.timestamp).toLocaleString()}</p>
                 </div>
               </div>
@@ -214,7 +268,7 @@ export default function Dashboard() {
 
           {filteredLeads.length === 0 && (
             <div className="text-center py-12 text-white/50">
-              No leads match the current filters
+              {t('dashboard.table.noResults')}
             </div>
           )}
         </motion.div>

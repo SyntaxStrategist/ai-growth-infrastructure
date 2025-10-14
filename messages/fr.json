@@ -105,5 +105,39 @@
     "toggle": "Langue",
     "en": "English",
     "fr": "Français"
+  },
+  "dashboard": {
+    "title": "Tableau d'intelligence",
+    "liveUpdates": "Mises à jour en direct",
+    "accessDenied": "Accès refusé",
+    "stats": {
+      "totalLeads": "Total de leads",
+      "avgConfidence": "Confiance moyenne",
+      "topIntent": "Intention principale",
+      "highUrgency": "Urgence élevée"
+    },
+    "filters": {
+      "urgency": "Urgence",
+      "language": "Langue",
+      "minConfidence": "Confiance minimale",
+      "all": "Tous",
+      "high": "Élevée",
+      "medium": "Moyenne",
+      "low": "Faible"
+    },
+    "table": {
+      "id": "ID",
+      "name": "Nom",
+      "email": "Courriel",
+      "message": "Message",
+      "summary": "Résumé IA",
+      "intent": "Intention",
+      "tone": "Ton",
+      "urgency": "Urgence",
+      "confidence": "Confiance",
+      "timestamp": "Horodatage",
+      "language": "Langue",
+      "noResults": "Aucun lead ne correspond aux filtres actuels"
+    }
   }
 }

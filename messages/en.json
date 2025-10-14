@@ -105,5 +105,39 @@
     "toggle": "Language",
     "en": "English",
     "fr": "Français"
+  },
+  "dashboard": {
+    "title": "Intelligence Dashboard",
+    "liveUpdates": "Live Updates",
+    "accessDenied": "Access Denied",
+    "stats": {
+      "totalLeads": "Total Leads",
+      "avgConfidence": "Avg Confidence",
+      "topIntent": "Top Intent",
+      "highUrgency": "High Urgency"
+    },
+    "filters": {
+      "urgency": "Urgency",
+      "language": "Language",
+      "minConfidence": "Min Confidence",
+      "all": "All",
+      "high": "High",
+      "medium": "Medium",
+      "low": "Low"
+    },
+    "table": {
+      "id": "ID",
+      "name": "Name",
+      "email": "Email",
+      "message": "Message",
+      "summary": "AI Summary",
+      "intent": "Intent",
+      "tone": "Tone",
+      "urgency": "Urgency",
+      "confidence": "Confidence",
+      "timestamp": "Timestamp",
+      "language": "Language",
+      "noResults": "No leads match the current filters"
+    }
   }
 }
