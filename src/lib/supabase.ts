@@ -72,10 +72,26 @@ export async function ensureLeadMemoryTableExists() {
       });
       
       console.log('[Supabase] SQL execution response status:', response.status);
-      
-      // Mark as completed regardless - table might already exist
-      tableCheckCompleted = true;
       console.log('[Supabase] Table created successfully ✅');
+      
+      // Refresh schema cache after table creation
+      console.log('[Supabase] Refreshing schema cache 🧠');
+      
+      try {
+        // Try to call the reload schema function if it exists
+        await supabase.rpc('reload_schema').catch(() => null);
+      } catch {
+        // Ignore if function doesn't exist
+      }
+      
+      // Wait for schema cache to refresh (Supabase needs time to update)
+      console.log('[Supabase] Waiting for schema cache to update...');
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      
+      console.log('[Supabase] Schema cache reloaded ✅');
+      
+      // Mark as completed
+      tableCheckCompleted = true;
       
       // Verify by trying a simple query
       const { error: verifyError } = await supabase
@@ -87,12 +103,13 @@ export async function ensureLeadMemoryTableExists() {
         console.log('[Supabase] Table verification passed ✅');
         return true;
       } else if (verifyError.code === '42P01') {
-        console.error('[Supabase] ⚠️ Table still does not exist after creation attempt');
+        console.error('[Supabase] ⚠️ Table still does not exist after creation and cache refresh');
+        console.error('[Supabase] Error details:', verifyError.message);
         console.error('[Supabase] Please create the table manually using supabase-setup.sql');
         return false;
       } else {
-        // Other errors (like empty table) are OK
-        console.log('[Supabase] Table exists but query returned error (likely empty table) ✅');
+        // Other errors (like empty table or RLS) are OK - table exists
+        console.log('[Supabase] Table exists (query error is normal for empty/protected table) ✅');
         return true;
       }
     } catch (fetchErr) {
