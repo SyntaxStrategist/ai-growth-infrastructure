@@ -32,6 +32,16 @@ if (process.env.NODE_ENV !== 'production') globalForPrisma.prisma = prisma
 // Ensure table exists at runtime (for Vercel/Supabase compatibility)
 export const ensureLeadMemoryTable = async () => {
   try {
+    console.log('[Prisma] Checking database connection...');
+    console.log('[Prisma] DATABASE_URL configured:', !!process.env.DATABASE_URL);
+    console.log('[Prisma] Connection URL format:', process.env.DATABASE_URL?.substring(0, 30) + '...');
+    
+    // Test connection first
+    await prisma.$connect();
+    console.log('[Prisma] ✅ Database connection successful');
+    
+    // Create table if not exists
+    console.log('[Prisma] Ensuring LeadMemory table exists...');
     await prisma.$executeRawUnsafe(`
       CREATE TABLE IF NOT EXISTS "lead_memory" (
         "id" TEXT NOT NULL,
@@ -44,20 +54,23 @@ export const ensureLeadMemoryTable = async () => {
         CONSTRAINT "lead_memory_pkey" PRIMARY KEY ("id")
       );
     `);
+    console.log('[Prisma] ✅ LeadMemory table ensured');
     
     // Create indexes if they don't exist
     await prisma.$executeRawUnsafe(`
       CREATE INDEX IF NOT EXISTS "lead_memory_timestamp_idx" ON "lead_memory"("timestamp");
     `);
+    console.log('[Prisma] ✅ Timestamp index ensured');
     
     await prisma.$executeRawUnsafe(`
       CREATE INDEX IF NOT EXISTS "lead_memory_email_idx" ON "lead_memory"("email");
     `);
+    console.log('[Prisma] ✅ Email index ensured');
     
-    console.log('LeadMemory table ensured');
     return true;
   } catch (err) {
-    console.error('Failed to ensure LeadMemory table:', err);
+    console.error('[Prisma] ❌ Failed to ensure LeadMemory table:', err);
+    console.error('[Prisma] Error details:', err instanceof Error ? err.message : 'Unknown error');
     return false;
   }
 };
