@@ -1,6 +1,27 @@
--- Run this SQL in your Supabase SQL Editor to create the lead_memory table
+-- Run this SQL in your Supabase SQL Editor to set up the lead_memory table
 -- This only needs to be run once when setting up your Supabase project
 
+-- Create the exec_sql function for dynamic SQL execution
+CREATE OR REPLACE FUNCTION exec_sql(query text)
+RETURNS jsonb
+LANGUAGE plpgsql
+SECURITY DEFINER
+AS $$
+DECLARE
+  result jsonb;
+BEGIN
+  EXECUTE query;
+  RETURN jsonb_build_object('success', true);
+EXCEPTION
+  WHEN OTHERS THEN
+    RETURN jsonb_build_object('success', false, 'error', SQLERRM);
+END;
+$$;
+
+-- Grant execute permission to service_role
+GRANT EXECUTE ON FUNCTION exec_sql(text) TO service_role;
+
+-- Create the lead_memory table
 CREATE TABLE IF NOT EXISTS lead_memory (
   id TEXT PRIMARY KEY,
   name TEXT NOT NULL,

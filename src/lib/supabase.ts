@@ -56,16 +56,14 @@ export async function ensureLeadMemoryTableExists() {
       CREATE INDEX IF NOT EXISTS lead_memory_email_idx ON public.lead_memory(email);
     `;
     
-    // Execute SQL directly using Supabase's query endpoint
-    // Note: This requires postgres changes API to be enabled in Supabase
-    const postgrestEndpoint = `${supabaseUrl}/rest/v1/rpc/exec`;
-    
-    console.log('[Supabase] Executing SQL with service role key...');
+    console.log('[Supabase] Executing CREATE TABLE via RPC...');
     console.log('[Supabase] SQL:', createTableSQL.substring(0, 100) + '...');
     
     try {
-      // Attempt to execute via fetch to the database
-      const response = await fetch(`${supabaseUrl}/rest/v1/`, {
+      // Call exec_sql RPC function to create the table
+      const sqlEndpoint = `${supabaseUrl}/rest/v1/rpc/exec_sql`;
+      
+      const response = await fetch(sqlEndpoint, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -185,11 +183,11 @@ export async function saveLeadToSupabase(data: {
         RETURNING *;
       `;
       
-      console.log('[Supabase] Executing direct SQL INSERT...');
+      console.log('[Supabase] Executing direct SQL INSERT via RPC...');
       
       try {
-        // Use Supabase's RPC endpoint for SQL execution
-        const sqlEndpoint = `${supabaseUrl}/rest/v1/rpc/exec`;
+        // Call the exec_sql RPC function (must be created in Supabase first)
+        const sqlEndpoint = `${supabaseUrl}/rest/v1/rpc/exec_sql`;
         
         const sqlResponse = await fetch(sqlEndpoint, {
           method: 'POST',
@@ -200,41 +198,25 @@ export async function saveLeadToSupabase(data: {
             'Prefer': 'return=representation',
           },
           body: JSON.stringify({ 
-            sql: insertSQL 
+            query: insertSQL 
           }),
         });
         
-        console.log('[Supabase] Direct SQL INSERT response:', sqlResponse.status);
+        console.log('[Supabase] RPC exec_sql response:', sqlResponse.status);
         
-        let finalResponse = sqlResponse;
-        
-        // If RPC endpoint doesn't exist, try alternative format
-        if (sqlResponse.status === 404) {
-          console.log('[Supabase] RPC endpoint not found, trying alternative...');
-          
-          const altResponse = await fetch(`${supabaseUrl}/rest/v1/rpc`, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'apikey': supabaseKey,
-              'Authorization': `Bearer ${supabaseKey}`,
-            },
-            body: JSON.stringify({
-              name: 'exec',
-              params: { query: insertSQL }
-            }),
-          });
-          
-          console.log('[Supabase] Alternative endpoint response:', altResponse.status);
-          finalResponse = altResponse;
-        }
-        
-        if (finalResponse.ok || finalResponse.status === 200 || finalResponse.status === 201) {
+        if (sqlResponse.ok || sqlResponse.status === 200 || sqlResponse.status === 201) {
           console.log('[Supabase] ✅ Lead saved via direct SQL');
           return record;
         } else {
-          const errorText = await finalResponse.text();
-          console.error('[Supabase] Direct SQL INSERT failed:', errorText);
+          const errorText = await sqlResponse.text();
+          console.error('[Supabase] RPC exec_sql failed:', errorText);
+          
+          // If function doesn't exist, provide helpful error message
+          if (sqlResponse.status === 404 || errorText.includes('function') || errorText.includes('not found')) {
+            console.error('[Supabase] ⚠️ exec_sql function not found');
+            console.error('[Supabase] Please create the function using supabase-setup.sql');
+          }
+          
           throw new Error(`SQL INSERT failed: ${errorText}`);
         }
       } catch (sqlErr) {
