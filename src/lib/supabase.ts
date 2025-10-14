@@ -42,17 +42,89 @@ export async function ensureLeadMemoryTableExists() {
       .limit(1);
     
     if (!queryError) {
-      console.log('[Supabase] Table found ✅');
+      console.log('[Supabase] Table already exists ✅');
       tableCheckCompleted = true;
       return true;
     }
     
-    // If error code indicates table doesn't exist
+    // If error code indicates table doesn't exist, create it via SQL endpoint
     if (queryError.code === '42P01' || queryError.message.includes('does not exist')) {
-      console.log('[Supabase] Table missing — please create it manually 🛠️');
-      console.log('[Supabase] Run the SQL from supabase-setup.sql in your Supabase SQL Editor');
-      console.warn('[Supabase] ⚠️ Table does not exist - inserts will fail until table is created');
-      return false;
+      console.log('[Supabase] Table missing — creating now 🛠️');
+      
+      const createTableSQL = `
+        CREATE TABLE IF NOT EXISTS lead_memory (
+          id TEXT PRIMARY KEY,
+          name TEXT NOT NULL,
+          email TEXT NOT NULL,
+          message TEXT NOT NULL,
+          ai_summary TEXT,
+          language TEXT NOT NULL DEFAULT 'en',
+          timestamp TIMESTAMPTZ NOT NULL DEFAULT NOW()
+        );
+        
+        CREATE INDEX IF NOT EXISTS lead_memory_timestamp_idx ON lead_memory(timestamp);
+        CREATE INDEX IF NOT EXISTS lead_memory_email_idx ON lead_memory(email);
+        
+        ALTER TABLE lead_memory ENABLE ROW LEVEL SECURITY;
+        
+        DROP POLICY IF EXISTS "Allow service role full access" ON lead_memory;
+        CREATE POLICY "Allow service role full access" ON lead_memory
+          FOR ALL
+          TO service_role
+          USING (true)
+          WITH CHECK (true);
+      `;
+      
+      // Use Supabase's SQL endpoint directly
+      const sqlEndpoint = `${supabaseUrl}/rest/v1/rpc/exec_sql`;
+      console.log('[Supabase] Executing CREATE TABLE via SQL endpoint...');
+      
+      try {
+        const response = await fetch(sqlEndpoint, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'apikey': supabaseKey,
+            'Authorization': `Bearer ${supabaseKey}`,
+            'Prefer': 'return=minimal',
+          },
+          body: JSON.stringify({ query: createTableSQL }),
+        });
+        
+        if (!response.ok) {
+          const errorText = await response.text();
+          console.error('[Supabase] ❌ SQL endpoint error:', response.status, errorText);
+          
+          // Try alternative approach: use supabase-js query method
+          console.log('[Supabase] Trying alternative SQL execution method...');
+          const { error: sqlError } = await supabase.rpc('exec_sql', { sql: createTableSQL });
+          
+          if (sqlError) {
+            console.error('[Supabase] ❌ Alternative method also failed:', sqlError.message);
+            return false;
+          }
+        }
+        
+        console.log('[Supabase] Table created successfully ✅');
+        tableCheckCompleted = true;
+        
+        // Verify table was created
+        const { error: verifyError } = await supabase
+          .from('lead_memory')
+          .select('id')
+          .limit(1);
+        
+        if (!verifyError) {
+          console.log('[Supabase] Table verification passed ✅');
+          return true;
+        } else {
+          console.warn('[Supabase] Table created but verification failed:', verifyError.message);
+          return false;
+        }
+      } catch (fetchErr) {
+        console.error('[Supabase] ❌ Failed to execute SQL:', fetchErr);
+        return false;
+      }
     }
     
     console.error('[Supabase] Unexpected query error:', queryError);
