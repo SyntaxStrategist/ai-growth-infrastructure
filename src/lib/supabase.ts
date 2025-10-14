@@ -14,6 +14,15 @@ export type LeadMemoryRecord = {
   tone?: string | null;
   urgency?: string | null;
   confidence_score?: number | null;
+  client_id?: string | null;
+};
+
+export type ClientRecord = {
+  id: string;
+  company_name: string;
+  contact_email: string;
+  api_key: string;
+  created_at: string;
 };
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL || 'https://placeholder.supabase.co';
@@ -120,6 +129,7 @@ export async function saveLeadToSupabase(data: {
   aiSummary: string | null;
   language: string;
   timestamp: string;
+  clientId?: string | null;
 }) {
   try {
     // Ensure table exists before insert
@@ -128,7 +138,7 @@ export async function saveLeadToSupabase(data: {
     // Generate unique ID
     const id = `lead_${Date.now()}_${Math.random().toString(36).slice(2, 11)}`;
     
-    const record = {
+    const record: any = {
       id,
       name: data.name,
       email: data.email,
@@ -137,6 +147,10 @@ export async function saveLeadToSupabase(data: {
       language: data.language,
       timestamp: data.timestamp,
     };
+    
+    if (data.clientId) {
+      record.client_id = data.clientId;
+    }
     
     // Try REST API insert first
     const { data: insertedData, error } = await supabase
@@ -242,6 +256,90 @@ export async function getRecentLeads(limit = 50, offset = 0) {
     return { data: data || [], total: count || 0 };
   } catch (err) {
     console.error('[Supabase] Query failed:', err instanceof Error ? err.message : err);
+    throw err;
+  }
+}
+
+// ==================== CLIENT MANAGEMENT FUNCTIONS ====================
+
+export async function validateApiKey(apiKey: string): Promise<ClientRecord | null> {
+  try {
+    const { data, error } = await supabase
+      .from('clients')
+      .select('*')
+      .eq('api_key', apiKey)
+      .single();
+    
+    if (error) {
+      return null;
+    }
+    
+    return data as ClientRecord;
+  } catch {
+    return null;
+  }
+}
+
+export async function getAllClients(): Promise<ClientRecord[]> {
+  try {
+    const { data, error } = await supabase
+      .from('clients')
+      .select('*')
+      .order('created_at', { ascending: false });
+    
+    if (error) {
+      throw error;
+    }
+    
+    return (data || []) as ClientRecord[];
+  } catch (err) {
+    console.error('[Supabase] Failed to fetch clients:', err instanceof Error ? err.message : err);
+    throw err;
+  }
+}
+
+export async function createClientRecord(params: {
+  company_name: string;
+  contact_email: string;
+  api_key: string;
+}): Promise<ClientRecord> {
+  try {
+    const { data, error } = await supabase
+      .from('clients')
+      .insert({
+        company_name: params.company_name,
+        contact_email: params.contact_email,
+        api_key: params.api_key,
+      })
+      .select()
+      .single();
+    
+    if (error) {
+      throw error;
+    }
+    
+    console.log('[Supabase] Client created successfully');
+    return data as ClientRecord;
+  } catch (err) {
+    console.error('[Supabase] Failed to create client:', err instanceof Error ? err.message : err);
+    throw err;
+  }
+}
+
+export async function deleteClient(clientId: string): Promise<void> {
+  try {
+    const { error } = await supabase
+      .from('clients')
+      .delete()
+      .eq('id', clientId);
+    
+    if (error) {
+      throw error;
+    }
+    
+    console.log('[Supabase] Client deleted successfully');
+  } catch (err) {
+    console.error('[Supabase] Failed to delete client:', err instanceof Error ? err.message : err);
     throw err;
   }
 }

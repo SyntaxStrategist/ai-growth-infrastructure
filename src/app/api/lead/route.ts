@@ -4,7 +4,7 @@ import { NextRequest } from "next/server";
 import { google } from "googleapis";
 import OpenAI from "openai";
 import { getAuthorizedGmail, buildHtmlEmail } from "../../../lib/gmail";
-import { saveLeadToSupabase, enrichLeadInDatabase } from "../../../lib/supabase";
+import { saveLeadToSupabase, enrichLeadInDatabase, validateApiKey } from "../../../lib/supabase";
 import { enrichLeadWithAI } from "../../../lib/ai-enrichment";
 
 type LeadPayload = {
@@ -46,6 +46,27 @@ async function retry<T>(fn: () => Promise<T>, opts?: { maxAttempts?: number; bas
 
 export async function POST(req: NextRequest) {
 	try {
+		// Check for API key authentication
+		const apiKey = req.headers.get('x-api-key');
+		let clientId: string | null = null;
+		
+		if (apiKey) {
+			// Validate API key for external clients
+			const client = await validateApiKey(apiKey);
+			if (!client) {
+				console.log('[API] Invalid API key provided');
+				return new Response(
+					JSON.stringify({ error: "Unauthorized: Invalid API key" }),
+					{ status: 401, headers: { "Content-Type": "application/json" } }
+				);
+			}
+			clientId = client.id;
+			console.log(`[API] Authenticated request from client: ${client.company_name}`);
+		} else {
+			// No API key = internal request (from website form)
+			console.log('[API] Internal request (no API key)');
+		}
+		
 		const body = (await req.json().catch(() => null)) as LeadPayload | null;
 		if (!body || typeof body !== "object") {
 			return new Response(
@@ -200,10 +221,15 @@ export async function POST(req: NextRequest) {
 					aiSummary: aiSummary || null,
 					language: locale,
 					timestamp,
+					clientId,
 				});
 				
 				leadId = savedRecord?.id;
-				console.log('[Lead API] Lead saved to database');
+				if (clientId) {
+					console.log(`[Lead API] Lead saved to database with client_id: ${clientId}`);
+				} else {
+					console.log('[Lead API] Lead saved to database (internal)');
+				}
 			} catch {
 				// non-fatal: log for debugging but don't break the flow
 				console.warn('[Lead API] Database save failed');
