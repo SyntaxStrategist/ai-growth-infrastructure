@@ -265,6 +265,12 @@ export default function Dashboard() {
                 <span className="text-xs text-green-400 font-medium">{t('dashboard.liveUpdates')}</span>
               </motion.div>
             )}
+            <a
+              href={`/${locale}/dashboard/insights`}
+              className="px-4 py-2 rounded-lg bg-cyan-500/20 border border-cyan-500/40 text-cyan-400 hover:bg-cyan-500/30 transition-all duration-300 text-sm font-medium"
+            >
+              {locale === 'fr' ? '📊 Insights' : '📊 Insights'}
+            </a>
             <button
               onClick={() => {
                 clearTranslationCache();
