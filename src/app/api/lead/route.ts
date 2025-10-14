@@ -4,6 +4,7 @@ import { NextRequest } from "next/server";
 import { google } from "googleapis";
 import OpenAI from "openai";
 import { getAuthorizedGmail, buildHtmlEmail, getGmailProfile } from "../../../lib/gmail";
+import { prisma } from "../../../lib/prisma";
 
 type LeadPayload = {
 	name?: string;
@@ -187,6 +188,24 @@ export async function POST(req: NextRequest) {
 			} catch (mailErr) {
 				// non-fatal: log-like response for debugging
 				console.error("gmail_send_error", mailErr);
+			}
+
+			// Store lead in growth memory database
+			try {
+				await prisma.leadMemory.create({
+					data: {
+						name,
+						email,
+						message,
+						aiSummary: aiSummary || null,
+						language: locale,
+						timestamp: new Date(timestamp),
+					},
+				});
+				console.log('Lead stored in growth memory database');
+			} catch (dbErr) {
+				// non-fatal: log for debugging
+				console.error("database_save_error", dbErr);
 			}
 		} catch (sheetsError) {
 			const msg = sheetsError instanceof Error ? sheetsError.message : "Failed to append to Google Sheet";
