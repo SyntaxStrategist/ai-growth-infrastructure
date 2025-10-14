@@ -115,7 +115,8 @@
       "placeholder": "Password",
       "button": "Access",
       "error": "Incorrect password",
-      "success": "Access Granted"
+      "success": "Access Granted",
+      "logout": "Logout"
     },
     "stats": {
       "totalLeads": "Total Leads",

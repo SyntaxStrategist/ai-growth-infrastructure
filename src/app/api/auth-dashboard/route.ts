@@ -12,15 +12,16 @@ export async function POST(req: NextRequest) {
     }
 
     const { password } = body as { password?: string };
-    const correctPassword = process.env.ADMIN_DASHBOARD_PASSWORD;
+    const correctPassword = process.env.ADMIN_DASHBOARD_PASSWORD || "AvenirAI2025";
 
-    if (!correctPassword) {
+    if (!password || typeof password !== 'string') {
       return new Response(
-        JSON.stringify({ error: "Dashboard password not configured" }),
-        { status: 500, headers: { "Content-Type": "application/json" } }
+        JSON.stringify({ success: false, authorized: false }),
+        { status: 400, headers: { "Content-Type": "application/json" } }
       );
     }
 
+    // Case-sensitive comparison
     if (password === correctPassword) {
       return new Response(
         JSON.stringify({ success: true, authorized: true }),

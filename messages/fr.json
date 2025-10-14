@@ -115,7 +115,8 @@
       "placeholder": "Mot de passe",
       "button": "Accéder",
       "error": "Mot de passe incorrect",
-      "success": "Accès autorisé"
+      "success": "Accès autorisé",
+      "logout": "Déconnexion"
     },
     "stats": {
       "totalLeads": "Total de leads",
