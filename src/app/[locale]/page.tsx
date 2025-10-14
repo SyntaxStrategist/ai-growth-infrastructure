@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useTranslations, useLocale } from 'next-intl';
 import { AvenirLogo } from "../../components/AvenirLogo";
 import { LanguageToggle } from "../../components/LanguageToggle";
@@ -22,6 +22,30 @@ export default function Home() {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [leadMessage, setLeadMessage] = useState("");
+  const [isVisible, setIsVisible] = useState(false);
+  const cardsRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    setIsVisible(true);
+    
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add('animate-in');
+          }
+        });
+      },
+      { threshold: 0.1 }
+    );
+
+    if (cardsRef.current) {
+      const cards = cardsRef.current.querySelectorAll('.framework-card');
+      cards.forEach((card) => observer.observe(card));
+    }
+
+    return () => observer.disconnect();
+  }, []);
 
   async function handleSend(e: React.FormEvent) {
     e.preventDefault();
@@ -60,6 +84,76 @@ export default function Home() {
 
   return (
     <div className="min-h-screen p-8 sm:p-20 flex items-start justify-center">
+      <style jsx global>{`
+        @keyframes fadeInUp {
+          from {
+            opacity: 0;
+            transform: translateY(20px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+        
+        @keyframes fadeIn {
+          from { opacity: 0; }
+          to { opacity: 1; }
+        }
+
+        .hero-animate {
+          animation: fadeIn 0.8s ease-out forwards;
+        }
+
+        .hero-text-animate {
+          animation: fadeInUp 1s ease-out 0.2s forwards;
+          opacity: 0;
+        }
+
+        .framework-card {
+          opacity: 0;
+          transform: translateY(30px);
+          transition: all 0.4s ease-out;
+        }
+
+        .framework-card.animate-in {
+          opacity: 1;
+          transform: translateY(0);
+        }
+
+        .framework-card:nth-child(1).animate-in { transition-delay: 0.1s; }
+        .framework-card:nth-child(2).animate-in { transition-delay: 0.2s; }
+        .framework-card:nth-child(3).animate-in { transition-delay: 0.3s; }
+        .framework-card:nth-child(4).animate-in { transition-delay: 0.4s; }
+
+        .card-hover {
+          transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .card-hover:hover {
+          transform: translateY(-4px);
+          box-shadow: 0 0 20px rgba(0, 191, 255, 0.3);
+          border-color: rgba(0, 191, 255, 0.4);
+        }
+
+        .logo-glow {
+          position: relative;
+        }
+
+        .logo-glow::before {
+          content: '';
+          position: absolute;
+          inset: -20px;
+          background: radial-gradient(circle, rgba(0, 191, 255, 0.2) 0%, transparent 70%);
+          z-index: -1;
+          animation: pulse 3s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+          0%, 100% { opacity: 0.5; }
+          50% { opacity: 0.8; }
+        }
+      `}</style>
       <main className="w-full max-w-3xl flex flex-col gap-10">
         {/* Language Toggle */}
         <div className="flex justify-end">
@@ -67,36 +161,38 @@ export default function Home() {
         </div>
 
         <section className="flex flex-col gap-6 text-center items-center">
-          <div className="inline-flex items-center gap-2 rounded-full border border-black/10 dark:border-white/20 px-3 py-1 text-xs font-medium">
+          <div className={`inline-flex items-center gap-2 rounded-full border border-black/10 dark:border-white/20 px-3 py-1 text-xs font-medium ${isVisible ? 'hero-animate' : 'opacity-0'}`}>
             {t('hero.badge')}
           </div>
           <div className="flex flex-col items-center gap-4">
-            <AvenirLogo className="h-14 w-14 sm:h-16 sm:w-16 max-w-[80px] sm:max-w-[120px]" />
-            <h1 className="text-3xl sm:text-5xl font-semibold tracking-tight text-center">
+            <div className={`logo-glow ${isVisible ? 'hero-animate' : 'opacity-0'}`}>
+              <AvenirLogo className="h-14 w-14 sm:h-16 sm:w-16 max-w-[80px] sm:max-w-[120px]" />
+            </div>
+            <h1 className={`text-3xl sm:text-5xl font-semibold tracking-tight text-center ${isVisible ? 'hero-text-animate' : 'opacity-0'}`}>
               {t('hero.title')}
             </h1>
           </div>
-          <p className="text-base sm:text-lg text-black/70 dark:text-white/70 max-w-3xl">
+          <p className={`text-base sm:text-lg text-black/70 dark:text-white/70 max-w-3xl ${isVisible ? 'hero-text-animate' : 'opacity-0'}`} style={{ animationDelay: '0.4s' }}>
             {t('hero.subtitle')}
           </p>
         </section>
 
-        <section className="flex flex-col gap-6">
+        <section className="flex flex-col gap-6 mt-8">
           <h2 className="text-2xl font-semibold text-center">{t('framework.title')}</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="rounded-lg border border-black/10 dark:border-white/20 p-6 bg-gradient-to-br from-blue-50/5 to-purple-50/5">
+          <div ref={cardsRef} className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="framework-card card-hover rounded-lg border border-black/10 dark:border-white/20 p-6 bg-gradient-to-br from-blue-50/5 to-purple-50/5">
               <h3 className="text-lg font-semibold mb-2">{t('framework.cards.acquisition.title')}</h3>
               <p className="text-sm text-black/70 dark:text-white/70">{t('framework.cards.acquisition.description')}</p>
             </div>
-            <div className="rounded-lg border border-black/10 dark:border-white/20 p-6 bg-gradient-to-br from-blue-50/5 to-purple-50/5">
+            <div className="framework-card card-hover rounded-lg border border-black/10 dark:border-white/20 p-6 bg-gradient-to-br from-blue-50/5 to-purple-50/5">
               <h3 className="text-lg font-semibold mb-2">{t('framework.cards.conversion.title')}</h3>
               <p className="text-sm text-black/70 dark:text-white/70">{t('framework.cards.conversion.description')}</p>
             </div>
-            <div className="rounded-lg border border-black/10 dark:border-white/20 p-6 bg-gradient-to-br from-blue-50/5 to-purple-50/5">
+            <div className="framework-card card-hover rounded-lg border border-black/10 dark:border-white/20 p-6 bg-gradient-to-br from-blue-50/5 to-purple-50/5">
               <h3 className="text-lg font-semibold mb-2">{t('framework.cards.retention.title')}</h3>
               <p className="text-sm text-black/70 dark:text-white/70">{t('framework.cards.retention.description')}</p>
             </div>
-            <div className="rounded-lg border border-black/10 dark:border-white/20 p-6 bg-gradient-to-br from-blue-50/5 to-purple-50/5">
+            <div className="framework-card card-hover rounded-lg border border-black/10 dark:border-white/20 p-6 bg-gradient-to-br from-blue-50/5 to-purple-50/5">
               <h3 className="text-lg font-semibold mb-2">{t('framework.cards.operational.title')}</h3>
               <p className="text-sm text-black/70 dark:text-white/70">{t('framework.cards.operational.description')}</p>
             </div>
