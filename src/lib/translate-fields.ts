@@ -87,14 +87,19 @@ export async function translateLeadFields(
     };
   }
 
-  // Check cache using lead ID and locale
-  const cacheKey = `${fields.id}_${targetLocale}`;
+  // Check cache using lead ID and locale with field-specific keys
+  const cacheKey = `${fields.id}_aiSummary_${targetLocale}`;
+  
+  console.log(`[Translation] Rendering for dashboard locale: ${targetLocale}`);
+  
   if (translationCache.has(cacheKey)) {
     console.log(`[Translation] Using cached translation for ${fields.id} (${targetLocale})`);
+    console.log(`[Translation] Cache key: ${cacheKey}`);
     return translationCache.get(cacheKey);
   }
 
-  console.log(`[Translation] Forcing translation for lead ${fields.id} to ${targetLocale}`);
+  console.log(`[Translation] Re-translating AI summary to ${targetLocale}`);
+  console.log(`[Translation] Cache key: ${cacheKey}`);
 
   try {
     if (!process.env.OPENAI_API_KEY) {

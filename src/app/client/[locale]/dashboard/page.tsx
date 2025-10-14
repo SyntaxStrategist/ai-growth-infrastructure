@@ -76,6 +76,37 @@ export default function ClientDashboard() {
     }
   }, []);
 
+  // Re-translate when locale changes
+  useEffect(() => {
+    if (!authenticated || !clientInfo || leads.length === 0) return;
+    
+    console.log(`[Client Portal] Locale changed to: ${locale} - re-translating all leads`);
+    
+    async function retranslate() {
+      const translatedLeads = await Promise.all(
+        leads.map(async (lead: TranslatedLead) => {
+          const translated = await translateLeadFields({
+            id: lead.id,
+            ai_summary: lead.ai_summary,
+            intent: lead.intent,
+            tone: lead.tone,
+            urgency: lead.urgency,
+          }, locale);
+          
+          return {
+            ...lead,
+            translated,
+          } as TranslatedLead;
+        })
+      );
+      setLeads(translatedLeads);
+      calculateStats(translatedLeads);
+    }
+    
+    retranslate();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [locale]);
+
   async function handleLogin(e: React.FormEvent) {
     e.preventDefault();
     setAuthenticating(true);

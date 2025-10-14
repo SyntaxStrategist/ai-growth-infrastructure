@@ -108,3 +108,40 @@ COMMENT ON TABLE clients IS 'Multi-tenant clients with API key authentication fo
 COMMENT ON TABLE lead_memory IS 'Stores lead capture data from Avenir AI Solutions growth infrastructure';
 COMMENT ON TABLE api_key_logs IS 'Audit log for API key rotation events';
 
+-- Create the growth_brain table for AI-generated meta-insights
+CREATE TABLE IF NOT EXISTS growth_brain (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  client_id UUID REFERENCES clients(id) ON DELETE CASCADE,
+  analysis_period_start TIMESTAMPTZ NOT NULL,
+  analysis_period_end TIMESTAMPTZ NOT NULL,
+  total_leads INTEGER NOT NULL DEFAULT 0,
+  top_intents JSONB,
+  urgency_distribution JSONB,
+  urgency_trend_percentage NUMERIC(5,2),
+  tone_distribution JSONB,
+  tone_sentiment_score NUMERIC(5,2),
+  avg_confidence NUMERIC(5,2),
+  confidence_trajectory JSONB,
+  language_ratio JSONB,
+  engagement_score NUMERIC(5,2),
+  predictive_insights JSONB,
+  analyzed_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS growth_brain_client_id_idx ON growth_brain(client_id);
+CREATE INDEX IF NOT EXISTS growth_brain_analyzed_at_idx ON growth_brain(analyzed_at);
+CREATE INDEX IF NOT EXISTS growth_brain_period_idx ON growth_brain(analysis_period_start, analysis_period_end);
+
+-- Enable Row Level Security (RLS) for growth_brain table
+ALTER TABLE growth_brain ENABLE ROW LEVEL SECURITY;
+
+-- Service role has full access (admin + intelligence engine)
+CREATE POLICY "Service role full access to growth_brain" ON growth_brain
+  FOR ALL
+  TO service_role
+  USING (true)
+  WITH CHECK (true);
+
+COMMENT ON TABLE growth_brain IS 'AI-generated meta-insights and predictive analytics from lead intelligence patterns';
+

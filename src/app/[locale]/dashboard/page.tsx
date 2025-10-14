@@ -6,6 +6,7 @@ import { useTranslations, useLocale } from 'next-intl';
 import { supabase } from "../../../lib/supabase";
 import { translateLeadFields, clearTranslationCache } from "../../../lib/translate-fields";
 import type { LeadMemoryRecord } from "../../../lib/supabase";
+import PredictiveGrowthEngine from "../../../components/PredictiveGrowthEngine";
 
 type TranslatedLead = LeadMemoryRecord & {
   translated?: {
@@ -63,6 +64,40 @@ export default function Dashboard() {
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [authorized]);
+
+  // Re-translate all leads when locale changes
+  useEffect(() => {
+    if (!authorized || leads.length === 0) return;
+    
+    console.log(`[Dashboard] Locale changed to: ${locale} - re-translating all leads`);
+    
+    async function retranslate() {
+      setTranslating(true);
+      const translatedLeads = await Promise.all(
+        leads.map(async (lead: TranslatedLead) => {
+          // Force re-translation for new locale
+          const translated = await translateLeadFields({
+            id: lead.id,
+            ai_summary: lead.ai_summary,
+            intent: lead.intent,
+            tone: lead.tone,
+            urgency: lead.urgency,
+          }, locale);
+          
+          return {
+            ...lead,
+            translated,
+          } as TranslatedLead;
+        })
+      );
+      setLeads(translatedLeads);
+      calculateStats(translatedLeads);
+      setTranslating(false);
+    }
+    
+    retranslate();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [locale]);
 
   async function fetchLeads() {
     try {
@@ -363,11 +398,21 @@ export default function Dashboard() {
           </div>
         </motion.div>
 
+        {/* Predictive Growth Engine */}
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.6, delay: 0.5 }}
+          className="mb-8"
+        >
+          <PredictiveGrowthEngine locale={locale} clientId={null} />
+        </motion.div>
+
         {/* Leads Table */}
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          transition={{ duration: 0.6, delay: 0.4 }}
+          transition={{ duration: 0.6, delay: 0.6 }}
           className="space-y-3"
         >
           {filteredLeads.map((lead, idx) => (
