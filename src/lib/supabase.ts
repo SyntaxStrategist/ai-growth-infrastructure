@@ -80,48 +80,37 @@ export async function ensureLeadMemoryTableExists() {
       console.log('[Supabase] SQL execution response status:', response.status);
       console.log('[Supabase] Table created successfully ✅');
       
-      // Re-initialize Supabase client to refresh schema cache
-      console.log('[Supabase] Refreshing schema cache 🧠');
-      console.log('[Supabase] Re-initializing Supabase client...');
+      // Verify table is accessible with retry loop
+      console.log('[Supabase] Verifying table is registered in schema...');
+      const maxRetries = 5;
       
-      // Create a new client instance to force cache refresh
-      supabase = createSupabaseClient();
-      
-      // Wait for schema cache to propagate
-      console.log('[Supabase] Waiting for schema cache to update...');
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      
-      console.log('[Supabase] Schema cache reloaded ✅');
-      
-      // Mark as completed
-      tableCheckCompleted = true;
-      
-      // Verify with the new client instance
-      const verifyRetries = 3;
-      for (let i = 0; i < verifyRetries; i++) {
-        const { error: verifyError } = await supabase
+      for (let attempt = 0; attempt < maxRetries; attempt++) {
+        console.log(`[Supabase] Verification attempt ${attempt + 1}/${maxRetries}...`);
+        
+        const { data, error, status } = await supabase
           .from('lead_memory')
-          .select('id')
+          .select('*')
           .limit(1);
         
-        if (!verifyError) {
-          console.log('[Supabase] Table verification passed ✅');
+        // Success: table is accessible (200 status or no table-not-found error)
+        if (status === 200 || (!error) || (error && error.code !== '42P01')) {
+          console.log('[Supabase] Table confirmed in schema ✅');
+          console.log('[Supabase] Response status:', status);
+          tableCheckCompleted = true;
           return true;
-        } else if (verifyError.code === '42P01') {
-          if (i < verifyRetries - 1) {
-            console.log(`[Supabase] Table not found in cache yet, retrying (${i + 1}/${verifyRetries})...`);
+        }
+        
+        // Table not found in cache yet
+        if (error && error.code === '42P01') {
+          if (attempt < maxRetries - 1) {
+            console.log(`[Supabase] Table not in cache yet, retrying in 1.5s... (${attempt + 1}/${maxRetries})`);
             await new Promise(resolve => setTimeout(resolve, 1500));
-            // Re-initialize client again
-            supabase = createSupabaseClient();
           } else {
-            console.error('[Supabase] ⚠️ Table still not found after retries');
-            console.error('[Supabase] Error details:', verifyError.message);
+            console.error('[Supabase] ⚠️ Table not found in schema after', maxRetries, 'attempts');
+            console.error('[Supabase] Error code:', error.code);
+            console.error('[Supabase] Error message:', error.message);
             return false;
           }
-        } else {
-          // Other errors (like empty table or RLS) are OK - table exists
-          console.log('[Supabase] Table exists (query error is normal for empty/protected table) ✅');
-          return true;
         }
       }
       
