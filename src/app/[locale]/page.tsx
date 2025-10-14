@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import { useTranslations, useLocale } from 'next-intl';
+import { motion, useScroll, useTransform } from 'framer-motion';
 import { AvenirLogo } from "../../components/AvenirLogo";
 import { LanguageToggle } from "../../components/LanguageToggle";
 
@@ -24,7 +25,10 @@ export default function Home() {
   const [leadMessage, setLeadMessage] = useState("");
   const [isVisible, setIsVisible] = useState(false);
   const [isSubmittingLead, setIsSubmittingLead] = useState(false);
+  const [cursorPos, setCursorPos] = useState({ x: 0, y: 0 });
   const cardsRef = useRef<HTMLDivElement>(null);
+  const { scrollYProgress } = useScroll();
+  const logoGlow = useTransform(scrollYProgress, [0, 0.2], [0.5, 1]);
 
   useEffect(() => {
     setIsVisible(true);
@@ -45,7 +49,17 @@ export default function Home() {
       cards.forEach((card) => observer.observe(card));
     }
 
-    return () => observer.disconnect();
+    // Cursor trail effect
+    const handleMouseMove = (e: MouseEvent) => {
+      setCursorPos({ x: e.clientX, y: e.clientY });
+    };
+    
+    window.addEventListener('mousemove', handleMouseMove);
+
+    return () => {
+      observer.disconnect();
+      window.removeEventListener('mousemove', handleMouseMove);
+    };
   }, []);
 
   async function handleSend(e: React.FormEvent) {
@@ -86,35 +100,67 @@ export default function Home() {
   return (
     <div className="min-h-screen p-8 sm:p-20 flex items-start justify-center">
       <style jsx global>{`
-        @keyframes fadeInUp {
-          from {
-            opacity: 0;
-            transform: translateY(20px);
-          }
-          to {
-            opacity: 1;
-            transform: translateY(0);
-          }
-        }
-        
-        @keyframes fadeIn {
-          from { opacity: 0; }
-          to { opacity: 1; }
+        @keyframes pulse {
+          0%, 100% { opacity: 0.4; transform: scale(1); }
+          50% { opacity: 0.7; transform: scale(1.05); }
         }
 
-        .hero-animate {
-          animation: fadeIn 0.8s ease-out forwards;
+        @keyframes glowPulse {
+          0%, 100% { filter: blur(40px); opacity: 0.3; }
+          50% { filter: blur(50px); opacity: 0.5; }
         }
 
-        .hero-text-animate {
-          animation: fadeInUp 1s ease-out 0.2s forwards;
-          opacity: 0;
+        .logo-glow {
+          position: relative;
+        }
+
+        .logo-glow::before {
+          content: '';
+          position: absolute;
+          inset: -30px;
+          background: radial-gradient(circle, rgba(0, 191, 255, 0.25) 0%, rgba(139, 92, 246, 0.15) 50%, transparent 70%);
+          z-index: -1;
+          animation: glowPulse 4s ease-in-out infinite;
+        }
+
+        .cta-glow {
+          position: relative;
+          overflow: hidden;
+        }
+
+        .cta-glow::after {
+          content: '';
+          position: absolute;
+          top: 50%;
+          left: 50%;
+          width: 0;
+          height: 0;
+          border-radius: 50%;
+          background: radial-gradient(circle, rgba(0, 191, 255, 0.4), transparent);
+          transform: translate(-50%, -50%);
+          transition: width 0.6s ease, height 0.6s ease;
+          pointer-events: none;
+        }
+
+        .cta-glow:hover::after {
+          width: 300px;
+          height: 300px;
+        }
+
+        .section-divider {
+          height: 1px;
+          background: linear-gradient(90deg, transparent, rgba(0, 191, 255, 0.3), transparent);
+          filter: blur(0.5px);
+        }
+
+        .letter-spacing-wide {
+          letter-spacing: 0.05em;
         }
 
         .framework-card {
           opacity: 0;
           transform: translateY(30px);
-          transition: all 0.4s ease-out;
+          transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
         .framework-card.animate-in {
@@ -128,31 +174,14 @@ export default function Home() {
         .framework-card:nth-child(4).animate-in { transition-delay: 0.4s; }
 
         .card-hover {
-          transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+          transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+          cursor: pointer;
         }
 
         .card-hover:hover {
-          transform: translateY(-4px);
-          box-shadow: 0 0 20px rgba(0, 191, 255, 0.3);
-          border-color: rgba(0, 191, 255, 0.4);
-        }
-
-        .logo-glow {
-          position: relative;
-        }
-
-        .logo-glow::before {
-          content: '';
-          position: absolute;
-          inset: -20px;
-          background: radial-gradient(circle, rgba(0, 191, 255, 0.2) 0%, transparent 70%);
-          z-index: -1;
-          animation: pulse 3s ease-in-out infinite;
-        }
-
-        @keyframes pulse {
-          0%, 100% { opacity: 0.5; }
-          50% { opacity: 0.8; }
+          transform: translateY(-6px);
+          box-shadow: 0 0 30px rgba(0, 191, 255, 0.25), 0 0 60px rgba(139, 92, 246, 0.15);
+          border-color: rgba(0, 191, 255, 0.5);
         }
       `}</style>
       <main className="w-full max-w-3xl flex flex-col gap-10">
@@ -161,25 +190,59 @@ export default function Home() {
           <LanguageToggle />
         </div>
 
-        <section className="flex flex-col gap-6 text-center items-center">
-          <div className={`inline-flex items-center gap-2 rounded-full border border-black/10 dark:border-white/20 px-3 py-1 text-xs font-medium ${isVisible ? 'hero-animate' : 'opacity-0'}`}>
+        <section className="flex flex-col gap-8 text-center items-center">
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, ease: "easeOut" }}
+            className="inline-flex items-center gap-2 rounded-full border border-black/10 dark:border-white/20 px-3 py-1 text-xs font-medium"
+          >
             {t('hero.badge')}
-          </div>
-          <div className="flex flex-col items-center gap-4">
-            <div className={`logo-glow ${isVisible ? 'hero-animate' : 'opacity-0'}`}>
+          </motion.div>
+          
+          <div className="flex flex-col items-center gap-6">
+            <motion.div
+              className="logo-glow"
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.8, delay: 0.2, ease: "easeOut" }}
+              style={{ opacity: logoGlow }}
+            >
               <AvenirLogo className="h-14 w-14 sm:h-16 sm:w-16 max-w-[80px] sm:max-w-[120px]" />
-            </div>
-            <h1 className={`text-2xl sm:text-4xl font-bold tracking-tight text-center max-w-4xl leading-tight ${isVisible ? 'hero-text-animate' : 'opacity-0'}`}>
+            </motion.div>
+            
+            <motion.h1
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.8, delay: 0.4, ease: "easeOut" }}
+              className="text-2xl sm:text-4xl font-bold tracking-tighter text-center max-w-4xl leading-tight"
+            >
               {t('hero.title')}
-            </h1>
+            </motion.h1>
           </div>
-          <p className={`text-base sm:text-lg text-black/70 dark:text-white/70 max-w-3xl ${isVisible ? 'hero-text-animate' : 'opacity-0'}`} style={{ animationDelay: '0.4s' }}>
+          
+          <motion.p
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, delay: 0.6, ease: "easeOut" }}
+            className="text-base sm:text-lg text-black/60 dark:text-white/60 max-w-3xl font-light leading-relaxed"
+          >
             {t('hero.subtitle')}
-          </p>
+          </motion.p>
         </section>
 
+        <div className="section-divider my-4"></div>
+
         <section className="flex flex-col gap-6 mt-8">
-          <h2 className="text-2xl font-semibold text-center">{t('framework.title')}</h2>
+          <motion.h2
+            initial={{ opacity: 0 }}
+            whileInView={{ opacity: 1 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6 }}
+            className="text-2xl font-semibold text-center letter-spacing-wide"
+          >
+            {t('framework.title')}
+          </motion.h2>
           <div ref={cardsRef} className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="framework-card card-hover rounded-lg border border-black/10 dark:border-white/20 p-6 bg-gradient-to-br from-blue-50/5 to-purple-50/5">
               <h3 className="text-lg font-semibold mb-2">{t('framework.cards.acquisition.title')}</h3>
@@ -200,13 +263,23 @@ export default function Home() {
           </div>
         </section>
 
-        <section className="flex flex-col gap-4 text-center">
+        <div className="section-divider my-4"></div>
+
+        <motion.section
+          initial={{ opacity: 0 }}
+          whileInView={{ opacity: 1 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.8 }}
+          className="flex flex-col gap-4 text-center"
+        >
           <div className="max-w-4xl mx-auto">
-            <p className="text-lg sm:text-xl text-blue-400 dark:text-blue-300 font-medium leading-relaxed">
+            <p className="text-lg sm:text-xl text-blue-400 dark:text-blue-300 font-medium leading-relaxed tracking-wide">
               {t('positioning.tagline')}
             </p>
           </div>
-        </section>
+        </motion.section>
+
+        <div className="section-divider my-8"></div>
 
         <section className="flex flex-col gap-4">
           <h2 className="text-xl font-semibold">{t('chat.title')}</h2>
@@ -219,13 +292,13 @@ export default function Home() {
               onChange={(e) => setInput(e.target.value)}
               disabled={loading}
             />
-            <button
-              type="submit"
-              className="rounded-md px-4 py-2 bg-black text-white dark:bg-white dark:text-black disabled:opacity-50"
-              disabled={loading}
-            >
-              {loading ? t('chat.sending') : t('chat.send')}
-            </button>
+          <button
+            type="submit"
+            className="cta-glow rounded-md px-4 py-2 bg-black text-white dark:bg-white dark:text-black disabled:opacity-50 transition-all"
+            disabled={loading}
+          >
+            {loading ? t('chat.sending') : t('chat.send')}
+          </button>
           </form>
 
           {error && (
@@ -310,7 +383,7 @@ export default function Home() {
                 <button
                   type="submit"
                   disabled={isSubmittingLead}
-                  className="rounded-md px-4 py-2 bg-black text-white dark:bg-white dark:text-black disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                  className="cta-glow rounded-md px-4 py-2 bg-black text-white dark:bg-white dark:text-black disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 transition-all"
                 >
                   {isSubmittingLead && (
                     <svg className="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
@@ -333,6 +406,20 @@ export default function Home() {
             </div>
           )}
         </section>
+
+        <div className="section-divider my-12"></div>
+
+        <motion.footer
+          initial={{ opacity: 0 }}
+          whileInView={{ opacity: 1 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.8 }}
+          className="text-center py-8"
+        >
+          <p className="text-sm text-black/50 dark:text-white/50 font-light tracking-wide">
+            Avenir AI Solutions — Building intelligent infrastructures that think and grow.
+          </p>
+        </motion.footer>
       </main>
     </div>
   );
