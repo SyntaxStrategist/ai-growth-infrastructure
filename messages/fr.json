@@ -29,6 +29,19 @@
   "positioning": {
     "tagline": "Nous ne créons pas de chatbots — nous construisons des infrastructures qui apprennent de chaque interaction."
   },
+  "demo": {
+    "title": "Voyez comment fonctionne notre intelligence artificielle",
+    "subtitle": "Données de démonstration uniquement",
+    "fields": {
+      "name": "Nom",
+      "message": "Message",
+      "summary": "Résumé IA",
+      "intent": "Intention",
+      "tone": "Ton",
+      "urgency": "Urgence",
+      "confidence": "Confiance"
+    }
+  },
   "chat": {
     "title": "Essayez l'assistant IA",
     "placeholder": "Tapez un message...",

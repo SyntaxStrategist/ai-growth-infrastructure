@@ -29,6 +29,19 @@
   "positioning": {
     "tagline": "We don't build chatbots — we build infrastructures that learn from every interaction."
   },
+  "demo": {
+    "title": "See How Our AI Intelligence Works",
+    "subtitle": "Demo data only",
+    "fields": {
+      "name": "Name",
+      "message": "Message",
+      "summary": "AI Summary",
+      "intent": "Intent",
+      "tone": "Tone",
+      "urgency": "Urgency",
+      "confidence": "Confidence"
+    }
+  },
   "chat": {
     "title": "Try the AI Assistant",
     "placeholder": "Type a message...",

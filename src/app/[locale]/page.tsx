@@ -269,6 +269,105 @@ export default function Home() {
           initial={{ opacity: 0 }}
           whileInView={{ opacity: 1 }}
           viewport={{ once: true }}
+          transition={{ duration: 0.6 }}
+          className="flex flex-col gap-6"
+        >
+          <div className="flex items-center justify-center gap-2">
+            <h2 className="text-2xl font-semibold text-center letter-spacing-wide">{t('demo.title')}</h2>
+            <span className="text-xs px-2 py-1 rounded-full bg-blue-500/10 text-blue-400 border border-blue-400/20">
+              {t('demo.subtitle')}
+            </span>
+          </div>
+
+          <div className="grid grid-cols-1 gap-4">
+            {[
+              {
+                name: "Sarah Chen",
+                message: "We need AI automation for our customer support team",
+                summary: "Enterprise B2B inquiry for AI integration",
+                intent: "B2B partnership for AI scaling",
+                tone: "Professional and direct",
+                urgency: "High",
+                confidence: 0.92
+              },
+              {
+                name: "Marc Dubois",
+                message: "Intéressé par vos solutions d'IA pour e-commerce",
+                summary: "E-commerce AI solution interest",
+                intent: "E-commerce AI implementation",
+                tone: "Curious and engaged",
+                urgency: "Medium",
+                confidence: 0.85
+              },
+              {
+                name: "Alex Rivera",
+                message: "Looking to automate lead qualification for our sales pipeline",
+                summary: "Sales automation and lead scoring needs",
+                intent: "Sales pipeline optimization",
+                tone: "Strategic and analytical",
+                urgency: "High",
+                confidence: 0.89
+              }
+            ].map((demo, idx) => (
+              <motion.div
+                key={idx}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.5, delay: idx * 0.15 }}
+                className="rounded-lg border border-black/10 dark:border-white/20 p-5 bg-gradient-to-br from-blue-50/5 to-purple-50/5 hover:border-blue-400/30 transition-all"
+              >
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
+                  <div>
+                    <span className="text-black/50 dark:text-white/50 text-xs">{t('demo.fields.name')}</span>
+                    <p className="font-medium">{demo.name}</p>
+                  </div>
+                  <div>
+                    <span className="text-black/50 dark:text-white/50 text-xs">{t('demo.fields.intent')}</span>
+                    <p className="font-medium text-blue-400">{demo.intent}</p>
+                  </div>
+                  <div className="sm:col-span-2">
+                    <span className="text-black/50 dark:text-white/50 text-xs">{t('demo.fields.message')}</span>
+                    <p className="text-black/70 dark:text-white/70 italic">"{demo.message}"</p>
+                  </div>
+                  <div className="sm:col-span-2">
+                    <span className="text-black/50 dark:text-white/50 text-xs">{t('demo.fields.summary')}</span>
+                    <p className="text-black/80 dark:text-white/80">{demo.summary}</p>
+                  </div>
+                  <div>
+                    <span className="text-black/50 dark:text-white/50 text-xs">{t('demo.fields.tone')}</span>
+                    <p>{demo.tone}</p>
+                  </div>
+                  <div>
+                    <span className="text-black/50 dark:text-white/50 text-xs">{t('demo.fields.urgency')}</span>
+                    <p className={demo.urgency === 'High' ? 'text-red-400 font-semibold' : demo.urgency === 'Medium' ? 'text-yellow-400' : 'text-green-400'}>
+                      {demo.urgency}
+                    </p>
+                  </div>
+                  <div className="sm:col-span-2">
+                    <span className="text-black/50 dark:text-white/50 text-xs">{t('demo.fields.confidence')}</span>
+                    <div className="flex items-center gap-2">
+                      <div className="flex-1 h-2 bg-black/10 dark:bg-white/10 rounded-full overflow-hidden">
+                        <div 
+                          className="h-full bg-gradient-to-r from-blue-500 to-purple-500 rounded-full transition-all"
+                          style={{ width: `${demo.confidence * 100}%` }}
+                        ></div>
+                      </div>
+                      <span className="text-xs font-mono">{(demo.confidence * 100).toFixed(0)}%</span>
+                    </div>
+                  </div>
+                </div>
+              </motion.div>
+            ))}
+          </div>
+        </motion.section>
+
+        <div className="section-divider my-4"></div>
+
+        <motion.section
+          initial={{ opacity: 0 }}
+          whileInView={{ opacity: 1 }}
+          viewport={{ once: true }}
           transition={{ duration: 0.8 }}
           className="flex flex-col gap-4 text-center"
         >
