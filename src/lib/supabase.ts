@@ -155,42 +155,68 @@ export async function saveLeadToSupabase(data: {
       timestamp: data.timestamp,
     };
     
-    console.log('[Supabase] Inserting record with ID:', id);
+    console.log('[Supabase] Attempting insert via REST API with ID:', id);
     
-    const { data: insertedData, error } = await supabase
+    // Try REST API insert first with Prefer header for better cache handling
+    const { data: insertedData, error, status } = await supabase
       .from('lead_memory')
       .insert(record)
       .select()
       .single();
     
-    if (error) {
+    if (error && (error.code === '42P01' || error.message.includes('schema cache') || error.message.includes('does not exist'))) {
+      console.warn('[Supabase] ⚠️ REST API insert failed (schema cache issue)');
+      console.log('[Supabase] Falling back to direct SQL INSERT...');
+      
+      // Fallback: Use direct SQL INSERT bypassing REST cache
+      const escapeSql = (str: string) => str.replace(/'/g, "''");
+      const insertSQL = `
+        INSERT INTO public.lead_memory (id, name, email, message, ai_summary, language, timestamp)
+        VALUES (
+          '${escapeSql(id)}',
+          '${escapeSql(data.name)}',
+          '${escapeSql(data.email)}',
+          '${escapeSql(data.message)}',
+          ${data.aiSummary ? `'${escapeSql(data.aiSummary)}'` : 'NULL'},
+          '${escapeSql(data.language)}',
+          '${data.timestamp}'::timestamptz
+        )
+        ON CONFLICT (id) DO NOTHING
+        RETURNING *;
+      `;
+      
+      console.log('[Supabase] Executing direct SQL INSERT...');
+      
+      try {
+        const sqlResponse = await fetch(`${supabaseUrl}/rest/v1/`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'apikey': supabaseKey,
+            'Authorization': `Bearer ${supabaseKey}`,
+            'Prefer': 'return=representation',
+          },
+          body: JSON.stringify({ query: insertSQL }),
+        });
+        
+        console.log('[Supabase] Direct SQL INSERT response:', sqlResponse.status);
+        
+        if (sqlResponse.ok || sqlResponse.status === 200 || sqlResponse.status === 201) {
+          console.log('[Supabase] ✅ Lead saved via direct SQL');
+          return { id, ...record };
+        } else {
+          const errorText = await sqlResponse.text();
+          console.error('[Supabase] Direct SQL INSERT failed:', errorText);
+          throw new Error(`SQL INSERT failed: ${errorText}`);
+        }
+      } catch (sqlErr) {
+        console.error('[Supabase] ❌ Direct SQL fallback also failed:', sqlErr);
+        throw sqlErr;
+      }
+    } else if (error) {
       console.error('[Supabase] ❌ Insert failed:', error.message);
       console.error('[Supabase] Error code:', error.code);
       console.error('[Supabase] Error details:', error.details);
-      console.error('[Supabase] Error hint:', error.hint);
-      
-      // If table still doesn't exist after ensure, try one more time
-      if (error.code === '42P01' || error.message.includes('does not exist')) {
-        console.log('[Supabase] Retrying table creation and insert...');
-        tableCheckCompleted = false; // Reset flag
-        await ensureLeadMemoryTableExists();
-        
-        // Retry insert
-        const { data: retryData, error: retryError } = await supabase
-          .from('lead_memory')
-          .insert(record)
-          .select()
-          .single();
-        
-        if (retryError) {
-          console.error('[Supabase] ❌ Retry insert also failed:', retryError.message);
-          throw retryError;
-        }
-        
-        console.log('[Supabase] ✅ Lead saved after retry');
-        return retryData;
-      }
-      
       throw error;
     }
     
