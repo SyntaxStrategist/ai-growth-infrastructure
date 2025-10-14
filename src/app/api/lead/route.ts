@@ -4,7 +4,7 @@ import { NextRequest } from "next/server";
 import { google } from "googleapis";
 import OpenAI from "openai";
 import { getAuthorizedGmail, buildHtmlEmail, getGmailProfile } from "../../../lib/gmail";
-import { prisma, ensureLeadMemoryTable } from "../../../lib/prisma";
+import { saveLeadToSupabase } from "../../../lib/supabase";
 
 type LeadPayload = {
 	name?: string;
@@ -190,42 +190,28 @@ export async function POST(req: NextRequest) {
 				console.error("gmail_send_error", mailErr);
 			}
 
-			// Store lead in growth memory database
+			// Store lead in growth memory database via Supabase REST API
 			try {
-				console.log('[Lead API] Starting database save operation...');
+				console.log('[Lead API] Starting Supabase save operation...');
 				console.log('[Lead API] Lead data:', { name, email, locale, hasAiSummary: !!aiSummary });
 				
-				// Ensure table exists at runtime (for Vercel/Supabase compatibility)
-				const tableReady = await ensureLeadMemoryTable();
-				
-				if (!tableReady) {
-					console.warn('[Lead API] ⚠️ Table creation failed, but continuing with insert attempt...');
-				}
-				
-				const leadRecord = await prisma.leadMemory.create({
-					data: {
-						name,
-						email,
-						message,
-						aiSummary: aiSummary || null,
-						language: locale,
-						timestamp: new Date(timestamp),
-					},
+				const savedRecord = await saveLeadToSupabase({
+					name,
+					email,
+					message,
+					aiSummary: aiSummary || null,
+					language: locale,
+					timestamp,
 				});
 				
-				console.log('[Lead API] ✅ Lead successfully written to database');
-				console.log('[Lead API] Record ID:', leadRecord.id);
-				console.log('[Lead API] Record timestamp:', leadRecord.timestamp);
+				console.log('[Lead API] ✅ Lead successfully written to Supabase');
+				console.log('[Lead API] Record ID:', savedRecord?.id);
 			} catch (dbErr) {
 				// non-fatal: log for debugging but don't break the flow
-				console.warn('[Lead API] ⚠️ Database save failed - lead saved to Google Sheets only');
+				console.warn('[Lead API] ⚠️ Supabase save failed - lead saved to Google Sheets only');
 				console.error('[Lead API] Database error:', dbErr);
 				console.error('[Lead API] Error type:', dbErr instanceof Error ? dbErr.constructor.name : typeof dbErr);
 				console.error('[Lead API] Error message:', dbErr instanceof Error ? dbErr.message : 'Unknown error');
-				
-				if (dbErr instanceof Error && dbErr.stack) {
-					console.error('[Lead API] Stack trace:', dbErr.stack.substring(0, 500));
-				}
 			}
 		} catch (sheetsError) {
 			const msg = sheetsError instanceof Error ? sheetsError.message : "Failed to append to Google Sheet";

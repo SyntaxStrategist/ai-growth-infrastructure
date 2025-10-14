@@ -1,37 +1,17 @@
 import { NextRequest } from "next/server";
-import { prisma, ensureLeadMemoryTable } from "../../../lib/prisma";
+import { getRecentLeads } from "../../../lib/supabase";
 
 export async function GET(req: NextRequest) {
   try {
     // Optional: Add authentication check here in production
     // For now, we'll return leads with basic security
     
-    // Ensure table exists at runtime
-    await ensureLeadMemoryTable();
-    
     const url = new URL(req.url);
     const limit = parseInt(url.searchParams.get('limit') || '50', 10);
     const offset = parseInt(url.searchParams.get('offset') || '0', 10);
 
-    // Fetch recent leads from the database
-    const leads = await prisma.leadMemory.findMany({
-      take: Math.min(limit, 100), // Max 100 leads per request
-      skip: offset,
-      orderBy: {
-        timestamp: 'desc',
-      },
-      select: {
-        id: true,
-        name: true,
-        email: true,
-        message: true,
-        aiSummary: true,
-        language: true,
-        timestamp: true,
-      },
-    });
-
-    const total = await prisma.leadMemory.count();
+    // Fetch recent leads from Supabase
+    const { data: leads, total } = await getRecentLeads(Math.min(limit, 100), offset);
 
     return new Response(
       JSON.stringify({
