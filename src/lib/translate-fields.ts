@@ -5,6 +5,7 @@ const translationCache = new Map<string, any>();
 
 export async function translateLeadFields(
   fields: {
+    id: string;
     ai_summary?: string | null;
     intent?: string | null;
     tone?: string | null;
@@ -16,6 +17,7 @@ export async function translateLeadFields(
   intent: string;
   tone: string;
   urgency: string;
+  locale: string;
 }> {
   // If fields are empty, return N/A
   if (!fields.ai_summary && !fields.intent && !fields.tone && !fields.urgency) {
@@ -24,18 +26,18 @@ export async function translateLeadFields(
       intent: 'N/A',
       tone: 'N/A',
       urgency: 'N/A',
+      locale: targetLocale,
     };
   }
 
-  // Check cache (use first 100 chars of summary for key to avoid huge keys)
-  const summaryKey = (fields.ai_summary || '').substring(0, 100);
-  const cacheKey = `${targetLocale}_${summaryKey}_${fields.intent}_${fields.tone}_${fields.urgency}`;
+  // Check cache using lead ID and locale
+  const cacheKey = `${fields.id}_${targetLocale}`;
   if (translationCache.has(cacheKey)) {
-    console.log('[Translation] Cache hit for locale:', targetLocale);
+    console.log(`[Translation] Using cached translation for ${fields.id} (${targetLocale})`);
     return translationCache.get(cacheKey);
   }
 
-  console.log('[Translation] Translating to:', targetLocale);
+  console.log(`[Translation] Forcing translation for lead ${fields.id} to ${targetLocale}`);
 
   try {
     if (!process.env.OPENAI_API_KEY) {
@@ -98,11 +100,12 @@ Original fields:
       intent: translated.intent || fields.intent || 'N/A',
       tone: translated.tone || fields.tone || 'N/A',
       urgency: translated.urgency || fields.urgency || 'N/A',
+      locale: targetLocale,
     };
 
     // Cache the result
     translationCache.set(cacheKey, result);
-    console.log('[Translation] Translation complete and cached');
+    console.log(`[Translation] Translation complete and cached for ${fields.id} (${targetLocale})`);
 
     return result;
   } catch (error) {
@@ -113,7 +116,14 @@ Original fields:
       intent: fields.intent || 'N/A',
       tone: fields.tone || 'N/A',
       urgency: fields.urgency || 'N/A',
+      locale: targetLocale,
     };
   }
+}
+
+// Export function to clear cache (useful for debugging)
+export function clearTranslationCache() {
+  translationCache.clear();
+  console.log('[Translation] Cache cleared');
 }
 

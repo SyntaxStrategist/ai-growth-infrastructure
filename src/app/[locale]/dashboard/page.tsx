@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { useTranslations, useLocale } from 'next-intl';
 import { supabase } from "../../../lib/supabase";
-import { translateLeadFields } from "../../../lib/translate-fields";
+import { translateLeadFields, clearTranslationCache } from "../../../lib/translate-fields";
 import type { LeadMemoryRecord } from "../../../lib/supabase";
 
 type TranslatedLead = LeadMemoryRecord & {
@@ -13,6 +13,7 @@ type TranslatedLead = LeadMemoryRecord & {
     intent: string;
     tone: string;
     urgency: string;
+    locale: string;
   };
 };
 
@@ -74,7 +75,9 @@ export default function Dashboard() {
         setTranslating(true);
         const translatedLeads = await Promise.all(
           leadsData.map(async (lead: LeadMemoryRecord) => {
+            // Always translate to match current locale (uses cache internally)
             const translated = await translateLeadFields({
+              id: lead.id,
               ai_summary: lead.ai_summary,
               intent: lead.intent,
               tone: lead.tone,
@@ -84,7 +87,7 @@ export default function Dashboard() {
             return {
               ...lead,
               translated,
-            };
+            } as TranslatedLead;
           })
         );
         setLeads(translatedLeads);
@@ -262,6 +265,15 @@ export default function Dashboard() {
                 <span className="text-xs text-green-400 font-medium">{t('dashboard.liveUpdates')}</span>
               </motion.div>
             )}
+            <button
+              onClick={() => {
+                clearTranslationCache();
+                fetchLeads();
+              }}
+              className="px-4 py-2 rounded-lg bg-purple-500/20 border border-purple-500/40 text-purple-400 hover:bg-purple-500/30 transition-all duration-300 text-sm font-medium"
+            >
+              {locale === 'fr' ? '🔄 Actualiser traductions' : '🔄 Refresh Translations'}
+            </button>
             <button
               onClick={() => {
                 localStorage.removeItem('admin_auth');
