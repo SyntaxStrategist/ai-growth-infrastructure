@@ -79,9 +79,9 @@ export async function ensureLeadMemoryTableExists() {
       
       try {
         // Try to call the reload schema function if it exists
-        await supabase.rpc('reload_schema').catch(() => null);
+        await supabase.rpc('reload_schema');
       } catch {
-        // Ignore if function doesn't exist
+        // Ignore if function doesn't exist - this is expected
       }
       
       // Wait for schema cache to refresh (Supabase needs time to update)
