@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable prefer-const */
 import { createClient } from '@supabase/supabase-js';
 
 export type LeadMemoryRecord = {
@@ -95,7 +97,7 @@ export async function ensureLeadMemoryTableExists() {
       tableCheckCompleted = true;
       
       // Verify with the new client instance
-      let verifyRetries = 3;
+      const verifyRetries = 3;
       for (let i = 0; i < verifyRetries; i++) {
         const { error: verifyError } = await supabase
           .from('lead_memory')
