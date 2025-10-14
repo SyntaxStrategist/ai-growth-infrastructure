@@ -169,7 +169,7 @@ export default function Home() {
             <div className={`logo-glow ${isVisible ? 'hero-animate' : 'opacity-0'}`}>
               <AvenirLogo className="h-14 w-14 sm:h-16 sm:w-16 max-w-[80px] sm:max-w-[120px]" />
             </div>
-            <h1 className={`text-3xl sm:text-5xl font-semibold tracking-tight text-center ${isVisible ? 'hero-text-animate' : 'opacity-0'}`}>
+            <h1 className={`text-2xl sm:text-4xl font-bold tracking-tight text-center max-w-4xl leading-tight ${isVisible ? 'hero-text-animate' : 'opacity-0'}`}>
               {t('hero.title')}
             </h1>
           </div>

@@ -1,8 +1,8 @@
 {
   "hero": {
     "badge": "Avenir AI Solutions",
-    "title": "We build AI growth infrastructures that think, respond, and scale your business.",
-    "subtitle": "From lead capture to conversion, Avenir AI Solutions designs intelligent systems that automate growth, eliminate bottlenecks, and future-proof your operations.",
+    "title": "We build AI growth infrastructures that study, qualify, and act — not just chat.",
+    "subtitle": "From lead to loyalty, our systems analyze intent, tone, and urgency in real time — turning every conversation into intelligence and every interaction into growth.",
     "button": "Talk to the AI Assistant"
   },
   "framework": {
@@ -10,24 +10,24 @@
     "cards": {
       "acquisition": {
         "title": "1️⃣ Acquisition Intelligence",
-        "description": "AI-powered lead capture and intent detection. Every visitor becomes a qualified opportunity."
+        "description": "Detect and qualify every visitor automatically."
       },
       "conversion": {
         "title": "2️⃣ Conversion Intelligence", 
-        "description": "Adaptive follow-ups and multilingual automations that turn conversations into clients."
+        "description": "Turn leads into clients with adaptive follow-ups."
       },
       "retention": {
         "title": "3️⃣ Retention Intelligence",
-        "description": "AI-driven client nurturing and engagement systems that strengthen loyalty automatically."
+        "description": "Strengthen loyalty with AI-driven engagement."
       },
       "operational": {
         "title": "4️⃣ Operational Intelligence",
-        "description": "Back-end automations, analytics, and internal AI agents that keep your team focused on growth."
+        "description": "Automate back-end workflows so teams stay focused on growth."
       }
     }
   },
   "positioning": {
-    "tagline": "We don't build chatbots — we build infrastructures that turn every lead into a response, every response into a sale, and every sale into a loyal client."
+    "tagline": "We don't build chatbots — we build infrastructures that learn from every interaction."
   },
   "chat": {
     "title": "Try the AI Assistant",

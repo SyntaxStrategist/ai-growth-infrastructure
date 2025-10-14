@@ -1,8 +1,8 @@
 {
   "hero": {
     "badge": "Avenir AI Solutions",
-    "title": "Nous concevons des infrastructures de croissance alimentées par l'IA.",
-    "subtitle": "De la capture de leads à la conversion, Avenir AI Solutions crée des systèmes intelligents qui automatisent la croissance, éliminent les goulots d'étranglement et préparent votre entreprise pour l'avenir.",
+    "title": "Nous construisons des infrastructures de croissance IA qui étudient, qualifient et agissent — pas seulement discuter.",
+    "subtitle": "De la prise de contact à la fidélisation, nos systèmes analysent l'intention, le ton et l'urgence en temps réel — transformant chaque échange en intelligence et chaque interaction en croissance.",
     "button": "Parler à l'assistant IA"
   },
   "framework": {
@@ -10,24 +10,24 @@
     "cards": {
       "acquisition": {
         "title": "1️⃣ Intelligence d'acquisition",
-        "description": "Capture de leads alimentée par l'IA et détection d'intention. Chaque visiteur devient une opportunité qualifiée."
+        "description": "Détectez et qualifiez chaque visiteur automatiquement."
       },
       "conversion": {
         "title": "2️⃣ Intelligence de conversion",
-        "description": "Suivis adaptatifs et automatisations multilingues qui transforment les conversations en clients."
+        "description": "Transformez les leads en clients avec des suivis adaptatifs."
       },
       "retention": {
         "title": "3️⃣ Intelligence de rétention",
-        "description": "Systèmes de fidélisation et d'engagement alimentés par l'IA qui renforcent automatiquement la loyauté."
+        "description": "Renforcez la loyauté avec un engagement piloté par l'IA."
       },
       "operational": {
         "title": "4️⃣ Intelligence opérationnelle",
-        "description": "Automatisations backend, analyses et agents IA internes qui maintiennent votre équipe concentrée sur la croissance."
+        "description": "Automatisez les flux de travail backend pour que les équipes restent concentrées sur la croissance."
       }
     }
   },
   "positioning": {
-    "tagline": "Nous ne créons pas de simples chatbots — nous concevons des infrastructures qui transforment chaque prospect en réponse, chaque réponse en vente et chaque vente en client fidèle."
+    "tagline": "Nous ne créons pas de chatbots — nous construisons des infrastructures qui apprennent de chaque interaction."
   },
   "chat": {
     "title": "Essayez l'assistant IA",
