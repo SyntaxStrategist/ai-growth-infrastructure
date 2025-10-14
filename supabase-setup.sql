@@ -12,7 +12,7 @@ execute query;
 end;
 $$;
 
--- Create the lead_memory table
+-- Create the lead_memory table with AI enrichment fields
 CREATE TABLE IF NOT EXISTS lead_memory (
   id TEXT PRIMARY KEY,
   name TEXT NOT NULL,
@@ -20,11 +20,17 @@ CREATE TABLE IF NOT EXISTS lead_memory (
   message TEXT NOT NULL,
   ai_summary TEXT,
   language TEXT NOT NULL DEFAULT 'en',
-  timestamp TIMESTAMPTZ NOT NULL DEFAULT NOW()
+  timestamp TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  intent TEXT,
+  tone TEXT,
+  urgency TEXT,
+  confidence_score NUMERIC(5,2)
 );
 
 CREATE INDEX IF NOT EXISTS lead_memory_timestamp_idx ON lead_memory(timestamp);
 CREATE INDEX IF NOT EXISTS lead_memory_email_idx ON lead_memory(email);
+CREATE INDEX IF NOT EXISTS lead_memory_urgency_idx ON lead_memory(urgency);
+CREATE INDEX IF NOT EXISTS lead_memory_confidence_idx ON lead_memory(confidence_score);
 
 -- Enable Row Level Security (RLS)
 ALTER TABLE lead_memory ENABLE ROW LEVEL SECURITY;

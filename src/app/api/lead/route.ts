@@ -4,7 +4,8 @@ import { NextRequest } from "next/server";
 import { google } from "googleapis";
 import OpenAI from "openai";
 import { getAuthorizedGmail, buildHtmlEmail, getGmailProfile } from "../../../lib/gmail";
-import { saveLeadToSupabase } from "../../../lib/supabase";
+import { saveLeadToSupabase, enrichLeadInDatabase } from "../../../lib/supabase";
+import { enrichLeadWithAI } from "../../../lib/ai-enrichment";
 
 type LeadPayload = {
 	name?: string;
@@ -191,10 +192,8 @@ export async function POST(req: NextRequest) {
 			}
 
 			// Store lead in growth memory database via Supabase REST API
+			let leadId: string | undefined;
 			try {
-				console.log('[Lead API] Starting Supabase save operation...');
-				console.log('[Lead API] Lead data:', { name, email, locale, hasAiSummary: !!aiSummary });
-				
 				const savedRecord = await saveLeadToSupabase({
 					name,
 					email,
@@ -204,14 +203,41 @@ export async function POST(req: NextRequest) {
 					timestamp,
 				});
 				
-				console.log('[Lead API] ✅ Lead successfully written to Supabase');
-				console.log('[Lead API] Record ID:', savedRecord?.id);
+				leadId = savedRecord?.id;
+				console.log('[Lead API] Lead saved to database');
 			} catch (dbErr) {
 				// non-fatal: log for debugging but don't break the flow
-				console.warn('[Lead API] ⚠️ Supabase save failed - lead saved to Google Sheets only');
-				console.error('[Lead API] Database error:', dbErr);
-				console.error('[Lead API] Error type:', dbErr instanceof Error ? dbErr.constructor.name : typeof dbErr);
-				console.error('[Lead API] Error message:', dbErr instanceof Error ? dbErr.message : 'Unknown error');
+				console.warn('[Lead API] Database save failed');
+			}
+
+			// AI Intelligence Layer: Enrich lead with intent, tone, urgency
+			if (leadId && aiSummary) {
+				try {
+					console.log('[AI Intelligence] Analyzing lead...');
+					
+					const enrichment = await enrichLeadWithAI({
+						message,
+						aiSummary,
+						language: locale,
+					});
+					
+					await enrichLeadInDatabase({
+						id: leadId,
+						intent: enrichment.intent,
+						tone: enrichment.tone,
+						urgency: enrichment.urgency,
+						confidence_score: enrichment.confidence_score,
+					});
+					
+					console.log('[AI Intelligence] Lead enriched:', {
+						intent: enrichment.intent,
+						urgency: enrichment.urgency,
+						confidence: enrichment.confidence_score,
+					});
+				} catch (enrichErr) {
+					// non-fatal
+					console.warn('[AI Intelligence] Enrichment failed');
+				}
 			}
 		} catch (sheetsError) {
 			const msg = sheetsError instanceof Error ? sheetsError.message : "Failed to append to Google Sheet";

@@ -10,6 +10,10 @@ export type LeadMemoryRecord = {
   ai_summary: string | null;
   language: string;
   timestamp: string;
+  intent?: string | null;
+  tone?: string | null;
+  urgency?: string | null;
+  confidence_score?: number | null;
 };
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL || '';
@@ -47,11 +51,17 @@ export async function ensureLeadMemoryTableExists() {
         message TEXT NOT NULL,
         ai_summary TEXT,
         language TEXT NOT NULL DEFAULT 'en',
-        timestamp TIMESTAMPTZ NOT NULL DEFAULT NOW()
+        timestamp TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+        intent TEXT,
+        tone TEXT,
+        urgency TEXT,
+        confidence_score NUMERIC(5,2)
       );
       
       CREATE INDEX IF NOT EXISTS lead_memory_timestamp_idx ON public.lead_memory(timestamp);
       CREATE INDEX IF NOT EXISTS lead_memory_email_idx ON public.lead_memory(email);
+      CREATE INDEX IF NOT EXISTS lead_memory_urgency_idx ON public.lead_memory(urgency);
+      CREATE INDEX IF NOT EXISTS lead_memory_confidence_idx ON public.lead_memory(confidence_score);
     `;
     
     try {
@@ -178,6 +188,38 @@ export async function saveLeadToSupabase(data: {
     return insertedData;
   } catch (err) {
     console.error('[Supabase] Insert failed:', err instanceof Error ? err.message : err);
+    throw err;
+  }
+}
+
+export async function enrichLeadInDatabase(params: {
+  id: string;
+  intent: string;
+  tone: string;
+  urgency: string;
+  confidence_score: number;
+}) {
+  try {
+    const { data, error } = await supabase
+      .from('lead_memory')
+      .update({
+        intent: params.intent,
+        tone: params.tone,
+        urgency: params.urgency,
+        confidence_score: params.confidence_score,
+      })
+      .eq('id', params.id)
+      .select()
+      .single();
+    
+    if (error) {
+      throw error;
+    }
+    
+    console.log('[Supabase] Lead enriched successfully');
+    return data;
+  } catch (err) {
+    console.error('[Supabase] Enrichment update failed:', err instanceof Error ? err.message : err);
     throw err;
   }
 }
