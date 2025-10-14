@@ -17,12 +17,16 @@ if (!supabaseUrl || !supabaseKey) {
   console.warn('[Supabase] Missing SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY - database features disabled');
 }
 
-export const supabase = createClient(supabaseUrl, supabaseKey, {
-  auth: {
-    persistSession: false,
-    autoRefreshToken: false,
-  },
-});
+function createSupabaseClient() {
+  return createClient(supabaseUrl, supabaseKey, {
+    auth: {
+      persistSession: false,
+      autoRefreshToken: false,
+    },
+  });
+}
+
+export let supabase = createSupabaseClient();
 
 let tableCheckCompleted = false;
 
@@ -74,17 +78,14 @@ export async function ensureLeadMemoryTableExists() {
       console.log('[Supabase] SQL execution response status:', response.status);
       console.log('[Supabase] Table created successfully ✅');
       
-      // Refresh schema cache after table creation
+      // Re-initialize Supabase client to refresh schema cache
       console.log('[Supabase] Refreshing schema cache 🧠');
+      console.log('[Supabase] Re-initializing Supabase client...');
       
-      try {
-        // Try to call the reload schema function if it exists
-        await supabase.rpc('reload_schema');
-      } catch {
-        // Ignore if function doesn't exist - this is expected
-      }
+      // Create a new client instance to force cache refresh
+      supabase = createSupabaseClient();
       
-      // Wait for schema cache to refresh (Supabase needs time to update)
+      // Wait for schema cache to propagate
       console.log('[Supabase] Waiting for schema cache to update...');
       await new Promise(resolve => setTimeout(resolve, 2000));
       
@@ -93,25 +94,36 @@ export async function ensureLeadMemoryTableExists() {
       // Mark as completed
       tableCheckCompleted = true;
       
-      // Verify by trying a simple query
-      const { error: verifyError } = await supabase
-        .from('lead_memory')
-        .select('id')
-        .limit(1);
-      
-      if (!verifyError) {
-        console.log('[Supabase] Table verification passed ✅');
-        return true;
-      } else if (verifyError.code === '42P01') {
-        console.error('[Supabase] ⚠️ Table still does not exist after creation and cache refresh');
-        console.error('[Supabase] Error details:', verifyError.message);
-        console.error('[Supabase] Please create the table manually using supabase-setup.sql');
-        return false;
-      } else {
-        // Other errors (like empty table or RLS) are OK - table exists
-        console.log('[Supabase] Table exists (query error is normal for empty/protected table) ✅');
-        return true;
+      // Verify with the new client instance
+      let verifyRetries = 3;
+      for (let i = 0; i < verifyRetries; i++) {
+        const { error: verifyError } = await supabase
+          .from('lead_memory')
+          .select('id')
+          .limit(1);
+        
+        if (!verifyError) {
+          console.log('[Supabase] Table verification passed ✅');
+          return true;
+        } else if (verifyError.code === '42P01') {
+          if (i < verifyRetries - 1) {
+            console.log(`[Supabase] Table not found in cache yet, retrying (${i + 1}/${verifyRetries})...`);
+            await new Promise(resolve => setTimeout(resolve, 1500));
+            // Re-initialize client again
+            supabase = createSupabaseClient();
+          } else {
+            console.error('[Supabase] ⚠️ Table still not found after retries');
+            console.error('[Supabase] Error details:', verifyError.message);
+            return false;
+          }
+        } else {
+          // Other errors (like empty table or RLS) are OK - table exists
+          console.log('[Supabase] Table exists (query error is normal for empty/protected table) ✅');
+          return true;
+        }
       }
+      
+      return false;
     } catch (fetchErr) {
       console.error('[Supabase] ❌ Failed to execute SQL via endpoint:', fetchErr);
       tableCheckCompleted = true; // Mark as attempted
