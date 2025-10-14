@@ -39,8 +39,6 @@ export async function ensureLeadMemoryTableExists() {
   }
 
   try {
-    console.log('[Supabase] Running direct SQL CREATE command...');
-    
     const createTableSQL = `
       CREATE TABLE IF NOT EXISTS public.lead_memory (
         id TEXT PRIMARY KEY,
@@ -56,14 +54,11 @@ export async function ensureLeadMemoryTableExists() {
       CREATE INDEX IF NOT EXISTS lead_memory_email_idx ON public.lead_memory(email);
     `;
     
-    console.log('[Supabase] Executing CREATE TABLE via RPC...');
-    console.log('[Supabase] SQL:', createTableSQL.substring(0, 100) + '...');
-    
     try {
       // Call exec_sql RPC function to create the table
       const sqlEndpoint = `${supabaseUrl}/rest/v1/rpc/exec_sql`;
       
-      const response = await fetch(sqlEndpoint, {
+      await fetch(sqlEndpoint, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -75,51 +70,32 @@ export async function ensureLeadMemoryTableExists() {
         }),
       });
       
-      console.log('[Supabase] SQL execution response status:', response.status);
-      console.log('[Supabase] Table created successfully ✅');
-      
-      // Verify table is accessible with retry loop
-      console.log('[Supabase] Verifying table is registered in schema...');
+      // Verify table is accessible
       const maxRetries = 5;
       
       for (let attempt = 0; attempt < maxRetries; attempt++) {
-        console.log(`[Supabase] Verification attempt ${attempt + 1}/${maxRetries}...`);
-        
-        const { data, error, status } = await supabase
+        const { error, status } = await supabase
           .from('lead_memory')
           .select('*')
           .limit(1);
         
-        // Success: table is accessible (200 status or no table-not-found error)
         if (status === 200 || (!error) || (error && error.code !== '42P01')) {
-          console.log('[Supabase] Table confirmed in schema ✅');
-          console.log('[Supabase] Response status:', status);
+          console.log('[Supabase] Table verified ✅');
           tableCheckCompleted = true;
           return true;
         }
         
-        // Table not found in cache yet
-        if (error && error.code === '42P01') {
-          if (attempt < maxRetries - 1) {
-            console.log(`[Supabase] Table not in cache yet, retrying in 1.5s... (${attempt + 1}/${maxRetries})`);
-            await new Promise(resolve => setTimeout(resolve, 1500));
-          } else {
-            console.error('[Supabase] ⚠️ Table not found in schema after', maxRetries, 'attempts');
-            console.error('[Supabase] Error code:', error.code);
-            console.error('[Supabase] Error message:', error.message);
-            return false;
-          }
+        if (error && error.code === '42P01' && attempt < maxRetries - 1) {
+          await new Promise(resolve => setTimeout(resolve, 1500));
         }
       }
       
       return false;
     } catch (fetchErr) {
-      console.error('[Supabase] ❌ Failed to execute SQL via endpoint:', fetchErr);
-      tableCheckCompleted = true; // Mark as attempted
+      tableCheckCompleted = true;
       return false;
     }
   } catch (err) {
-    console.error('[Supabase] Error during table creation:', err);
     return false;
   }
 }
@@ -133,10 +109,6 @@ export async function saveLeadToSupabase(data: {
   timestamp: string;
 }) {
   try {
-    console.log('[Supabase] Starting lead save operation...');
-    console.log('[Supabase] Connection configured:', !!supabaseUrl && !!supabaseKey);
-    console.log('[Supabase] Project URL:', supabaseUrl.substring(0, 30) + '...');
-    
     // Ensure table exists before insert
     await ensureLeadMemoryTableExists();
     
@@ -153,19 +125,14 @@ export async function saveLeadToSupabase(data: {
       timestamp: data.timestamp,
     };
     
-    console.log('[Supabase] Attempting insert via REST API with ID:', id);
-    
-    // Try REST API insert first with Prefer header for better cache handling
-    const { data: insertedData, error, status } = await supabase
+    // Try REST API insert first
+    const { data: insertedData, error } = await supabase
       .from('lead_memory')
       .insert(record)
       .select()
       .single();
     
     if (error && (error.code === '42P01' || error.message.includes('schema cache') || error.message.includes('does not exist'))) {
-      console.warn('[Supabase] ⚠️ REST API insert failed (schema cache issue)');
-      console.log('[Supabase] Falling back to direct SQL INSERT...');
-      
       // Fallback: Use direct SQL INSERT bypassing REST cache
       const escapeSql = (str: string) => str.replace(/'/g, "''");
       const insertSQL = `
@@ -179,72 +146,44 @@ export async function saveLeadToSupabase(data: {
           '${escapeSql(data.language)}',
           '${data.timestamp}'::timestamptz
         )
-        ON CONFLICT (id) DO NOTHING
-        RETURNING *;
+        ON CONFLICT (id) DO NOTHING;
       `;
       
-      console.log('[Supabase] Executing direct SQL INSERT via RPC...');
+      const sqlEndpoint = `${supabaseUrl}/rest/v1/rpc/exec_sql`;
       
-      try {
-        // Call the exec_sql RPC function (must be created in Supabase first)
-        const sqlEndpoint = `${supabaseUrl}/rest/v1/rpc/exec_sql`;
-        
-        const sqlResponse = await fetch(sqlEndpoint, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'apikey': supabaseKey,
-            'Authorization': `Bearer ${supabaseKey}`,
-            'Prefer': 'return=representation',
-          },
-          body: JSON.stringify({ 
-            query: insertSQL 
-          }),
-        });
-        
-        console.log('[Supabase] RPC exec_sql response:', sqlResponse.status);
-        
-        if (sqlResponse.ok || sqlResponse.status === 200 || sqlResponse.status === 201) {
-          console.log('[Supabase] ✅ Lead saved via direct SQL');
-          return record;
-        } else {
-          const errorText = await sqlResponse.text();
-          console.error('[Supabase] RPC exec_sql failed:', errorText);
-          
-          // If function doesn't exist, provide helpful error message
-          if (sqlResponse.status === 404 || errorText.includes('function') || errorText.includes('not found')) {
-            console.error('[Supabase] ⚠️ exec_sql function not found');
-            console.error('[Supabase] Please create the function using supabase-setup.sql');
-          }
-          
-          throw new Error(`SQL INSERT failed: ${errorText}`);
-        }
-      } catch (sqlErr) {
-        console.error('[Supabase] ❌ Direct SQL fallback also failed:', sqlErr);
-        throw sqlErr;
+      const sqlResponse = await fetch(sqlEndpoint, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'apikey': supabaseKey,
+          'Authorization': `Bearer ${supabaseKey}`,
+        },
+        body: JSON.stringify({ 
+          query: insertSQL 
+        }),
+      });
+      
+      if (!sqlResponse.ok) {
+        const errorText = await sqlResponse.text();
+        throw new Error(`SQL INSERT failed: ${errorText}`);
       }
+      
+      console.log('[Supabase] Lead inserted successfully');
+      return record;
     } else if (error) {
-      console.error('[Supabase] ❌ Insert failed:', error.message);
-      console.error('[Supabase] Error code:', error.code);
-      console.error('[Supabase] Error details:', error.details);
       throw error;
     }
     
-    console.log('[Supabase] ✅ Lead successfully saved to database');
-    console.log('[Supabase] Record ID:', insertedData?.id);
-    console.log('[Supabase] Record timestamp:', insertedData?.timestamp);
-    
+    console.log('[Supabase] Lead inserted successfully');
     return insertedData;
   } catch (err) {
-    console.error('[Supabase] Save operation failed:', err);
+    console.error('[Supabase] Insert failed:', err instanceof Error ? err.message : err);
     throw err;
   }
 }
 
 export async function getRecentLeads(limit = 50, offset = 0) {
   try {
-    console.log('[Supabase] Fetching recent leads...');
-    
     const { data, error, count } = await supabase
       .from('lead_memory')
       .select('*', { count: 'exact' })
@@ -252,15 +191,12 @@ export async function getRecentLeads(limit = 50, offset = 0) {
       .range(offset, offset + limit - 1);
     
     if (error) {
-      console.error('[Supabase] ❌ Query failed:', error.message);
       throw error;
     }
     
-    console.log('[Supabase] ✅ Retrieved', data?.length || 0, 'leads');
-    
     return { data: data || [], total: count || 0 };
   } catch (err) {
-    console.error('[Supabase] Query operation failed:', err);
+    console.error('[Supabase] Query failed:', err instanceof Error ? err.message : err);
     throw err;
   }
 }
