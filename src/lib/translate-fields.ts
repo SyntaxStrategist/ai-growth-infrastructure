@@ -27,11 +27,15 @@ export async function translateLeadFields(
     };
   }
 
-  // Check cache
-  const cacheKey = `${targetLocale}_${fields.ai_summary}_${fields.intent}_${fields.tone}_${fields.urgency}`;
+  // Check cache (use first 100 chars of summary for key to avoid huge keys)
+  const summaryKey = (fields.ai_summary || '').substring(0, 100);
+  const cacheKey = `${targetLocale}_${summaryKey}_${fields.intent}_${fields.tone}_${fields.urgency}`;
   if (translationCache.has(cacheKey)) {
+    console.log('[Translation] Cache hit for locale:', targetLocale);
     return translationCache.get(cacheKey);
   }
+
+  console.log('[Translation] Translating to:', targetLocale);
 
   try {
     if (!process.env.OPENAI_API_KEY) {
@@ -98,6 +102,7 @@ Original fields:
 
     // Cache the result
     translationCache.set(cacheKey, result);
+    console.log('[Translation] Translation complete and cached');
 
     return result;
   } catch (error) {
