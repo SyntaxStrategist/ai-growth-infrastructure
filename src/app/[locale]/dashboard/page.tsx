@@ -4,7 +4,17 @@ import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { useTranslations, useLocale } from 'next-intl';
 import { supabase } from "../../../lib/supabase";
+import { translateLeadFields } from "../../../lib/translate-fields";
 import type { LeadMemoryRecord } from "../../../lib/supabase";
+
+type TranslatedLead = LeadMemoryRecord & {
+  translated?: {
+    ai_summary: string;
+    intent: string;
+    tone: string;
+    urgency: string;
+  };
+};
 
 export default function Dashboard() {
   const t = useTranslations();
@@ -13,11 +23,12 @@ export default function Dashboard() {
   const [password, setPassword] = useState("");
   const [authError, setAuthError] = useState("");
   const [authSuccess, setAuthSuccess] = useState(false);
-  const [leads, setLeads] = useState<LeadMemoryRecord[]>([]);
+  const [leads, setLeads] = useState<TranslatedLead[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState({ urgency: 'all', language: 'all', minConfidence: 0 });
   const [stats, setStats] = useState({ total: 0, avgConfidence: 0, topIntent: '', highUrgency: 0 });
   const [isLive, setIsLive] = useState(false);
+  const [translating, setTranslating] = useState(false);
 
   // Check localStorage for existing auth
   useEffect(() => {
@@ -58,8 +69,32 @@ export default function Dashboard() {
       const json = await res.json();
       if (json.success) {
         const leadsData = json.data || [];
-        setLeads(leadsData);
-        calculateStats(leadsData);
+        
+        // Translate fields if locale is French
+        if (locale === 'fr') {
+          setTranslating(true);
+          const translatedLeads = await Promise.all(
+            leadsData.map(async (lead: LeadMemoryRecord) => {
+              const translated = await translateLeadFields({
+                ai_summary: lead.ai_summary,
+                intent: lead.intent,
+                tone: lead.tone,
+                urgency: lead.urgency,
+              }, locale);
+              
+              return {
+                ...lead,
+                translated,
+              };
+            })
+          );
+          setLeads(translatedLeads);
+          calculateStats(translatedLeads);
+          setTranslating(false);
+        } else {
+          setLeads(leadsData);
+          calculateStats(leadsData);
+        }
       }
     } catch (err) {
       console.error('Failed to fetch leads:', err);
@@ -349,24 +384,28 @@ export default function Dashboard() {
                 </div>
                 <div className="md:col-span-2 lg:col-span-3">
                   <span className="text-white/50 text-xs block mb-1">{t('dashboard.table.summary')}</span>
-                  <p className="text-white/90">{lead.ai_summary || 'N/A'}</p>
+                  <p className="text-white/90">
+                    {lead.translated?.ai_summary || lead.ai_summary || 'N/A'}
+                  </p>
                 </div>
                 <div>
                   <span className="text-white/50 text-xs block mb-1">{t('dashboard.table.intent')}</span>
-                  <p className="text-blue-300 font-medium">{lead.intent || 'N/A'}</p>
+                  <p className="text-blue-300 font-medium">
+                    {lead.translated?.intent || lead.intent || 'N/A'}
+                  </p>
                 </div>
                 <div>
                   <span className="text-white/50 text-xs block mb-1">{t('dashboard.table.tone')}</span>
-                  <p>{lead.tone || 'N/A'}</p>
+                  <p>{lead.translated?.tone || lead.tone || 'N/A'}</p>
                 </div>
                 <div>
                   <span className="text-white/50 text-xs block mb-1">{t('dashboard.table.urgency')}</span>
                   <p className={
-                    (lead.urgency === 'High' || lead.urgency === 'Élevée') ? 'text-red-400 font-semibold' :
-                    (lead.urgency === 'Medium' || lead.urgency === 'Moyenne') ? 'text-yellow-400' :
+                    ((lead.translated?.urgency || lead.urgency) === 'High' || (lead.translated?.urgency || lead.urgency) === 'Élevée') ? 'text-red-400 font-semibold' :
+                    ((lead.translated?.urgency || lead.urgency) === 'Medium' || (lead.translated?.urgency || lead.urgency) === 'Moyenne') ? 'text-yellow-400' :
                     'text-green-400'
                   }>
-                    {lead.urgency || 'N/A'}
+                    {lead.translated?.urgency || lead.urgency || 'N/A'}
                   </p>
                 </div>
                 <div className="md:col-span-2 lg:col-span-3">
