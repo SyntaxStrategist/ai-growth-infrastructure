@@ -70,31 +70,26 @@ export default function Dashboard() {
       if (json.success) {
         const leadsData = json.data || [];
         
-        // Translate fields if locale is French
-        if (locale === 'fr') {
-          setTranslating(true);
-          const translatedLeads = await Promise.all(
-            leadsData.map(async (lead: LeadMemoryRecord) => {
-              const translated = await translateLeadFields({
-                ai_summary: lead.ai_summary,
-                intent: lead.intent,
-                tone: lead.tone,
-                urgency: lead.urgency,
-              }, locale);
-              
-              return {
-                ...lead,
-                translated,
-              };
-            })
-          );
-          setLeads(translatedLeads);
-          calculateStats(translatedLeads);
-          setTranslating(false);
-        } else {
-          setLeads(leadsData);
-          calculateStats(leadsData);
-        }
+        // Translate fields to match current locale
+        setTranslating(true);
+        const translatedLeads = await Promise.all(
+          leadsData.map(async (lead: LeadMemoryRecord) => {
+            const translated = await translateLeadFields({
+              ai_summary: lead.ai_summary,
+              intent: lead.intent,
+              tone: lead.tone,
+              urgency: lead.urgency,
+            }, locale);
+            
+            return {
+              ...lead,
+              translated,
+            };
+          })
+        );
+        setLeads(translatedLeads);
+        calculateStats(translatedLeads);
+        setTranslating(false);
       }
     } catch (err) {
       console.error('Failed to fetch leads:', err);

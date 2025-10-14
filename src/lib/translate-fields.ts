@@ -17,13 +17,13 @@ export async function translateLeadFields(
   tone: string;
   urgency: string;
 }> {
-  // If target is English or fields are empty, return as-is
-  if (targetLocale === 'en' || !fields.ai_summary) {
+  // If fields are empty, return N/A
+  if (!fields.ai_summary && !fields.intent && !fields.tone && !fields.urgency) {
     return {
-      ai_summary: fields.ai_summary || 'N/A',
-      intent: fields.intent || 'N/A',
-      tone: fields.tone || 'N/A',
-      urgency: fields.urgency || 'N/A',
+      ai_summary: 'N/A',
+      intent: 'N/A',
+      tone: 'N/A',
+      urgency: 'N/A',
     };
   }
 
@@ -40,7 +40,10 @@ export async function translateLeadFields(
 
     const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
-    const prompt = `Translate these lead analysis fields to French. Return ONLY JSON with these exact fields:
+    const isFrench = targetLocale === 'fr';
+    
+    const prompt = isFrench
+      ? `Translate these lead analysis fields to French. Return ONLY JSON with these exact fields:
 
 {
   "ai_summary": "translated summary",
@@ -53,12 +56,30 @@ Original fields:
 - AI Summary: ${fields.ai_summary || 'N/A'}
 - Intent: ${fields.intent || 'N/A'}
 - Tone: ${fields.tone || 'N/A'}
+- Urgency: ${fields.urgency || 'N/A'}`
+      : `Translate these lead analysis fields to English. Return ONLY JSON with these exact fields:
+
+{
+  "ai_summary": "translated summary",
+  "intent": "translated intent",
+  "tone": "translated tone",
+  "urgency": "translated urgency (must be: Low, Medium, or High)"
+}
+
+Original fields:
+- AI Summary: ${fields.ai_summary || 'N/A'}
+- Intent: ${fields.intent || 'N/A'}
+- Tone: ${fields.tone || 'N/A'}
 - Urgency: ${fields.urgency || 'N/A'}`;
+
+    const systemPrompt = isFrench
+      ? "You translate lead analysis fields to French. Return only valid JSON."
+      : "You translate lead analysis fields to English. Return only valid JSON.";
 
     const response = await openai.chat.completions.create({
       model: "gpt-4o-mini",
       messages: [
-        { role: "system", content: "You translate lead analysis fields to French. Return only valid JSON." },
+        { role: "system", content: systemPrompt },
         { role: "user", content: prompt },
       ],
       temperature: 0.2,
