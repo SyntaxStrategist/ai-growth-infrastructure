@@ -8,14 +8,27 @@ import type { LeadMemoryRecord } from "../../../lib/supabase";
 
 export default function Dashboard() {
   const t = useTranslations();
-  const [authorized] = useState(true); // Placeholder auth - set to false to block access
+  const [authorized, setAuthorized] = useState(false);
+  const [password, setPassword] = useState("");
+  const [authError, setAuthError] = useState("");
+  const [authSuccess, setAuthSuccess] = useState(false);
   const [leads, setLeads] = useState<LeadMemoryRecord[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState({ urgency: 'all', language: 'all', minConfidence: 0 });
   const [stats, setStats] = useState({ total: 0, avgConfidence: 0, topIntent: '', highUrgency: 0 });
   const [isLive, setIsLive] = useState(false);
 
+  // Check localStorage for existing auth
   useEffect(() => {
+    const savedAuth = localStorage.getItem('admin_auth');
+    if (savedAuth === 'true') {
+      setAuthorized(true);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!authorized) return;
+    
     fetchLeads();
     
     // Set up real-time subscription
@@ -36,7 +49,7 @@ export default function Dashboard() {
       supabase.removeChannel(channel);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [authorized]);
 
   async function fetchLeads() {
     try {
@@ -75,12 +88,106 @@ export default function Dashboard() {
     return true;
   });
 
+  async function handleAuth(e: React.FormEvent) {
+    e.preventDefault();
+    setAuthError("");
+    
+    try {
+      const res = await fetch('/api/auth-dashboard', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ password }),
+      });
+      
+      const data = await res.json();
+      
+      if (data.authorized) {
+        setAuthSuccess(true);
+        localStorage.setItem('admin_auth', 'true');
+        setTimeout(() => {
+          setAuthorized(true);
+        }, 800);
+      } else {
+        setAuthError(t('dashboard.auth.error'));
+        setPassword("");
+      }
+    } catch {
+      setAuthError(t('dashboard.auth.error'));
+    }
+  }
+
   if (!authorized) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-black text-white">
-        <div className="text-center">
-          <h1 className="text-2xl font-bold mb-2">{t('dashboard.accessDenied')}</h1>
-        </div>
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6 }}
+          className="w-full max-w-md"
+        >
+          <div className="rounded-lg border border-white/10 p-8 bg-gradient-to-br from-blue-500/5 to-purple-500/5 relative overflow-hidden">
+            {/* Glowing background effect */}
+            <div className="absolute inset-0 bg-gradient-to-br from-blue-500/10 to-purple-500/10 blur-xl"></div>
+            
+            <div className="relative">
+              {/* Lock Icon */}
+              <div className="flex justify-center mb-6">
+                <div className="h-16 w-16 rounded-full bg-blue-500/10 border border-blue-400/30 flex items-center justify-center">
+                  <svg className="h-8 w-8 text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                  </svg>
+                </div>
+              </div>
+
+              <h2 className="text-2xl font-bold text-center mb-6">{t('dashboard.auth.title')}</h2>
+
+              {authSuccess ? (
+                <motion.div
+                  initial={{ scale: 0.8, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  className="text-center"
+                >
+                  <div className="h-16 w-16 rounded-full bg-green-500/20 border border-green-400/40 flex items-center justify-center mx-auto mb-4">
+                    <svg className="h-8 w-8 text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                    </svg>
+                  </div>
+                  <p className="text-green-400 font-medium">{t('dashboard.auth.success')}</p>
+                </motion.div>
+              ) : (
+                <form onSubmit={handleAuth} className="space-y-4">
+                  <div>
+                    <input
+                      type="password"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      placeholder={t('dashboard.auth.placeholder')}
+                      className="w-full px-4 py-3 rounded-md bg-white/5 border border-white/10 text-white placeholder:text-white/40 focus:border-blue-400/50 focus:outline-none transition-all"
+                      autoFocus
+                    />
+                  </div>
+
+                  {authError && (
+                    <motion.div
+                      initial={{ opacity: 0, y: -10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      className="text-sm text-red-400 text-center"
+                    >
+                      {authError}
+                    </motion.div>
+                  )}
+
+                  <button
+                    type="submit"
+                    className="w-full px-4 py-3 rounded-md bg-blue-500 text-white font-medium hover:bg-blue-600 transition-all cta-glow"
+                  >
+                    {t('dashboard.auth.button')}
+                  </button>
+                </form>
+              )}
+            </div>
+          </div>
+        </motion.div>
       </div>
     );
   }

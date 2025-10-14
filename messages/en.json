@@ -110,6 +110,13 @@
     "title": "Intelligence Dashboard",
     "liveUpdates": "Live Updates",
     "accessDenied": "Access Denied",
+    "auth": {
+      "title": "Enter Access Password",
+      "placeholder": "Password",
+      "button": "Access",
+      "error": "Incorrect password",
+      "success": "Access Granted"
+    },
     "stats": {
       "totalLeads": "Total Leads",
       "avgConfidence": "Avg Confidence",

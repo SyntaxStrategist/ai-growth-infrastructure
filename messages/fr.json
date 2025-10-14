@@ -110,6 +110,13 @@
     "title": "Tableau d'intelligence",
     "liveUpdates": "Mises à jour en direct",
     "accessDenied": "Accès refusé",
+    "auth": {
+      "title": "Entrez le mot de passe d'accès",
+      "placeholder": "Mot de passe",
+      "button": "Accéder",
+      "error": "Mot de passe incorrect",
+      "success": "Accès autorisé"
+    },
     "stats": {
       "totalLeads": "Total de leads",
       "avgConfidence": "Confiance moyenne",
