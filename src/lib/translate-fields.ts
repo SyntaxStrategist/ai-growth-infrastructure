@@ -3,6 +3,63 @@ import OpenAI from "openai";
 
 const translationCache = new Map<string, any>();
 
+// Hardcoded translation maps for common short terms
+const TONE_TRANSLATIONS: Record<string, { en: string; fr: string }> = {
+  'formal': { en: 'formal', fr: 'formel' },
+  'formel': { en: 'formal', fr: 'formel' },
+  'casual': { en: 'casual', fr: 'décontracté' },
+  'décontracté': { en: 'casual', fr: 'décontracté' },
+  'decontracte': { en: 'casual', fr: 'décontracté' },
+  'professional': { en: 'professional', fr: 'professionnel' },
+  'professionnel': { en: 'professional', fr: 'professionnel' },
+  'strategic': { en: 'strategic', fr: 'stratégique' },
+  'stratégique': { en: 'strategic', fr: 'stratégique' },
+  'strategique': { en: 'strategic', fr: 'stratégique' },
+  'direct': { en: 'direct', fr: 'direct' },
+  'confident': { en: 'confident', fr: 'confiant' },
+  'confiant': { en: 'confident', fr: 'confiant' },
+  'urgent': { en: 'urgent', fr: 'urgent' },
+  'hesitant': { en: 'hesitant', fr: 'hésitant' },
+  'hésitant': { en: 'hesitant', fr: 'hésitant' },
+  'curious': { en: 'curious', fr: 'curieux' },
+  'curieux': { en: 'curious', fr: 'curieux' },
+};
+
+const URGENCY_TRANSLATIONS: Record<string, { en: string; fr: string }> = {
+  'high': { en: 'High', fr: 'Élevée' },
+  'élevée': { en: 'High', fr: 'Élevée' },
+  'elevee': { en: 'High', fr: 'Élevée' },
+  'medium': { en: 'Medium', fr: 'Moyenne' },
+  'moyenne': { en: 'Medium', fr: 'Moyenne' },
+  'low': { en: 'Low', fr: 'Faible' },
+  'faible': { en: 'Low', fr: 'Faible' },
+  'n/a': { en: 'N/A', fr: 'N/A' },
+};
+
+// Helper function to translate short terms using hardcoded maps
+function translateShortTerm(
+  term: string | null | undefined,
+  targetLocale: string,
+  fieldName: 'tone' | 'urgency'
+): string {
+  if (!term || term === 'N/A') return 'N/A';
+  
+  const normalizedTerm = term.toLowerCase().trim();
+  const map = fieldName === 'tone' ? TONE_TRANSLATIONS : URGENCY_TRANSLATIONS;
+  const mapping = map[normalizedTerm];
+  
+  if (mapping) {
+    const translated = targetLocale === 'fr' ? mapping.fr : mapping.en;
+    if (translated !== term) {
+      console.log(`[Translation] Translating ${fieldName} '${term}' → '${translated}'`);
+    }
+    return translated;
+  }
+  
+  // If not in map, return original
+  return term;
+}
+
 export async function translateLeadFields(
   fields: {
     id: string;
@@ -49,28 +106,32 @@ export async function translateLeadFields(
     const isFrench = targetLocale === 'fr';
     
     const prompt = isFrench
-      ? `Translate these lead analysis fields to French. Return ONLY JSON with these exact fields:
+      ? `Translate ALL of these lead analysis fields to French. ALWAYS translate every field, even if it's short or looks already localized. Return ONLY JSON with these exact fields:
 
 {
-  "ai_summary": "translated summary",
-  "intent": "translated intent",
-  "tone": "translated tone",
-  "urgency": "translated urgency (must be: Faible, Moyenne, or Élevée)"
+  "ai_summary": "translated summary in French",
+  "intent": "translated intent in French",
+  "tone": "translated tone in French (examples: formel, décontracté, professionnel, stratégique)",
+  "urgency": "translated urgency in French (must be exactly: Faible, Moyenne, or Élevée)"
 }
+
+IMPORTANT: Translate ALL fields to French, including short words like "Low" → "Faible", "casual" → "décontracté", etc.
 
 Original fields:
 - AI Summary: ${fields.ai_summary || 'N/A'}
 - Intent: ${fields.intent || 'N/A'}
 - Tone: ${fields.tone || 'N/A'}
 - Urgency: ${fields.urgency || 'N/A'}`
-      : `Translate these lead analysis fields to English. Return ONLY JSON with these exact fields:
+      : `Translate ALL of these lead analysis fields to English. ALWAYS translate every field, even if it's short or looks already localized. Return ONLY JSON with these exact fields:
 
 {
-  "ai_summary": "translated summary",
-  "intent": "translated intent",
-  "tone": "translated tone",
-  "urgency": "translated urgency (must be: Low, Medium, or High)"
+  "ai_summary": "translated summary in English",
+  "intent": "translated intent in English",
+  "tone": "translated tone in English (examples: formal, casual, professional, strategic)",
+  "urgency": "translated urgency in English (must be exactly: Low, Medium, or High)"
 }
+
+IMPORTANT: Translate ALL fields to English, including short words like "Élevée" → "High", "décontracté" → "casual", etc.
 
 Original fields:
 - AI Summary: ${fields.ai_summary || 'N/A'}
@@ -79,8 +140,8 @@ Original fields:
 - Urgency: ${fields.urgency || 'N/A'}`;
 
     const systemPrompt = isFrench
-      ? "You translate lead analysis fields to French. Return only valid JSON."
-      : "You translate lead analysis fields to English. Return only valid JSON.";
+      ? "You are a professional translator. Translate ALL fields to French, including short words. NEVER skip translation. Return only valid JSON."
+      : "You are a professional translator. Translate ALL fields to English, including short words. NEVER skip translation. Return only valid JSON.";
 
     const response = await openai.chat.completions.create({
       model: "gpt-4o-mini",
@@ -95,11 +156,24 @@ Original fields:
     const content = response.choices?.[0]?.message?.content || "{}";
     const translated = JSON.parse(content);
 
+    // Apply hardcoded translations for tone and urgency (overrides GPT if needed)
+    const translatedTone = translateShortTerm(
+      translated.tone || fields.tone,
+      targetLocale,
+      'tone'
+    );
+    
+    const translatedUrgency = translateShortTerm(
+      translated.urgency || fields.urgency,
+      targetLocale,
+      'urgency'
+    );
+
     const result = {
       ai_summary: translated.ai_summary || fields.ai_summary || 'N/A',
       intent: translated.intent || fields.intent || 'N/A',
-      tone: translated.tone || fields.tone || 'N/A',
-      urgency: translated.urgency || fields.urgency || 'N/A',
+      tone: translatedTone,
+      urgency: translatedUrgency,
       locale: targetLocale,
     };
 
@@ -110,12 +184,15 @@ Original fields:
     return result;
   } catch (error) {
     console.error('[Translation] Failed:', error);
-    // Return original on error
+    // On error, still apply hardcoded translations for tone/urgency
+    const fallbackTone = translateShortTerm(fields.tone, targetLocale, 'tone');
+    const fallbackUrgency = translateShortTerm(fields.urgency, targetLocale, 'urgency');
+    
     return {
       ai_summary: fields.ai_summary || 'N/A',
       intent: fields.intent || 'N/A',
-      tone: fields.tone || 'N/A',
-      urgency: fields.urgency || 'N/A',
+      tone: fallbackTone,
+      urgency: fallbackUrgency,
       locale: targetLocale,
     };
   }
