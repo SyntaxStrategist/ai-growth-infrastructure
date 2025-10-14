@@ -5,6 +5,7 @@ import { useTranslations, useLocale } from 'next-intl';
 import { motion, useScroll, useTransform } from 'framer-motion';
 import { AvenirLogo } from "../../components/AvenirLogo";
 import { LanguageToggle } from "../../components/LanguageToggle";
+import BridgeAnimation from "../../components/BridgeAnimation";
 
 type ChatMessage = {
   role: "user" | "assistant" | "system";
@@ -220,6 +221,11 @@ export default function Home() {
         </section>
 
         <div className="section-divider my-4"></div>
+
+        {/* Bridge Animation */}
+        <section className="py-20">
+          <BridgeAnimation locale={locale} />
+        </section>
 
         <section className="flex flex-col gap-6 mt-8">
           <motion.h2
