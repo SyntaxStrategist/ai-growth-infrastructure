@@ -2,12 +2,13 @@
 
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { useTranslations } from 'next-intl';
+import { useTranslations, useLocale } from 'next-intl';
 import { supabase } from "../../../lib/supabase";
 import type { LeadMemoryRecord } from "../../../lib/supabase";
 
 export default function Dashboard() {
   const t = useTranslations();
+  const locale = useLocale();
   const [authorized, setAuthorized] = useState(false);
   const [password, setPassword] = useState("");
   const [authError, setAuthError] = useState("");
@@ -214,7 +215,11 @@ export default function Dashboard() {
         >
           <div>
             <h1 className="text-3xl font-bold mb-2">{t('dashboard.title')}</h1>
-            <p className="text-white/60">Real-time lead intelligence from Supabase</p>
+            <p className="text-white/60">
+              {locale === 'fr' 
+                ? 'Intelligence de leads en temps réel depuis Supabase'
+                : 'Real-time lead intelligence from Supabase'}
+            </p>
           </div>
           <div className="flex items-center gap-3">
             {isLive && (
