@@ -14,6 +14,7 @@ export default function Dashboard() {
     fetchLeads();
     const interval = setInterval(fetchLeads, 10000); // Refresh every 10s
     return () => clearInterval(interval);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   async function fetchLeads() {
@@ -167,7 +168,7 @@ export default function Dashboard() {
                 </div>
                 <div className="md:col-span-2 lg:col-span-3">
                   <span className="text-white/50 text-xs block mb-1">Message</span>
-                  <p className="text-white/80 italic">"{lead.message}"</p>
+                  <p className="text-white/80 italic">&quot;{lead.message}&quot;</p>
                 </div>
                 <div className="md:col-span-2 lg:col-span-3">
                   <span className="text-white/50 text-xs block mb-1">AI Summary</span>

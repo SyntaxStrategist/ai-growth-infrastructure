@@ -1,6 +1,5 @@
 import { NextRequest } from "next/server";
 import { getOAuth2Client, storeTokens, getGmailProfile } from "../../../../lib/gmail";
-import { google } from "googleapis";
 
 export async function GET(req: NextRequest) {
   try {

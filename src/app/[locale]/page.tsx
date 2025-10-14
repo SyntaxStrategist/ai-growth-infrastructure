@@ -23,16 +23,12 @@ export default function Home() {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [leadMessage, setLeadMessage] = useState("");
-  const [isVisible, setIsVisible] = useState(false);
   const [isSubmittingLead, setIsSubmittingLead] = useState(false);
-  const [cursorPos, setCursorPos] = useState({ x: 0, y: 0 });
   const cardsRef = useRef<HTMLDivElement>(null);
   const { scrollYProgress } = useScroll();
   const logoGlow = useTransform(scrollYProgress, [0, 0.2], [0.5, 1]);
 
   useEffect(() => {
-    setIsVisible(true);
-    
     const observer = new IntersectionObserver(
       (entries) => {
         entries.forEach((entry) => {
@@ -49,16 +45,8 @@ export default function Home() {
       cards.forEach((card) => observer.observe(card));
     }
 
-    // Cursor trail effect
-    const handleMouseMove = (e: MouseEvent) => {
-      setCursorPos({ x: e.clientX, y: e.clientY });
-    };
-    
-    window.addEventListener('mousemove', handleMouseMove);
-
     return () => {
       observer.disconnect();
-      window.removeEventListener('mousemove', handleMouseMove);
     };
   }, []);
 
@@ -328,7 +316,7 @@ export default function Home() {
                   </div>
                   <div className="sm:col-span-2">
                     <span className="text-black/50 dark:text-white/50 text-xs">{t('demo.fields.message')}</span>
-                    <p className="text-black/70 dark:text-white/70 italic">"{demo.message}"</p>
+                    <p className="text-black/70 dark:text-white/70 italic">&quot;{demo.message}&quot;</p>
                   </div>
                   <div className="sm:col-span-2">
                     <span className="text-black/50 dark:text-white/50 text-xs">{t('demo.fields.summary')}</span>

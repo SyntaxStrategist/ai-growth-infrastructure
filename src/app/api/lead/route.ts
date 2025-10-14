@@ -3,7 +3,7 @@
 import { NextRequest } from "next/server";
 import { google } from "googleapis";
 import OpenAI from "openai";
-import { getAuthorizedGmail, buildHtmlEmail, getGmailProfile } from "../../../lib/gmail";
+import { getAuthorizedGmail, buildHtmlEmail } from "../../../lib/gmail";
 import { saveLeadToSupabase, enrichLeadInDatabase } from "../../../lib/supabase";
 import { enrichLeadWithAI } from "../../../lib/ai-enrichment";
 
@@ -187,7 +187,6 @@ export async function POST(req: NextRequest) {
 				
 				console.log('Email sent successfully with refreshed sender identity');
 			} catch (mailErr) {
-				// non-fatal: log-like response for debugging
 				console.error("gmail_send_error", mailErr);
 			}
 
@@ -205,7 +204,7 @@ export async function POST(req: NextRequest) {
 				
 				leadId = savedRecord?.id;
 				console.log('[Lead API] Lead saved to database');
-			} catch (dbErr) {
+			} catch {
 				// non-fatal: log for debugging but don't break the flow
 				console.warn('[Lead API] Database save failed');
 			}
@@ -234,7 +233,7 @@ export async function POST(req: NextRequest) {
 						urgency: enrichment.urgency,
 						confidence: enrichment.confidence_score,
 					});
-				} catch (enrichErr) {
+				} catch {
 					// non-fatal
 					console.warn('[AI Intelligence] Enrichment failed');
 				}
