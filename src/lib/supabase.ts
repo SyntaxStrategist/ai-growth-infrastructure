@@ -188,7 +188,10 @@ export async function saveLeadToSupabase(data: {
       console.log('[Supabase] Executing direct SQL INSERT...');
       
       try {
-        const sqlResponse = await fetch(`${supabaseUrl}/rest/v1/`, {
+        // Use Supabase's RPC endpoint for SQL execution
+        const sqlEndpoint = `${supabaseUrl}/rest/v1/rpc/exec`;
+        
+        const sqlResponse = await fetch(sqlEndpoint, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -196,16 +199,41 @@ export async function saveLeadToSupabase(data: {
             'Authorization': `Bearer ${supabaseKey}`,
             'Prefer': 'return=representation',
           },
-          body: JSON.stringify({ query: insertSQL }),
+          body: JSON.stringify({ 
+            sql: insertSQL 
+          }),
         });
         
         console.log('[Supabase] Direct SQL INSERT response:', sqlResponse.status);
         
-        if (sqlResponse.ok || sqlResponse.status === 200 || sqlResponse.status === 201) {
+        let finalResponse = sqlResponse;
+        
+        // If RPC endpoint doesn't exist, try alternative format
+        if (sqlResponse.status === 404) {
+          console.log('[Supabase] RPC endpoint not found, trying alternative...');
+          
+          const altResponse = await fetch(`${supabaseUrl}/rest/v1/rpc`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'apikey': supabaseKey,
+              'Authorization': `Bearer ${supabaseKey}`,
+            },
+            body: JSON.stringify({
+              name: 'exec',
+              params: { query: insertSQL }
+            }),
+          });
+          
+          console.log('[Supabase] Alternative endpoint response:', altResponse.status);
+          finalResponse = altResponse;
+        }
+        
+        if (finalResponse.ok || finalResponse.status === 200 || finalResponse.status === 201) {
           console.log('[Supabase] ✅ Lead saved via direct SQL');
           return record;
         } else {
-          const errorText = await sqlResponse.text();
+          const errorText = await finalResponse.text();
           console.error('[Supabase] Direct SQL INSERT failed:', errorText);
           throw new Error(`SQL INSERT failed: ${errorText}`);
         }
