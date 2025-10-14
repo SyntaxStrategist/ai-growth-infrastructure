@@ -29,7 +29,40 @@ export const prisma = globalForPrisma.prisma ?? new PrismaClient({
 
 if (process.env.NODE_ENV !== 'production') globalForPrisma.prisma = prisma
 
-// Ensure connection on first use with retry logic
+// Ensure table exists at runtime (for Vercel/Supabase compatibility)
+export const ensureLeadMemoryTable = async () => {
+  try {
+    await prisma.$executeRawUnsafe(`
+      CREATE TABLE IF NOT EXISTS "lead_memory" (
+        "id" TEXT NOT NULL,
+        "name" TEXT NOT NULL,
+        "email" TEXT NOT NULL,
+        "message" TEXT NOT NULL,
+        "aiSummary" TEXT,
+        "language" TEXT NOT NULL DEFAULT 'en',
+        "timestamp" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        CONSTRAINT "lead_memory_pkey" PRIMARY KEY ("id")
+      );
+    `);
+    
+    // Create indexes if they don't exist
+    await prisma.$executeRawUnsafe(`
+      CREATE INDEX IF NOT EXISTS "lead_memory_timestamp_idx" ON "lead_memory"("timestamp");
+    `);
+    
+    await prisma.$executeRawUnsafe(`
+      CREATE INDEX IF NOT EXISTS "lead_memory_email_idx" ON "lead_memory"("email");
+    `);
+    
+    console.log('LeadMemory table ensured');
+    return true;
+  } catch (err) {
+    console.error('Failed to ensure LeadMemory table:', err);
+    return false;
+  }
+};
+
+// Connect with retry logic (non-blocking)
 const connectWithRetry = async (retries = 3, delay = 1000) => {
   for (let i = 0; i < retries; i++) {
     try {

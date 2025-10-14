@@ -4,7 +4,7 @@ import { NextRequest } from "next/server";
 import { google } from "googleapis";
 import OpenAI from "openai";
 import { getAuthorizedGmail, buildHtmlEmail, getGmailProfile } from "../../../lib/gmail";
-import { prisma } from "../../../lib/prisma";
+import { prisma, ensureLeadMemoryTable } from "../../../lib/prisma";
 
 type LeadPayload = {
 	name?: string;
@@ -192,6 +192,9 @@ export async function POST(req: NextRequest) {
 
 			// Store lead in growth memory database
 			try {
+				// Ensure table exists at runtime (for Vercel/Supabase compatibility)
+				await ensureLeadMemoryTable();
+				
 				await prisma.leadMemory.create({
 					data: {
 						name,
@@ -206,42 +209,6 @@ export async function POST(req: NextRequest) {
 			} catch (dbErr) {
 				// non-fatal: log for debugging
 				console.error("database_save_error", dbErr);
-				
-				// If table doesn't exist, try to create it
-				if (dbErr instanceof Error && dbErr.message.includes('does not exist')) {
-					try {
-						await prisma.$executeRawUnsafe(`
-							CREATE TABLE IF NOT EXISTS "lead_memory" (
-								"id" TEXT NOT NULL,
-								"name" TEXT NOT NULL,
-								"email" TEXT NOT NULL,
-								"message" TEXT NOT NULL,
-								"aiSummary" TEXT,
-								"language" TEXT NOT NULL DEFAULT 'en',
-								"timestamp" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-								CONSTRAINT "lead_memory_pkey" PRIMARY KEY ("id")
-							);
-							CREATE INDEX IF NOT EXISTS "lead_memory_timestamp_idx" ON "lead_memory"("timestamp");
-							CREATE INDEX IF NOT EXISTS "lead_memory_email_idx" ON "lead_memory"("email");
-						`);
-						console.log('Created lead_memory table');
-						
-						// Retry the insert
-						await prisma.leadMemory.create({
-							data: {
-								name,
-								email,
-								message,
-								aiSummary: aiSummary || null,
-								language: locale,
-								timestamp: new Date(timestamp),
-							},
-						});
-						console.log('Lead stored after table creation');
-					} catch (createErr) {
-						console.error("table_creation_error", createErr);
-					}
-				}
 			}
 		} catch (sheetsError) {
 			const msg = sheetsError instanceof Error ? sheetsError.message : "Failed to append to Google Sheet";

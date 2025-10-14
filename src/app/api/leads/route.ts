@@ -1,10 +1,13 @@
 import { NextRequest } from "next/server";
-import { prisma } from "../../../lib/prisma";
+import { prisma, ensureLeadMemoryTable } from "../../../lib/prisma";
 
 export async function GET(req: NextRequest) {
   try {
     // Optional: Add authentication check here in production
     // For now, we'll return leads with basic security
+    
+    // Ensure table exists at runtime
+    await ensureLeadMemoryTable();
     
     const url = new URL(req.url);
     const limit = parseInt(url.searchParams.get('limit') || '50', 10);
