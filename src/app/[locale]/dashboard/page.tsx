@@ -145,6 +145,13 @@ export default function Dashboard() {
 
   async function handleDeleteLead(leadId: string) {
     try {
+      console.log(`[LeadAction] Deleting lead ${leadId}...`);
+      
+      // Optimistic update - remove from UI immediately
+      const originalLeads = [...leads];
+      setLeads(leads.filter(l => l.id !== leadId));
+      setConfirmDelete(null);
+
       const res = await fetch('/api/lead-actions', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -152,18 +159,29 @@ export default function Dashboard() {
       });
 
       if (res.ok) {
-        setLeads(leads.filter(l => l.id !== leadId));
-        setConfirmDelete(null);
+        console.log(`[LeadAction] Deleted lead ${leadId}`);
         showToast(locale === 'fr' ? 'Lead supprimé avec succès.' : 'Lead deleted successfully.');
         fetchRecentActions();
+      } else {
+        // Revert on failure
+        console.error(`[LeadAction] Failed to delete lead ${leadId}`);
+        setLeads(originalLeads);
+        showToast(locale === 'fr' ? 'Erreur lors de la suppression.' : 'Delete failed.');
       }
     } catch (err) {
-      console.error('Failed to delete lead:', err);
+      console.error(`[LeadAction] Error deleting lead ${leadId}:`, err);
+      showToast(locale === 'fr' ? 'Erreur lors de la suppression.' : 'Delete failed.');
     }
   }
 
   async function handleArchiveLead(leadId: string) {
     try {
+      console.log(`[LeadAction] Archiving lead ${leadId}...`);
+      
+      // Optimistic update - remove from UI immediately
+      const originalLeads = [...leads];
+      setLeads(leads.filter(l => l.id !== leadId));
+
       const res = await fetch('/api/lead-actions', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -171,11 +189,18 @@ export default function Dashboard() {
       });
 
       if (res.ok) {
+        console.log(`[LeadAction] Archived lead ${leadId}`);
         showToast(locale === 'fr' ? 'Lead archivé avec succès.' : 'Lead archived successfully.');
         fetchRecentActions();
+      } else {
+        // Revert on failure
+        console.error(`[LeadAction] Failed to archive lead ${leadId}`);
+        setLeads(originalLeads);
+        showToast(locale === 'fr' ? 'Erreur lors de l\'archivage.' : 'Archive failed.');
       }
     } catch (err) {
-      console.error('Failed to archive lead:', err);
+      console.error(`[LeadAction] Error archiving lead ${leadId}:`, err);
+      showToast(locale === 'fr' ? 'Erreur lors de l\'archivage.' : 'Archive failed.');
     }
   }
 
@@ -183,6 +208,8 @@ export default function Dashboard() {
     if (!tagLead || !selectedTag) return;
 
     try {
+      console.log(`[LeadAction] Tagging lead ${tagLead} as ${selectedTag}...`);
+
       const res = await fetch('/api/lead-actions', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -190,13 +217,18 @@ export default function Dashboard() {
       });
 
       if (res.ok) {
+        console.log(`[LeadAction] Tagged lead ${tagLead} as ${selectedTag}`);
         setTagLead(null);
         setSelectedTag('');
-        showToast(locale === 'fr' ? 'Lead étiqueté avec succès.' : 'Lead tagged successfully.');
+        showToast(locale === 'fr' ? `Lead étiqueté comme "${selectedTag}" avec succès.` : `Lead tagged as "${selectedTag}" successfully.`);
         fetchRecentActions();
+      } else {
+        console.error(`[LeadAction] Failed to tag lead ${tagLead}`);
+        showToast(locale === 'fr' ? 'Erreur lors de l\'étiquetage.' : 'Tag failed.');
       }
     } catch (err) {
-      console.error('Failed to tag lead:', err);
+      console.error(`[LeadAction] Error tagging lead ${tagLead}:`, err);
+      showToast(locale === 'fr' ? 'Erreur lors de l\'étiquetage.' : 'Tag failed.');
     }
   }
 
@@ -522,27 +554,39 @@ export default function Dashboard() {
 
               {/* Action Buttons */}
               <div className="flex items-center gap-2 mt-4 pt-4 border-t border-white/5">
-                <button
-                  onClick={() => setTagLead(lead.id)}
-                  className="p-2 rounded-lg bg-blue-500/20 border border-blue-500/40 text-blue-400 hover:bg-blue-500/30 hover:shadow-[0_0_15px_rgba(59,130,246,0.5)] transition-all text-xs"
-                  title={locale === 'fr' ? 'Étiqueter' : 'Tag Lead'}
-                >
-                  🏷️
-                </button>
-                <button
-                  onClick={() => handleArchiveLead(lead.id)}
-                  className="p-2 rounded-lg bg-yellow-500/20 border border-yellow-500/40 text-yellow-400 hover:bg-yellow-500/30 hover:shadow-[0_0_15px_rgba(234,179,8,0.5)] transition-all text-xs"
-                  title={locale === 'fr' ? 'Archiver' : 'Archive Lead'}
-                >
-                  📦
-                </button>
-                <button
-                  onClick={() => setConfirmDelete(lead.id)}
-                  className="p-2 rounded-lg bg-red-500/20 border border-red-500/40 text-red-400 hover:bg-red-500/30 hover:shadow-[0_0_15px_rgba(239,68,68,0.5)] transition-all text-xs"
-                  title={locale === 'fr' ? 'Supprimer' : 'Delete Lead'}
-                >
-                  🗑️
-                </button>
+                <div className="relative group">
+                  <button
+                    onClick={() => setTagLead(lead.id)}
+                    className="p-2 rounded-lg bg-blue-500/20 border border-blue-500/40 text-blue-400 hover:bg-blue-500/30 hover:shadow-[0_0_15px_rgba(59,130,246,0.5)] hover:border-blue-500/60 transition-all duration-100 text-xs"
+                  >
+                    🏷️
+                  </button>
+                  <span className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 bg-blue-600 text-white text-[0.9rem] rounded opacity-0 group-hover:opacity-100 transition-opacity duration-150 delay-150 whitespace-nowrap pointer-events-none z-10">
+                    {locale === 'fr' ? 'Étiqueter le lead' : 'Tag Lead'}
+                  </span>
+                </div>
+                <div className="relative group">
+                  <button
+                    onClick={() => handleArchiveLead(lead.id)}
+                    className="p-2 rounded-lg bg-yellow-500/20 border border-yellow-500/40 text-yellow-400 hover:bg-yellow-500/30 hover:shadow-[0_0_15px_rgba(234,179,8,0.5)] hover:border-yellow-500/60 transition-all duration-100 text-xs"
+                  >
+                    📦
+                  </button>
+                  <span className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 bg-yellow-600 text-white text-[0.9rem] rounded opacity-0 group-hover:opacity-100 transition-opacity duration-150 delay-150 whitespace-nowrap pointer-events-none z-10">
+                    {locale === 'fr' ? 'Archiver' : 'Archive'}
+                  </span>
+                </div>
+                <div className="relative group">
+                  <button
+                    onClick={() => setConfirmDelete(lead.id)}
+                    className="p-2 rounded-lg bg-red-500/20 border border-red-500/40 text-red-400 hover:bg-red-500/30 hover:shadow-[0_0_15px_rgba(239,68,68,0.5)] hover:border-red-500/60 transition-all duration-100 text-xs"
+                  >
+                    🗑️
+                  </button>
+                  <span className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 bg-red-600 text-white text-[0.9rem] rounded opacity-0 group-hover:opacity-100 transition-opacity duration-150 delay-150 whitespace-nowrap pointer-events-none z-10">
+                    {locale === 'fr' ? 'Supprimer' : 'Delete'}
+                  </span>
+                </div>
               </div>
             </motion.div>
           ))}

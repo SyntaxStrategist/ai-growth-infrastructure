@@ -84,19 +84,22 @@ export default function GrowthCopilot({ locale }: GrowthCopilotProps) {
 
   return (
     <>
-      {/* Toggle Button */}
-      <motion.button
-        onClick={() => setIsOpen(!isOpen)}
-        className={`fixed right-8 top-32 z-50 px-4 py-3 rounded-lg font-medium text-sm shadow-lg transition-all ${
-          isOpen
-            ? 'bg-purple-600 text-white border border-purple-500'
-            : 'bg-purple-500/20 border border-purple-500/40 text-purple-400 hover:bg-purple-500/30'
-        }`}
-        whileHover={{ scale: 1.05 }}
-        whileTap={{ scale: 0.95 }}
-      >
-        🧠 {t.title}
-      </motion.button>
+      {/* Toggle Button - Hide when panel is open */}
+      <AnimatePresence>
+        {!isOpen && (
+          <motion.button
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: 20 }}
+            onClick={() => setIsOpen(true)}
+            className="fixed right-8 top-32 z-50 px-4 py-3 rounded-lg font-medium text-sm shadow-lg bg-purple-500/20 border border-purple-500/40 text-purple-400 hover:bg-purple-500/30 hover:shadow-[0_0_20px_rgba(168,85,247,0.5)] hover:border-purple-500/60 transition-all duration-100"
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+          >
+            🧠 {t.title}
+          </motion.button>
+        )}
+      </AnimatePresence>
 
       {/* Copilot Panel */}
       <AnimatePresence>
@@ -106,7 +109,7 @@ export default function GrowthCopilot({ locale }: GrowthCopilotProps) {
             animate={{ x: 0 }}
             exit={{ x: '100%' }}
             transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-            className="fixed right-0 top-0 bottom-0 w-full md:w-96 bg-black border-l border-white/10 shadow-2xl z-40 overflow-y-auto"
+            className="fixed right-0 top-0 bottom-0 w-full md:w-96 lg:w-[420px] bg-black/95 backdrop-blur-xl border-l border-white/10 shadow-2xl z-50 overflow-y-auto"
           >
             <div className="p-6 space-y-6">
               {/* Header */}
@@ -211,7 +214,7 @@ export default function GrowthCopilot({ locale }: GrowthCopilotProps) {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={() => setIsOpen(false)}
-            className="fixed inset-0 bg-black/50 backdrop-blur-sm z-30 md:hidden"
+            className="fixed inset-0 bg-black/50 backdrop-blur-sm z-40 md:hidden"
           />
         )}
       </AnimatePresence>
