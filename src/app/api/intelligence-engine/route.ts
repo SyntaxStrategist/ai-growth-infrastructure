@@ -8,12 +8,21 @@ import { runWeeklyAnalysis } from "../../../lib/intelligence-engine";
  */
 export async function POST(req: NextRequest) {
   try {
-    // Optional: Add authorization header check for cron jobs
+    // Check if triggered by Vercel Cron
+    const isCron = req.headers.get('user-agent')?.includes('vercel-cron');
+    const triggerSource = isCron ? 'CRON (Vercel)' : 'Manual (User/API)';
+    
+    console.log('[Intelligence Engine] ============================================');
+    console.log('[Intelligence Engine] Trigger source:', triggerSource);
+    console.log('[Intelligence Engine] ============================================');
+
+    // Optional: Add authorization header check for manual requests
     const authHeader = req.headers.get('authorization');
     const cronSecret = process.env.CRON_SECRET || 'dev-secret';
     
-    if (authHeader !== `Bearer ${cronSecret}`) {
-      console.log('[Intelligence Engine] Unauthorized request');
+    // Skip auth check for Vercel Cron or if auth header matches
+    if (!isCron && authHeader && authHeader !== `Bearer ${cronSecret}`) {
+      console.log('[Intelligence Engine] Unauthorized manual request');
       return NextResponse.json(
         { success: false, error: "Unauthorized" },
         { status: 401 }
@@ -24,10 +33,17 @@ export async function POST(req: NextRequest) {
     
     const result = await runWeeklyAnalysis();
 
+    console.log('[Intelligence Engine] Analysis complete:', {
+      processed: result.processed,
+      errors: result.errors,
+      trigger: triggerSource,
+    });
+
     return NextResponse.json({
       success: true,
       data: result,
       message: `Processed ${result.processed} analyses with ${result.errors} errors`,
+      trigger: triggerSource,
     });
   } catch (error) {
     console.error('[Intelligence Engine] Analysis failed:', error);

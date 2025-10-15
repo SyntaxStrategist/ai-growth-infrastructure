@@ -18,6 +18,7 @@ export default function GrowthCopilot({ locale }: GrowthCopilotProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [summary, setSummary] = useState<CopilotSummary | null>(null);
   const [loading, setLoading] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
 
   const isFrench = locale === 'fr';
 
@@ -28,8 +29,62 @@ export default function GrowthCopilot({ locale }: GrowthCopilotProps) {
     prediction: isFrench ? 'Prédiction' : 'Prediction',
     generateSummary: isFrench ? 'Générer un nouveau résumé' : 'Generate Fresh Summary',
     loading: isFrench ? 'Analyse en cours...' : 'Analyzing...',
+    refreshing: isFrench ? 'Actualisation des données...' : 'Refreshing data...',
     poweredBy: isFrench ? 'Propulsé par GPT-4o-mini' : 'Powered by GPT-4o-mini',
+    refreshError: isFrench ? 'Impossible d\'actualiser le résumé. Réessayez plus tard.' : 'Unable to refresh summary. Try again later.',
   };
+
+  async function manualRefresh() {
+    setRefreshing(true);
+    try {
+      console.log('[GrowthCopilot] ============================================');
+      console.log('[GrowthCopilot] Manual refresh triggered by user');
+      console.log('[GrowthCopilot] ============================================');
+      
+      // Call Intelligence Engine to regenerate insights
+      console.log('[GrowthCopilot] Calling /api/intelligence-engine...');
+      const engineRes = await fetch('/api/intelligence-engine', {
+        method: 'POST',
+      });
+      
+      const engineJson = await engineRes.json();
+      console.log('[GrowthCopilot] Intelligence Engine response:', engineJson);
+      
+      if (!engineJson.success) {
+        console.error('[GrowthCopilot] ❌ Intelligence Engine failed:', engineJson.error);
+        setSummary({
+          trendSummary: t.refreshError,
+          recommendedActions: [],
+          prediction: '',
+        });
+        setRefreshing(false);
+        return;
+      }
+      
+      console.log('[GrowthCopilot] ✅ Intelligence Engine completed:', {
+        processed: engineJson.data?.processed,
+        errors: engineJson.data?.errors,
+        trigger: engineJson.trigger,
+      });
+      
+      // Wait a moment for data to be available
+      await new Promise(resolve => setTimeout(resolve, 500));
+      
+      // Now fetch the fresh insights
+      console.log('[GrowthCopilot] Fetching fresh growth insights...');
+      await generateSummary();
+      
+    } catch (err) {
+      console.error('[GrowthCopilot] ❌ Manual refresh failed:', err);
+      setSummary({
+        trendSummary: t.refreshError,
+        recommendedActions: [],
+        prediction: '',
+      });
+    } finally {
+      setRefreshing(false);
+    }
+  }
 
   async function generateSummary() {
     setLoading(true);
@@ -236,14 +291,17 @@ export default function GrowthCopilot({ locale }: GrowthCopilotProps) {
 
               {/* Generate Button */}
               <button
-                onClick={generateSummary}
-                disabled={loading}
-                className="w-full py-2 px-4 rounded-lg bg-purple-600 hover:bg-purple-700 transition-all text-sm font-medium disabled:opacity-50"
+                onClick={manualRefresh}
+                disabled={loading || refreshing}
+                className="w-full py-2 px-4 rounded-lg bg-purple-600 hover:bg-purple-700 transition-all text-sm font-medium disabled:opacity-50 flex items-center justify-center gap-2"
               >
-                {loading ? t.loading : t.generateSummary}
+                {refreshing && (
+                  <div className="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full"></div>
+                )}
+                {refreshing ? t.refreshing : loading ? t.loading : t.generateSummary}
               </button>
 
-              {loading && (
+              {(loading || refreshing) && (
                 <div className="flex justify-center py-8">
                   <div className="animate-spin h-8 w-8 border-4 border-purple-500 border-t-transparent rounded-full"></div>
                 </div>
