@@ -34,6 +34,7 @@ export default function Dashboard() {
   const [recentActions, setRecentActions] = useState<LeadAction[]>([]);
   const [toast, setToast] = useState<{ message: string; show: boolean }>({ message: '', show: false });
   const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
+  const [confirmPermanentDelete, setConfirmPermanentDelete] = useState<string | null>(null);
   const [tagLead, setTagLead] = useState<string | null>(null);
   const [selectedTag, setSelectedTag] = useState<string>('');
   const [activeTab, setActiveTab] = useState<'active' | 'archived' | 'deleted'>('active');
@@ -293,6 +294,40 @@ export default function Dashboard() {
     } catch (err) {
       console.error(`[LeadAction] Error reactivating lead ${leadId}:`, err);
       showToast(locale === 'fr' ? 'Erreur lors de la réactivation.' : 'Reactivate failed.');
+    }
+  }
+
+  async function handlePermanentDelete(leadId: string) {
+    try {
+      console.log(`[LeadAction] PERMANENTLY deleting lead ${leadId}...`);
+      
+      // Optimistic update - remove from UI immediately
+      const originalLeads = [...leads];
+      setLeads(leads.filter(l => l.id !== leadId));
+      setConfirmPermanentDelete(null);
+
+      const res = await fetch('/api/lead-actions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ lead_id: leadId, action: 'permanent_delete' }),
+      });
+
+      const json = await res.json();
+      console.log(`[LeadAction] Permanent delete response:`, json);
+
+      if (json.success) {
+        console.log(`[LeadAction] Permanently deleted lead ${leadId}`);
+        showToast(locale === 'fr' ? 'Lead supprimé définitivement.' : 'Lead permanently deleted.');
+        // Don't fetch recent actions since the record is gone
+      } else {
+        // Revert on failure
+        console.error(`[LeadAction] Failed to permanently delete lead ${leadId}:`, json.message || json.error);
+        setLeads(originalLeads);
+        showToast(locale === 'fr' ? `Erreur: ${json.message || 'Suppression définitive échouée'}` : `Error: ${json.message || 'Permanent delete failed'}`);
+      }
+    } catch (err) {
+      console.error(`[LeadAction] Error permanently deleting lead ${leadId}:`, err);
+      showToast(locale === 'fr' ? 'Erreur lors de la suppression définitive.' : 'Permanent delete failed.');
     }
   }
 
@@ -765,6 +800,20 @@ export default function Dashboard() {
                         {locale === 'fr' ? 'Réactiver' : 'Reactivate'}
                       </span>
                     </div>
+                    {/* Permanent Delete Button (only in deleted tab) */}
+                    {activeTab === 'deleted' && (
+                      <div className="relative group">
+                        <button
+                          onClick={() => setConfirmPermanentDelete(lead.id)}
+                          className="p-2 rounded-lg bg-red-500/20 border border-red-500/40 text-red-400 hover:bg-red-500/30 hover:shadow-[0_0_15px_rgba(239,68,68,0.5)] hover:border-red-500/60 transition-all duration-100 text-xs"
+                        >
+                          ❌
+                        </button>
+                        <span className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 bg-red-600 text-white text-[0.9rem] rounded opacity-0 group-hover:opacity-100 transition-opacity duration-150 delay-150 whitespace-nowrap pointer-events-none z-10">
+                          {locale === 'fr' ? 'Supprimer définitivement' : 'Delete Permanently'}
+                        </span>
+                      </div>
+                    )}
                   </>
                 )}
               </div>
@@ -789,7 +838,7 @@ export default function Dashboard() {
         </motion.div>
       </div>
 
-      {/* Delete Confirmation Modal */}
+      {/* Delete Confirmation Modal (Soft Delete) */}
       {confirmDelete && (
         <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
           <motion.div
@@ -802,8 +851,8 @@ export default function Dashboard() {
             </h3>
             <p className="text-white/70 mb-6">
               {locale === 'fr' 
-                ? 'Êtes-vous sûr de vouloir supprimer ce lead ? Cette action est irréversible.'
-                : 'Are you sure you want to delete this lead? This action is irreversible.'}
+                ? 'Êtes-vous sûr de vouloir supprimer ce lead ? Vous pourrez le récupérer plus tard depuis l\'onglet Leads supprimés.'
+                : 'Are you sure you want to delete this lead? You can recover it later from the Deleted Leads tab.'}
             </p>
             <div className="flex gap-3">
               <button
@@ -814,6 +863,47 @@ export default function Dashboard() {
               </button>
               <button
                 onClick={() => setConfirmDelete(null)}
+                className="flex-1 py-2 px-4 rounded-lg bg-white/5 border border-white/10 hover:bg-white/10 transition-all"
+              >
+                {locale === 'fr' ? 'Annuler' : 'Cancel'}
+              </button>
+            </div>
+          </motion.div>
+        </div>
+      )}
+
+      {/* Permanent Delete Confirmation Modal */}
+      {confirmPermanentDelete && (
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <motion.div
+            initial={{ scale: 0.9, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            className="bg-black border border-red-500/30 rounded-lg p-6 max-w-md w-full shadow-[0_0_40px_rgba(239,68,68,0.5)]"
+          >
+            <div className="flex items-center gap-3 mb-4">
+              <div className="h-12 w-12 rounded-full bg-red-500/20 border border-red-500/40 flex items-center justify-center flex-shrink-0">
+                <svg className="h-6 w-6 text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                </svg>
+              </div>
+              <h3 className="text-lg font-bold text-red-400">
+                {locale === 'fr' ? 'Suppression définitive' : 'Permanent Delete'}
+              </h3>
+            </div>
+            <p className="text-white/70 mb-6">
+              {locale === 'fr' 
+                ? 'Êtes-vous sûr de vouloir supprimer définitivement ce lead ? Cette action est irréversible.'
+                : 'Are you sure you want to permanently delete this lead? This action cannot be undone.'}
+            </p>
+            <div className="flex gap-3">
+              <button
+                onClick={() => handlePermanentDelete(confirmPermanentDelete)}
+                className="flex-1 py-2 px-4 rounded-lg bg-red-600 hover:bg-red-700 transition-all font-medium shadow-[0_0_15px_rgba(239,68,68,0.3)]"
+              >
+                {locale === 'fr' ? 'Supprimer définitivement' : 'Delete Permanently'}
+              </button>
+              <button
+                onClick={() => setConfirmPermanentDelete(null)}
                 className="flex-1 py-2 px-4 rounded-lg bg-white/5 border border-white/10 hover:bg-white/10 transition-all"
               >
                 {locale === 'fr' ? 'Annuler' : 'Cancel'}

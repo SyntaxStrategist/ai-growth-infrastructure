@@ -28,7 +28,7 @@ export async function POST(req: NextRequest) {
     }
 
     // Validate action type
-    if (!['delete', 'archive', 'tag', 'reactivate'].includes(action)) {
+    if (!['delete', 'archive', 'tag', 'reactivate', 'permanent_delete'].includes(action)) {
       console.error(`[LeadActions] Invalid action type: ${action}`);
       return NextResponse.json(
         { success: false, message: `Invalid action type: ${action}` },
@@ -106,6 +106,42 @@ export async function POST(req: NextRequest) {
           { status: 500 }
         );
       }
+    } else if (action === 'permanent_delete') {
+      console.log(`[LeadActions] PERMANENTLY deleting lead ${lead_id}...`);
+      
+      // First, delete all related actions
+      const { error: actionsDeleteError } = await supabase
+        .from('lead_actions')
+        .delete()
+        .eq('lead_id', lead_id);
+
+      if (actionsDeleteError) {
+        console.error('[LeadActions] Failed to delete related actions:', JSON.stringify(actionsDeleteError));
+      }
+
+      // Then permanently delete the lead record
+      const { error: permanentDeleteError } = await supabase
+        .from('lead_memory')
+        .delete()
+        .eq('id', lead_id);
+
+      console.log(`[LeadActions] Permanent delete response:`, { error: permanentDeleteError || 'success' });
+
+      if (permanentDeleteError) {
+        console.error('[LeadActions] Failed to permanently delete lead:', JSON.stringify(permanentDeleteError));
+        return NextResponse.json(
+          { success: false, message: "Error permanently deleting lead", error: permanentDeleteError.message },
+          { status: 500 }
+        );
+      }
+
+      // For permanent delete, we don't log to lead_actions (record is gone)
+      console.log(`[LeadActions] Lead permanently deleted - no action log created`);
+      return NextResponse.json({ 
+        success: true, 
+        message: 'Lead permanently deleted successfully',
+        permanent: true 
+      });
     }
 
     // Log the action to lead_actions table
