@@ -410,6 +410,44 @@ export default function Dashboard() {
     return 'bg-white/10 border-white/20 text-white/60';
   };
 
+  const toneTranslations: Record<string, string> = {
+    'formal': 'formel',
+    'inquisitive': 'curieux',
+    'neutral': 'neutre',
+    'friendly': 'amical',
+    'impatient': 'impatient',
+    'professional': 'professionnel',
+    'casual': 'décontracté',
+    'urgent': 'urgent',
+    'confident': 'confiant',
+    'hesitant': 'hésitant',
+    'strategic': 'stratégique',
+    'curious': 'curieux',
+    'polite': 'poli',
+    'direct': 'direct',
+  };
+
+  const translateTone = (tone: string | null | undefined): string => {
+    if (!tone) return 'N/A';
+    
+    // If French dashboard, translate English tones
+    if (locale === 'fr') {
+      const toneLower = tone.toLowerCase();
+      const translated = toneTranslations[toneLower];
+      
+      if (translated) {
+        console.log(`[LeadCard] French tone translation applied: ${tone} → ${translated}`);
+        return translated.charAt(0).toUpperCase() + translated.slice(1); // Capitalize first letter
+      }
+      
+      // If already in French or no mapping, return as-is
+      return tone;
+    }
+    
+    // English dashboard - return as-is
+    return tone;
+  };
+
   const tabLabels = {
     active: locale === 'fr' ? 'Leads Actifs' : 'Active Leads',
     archived: locale === 'fr' ? 'Leads Archivés' : 'Archived Leads',
@@ -640,7 +678,7 @@ export default function Dashboard() {
                 </div>
                 <div>
                   <span className="text-white/50 text-xs block mb-1">{t('dashboard.table.tone')}</span>
-                  <p>{lead.translated_ai?.tone || lead.tone || 'N/A'}</p>
+                  <p>{translateTone(lead.translated_ai?.tone || lead.tone)}</p>
                 </div>
                 <div>
                   <span className="text-white/50 text-xs block mb-1">{t('dashboard.table.urgency')}</span>
