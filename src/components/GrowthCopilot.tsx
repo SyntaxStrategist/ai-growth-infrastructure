@@ -75,52 +75,100 @@ export default function GrowthCopilot({ locale }: GrowthCopilotProps) {
       }
 
       const insights = json.data;
-      console.log('[GrowthCopilot] Insights received:', {
-        total_leads: insights.total_leads,
-        engagement_score: insights.engagement_score,
-        has_predictive_insights: !!insights.predictive_insights,
-        predictive_insights_type: typeof insights.predictive_insights,
-        analyzed_at: insights.analyzed_at,
-      });
+      console.log('[GrowthCopilot] ============================================');
+      console.log('[GrowthCopilot] Insights received from growth_brain:');
+      console.log('[GrowthCopilot] ============================================');
+      console.log('[GrowthCopilot] Record ID:', insights.id);
+      console.log('[GrowthCopilot] Total leads:', insights.total_leads);
+      console.log('[GrowthCopilot] Engagement score:', insights.engagement_score);
+      console.log('[GrowthCopilot] Avg confidence:', insights.avg_confidence);
+      console.log('[GrowthCopilot] Created at:', insights.created_at);
+      console.log('[GrowthCopilot] Has predictive_insights:', !!insights.predictive_insights);
+      console.log('[GrowthCopilot] Predictive insights type:', typeof insights.predictive_insights);
 
       if (insights.predictive_insights) {
-        console.log('[GrowthCopilot] predictive_insights structure:', {
+        console.log('[GrowthCopilot] Predictive insights structure:', {
           has_en: !!insights.predictive_insights.en,
           has_fr: !!insights.predictive_insights.fr,
           en_keys: insights.predictive_insights.en ? Object.keys(insights.predictive_insights.en) : [],
           fr_keys: insights.predictive_insights.fr ? Object.keys(insights.predictive_insights.fr) : [],
         });
+        
+        // Log the actual content
+        if (insights.predictive_insights.en) {
+          console.log('[GrowthCopilot] EN predictions:', {
+            urgency_trend: insights.predictive_insights.en.urgency_trend?.substring(0, 60) + '...',
+            confidence_insight: insights.predictive_insights.en.confidence_insight?.substring(0, 60) + '...',
+            tone_insight: insights.predictive_insights.en.tone_insight?.substring(0, 60) + '...',
+          });
+        }
+        
+        if (insights.predictive_insights.fr) {
+          console.log('[GrowthCopilot] FR predictions:', {
+            urgency_trend: insights.predictive_insights.fr.urgency_trend?.substring(0, 60) + '...',
+            confidence_insight: insights.predictive_insights.fr.confidence_insight?.substring(0, 60) + '...',
+            tone_insight: insights.predictive_insights.fr.tone_insight?.substring(0, 60) + '...',
+          });
+        }
+      } else {
+        console.warn('[GrowthCopilot] ⚠️  predictive_insights is missing or null');
       }
 
       // Use the predictive insights from growth_brain
       const predictions = isFrench ? insights.predictive_insights?.fr : insights.predictive_insights?.en;
       
-      console.log('[GrowthCopilot] Selected predictions for', isFrench ? 'FR' : 'EN', ':', predictions);
-      console.log('[GrowthCopilot] Predictions breakdown:', {
-        has_urgency_trend: !!predictions?.urgency_trend,
-        urgency_trend_length: predictions?.urgency_trend?.length || 0,
-        has_confidence_insight: !!predictions?.confidence_insight,
-        confidence_insight_length: predictions?.confidence_insight?.length || 0,
-        has_tone_insight: !!predictions?.tone_insight,
-        tone_insight_length: predictions?.tone_insight?.length || 0,
-      });
+      console.log('[GrowthCopilot] ============================================');
+      console.log('[GrowthCopilot] Selected language:', isFrench ? 'FR' : 'EN');
+      console.log('[GrowthCopilot] Selected predictions:', predictions);
+      console.log('[GrowthCopilot] ============================================');
+
+      if (!predictions) {
+        console.error('[GrowthCopilot] ❌ No predictions for selected language');
+        setSummary({
+          trendSummary: isFrench ? 'Données de prédiction manquantes' : 'Prediction data missing',
+          recommendedActions: [],
+          prediction: '',
+        });
+        setLoading(false);
+        return;
+      }
+
+      // Build summary from predictions
+      const trendSummary = predictions.urgency_trend || (isFrench ? 'Aucune tendance détectée' : 'No trends detected');
+      const recommendedActions = [
+        predictions.confidence_insight || '',
+        predictions.tone_insight || '',
+      ].filter(Boolean);
+      
+      const avgConfidencePercent = insights.avg_confidence ? (insights.avg_confidence * 100).toFixed(0) : '0';
+      const engagementScoreValue = insights.engagement_score?.toFixed(0) || '0';
+      
+      const prediction = isFrench
+        ? `Basé sur ${insights.total_leads} leads analysés avec une confiance moyenne de ${avgConfidencePercent}%, votre score d'engagement est de ${engagementScoreValue}/100.`
+        : `Based on ${insights.total_leads} analyzed leads with ${avgConfidencePercent}% average confidence, your engagement score is ${engagementScoreValue}/100.`;
 
       const newSummary = {
-        trendSummary: predictions?.urgency_trend || (isFrench ? 'Aucune tendance détectée' : 'No trends detected'),
-        recommendedActions: [
-          predictions?.confidence_insight || '',
-          predictions?.tone_insight || '',
-        ].filter(Boolean),
-        prediction: isFrench
-          ? `Basé sur les ${insights.total_leads} leads analysés, votre score d'engagement est de ${insights.engagement_score?.toFixed(0) || 0}/100.`
-          : `Based on ${insights.total_leads} analyzed leads, your engagement score is ${insights.engagement_score?.toFixed(0) || 0}/100.`,
+        trendSummary,
+        recommendedActions,
+        prediction,
       };
       
-      console.log('[GrowthCopilot] Summary generated:', {
-        trendSummary: newSummary.trendSummary.substring(0, 50) + '...',
-        actionCount: newSummary.recommendedActions.length,
-        hasPrediction: !!newSummary.prediction,
+      console.log('[GrowthCopilot] ============================================');
+      console.log('[GrowthCopilot] Summary built successfully:');
+      console.log('[GrowthCopilot] ============================================');
+      console.log('[GrowthCopilot] Trend Summary:', trendSummary);
+      console.log('[GrowthCopilot] Recommended Actions count:', recommendedActions.length);
+      console.log('[GrowthCopilot] Recommended Actions:');
+      recommendedActions.forEach((action, idx) => {
+        console.log(`[GrowthCopilot]   ${idx + 1}. ${action.substring(0, 80)}...`);
       });
+      console.log('[GrowthCopilot] Prediction:', prediction);
+      console.log('[GrowthCopilot] Metrics used:', {
+        total_leads: insights.total_leads,
+        avg_confidence: avgConfidencePercent + '%',
+        engagement_score: engagementScoreValue + '/100',
+      });
+      console.log('[GrowthCopilot] ============================================');
 
       setSummary(newSummary);
     } catch (err) {
