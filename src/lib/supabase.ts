@@ -405,40 +405,141 @@ export async function upsertLeadWithHistory(params: {
       console.log('[LeadMemory] Updated confidence history length:', confidenceHistory.length);
       console.log('[LeadMemory] Updated urgency history length:', urgencyHistory.length);
       
-      // Generate relationship insight
-      let insight = '';
+      // Generate relationship insight (ALWAYS generates a value)
+      console.log('[LeadMemory] ============================================');
+      console.log('[LeadMemory] Generating relationship insight...');
+      console.log('[LeadMemory] ============================================');
+      console.log('[LeadMemory] Previous values:', {
+        tone: existingLead.tone,
+        confidence: existingLead.confidence_score,
+        urgency: existingLead.urgency,
+      });
+      console.log('[LeadMemory] Current values:', {
+        tone: params.tone,
+        confidence: params.confidence_score,
+        urgency: params.urgency,
+      });
+      
       const previousTone = existingLead.tone;
       const previousConfidence = existingLead.confidence_score;
       const previousUrgency = existingLead.urgency;
+      const isEnglish = params.language === 'en';
+      
+      let insight = '';
+      let hasChange = false;
       
       // Detect tone change
-      if (previousTone && previousTone !== params.tone) {
-        insight = `Tone shifted from ${previousTone.toLowerCase()} to ${params.tone.toLowerCase()}`;
+      if (previousTone && previousTone.toLowerCase() !== params.tone.toLowerCase()) {
+        hasChange = true;
+        if (isEnglish) {
+          insight = `Tone shifted from ${previousTone.toLowerCase()} to ${params.tone.toLowerCase()}`;
+        } else {
+          insight = `Ton passé de ${previousTone.toLowerCase()} à ${params.tone.toLowerCase()}`;
+        }
+        console.log('[LeadMemory] Tone changed:', previousTone, '→', params.tone);
       }
       
-      // Detect confidence change
+      // Detect confidence change (>= 10% threshold)
       if (previousConfidence !== null && previousConfidence !== undefined) {
         const confidenceDiff = params.confidence_score - previousConfidence;
-        if (Math.abs(confidenceDiff) >= 0.15) { // 15% change
-          const direction = confidenceDiff > 0 ? 'increased' : 'decreased';
+        if (Math.abs(confidenceDiff) >= 0.10) { // 10% change
+          hasChange = true;
+          const direction = confidenceDiff > 0 ? (isEnglish ? 'increased' : 'augmenté') : (isEnglish ? 'decreased' : 'diminué');
+          const changePercent = Math.abs(confidenceDiff * 100).toFixed(0);
+          
           if (insight) {
-            insight += ` and confidence ${direction}`;
+            insight += isEnglish ? ` and confidence ${direction}` : ` et confiance ${direction}`;
           } else {
-            insight = `Confidence ${direction} by ${Math.abs(confidenceDiff * 100).toFixed(0)}%`;
+            insight = isEnglish 
+              ? `Confidence ${direction} by ${changePercent}%` 
+              : `Confiance ${direction} de ${changePercent}%`;
           }
+          console.log('[LeadMemory] Confidence changed:', previousConfidence, '→', params.confidence_score, `(${confidenceDiff > 0 ? '+' : ''}${(confidenceDiff * 100).toFixed(0)}%)`);
         }
       }
       
-      // Add follow-up recommendation
-      if (params.tone.toLowerCase().includes('confident') || params.urgency.toLowerCase().includes('high')) {
-        insight += insight ? ' — great time to follow up!' : 'High urgency detected — follow up now!';
-      } else if (params.tone.toLowerCase().includes('hesitant')) {
-        insight += insight ? ' — nurture with more info.' : 'Hesitant tone — provide more information.';
+      // Detect urgency change
+      if (previousUrgency && previousUrgency.toLowerCase() !== params.urgency.toLowerCase()) {
+        hasChange = true;
+        const urgencyChange = isEnglish
+          ? `Urgency changed from ${previousUrgency.toLowerCase()} to ${params.urgency.toLowerCase()}`
+          : `Urgence passée de ${previousUrgency.toLowerCase()} à ${params.urgency.toLowerCase()}`;
+        
+        if (insight) {
+          insight += isEnglish ? `, urgency changed to ${params.urgency.toLowerCase()}` : `, urgence passée à ${params.urgency.toLowerCase()}`;
+        } else {
+          insight = urgencyChange;
+        }
+        console.log('[LeadMemory] Urgency changed:', previousUrgency, '→', params.urgency);
       }
       
-      console.log('[LeadMemory] Generated new relationship insight:', insight || 'No significant change');
+      // If no changes detected, generate default insight based on current state
+      if (!hasChange || !insight) {
+        console.log('[LeadMemory] No significant changes detected - generating default insight');
+        
+        // Check current tone and urgency for default message
+        const toneLower = params.tone.toLowerCase();
+        const urgencyLower = params.urgency.toLowerCase();
+        
+        if (toneLower.includes('confident') || toneLower.includes('confiant')) {
+          insight = isEnglish 
+            ? 'Tone stayed confident — good time to engage' 
+            : 'Ton resté confiant — bon moment pour engager';
+        } else if (toneLower.includes('hesitant') || toneLower.includes('hésitant')) {
+          insight = isEnglish 
+            ? 'Tone remains hesitant — nurture with more info' 
+            : 'Ton reste hésitant — nourrir avec plus d\'info';
+        } else if (urgencyLower.includes('high') || urgencyLower.includes('élevée')) {
+          insight = isEnglish 
+            ? 'High urgency maintained — follow up now' 
+            : 'Urgence élevée maintenue — suivre maintenant';
+        } else if (urgencyLower.includes('low') || urgencyLower.includes('faible')) {
+          insight = isEnglish 
+            ? 'Low urgency — passive nurturing recommended' 
+            : 'Urgence faible — nurturing passif recommandé';
+        } else {
+          insight = isEnglish 
+            ? 'Tone stayed consistent, confidence unchanged — monitor engagement' 
+            : 'Ton resté constant, confiance inchangée — surveiller l\'engagement';
+        }
+      } else {
+        // Add follow-up recommendation based on final state
+        const toneLower = params.tone.toLowerCase();
+        const urgencyLower = params.urgency.toLowerCase();
+        
+        if (toneLower.includes('confident') || toneLower.includes('confiant') || urgencyLower.includes('high') || urgencyLower.includes('élevée')) {
+          insight += isEnglish ? ' — great time to follow up!' : ' — bon moment pour suivre!';
+        } else if (toneLower.includes('hesitant') || toneLower.includes('hésitant')) {
+          insight += isEnglish ? ' — nurture with more info.' : ' — nourrir avec plus d\'info.';
+        } else if (urgencyLower.includes('low') || urgencyLower.includes('faible')) {
+          insight += isEnglish ? ' — follow up to confirm interest.' : ' — suivre pour confirmer l\'intérêt.';
+        }
+      }
+      
+      console.log('[LeadMemory] ============================================');
+      console.log('[LeadMemory] Generated relationship insight:', insight);
+      console.log('[LeadMemory] Insight language:', isEnglish ? 'EN' : 'FR');
+      console.log('[LeadMemory] Insight length:', insight.length);
+      console.log('[LeadMemory] ============================================');
       
       // Update the existing lead
+      console.log('[LeadMemory] Preparing UPDATE query...');
+      console.log('[LeadMemory] Fields to update:', {
+        name: params.name,
+        email: params.email,
+        intent: params.intent,
+        tone: params.tone,
+        urgency: params.urgency,
+        confidence_score: params.confidence_score,
+        tone_history_length: toneHistory.length,
+        confidence_history_length: confidenceHistory.length,
+        urgency_history_length: urgencyHistory.length,
+        relationship_insight: insight,
+        relationship_insight_length: insight.length,
+        last_updated: now,
+      });
+      
+      const updateStart = Date.now();
       const { data: updatedLead, error: updateError } = await supabase
         .from('lead_memory')
         .update({
@@ -455,19 +556,47 @@ export async function upsertLeadWithHistory(params: {
           confidence_history: confidenceHistory,
           urgency_history: urgencyHistory,
           last_updated: now,
-          relationship_insight: insight || null,
+          relationship_insight: insight,
         })
         .eq('id', existingLead.id)
         .select()
         .single();
+      const updateDuration = Date.now() - updateStart;
+      
+      console.log('[LeadMemory] UPDATE query completed in', updateDuration, 'ms');
+      console.log('[LeadMemory] UPDATE result:', {
+        success: !updateError,
+        hasData: !!updatedLead,
+        error: updateError ? {
+          code: updateError.code,
+          message: updateError.message,
+          details: updateError.details,
+          hint: updateError.hint,
+        } : null,
+      });
       
       if (updateError) {
-        console.error('[LeadMemory] Failed to update existing lead:', updateError);
+        console.error('[LeadMemory] ============================================');
+        console.error('[LeadMemory] ❌ UPDATE FAILED');
+        console.error('[LeadMemory] ============================================');
+        console.error('[LeadMemory] Error code:', updateError.code);
+        console.error('[LeadMemory] Error message:', updateError.message);
+        console.error('[LeadMemory] Error details:', updateError.details);
+        console.error('[LeadMemory] Error hint:', updateError.hint);
+        console.error('[LeadMemory] Full error object:', JSON.stringify(updateError, null, 2));
+        console.error('[LeadMemory] ============================================');
         throw updateError;
       }
       
+      console.log('[LeadMemory] ============================================');
       console.log('[LeadMemory] ✅ Existing lead updated successfully');
-      return { isNew: false, leadId: existingLead.id, insight: insight || null };
+      console.log('[LeadMemory] ============================================');
+      console.log('[LeadMemory] Updated lead ID:', existingLead.id);
+      console.log('[LeadMemory] Saved relationship insight to Supabase: success=true');
+      console.log('[LeadMemory] Verified insight in response:', updatedLead?.relationship_insight?.substring(0, 80) + '...');
+      console.log('[LeadMemory] ============================================');
+      
+      return { isNew: false, leadId: existingLead.id, insight: insight };
       
     } else {
       console.log('[LeadMemory] ============================================');
