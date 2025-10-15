@@ -47,8 +47,22 @@ export default function RelationshipInsights({ locale }: RelationshipInsightsPro
   async function fetchLeadsWithInsights() {
     try {
       setLoading(true);
+      console.log('[RelationshipInsights] ============================================');
       console.log('[RelationshipInsights] Fetching leads with history...');
+      console.log('[RelationshipInsights] ============================================');
+      console.log('[RelationshipInsights] Query params:', {
+        table: 'lead_memory',
+        columns: 'name, email, tone_history, confidence_history, urgency_history, relationship_insight, last_updated',
+        filters: {
+          archived: false,
+          deleted: false,
+          relationship_insight: 'IS NOT NULL',
+        },
+        order: 'last_updated DESC',
+        limit: 20,
+      });
 
+      const queryStart = Date.now();
       const { data, error } = await supabase
         .from('lead_memory')
         .select('name, email, tone_history, confidence_history, urgency_history, relationship_insight, last_updated')
@@ -57,16 +71,77 @@ export default function RelationshipInsights({ locale }: RelationshipInsightsPro
         .not('relationship_insight', 'is', null)
         .order('last_updated', { ascending: false })
         .limit(20);
+      const queryDuration = Date.now() - queryStart;
+
+      console.log('[RelationshipInsights] Query completed in', queryDuration, 'ms');
+      console.log('[RelationshipInsights] Query result:', {
+        success: !error,
+        rowCount: data?.length || 0,
+        hasError: !!error,
+      });
 
       if (error) {
-        console.error('[RelationshipInsights] Query failed:', error);
+        console.error('[RelationshipInsights] ============================================');
+        console.error('[RelationshipInsights] ❌ Query FAILED');
+        console.error('[RelationshipInsights] ============================================');
+        console.error('[RelationshipInsights] Error code:', error.code);
+        console.error('[RelationshipInsights] Error message:', error.message);
+        console.error('[RelationshipInsights] Error details:', error.details);
+        console.error('[RelationshipInsights] Error hint:', error.hint);
+        console.error('[RelationshipInsights] Full error object:', JSON.stringify(error, null, 2));
+        console.error('[RelationshipInsights] ============================================');
         throw error;
       }
 
-      console.log('[RelationshipInsights] Found', data?.length || 0, 'leads with insights');
+      if (!data || data.length === 0) {
+        console.log('[RelationshipInsights] ============================================');
+        console.log('[RelationshipInsights] ℹ️  No leads with relationship insights found');
+        console.log('[RelationshipInsights] ============================================');
+        console.log('[RelationshipInsights] This is expected when:');
+        console.log('[RelationshipInsights]   - No leads have returned for a second contact');
+        console.log('[RelationshipInsights]   - All leads are first-time contacts');
+        console.log('[RelationshipInsights]   - Leads are archived or deleted');
+        console.log('[RelationshipInsights] ============================================');
+        setLeads([]);
+        return;
+      }
+
+      console.log('[RelationshipInsights] ============================================');
+      console.log('[RelationshipInsights] ✅ Found', data.length, 'leads with insights');
+      console.log('[RelationshipInsights] ============================================');
+      console.log('[RelationshipInsights] Sample data (first lead):');
+      if (data[0]) {
+        console.log('[RelationshipInsights]   Name:', data[0].name);
+        console.log('[RelationshipInsights]   Email:', data[0].email);
+        console.log('[RelationshipInsights]   Insight:', data[0].relationship_insight?.substring(0, 80) + '...');
+        console.log('[RelationshipInsights]   Last Updated:', data[0].last_updated);
+        console.log('[RelationshipInsights]   Tone History Length:', data[0].tone_history?.length || 0);
+        console.log('[RelationshipInsights]   Confidence History Length:', data[0].confidence_history?.length || 0);
+        console.log('[RelationshipInsights]   Urgency History Length:', data[0].urgency_history?.length || 0);
+      }
+      console.log('[RelationshipInsights] ============================================');
+      console.log('[RelationshipInsights] All leads with insights:', data.map(l => ({
+        name: l.name,
+        email: l.email,
+        hasInsight: !!l.relationship_insight,
+        historyLengths: {
+          tone: l.tone_history?.length || 0,
+          confidence: l.confidence_history?.length || 0,
+          urgency: l.urgency_history?.length || 0,
+        },
+      })));
+      console.log('[RelationshipInsights] ============================================');
+
       setLeads((data || []) as LeadWithHistory[]);
     } catch (err) {
-      console.error('[RelationshipInsights] Failed to fetch leads:', err);
+      console.error('[RelationshipInsights] ============================================');
+      console.error('[RelationshipInsights] ❌ CRITICAL ERROR');
+      console.error('[RelationshipInsights] ============================================');
+      console.error('[RelationshipInsights] Error type:', err instanceof Error ? err.constructor.name : typeof err);
+      console.error('[RelationshipInsights] Error message:', err instanceof Error ? err.message : String(err));
+      console.error('[RelationshipInsights] Error stack:', err instanceof Error ? err.stack : 'N/A');
+      console.error('[RelationshipInsights] Full error object:', err);
+      console.error('[RelationshipInsights] ============================================');
     } finally {
       setLoading(false);
     }

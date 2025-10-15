@@ -124,6 +124,50 @@ export default function Dashboard() {
     }
   }
 
+  // Intent translation mapping (French → English)
+  const intentTranslations: Record<string, string> = {
+    'annulation d\'intérêt': 'interest cancellation',
+    'annulation': 'cancellation',
+    'consultation': 'consultation',
+    'partenariat': 'partnership',
+    'demande d\'information': 'information request',
+    'demande': 'request',
+    'support technique': 'technical support',
+    'ventes': 'sales',
+    'entreprise': 'enterprise',
+    'intégration': 'integration',
+    'automatisation': 'automation',
+    'collaboration': 'collaboration',
+    'exploration': 'exploration',
+    'optimisation': 'optimization',
+    'mise à l\'échelle': 'scaling',
+    'développement': 'development',
+  };
+
+  function translateIntent(intent: string): string {
+    // If English dashboard and intent looks French, translate it
+    if (locale === 'en') {
+      const intentLower = intent.toLowerCase();
+      
+      // Check for exact matches first
+      if (intentTranslations[intentLower]) {
+        console.log(`[Dashboard] Intent translation: "${intent}" → "${intentTranslations[intentLower]}"`);
+        return intentTranslations[intentLower].split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
+      }
+      
+      // Check for partial matches
+      for (const [fr, en] of Object.entries(intentTranslations)) {
+        if (intentLower.includes(fr)) {
+          console.log(`[Dashboard] Intent translation (partial): "${intent}" → "${en}"`);
+          return en.split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
+        }
+      }
+    }
+    
+    // Return as-is if French dashboard or no translation found
+    return intent;
+  }
+
   function calculateStats(leadsData: TranslatedLead[]) {
     const total = leadsData.length;
     const avgConfidence = leadsData.reduce((sum, l) => sum + (l.confidence_score || 0), 0) / total || 0;
@@ -137,7 +181,18 @@ export default function Dashboard() {
         intentCounts[l.intent] = (intentCounts[l.intent] || 0) + 1;
       }
     });
-    const topIntent = Object.keys(intentCounts).sort((a, b) => intentCounts[b] - intentCounts[a])[0] || 'N/A';
+    const rawTopIntent = Object.keys(intentCounts).sort((a, b) => intentCounts[b] - intentCounts[a])[0] || 'N/A';
+    const topIntent = translateIntent(rawTopIntent);
+    
+    console.log('[Dashboard] Stats calculated:', {
+      total,
+      avgConfidence: (avgConfidence * 100).toFixed(0) + '%',
+      rawTopIntent,
+      translatedTopIntent: topIntent,
+      highUrgency,
+      locale,
+    });
+    
     setStats({ total, avgConfidence, topIntent, highUrgency });
   }
 
