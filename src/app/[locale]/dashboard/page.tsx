@@ -126,7 +126,8 @@ export default function Dashboard() {
 
   // Intent translation mapping (French → English)
   const intentTranslations: Record<string, string> = {
-    'annulation d\'intérêt': 'interest cancellation',
+    'annulation d\'intérêt': 'withdrawal of interest',
+    'retrait d\'intérêt': 'withdrawal of interest',
     'annulation': 'cancellation',
     'consultation': 'consultation',
     'partenariat': 'partnership',

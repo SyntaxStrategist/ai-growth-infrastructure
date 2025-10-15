@@ -2,8 +2,11 @@
 
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { supabase } from "../lib/supabase";
-import type { HistoryEntry } from "../lib/supabase";
+
+type HistoryEntry = {
+  value: string | number;
+  timestamp: string;
+};
 
 interface RelationshipInsightsProps {
   locale: string;
@@ -50,28 +53,36 @@ export default function RelationshipInsights({ locale }: RelationshipInsightsPro
       console.log('[RelationshipInsights] ============================================');
       console.log('[RelationshipInsights] Fetching leads with history...');
       console.log('[RelationshipInsights] ============================================');
-      console.log('[RelationshipInsights] Query params:', {
-        table: 'lead_memory',
-        columns: 'name, email, tone_history, confidence_history, urgency_history, relationship_insight, last_updated',
-        filters: {
-          archived: false,
-          deleted: false,
-          relationship_insight: 'IS NOT NULL',
-        },
-        order: 'last_updated DESC',
-        limit: 20,
-      });
-
+      console.log('[RelationshipInsights] Using API endpoint approach for client component');
+      console.log('[RelationshipInsights] Locale:', locale);
+      
+      // Use API endpoint instead of direct Supabase client (client component limitation)
+      const endpoint = `/api/leads/insights?locale=${locale}`;
+      console.log('[RelationshipInsights] Fetching from:', endpoint);
+      
       const queryStart = Date.now();
-      const { data, error } = await supabase
-        .from('lead_memory')
-        .select('name, email, tone_history, confidence_history, urgency_history, relationship_insight, last_updated')
-        .eq('archived', false)
-        .eq('deleted', false)
-        .not('relationship_insight', 'is', null)
-        .order('last_updated', { ascending: false })
-        .limit(20);
+      const response = await fetch(endpoint, { cache: 'no-store' });
       const queryDuration = Date.now() - queryStart;
+      
+      console.log('[RelationshipInsights] API request completed in', queryDuration, 'ms');
+      console.log('[RelationshipInsights] Response status:', response.status);
+      
+      if (!response.ok) {
+        console.error('[RelationshipInsights] ❌ API request failed with status:', response.status);
+        const errorText = await response.text();
+        console.error('[RelationshipInsights] Error response:', errorText);
+        throw new Error(`API returned ${response.status}: ${errorText}`);
+      }
+      
+      const json = await response.json();
+      console.log('[RelationshipInsights] API response:', {
+        success: json.success,
+        hasData: !!json.data,
+        dataLength: json.data?.length || 0,
+      });
+      
+      const data = json.data || [];
+      const error = json.success ? null : json.error;
 
       console.log('[RelationshipInsights] Query completed in', queryDuration, 'ms');
       console.log('[RelationshipInsights] Query result:', {
@@ -120,7 +131,7 @@ export default function RelationshipInsights({ locale }: RelationshipInsightsPro
         console.log('[RelationshipInsights]   Urgency History Length:', data[0].urgency_history?.length || 0);
       }
       console.log('[RelationshipInsights] ============================================');
-      console.log('[RelationshipInsights] All leads with insights:', data.map(l => ({
+      console.log('[RelationshipInsights] All leads with insights:', data.map((l: any) => ({
         name: l.name,
         email: l.email,
         hasInsight: !!l.relationship_insight,
