@@ -30,24 +30,42 @@ export async function analyzeClientLeads(
   periodStart: Date,
   periodEnd: Date
 ): Promise<Omit<GrowthBrainRecord, 'id' | 'analyzed_at' | 'created_at'>> {
-  // Fetch leads for the period
+  console.log(`[Engine] Analyzing leads for client: ${clientId || 'global'}`);
+  console.log(`[Engine] Period: ${periodStart.toISOString()} to ${periodEnd.toISOString()}`);
+  
+  // Fetch leads for the period (only active leads: not archived, not deleted)
   let query = supabase
     .from('lead_memory')
     .select('*')
     .gte('timestamp', periodStart.toISOString())
-    .lte('timestamp', periodEnd.toISOString());
+    .lte('timestamp', periodEnd.toISOString())
+    .eq('archived', false)
+    .eq('deleted', false);
 
   if (clientId) {
     query = query.eq('client_id', clientId);
   }
 
-  const { data: leads, error } = await query;
+  console.log('[Engine] Executing Supabase query...');
+  const { data: leads, error, count } = await query;
+
+  console.log(`[Engine] Supabase response:`, {
+    rowCount: leads?.length || 0,
+    totalCount: count,
+    error: error ? JSON.stringify(error) : 'none',
+  });
 
   if (error) {
+    console.error('[Engine] Supabase query error:', JSON.stringify(error));
     throw error;
   }
 
   const allLeads = (leads || []) as LeadMemoryRecord[];
+  console.log(`[Engine] Fetched leads: ${allLeads.length}`);
+  
+  if (allLeads.length > 0) {
+    console.log(`[Engine] Sample lead IDs:`, allLeads.slice(0, 3).map(l => l.id));
+  }
 
   // 1. Top Intents Analysis
   const intentCounts: Record<string, number> = {};
@@ -194,7 +212,7 @@ export async function analyzeClientLeads(
     },
   };
 
-  return {
+  const result = {
     client_id: clientId,
     analysis_period_start: periodStart.toISOString(),
     analysis_period_end: periodEnd.toISOString(),
@@ -210,6 +228,16 @@ export async function analyzeClientLeads(
     engagement_score: engagementScore,
     predictive_insights: predictiveInsights,
   };
+
+  console.log('[Engine] Analysis complete:', {
+    client_id: clientId || 'global',
+    total_leads: result.total_leads,
+    top_intent: topIntents[0]?.intent || 'N/A',
+    high_urgency: urgencyDist.high,
+    avg_confidence: (avgConfidence * 100).toFixed(1) + '%',
+  });
+
+  return result;
 }
 
 /**
@@ -217,20 +245,35 @@ export async function analyzeClientLeads(
  */
 export async function storeGrowthInsights(insights: Omit<GrowthBrainRecord, 'id' | 'analyzed_at' | 'created_at'>) {
   try {
+    console.log('[Engine] Storing insights to growth_brain table...');
+    console.log('[Engine] Insights data:', {
+      client_id: insights.client_id,
+      total_leads: insights.total_leads,
+      period: `${insights.analysis_period_start} to ${insights.analysis_period_end}`,
+    });
+
     const { data, error } = await supabase
       .from('growth_brain')
       .insert(insights)
       .select()
       .single();
 
+    console.log('[Engine] Supabase insert response:', {
+      success: !error,
+      data: data ? 'inserted' : 'null',
+      error: error ? JSON.stringify(error) : 'none',
+    });
+
     if (error) {
+      console.error('[Engine] Insert error details:', JSON.stringify(error, null, 2));
       throw error;
     }
 
-    console.log('[Intelligence Engine] Growth insights stored successfully');
+    console.log('[Engine] Growth insights stored successfully, ID:', data.id);
     return data as GrowthBrainRecord;
   } catch (err) {
-    console.error('[Intelligence Engine] Failed to store insights:', err instanceof Error ? err.message : err);
+    console.error('[Engine] Failed to store insights:', err instanceof Error ? err.message : err);
+    console.error('[Engine] Error details:', err);
     throw err;
   }
 }
@@ -298,34 +341,63 @@ export async function getGrowthInsightsHistory(clientId: string | null = null, l
  * Run weekly intelligence analysis for all clients
  */
 export async function runWeeklyAnalysis(): Promise<{ processed: number; errors: number }> {
-  console.log('[Intelligence Engine] Starting weekly analysis...');
+  console.log('[Engine] ============================================');
+  console.log('[Engine] Starting weekly intelligence analysis...');
+  console.log('[Engine] ============================================');
   
   const now = new Date();
   const weekAgo = new Date(now);
   weekAgo.setDate(weekAgo.getDate() - 7);
+
+  console.log('[Engine] Analysis period:', {
+    start: weekAgo.toISOString(),
+    end: now.toISOString(),
+    days: 7,
+  });
 
   let processed = 0;
   let errors = 0;
 
   try {
     // 1. Analyze global leads (all clients combined)
+    console.log('[Engine] -------- Global Analysis --------');
     try {
       const globalInsights = await analyzeClientLeads(null, weekAgo, now);
-      await storeGrowthInsights(globalInsights);
-      processed++;
-      console.log('[Intelligence Engine] Global analysis complete');
+      console.log('[Engine] Global insights generated:', {
+        total_leads: globalInsights.total_leads,
+        avg_confidence: globalInsights.avg_confidence,
+        engagement_score: globalInsights.engagement_score,
+      });
+      
+      if (globalInsights.total_leads > 0) {
+        await storeGrowthInsights(globalInsights);
+        processed++;
+        console.log('[Engine] ✅ Global analysis complete and stored');
+      } else {
+        console.log('[Engine] ⚠️  No leads found in period - skipping storage');
+      }
     } catch (err) {
-      console.error('[Intelligence Engine] Global analysis failed:', err);
+      console.error('[Engine] ❌ Global analysis failed:', err instanceof Error ? err.message : err);
+      console.error('[Engine] Error stack:', err);
       errors++;
     }
 
     // 2. Analyze per-client leads
-    const { data: clients } = await supabase
+    console.log('[Engine] -------- Per-Client Analysis --------');
+    const { data: clients, error: clientError } = await supabase
       .from('clients')
       .select('id, company_name');
 
+    console.log('[Engine] Clients query result:', {
+      count: clients?.length || 0,
+      error: clientError ? JSON.stringify(clientError) : 'none',
+    });
+
     if (clients && clients.length > 0) {
+      console.log(`[Engine] Found ${clients.length} clients to analyze`);
+      
       for (const client of clients) {
+        console.log(`[Engine] ---- Analyzing client: ${client.company_name} (${client.id}) ----`);
         try {
           const clientInsights = await analyzeClientLeads(client.id, weekAgo, now);
           
@@ -333,19 +405,28 @@ export async function runWeeklyAnalysis(): Promise<{ processed: number; errors: 
           if (clientInsights.total_leads > 0) {
             await storeGrowthInsights(clientInsights);
             processed++;
-            console.log(`[Intelligence Engine] Analysis complete for client: ${client.company_name}`);
+            console.log(`[Engine] ✅ Analysis complete for client: ${client.company_name}`);
+          } else {
+            console.log(`[Engine] ⚠️  No leads for ${client.company_name} - skipping`);
           }
         } catch (err) {
-          console.error(`[Intelligence Engine] Failed to analyze client ${client.company_name}:`, err);
+          console.error(`[Engine] ❌ Failed to analyze client ${client.company_name}:`, err instanceof Error ? err.message : err);
+          console.error(`[Engine] Error details:`, err);
           errors++;
         }
       }
+    } else {
+      console.log('[Engine] No clients found - skipping per-client analysis');
     }
 
-    console.log(`[Intelligence Engine] Weekly analysis complete. Processed: ${processed}, Errors: ${errors}`);
+    console.log('[Engine] ============================================');
+    console.log(`[Engine] Weekly analysis complete`);
+    console.log(`[Engine] ✅ Processed: ${processed}, ❌ Errors: ${errors}`);
+    console.log('[Engine] ============================================');
     return { processed, errors };
   } catch (err) {
-    console.error('[Intelligence Engine] Weekly analysis failed:', err);
+    console.error('[Engine] ❌ Weekly analysis failed:', err instanceof Error ? err.message : err);
+    console.error('[Engine] Error details:', err);
     return { processed, errors: errors + 1 };
   }
 }
