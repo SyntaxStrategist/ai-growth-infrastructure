@@ -53,7 +53,12 @@ CREATE TABLE IF NOT EXISTS lead_memory (
   client_id UUID REFERENCES clients(id) ON DELETE SET NULL,
   archived BOOLEAN DEFAULT FALSE,
   deleted BOOLEAN DEFAULT FALSE,
-  current_tag TEXT
+  current_tag TEXT,
+  tone_history JSONB DEFAULT '[]'::jsonb,
+  confidence_history JSONB DEFAULT '[]'::jsonb,
+  urgency_history JSONB DEFAULT '[]'::jsonb,
+  last_updated TIMESTAMPTZ DEFAULT NOW(),
+  relationship_insight TEXT
 );
 
 -- Add columns if they don't exist (for existing tables)
@@ -79,6 +84,41 @@ BEGIN
   ) THEN
     ALTER TABLE lead_memory ADD COLUMN current_tag TEXT;
   END IF;
+  
+  IF NOT EXISTS (
+    SELECT 1 FROM information_schema.columns 
+    WHERE table_name = 'lead_memory' AND column_name = 'tone_history'
+  ) THEN
+    ALTER TABLE lead_memory ADD COLUMN tone_history JSONB DEFAULT '[]'::jsonb;
+  END IF;
+  
+  IF NOT EXISTS (
+    SELECT 1 FROM information_schema.columns 
+    WHERE table_name = 'lead_memory' AND column_name = 'confidence_history'
+  ) THEN
+    ALTER TABLE lead_memory ADD COLUMN confidence_history JSONB DEFAULT '[]'::jsonb;
+  END IF;
+  
+  IF NOT EXISTS (
+    SELECT 1 FROM information_schema.columns 
+    WHERE table_name = 'lead_memory' AND column_name = 'urgency_history'
+  ) THEN
+    ALTER TABLE lead_memory ADD COLUMN urgency_history JSONB DEFAULT '[]'::jsonb;
+  END IF;
+  
+  IF NOT EXISTS (
+    SELECT 1 FROM information_schema.columns 
+    WHERE table_name = 'lead_memory' AND column_name = 'last_updated'
+  ) THEN
+    ALTER TABLE lead_memory ADD COLUMN last_updated TIMESTAMPTZ DEFAULT NOW();
+  END IF;
+  
+  IF NOT EXISTS (
+    SELECT 1 FROM information_schema.columns 
+    WHERE table_name = 'lead_memory' AND column_name = 'relationship_insight'
+  ) THEN
+    ALTER TABLE lead_memory ADD COLUMN relationship_insight TEXT;
+  END IF;
 END $$;
 
 CREATE INDEX IF NOT EXISTS lead_memory_timestamp_idx ON lead_memory(timestamp);
@@ -89,6 +129,7 @@ CREATE INDEX IF NOT EXISTS lead_memory_client_id_idx ON lead_memory(client_id);
 CREATE INDEX IF NOT EXISTS lead_memory_archived_idx ON lead_memory(archived);
 CREATE INDEX IF NOT EXISTS lead_memory_deleted_idx ON lead_memory(deleted);
 CREATE INDEX IF NOT EXISTS lead_memory_current_tag_idx ON lead_memory(current_tag);
+CREATE INDEX IF NOT EXISTS lead_memory_last_updated_idx ON lead_memory(last_updated);
 
 -- Enable Row Level Security (RLS) for clients table
 ALTER TABLE clients ENABLE ROW LEVEL SECURITY;

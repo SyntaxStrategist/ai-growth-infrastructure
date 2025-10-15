@@ -2,6 +2,11 @@
 /* eslint-disable prefer-const */
 import { createClient } from '@supabase/supabase-js';
 
+export type HistoryEntry = {
+  value: string | number;
+  timestamp: string;
+};
+
 export type LeadMemoryRecord = {
   id: string;
   name: string;
@@ -18,6 +23,11 @@ export type LeadMemoryRecord = {
   archived?: boolean;
   deleted?: boolean;
   current_tag?: string | null;
+  tone_history?: HistoryEntry[];
+  confidence_history?: HistoryEntry[];
+  urgency_history?: HistoryEntry[];
+  last_updated?: string;
+  relationship_insight?: string | null;
 };
 
 export type ClientRecord = {
@@ -229,7 +239,7 @@ export async function enrichLeadInDatabase(params: {
   confidence_score: number;
 }) {
   try {
-    const { data, error } = await supabase
+    const { data, error} = await supabase
       .from('lead_memory')
       .update({
         intent: params.intent,
@@ -249,6 +259,173 @@ export async function enrichLeadInDatabase(params: {
     return data;
   } catch (err) {
     console.error('[Supabase] Enrichment update failed:', err instanceof Error ? err.message : err);
+    throw err;
+  }
+}
+
+export async function upsertLeadWithHistory(params: {
+  email: string;
+  name: string;
+  message: string;
+  ai_summary: string | null;
+  language: string;
+  timestamp: string;
+  intent: string;
+  tone: string;
+  urgency: string;
+  confidence_score: number;
+  client_id?: string | null;
+}): Promise<{ isNew: boolean; leadId: string; insight: string | null }> {
+  try {
+    console.log('[LeadMemory] Checking for existing lead with email:', params.email);
+    
+    // Check if lead with this email already exists
+    const { data: existingLead, error: fetchError } = await supabase
+      .from('lead_memory')
+      .select('*')
+      .eq('email', params.email)
+      .eq('deleted', false)
+      .single();
+    
+    if (fetchError && fetchError.code !== 'PGRST116') { // PGRST116 = no rows returned
+      console.error('[LeadMemory] Error checking for existing lead:', fetchError);
+      throw fetchError;
+    }
+    
+    const now = new Date().toISOString();
+    
+    if (existingLead) {
+      console.log('[LeadMemory] Existing record found for email:', params.email);
+      console.log('[LeadMemory] Lead ID:', existingLead.id);
+      
+      // Parse existing histories
+      const toneHistory: HistoryEntry[] = Array.isArray(existingLead.tone_history) ? existingLead.tone_history : [];
+      const confidenceHistory: HistoryEntry[] = Array.isArray(existingLead.confidence_history) ? existingLead.confidence_history : [];
+      const urgencyHistory: HistoryEntry[] = Array.isArray(existingLead.urgency_history) ? existingLead.urgency_history : [];
+      
+      // Append new values
+      toneHistory.push({ value: params.tone, timestamp: now });
+      confidenceHistory.push({ value: params.confidence_score, timestamp: now });
+      urgencyHistory.push({ value: params.urgency, timestamp: now });
+      
+      console.log('[LeadMemory] Updated tone history length:', toneHistory.length);
+      console.log('[LeadMemory] Updated confidence history length:', confidenceHistory.length);
+      console.log('[LeadMemory] Updated urgency history length:', urgencyHistory.length);
+      
+      // Generate relationship insight
+      let insight = '';
+      const previousTone = existingLead.tone;
+      const previousConfidence = existingLead.confidence_score;
+      const previousUrgency = existingLead.urgency;
+      
+      // Detect tone change
+      if (previousTone && previousTone !== params.tone) {
+        insight = `Tone shifted from ${previousTone.toLowerCase()} to ${params.tone.toLowerCase()}`;
+      }
+      
+      // Detect confidence change
+      if (previousConfidence !== null && previousConfidence !== undefined) {
+        const confidenceDiff = params.confidence_score - previousConfidence;
+        if (Math.abs(confidenceDiff) >= 0.15) { // 15% change
+          const direction = confidenceDiff > 0 ? 'increased' : 'decreased';
+          if (insight) {
+            insight += ` and confidence ${direction}`;
+          } else {
+            insight = `Confidence ${direction} by ${Math.abs(confidenceDiff * 100).toFixed(0)}%`;
+          }
+        }
+      }
+      
+      // Add follow-up recommendation
+      if (params.tone.toLowerCase().includes('confident') || params.urgency.toLowerCase().includes('high')) {
+        insight += insight ? ' — great time to follow up!' : 'High urgency detected — follow up now!';
+      } else if (params.tone.toLowerCase().includes('hesitant')) {
+        insight += insight ? ' — nurture with more info.' : 'Hesitant tone — provide more information.';
+      }
+      
+      console.log('[LeadMemory] Generated new relationship insight:', insight || 'No significant change');
+      
+      // Update the existing lead
+      const { data: updatedLead, error: updateError } = await supabase
+        .from('lead_memory')
+        .update({
+          name: params.name,
+          message: params.message,
+          ai_summary: params.ai_summary,
+          language: params.language,
+          timestamp: params.timestamp,
+          intent: params.intent,
+          tone: params.tone,
+          urgency: params.urgency,
+          confidence_score: params.confidence_score,
+          tone_history: toneHistory,
+          confidence_history: confidenceHistory,
+          urgency_history: urgencyHistory,
+          last_updated: now,
+          relationship_insight: insight || null,
+        })
+        .eq('id', existingLead.id)
+        .select()
+        .single();
+      
+      if (updateError) {
+        console.error('[LeadMemory] Failed to update existing lead:', updateError);
+        throw updateError;
+      }
+      
+      console.log('[LeadMemory] ✅ Existing lead updated successfully');
+      return { isNew: false, leadId: existingLead.id, insight: insight || null };
+      
+    } else {
+      console.log('[LeadMemory] No existing record found - creating new lead');
+      
+      // Generate unique ID
+      const id = `lead_${Date.now()}_${Math.random().toString(36).slice(2, 11)}`;
+      
+      // Initialize histories with first entry
+      const initialToneHistory: HistoryEntry[] = [{ value: params.tone, timestamp: now }];
+      const initialConfidenceHistory: HistoryEntry[] = [{ value: params.confidence_score, timestamp: now }];
+      const initialUrgencyHistory: HistoryEntry[] = [{ value: params.urgency, timestamp: now }];
+      
+      const newRecord: any = {
+        id,
+        name: params.name,
+        email: params.email,
+        message: params.message,
+        ai_summary: params.ai_summary,
+        language: params.language,
+        timestamp: params.timestamp,
+        intent: params.intent,
+        tone: params.tone,
+        urgency: params.urgency,
+        confidence_score: params.confidence_score,
+        tone_history: initialToneHistory,
+        confidence_history: initialConfidenceHistory,
+        urgency_history: initialUrgencyHistory,
+        last_updated: now,
+        relationship_insight: null, // No insight for first contact
+      };
+      
+      if (params.client_id) {
+        newRecord.client_id = params.client_id;
+      }
+      
+      const { data: insertedLead, error: insertError } = await supabase
+        .from('lead_memory')
+        .insert(newRecord)
+        .select()
+        .single();
+      
+      if (insertError) {
+        console.error('[LeadMemory] Failed to insert new lead:', insertError);
+        throw insertError;
+      }
+      
+      console.log('[LeadMemory] ✅ New lead created successfully');
+      return { isNew: true, leadId: id, insight: null };
+    }
+  } catch (err) {
+    console.error('[LeadMemory] upsertLeadWithHistory failed:', err instanceof Error ? err.message : err);
     throw err;
   }
 }

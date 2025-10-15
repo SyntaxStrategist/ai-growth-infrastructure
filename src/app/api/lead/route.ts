@@ -4,7 +4,7 @@ import { NextRequest } from "next/server";
 import { google } from "googleapis";
 import OpenAI from "openai";
 import { getAuthorizedGmail, buildHtmlEmail } from "../../../lib/gmail";
-import { saveLeadToSupabase, enrichLeadInDatabase, validateApiKey } from "../../../lib/supabase";
+import { validateApiKey, upsertLeadWithHistory } from "../../../lib/supabase";
 import { enrichLeadWithAI } from "../../../lib/ai-enrichment";
 
 type LeadPayload = {
@@ -211,58 +211,57 @@ export async function POST(req: NextRequest) {
 				console.error("gmail_send_error", mailErr);
 			}
 
-			// Store lead in growth memory database via Supabase REST API
-			let leadId: string | undefined;
+			// AI Intelligence Layer + Historical Tracking: Analyze and store/update lead
 			try {
-				const savedRecord = await saveLeadToSupabase({
-					name,
-					email,
+				console.log('[AI Intelligence] Analyzing lead for enrichment...');
+				
+				const enrichment = await enrichLeadWithAI({
 					message,
-					aiSummary: aiSummary || null,
+					aiSummary,
 					language: locale,
-					timestamp,
-					clientId,
 				});
 				
-				leadId = savedRecord?.id;
-				if (clientId) {
-					console.log(`[Lead API] Lead saved to database with client_id: ${clientId}`);
+				console.log('[AI Intelligence] Enrichment complete:', {
+					intent: enrichment.intent,
+					tone: enrichment.tone,
+					urgency: enrichment.urgency,
+					confidence: enrichment.confidence_score,
+				});
+				
+				// Upsert lead with historical tracking
+				console.log('[AI Intelligence] Upserting lead with history tracking...');
+				const result = await upsertLeadWithHistory({
+					email,
+					name,
+					message,
+					ai_summary: aiSummary || null,
+					language: locale,
+					timestamp,
+					intent: enrichment.intent,
+					tone: enrichment.tone,
+					urgency: enrichment.urgency,
+					confidence_score: enrichment.confidence_score,
+					client_id: clientId,
+				});
+				
+				if (result.isNew) {
+					console.log('[AI Intelligence] ✅ New lead created:', result.leadId);
 				} else {
-					console.log('[Lead API] Lead saved to database (internal)');
+					console.log('[AI Intelligence] ✅ Existing lead updated:', result.leadId);
+					if (result.insight) {
+						console.log('[AI Intelligence] 📊 Relationship insight:', result.insight);
+					}
 				}
-			} catch {
+				
+				if (clientId) {
+					console.log(`[Lead API] Lead processed with client_id: ${clientId}`);
+				} else {
+					console.log('[Lead API] Lead processed (internal)');
+				}
+			} catch (enrichError) {
 				// non-fatal: log for debugging but don't break the flow
-				console.warn('[Lead API] Database save failed');
-			}
-
-			// AI Intelligence Layer: Enrich lead with intent, tone, urgency
-			if (leadId && aiSummary) {
-				try {
-					console.log('[AI Intelligence] Analyzing lead...');
-					
-					const enrichment = await enrichLeadWithAI({
-						message,
-						aiSummary,
-						language: locale,
-					});
-					
-					await enrichLeadInDatabase({
-						id: leadId,
-						intent: enrichment.intent,
-						tone: enrichment.tone,
-						urgency: enrichment.urgency,
-						confidence_score: enrichment.confidence_score,
-					});
-					
-					console.log('[AI Intelligence] Lead enriched:', {
-						intent: enrichment.intent,
-						urgency: enrichment.urgency,
-						confidence: enrichment.confidence_score,
-					});
-				} catch {
-					// non-fatal
-					console.warn('[AI Intelligence] Enrichment failed');
-				}
+				console.error('[AI Intelligence] Enrichment/storage failed:', enrichError);
+				console.warn('[AI Intelligence] Continuing without enrichment');
 			}
 		} catch (sheetsError) {
 			const msg = sheetsError instanceof Error ? sheetsError.message : "Failed to append to Google Sheet";

@@ -12,6 +12,12 @@ type CopilotSummary = {
   trendSummary: string;
   recommendedActions: string[];
   prediction: string;
+  relationshipInsights?: Array<{
+    name: string;
+    email: string;
+    insight: string;
+    lastUpdated: string;
+  }>;
 };
 
 export default function GrowthCopilot({ locale }: GrowthCopilotProps) {
@@ -27,11 +33,13 @@ export default function GrowthCopilot({ locale }: GrowthCopilotProps) {
     trendSummary: isFrench ? 'Résumé des tendances' : 'Trend Summary',
     recommendedActions: isFrench ? 'Actions recommandées' : 'Recommended Actions',
     prediction: isFrench ? 'Prédiction' : 'Prediction',
+    relationshipInsights: isFrench ? 'Aperçus relationnels' : 'Relationship Insights',
     generateSummary: isFrench ? 'Générer un nouveau résumé' : 'Generate Fresh Summary',
     loading: isFrench ? 'Analyse en cours...' : 'Analyzing...',
     refreshing: isFrench ? 'Actualisation des données...' : 'Refreshing data...',
     poweredBy: isFrench ? 'Propulsé par GPT-4o-mini' : 'Powered by GPT-4o-mini',
     refreshError: isFrench ? 'Impossible d\'actualiser le résumé. Réessayez plus tard.' : 'Unable to refresh summary. Try again later.',
+    noInsights: isFrench ? 'Aucun aperçu disponible' : 'No insights available',
   };
 
   async function manualRefresh() {
@@ -202,10 +210,36 @@ export default function GrowthCopilot({ locale }: GrowthCopilotProps) {
         ? `Basé sur ${insights.total_leads} leads analysés avec une confiance moyenne de ${avgConfidencePercent}%, votre score d'engagement est de ${engagementScoreValue}/100.`
         : `Based on ${insights.total_leads} analyzed leads with ${avgConfidencePercent}% average confidence, your engagement score is ${engagementScoreValue}/100.`;
 
+      // Fetch recent leads with relationship insights
+      console.log('[GrowthCopilot] Fetching recent leads with relationship insights...');
+      let relationshipInsights: Array<{ name: string; email: string; insight: string; lastUpdated: string }> = [];
+      
+      try {
+        const leadsRes = await fetch(`/api/leads?limit=10&locale=${locale}`);
+        const leadsJson = await leadsRes.json();
+        
+        if (leadsJson.success && leadsJson.data) {
+          relationshipInsights = leadsJson.data
+            .filter((lead: any) => lead.relationship_insight && lead.relationship_insight.trim())
+            .map((lead: any) => ({
+              name: lead.name,
+              email: lead.email,
+              insight: lead.relationship_insight,
+              lastUpdated: lead.last_updated || lead.timestamp,
+            }))
+            .slice(0, 5); // Show top 5
+          
+          console.log('[GrowthCopilot] Found', relationshipInsights.length, 'leads with insights');
+        }
+      } catch (err) {
+        console.error('[GrowthCopilot] Failed to fetch relationship insights:', err);
+      }
+
       const newSummary = {
         trendSummary,
         recommendedActions,
         prediction,
+        relationshipInsights,
       };
       
       console.log('[GrowthCopilot] ============================================');
@@ -362,6 +396,42 @@ export default function GrowthCopilot({ locale }: GrowthCopilotProps) {
                       <p className="text-sm text-white/80 leading-relaxed">
                         {summary.prediction}
                       </p>
+                    </motion.div>
+                  )}
+
+                  {/* Relationship Insights */}
+                  {summary.relationshipInsights && summary.relationshipInsights.length > 0 && (
+                    <motion.div
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 0.3 }}
+                      className="rounded-lg border border-blue-500/30 p-4 bg-gradient-to-br from-blue-500/10 to-cyan-500/10"
+                    >
+                      <div className="flex items-center gap-2 mb-3">
+                        <span className="text-lg">📈</span>
+                        <h3 className="text-sm font-semibold text-blue-300">{t.relationshipInsights}</h3>
+                      </div>
+                      <div className="space-y-3">
+                        {summary.relationshipInsights.map((insight, idx) => (
+                          <div key={idx} className="rounded-md border border-white/10 p-3 bg-white/5">
+                            <div className="flex items-start justify-between gap-2 mb-2">
+                              <div className="flex-1 min-w-0">
+                                <p className="text-sm font-medium text-white truncate">{insight.name}</p>
+                                <p className="text-xs text-white/50 truncate">{insight.email}</p>
+                              </div>
+                              <span className="text-xs text-white/40 whitespace-nowrap">
+                                {new Date(insight.lastUpdated).toLocaleDateString(locale === 'fr' ? 'fr-CA' : 'en-US', { 
+                                  month: 'short', 
+                                  day: 'numeric' 
+                                })}
+                              </span>
+                            </div>
+                            <p className="text-xs text-blue-300 leading-relaxed">
+                              💡 {insight.insight}
+                            </p>
+                          </div>
+                        ))}
+                      </div>
                     </motion.div>
                   )}
                 </div>
