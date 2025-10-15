@@ -121,6 +121,61 @@ BEGIN
   END IF;
 END $$;
 
+-- Refresh schema cache to ensure PostgREST picks up new columns
+ALTER TABLE lead_memory REPLICA IDENTITY FULL;
+
+-- Verify all required columns exist
+DO $$
+DECLARE
+  missing_columns TEXT := '';
+BEGIN
+  -- Check for tone_history
+  IF NOT EXISTS (
+    SELECT 1 FROM information_schema.columns 
+    WHERE table_name = 'lead_memory' AND column_name = 'tone_history'
+  ) THEN
+    missing_columns := missing_columns || 'tone_history, ';
+  END IF;
+  
+  -- Check for confidence_history
+  IF NOT EXISTS (
+    SELECT 1 FROM information_schema.columns 
+    WHERE table_name = 'lead_memory' AND column_name = 'confidence_history'
+  ) THEN
+    missing_columns := missing_columns || 'confidence_history, ';
+  END IF;
+  
+  -- Check for urgency_history
+  IF NOT EXISTS (
+    SELECT 1 FROM information_schema.columns 
+    WHERE table_name = 'lead_memory' AND column_name = 'urgency_history'
+  ) THEN
+    missing_columns := missing_columns || 'urgency_history, ';
+  END IF;
+  
+  -- Check for relationship_insight
+  IF NOT EXISTS (
+    SELECT 1 FROM information_schema.columns 
+    WHERE table_name = 'lead_memory' AND column_name = 'relationship_insight'
+  ) THEN
+    missing_columns := missing_columns || 'relationship_insight, ';
+  END IF;
+  
+  -- Check for last_updated
+  IF NOT EXISTS (
+    SELECT 1 FROM information_schema.columns 
+    WHERE table_name = 'lead_memory' AND column_name = 'last_updated'
+  ) THEN
+    missing_columns := missing_columns || 'last_updated, ';
+  END IF;
+  
+  IF missing_columns != '' THEN
+    RAISE EXCEPTION 'Missing columns in lead_memory: %', missing_columns;
+  ELSE
+    RAISE NOTICE '✅ All required columns present in lead_memory table';
+  END IF;
+END $$;
+
 CREATE INDEX IF NOT EXISTS lead_memory_timestamp_idx ON lead_memory(timestamp);
 CREATE INDEX IF NOT EXISTS lead_memory_email_idx ON lead_memory(email);
 CREATE INDEX IF NOT EXISTS lead_memory_urgency_idx ON lead_memory(urgency);

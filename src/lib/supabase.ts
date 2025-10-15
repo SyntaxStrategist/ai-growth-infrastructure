@@ -231,6 +231,47 @@ export async function saveLeadToSupabase(data: {
   }
 }
 
+export async function verifyLeadMemorySchema(): Promise<{ verified: boolean; missingColumns: string[] }> {
+  try {
+    console.log('[Schema Verification] Checking lead_memory table schema...');
+    
+    // Try to select the new columns to verify they exist
+    const { data, error } = await supabase
+      .from('lead_memory')
+      .select('id, tone_history, confidence_history, urgency_history, last_updated, relationship_insight')
+      .limit(1);
+    
+    if (error) {
+      console.error('[Schema Verification] ❌ Schema check failed:', {
+        code: error.code,
+        message: error.message,
+        details: error.details,
+        hint: error.hint,
+      });
+      
+      // Parse error message to detect missing columns
+      const missingColumns: string[] = [];
+      const errorMsg = error.message.toLowerCase();
+      
+      if (errorMsg.includes('tone_history')) missingColumns.push('tone_history');
+      if (errorMsg.includes('confidence_history')) missingColumns.push('confidence_history');
+      if (errorMsg.includes('urgency_history')) missingColumns.push('urgency_history');
+      if (errorMsg.includes('last_updated')) missingColumns.push('last_updated');
+      if (errorMsg.includes('relationship_insight')) missingColumns.push('relationship_insight');
+      
+      console.error('[Schema Verification] Missing columns:', missingColumns.join(', '));
+      return { verified: false, missingColumns };
+    }
+    
+    console.log('[Schema Verification] ✅ Schema verified: tone_history, confidence_history, urgency_history, last_updated, relationship_insight present');
+    return { verified: true, missingColumns: [] };
+    
+  } catch (err) {
+    console.error('[Schema Verification] ❌ Unexpected error during schema check:', err);
+    return { verified: false, missingColumns: ['unknown'] };
+  }
+}
+
 export async function enrichLeadInDatabase(params: {
   id: string;
   intent: string;
@@ -292,6 +333,20 @@ export async function upsertLeadWithHistory(params: {
       message_length: params.message?.length || 0,
       ai_summary_length: params.ai_summary?.length || 0,
     });
+    
+    // Verify schema before attempting upsert
+    console.log('[LeadMemory] Verifying schema...');
+    const schemaCheck = await verifyLeadMemorySchema();
+    
+    if (!schemaCheck.verified) {
+      console.error('[LeadMemory] ============================================');
+      console.error('[LeadMemory] ❌ SCHEMA VERIFICATION FAILED');
+      console.error('[LeadMemory] ============================================');
+      console.error('[LeadMemory] Missing columns:', schemaCheck.missingColumns.join(', '));
+      console.error('[LeadMemory] Please run the migration SQL from supabase-setup.sql');
+      console.error('[LeadMemory] ============================================');
+      throw new Error(`Schema verification failed. Missing columns: ${schemaCheck.missingColumns.join(', ')}`);
+    }
     
     console.log('[LeadMemory] Checking for existing lead with email:', params.email);
     console.log('[LeadMemory] Supabase URL:', supabaseUrl);
