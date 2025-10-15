@@ -287,30 +287,48 @@ export async function storeGrowthInsights(insights: Omit<GrowthBrainRecord, 'id'
     console.log('[Engine] Storing insights to growth_brain table...');
     console.log('[Engine] ============================================');
     
-    // Log the complete data structure being inserted
-    console.log('[Engine] Complete insights object:', JSON.stringify(insights, null, 2));
+    // Validate data types before insert
+    console.log('[Engine] Validating data types...');
+    console.log('[Engine] client_id type:', typeof insights.client_id, '| value:', insights.client_id);
+    console.log('[Engine] total_leads type:', typeof insights.total_leads, '| value:', insights.total_leads);
+    console.log('[Engine] period_start type:', typeof insights.analysis_period_start, '| value:', insights.analysis_period_start);
+    console.log('[Engine] period_end type:', typeof insights.analysis_period_end, '| value:', insights.analysis_period_end);
+    console.log('[Engine] avg_confidence type:', typeof insights.avg_confidence, '| value:', insights.avg_confidence);
+    console.log('[Engine] engagement_score type:', typeof insights.engagement_score, '| value:', insights.engagement_score);
+    console.log('[Engine] urgency_trend_percentage type:', typeof insights.urgency_trend_percentage, '| value:', insights.urgency_trend_percentage);
+    console.log('[Engine] tone_sentiment_score type:', typeof insights.tone_sentiment_score, '| value:', insights.tone_sentiment_score);
     
-    console.log('[Engine] Data summary:', {
-      client_id: insights.client_id,
-      total_leads: insights.total_leads,
-      period_start: insights.analysis_period_start,
-      period_end: insights.analysis_period_end,
-      avg_confidence: insights.avg_confidence,
-      engagement_score: insights.engagement_score,
-      has_top_intents: !!insights.top_intents,
-      has_urgency_dist: !!insights.urgency_distribution,
-      has_predictive: !!insights.predictive_insights,
-    });
-
+    // Log array/object fields
+    console.log('[Engine] top_intents:', Array.isArray(insights.top_intents) ? `array[${insights.top_intents.length}]` : typeof insights.top_intents);
+    console.log('[Engine] urgency_distribution:', typeof insights.urgency_distribution);
+    console.log('[Engine] tone_distribution:', Array.isArray(insights.tone_distribution) ? `array[${insights.tone_distribution.length}]` : typeof insights.tone_distribution);
+    console.log('[Engine] confidence_trajectory:', Array.isArray(insights.confidence_trajectory) ? `array[${insights.confidence_trajectory.length}]` : typeof insights.confidence_trajectory);
+    console.log('[Engine] language_ratio:', typeof insights.language_ratio);
+    console.log('[Engine] predictive_insights:', typeof insights.predictive_insights);
+    
+    // Check for any undefined or NaN values
+    const hasUndefined = Object.entries(insights).some(([key, val]) => val === undefined);
+    const hasNaN = Object.entries(insights).some(([key, val]) => typeof val === 'number' && isNaN(val));
+    console.log('[Engine] Has undefined values:', hasUndefined);
+    console.log('[Engine] Has NaN values:', hasNaN);
+    
+    if (hasUndefined || hasNaN) {
+      console.error('[Engine] ❌ Data validation failed - undefined or NaN detected');
+      console.error('[Engine] Full object:', JSON.stringify(insights, null, 2));
+    }
+    
     console.log('[Engine] Executing INSERT into growth_brain...');
+    
+    const insertStart = Date.now();
     const { data, error } = await supabase
       .from('growth_brain')
       .insert(insights)
       .select()
       .single();
+    const insertDuration = Date.now() - insertStart;
 
     console.log('[Engine] ============================================');
-    console.log('[Engine] INSERT Result:');
+    console.log('[Engine] INSERT Result (took', insertDuration, 'ms):');
     console.log('[Engine] ============================================');
     console.log('[Engine] Success:', !error);
     console.log('[Engine] Data returned:', data ? 'YES' : 'NO');
@@ -318,26 +336,36 @@ export async function storeGrowthInsights(insights: Omit<GrowthBrainRecord, 'id'
     
     if (error) {
       console.error('[Engine] ❌ INSERT FAILED');
-      console.error('[Engine] Error code:', error.code);
-      console.error('[Engine] Error message:', error.message);
-      console.error('[Engine] Error details (full):', JSON.stringify(error, null, 2));
-      console.error('[Engine] Hint:', error.hint);
-      console.error('[Engine] Details:', error.details);
+      console.error('[Engine] ============================================');
+      console.error('[Engine] PostgreSQL Error Code:', error.code);
+      console.error('[Engine] Error Message:', error.message);
+      console.error('[Engine] Error Hint:', error.hint || 'none');
+      console.error('[Engine] Error Details:', error.details || 'none');
+      console.error('[Engine] ============================================');
+      console.error('[Engine] Full Supabase error object:');
+      console.error(JSON.stringify(error, null, 2));
+      console.error('[Engine] ============================================');
+      console.error('[Engine] Data that failed to insert:');
+      console.error(JSON.stringify(insights, null, 2));
+      console.error('[Engine] ============================================');
       throw error;
     }
 
     console.log('[Engine] ✅ Growth insights stored successfully');
-    console.log('[Engine] Inserted record ID:', data.id);
+    console.log('[Engine] Inserted record ID:', data?.id);
+    console.log('[Engine] Inserted record analyzed_at:', data?.analyzed_at);
     console.log('[Engine] ============================================');
     return data as GrowthBrainRecord;
-  } catch (err) {
+  } catch (err: any) {
     console.error('[Engine] ============================================');
     console.error('[Engine] ❌ CRITICAL ERROR in storeGrowthInsights');
     console.error('[Engine] ============================================');
-    console.error('[Engine] Error type:', err instanceof Error ? err.constructor.name : typeof err);
-    console.error('[Engine] Error message:', err instanceof Error ? err.message : String(err));
-    console.error('[Engine] Error stack:', err instanceof Error ? err.stack : 'N/A');
-    console.error('[Engine] Full error object:', err);
+    console.error('[Engine] Error type:', err?.constructor?.name || typeof err);
+    console.error('[Engine] Error message:', err?.message || String(err));
+    console.error('[Engine] Error code (if DB error):', err?.code);
+    console.error('[Engine] Error hint (if DB error):', err?.hint);
+    console.error('[Engine] Error details (if DB error):', err?.details);
+    console.error('[Engine] Error stack:', err?.stack || 'N/A');
     console.error('[Engine] ============================================');
     throw err;
   }
