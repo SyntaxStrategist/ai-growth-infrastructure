@@ -255,6 +255,7 @@ export async function getRecentLeads(limit = 50, offset = 0) {
     const { data, error, count } = await supabase
       .from('lead_memory')
       .select('*', { count: 'exact' })
+      .eq('archived', false) // Only fetch non-archived leads
       .order('timestamp', { ascending: false })
       .range(offset, offset + limit - 1);
     

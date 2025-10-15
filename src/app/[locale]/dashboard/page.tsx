@@ -158,15 +158,18 @@ export default function Dashboard() {
         body: JSON.stringify({ lead_id: leadId, action: 'delete' }),
       });
 
-      if (res.ok) {
+      const json = await res.json();
+      console.log(`[LeadAction] Delete response:`, json);
+
+      if (json.success) {
         console.log(`[LeadAction] Deleted lead ${leadId}`);
         showToast(locale === 'fr' ? 'Lead supprimé avec succès.' : 'Lead deleted successfully.');
         fetchRecentActions();
       } else {
         // Revert on failure
-        console.error(`[LeadAction] Failed to delete lead ${leadId}`);
+        console.error(`[LeadAction] Failed to delete lead ${leadId}:`, json.message || json.error);
         setLeads(originalLeads);
-        showToast(locale === 'fr' ? 'Erreur lors de la suppression.' : 'Delete failed.');
+        showToast(locale === 'fr' ? `Erreur: ${json.message || 'Suppression échouée'}` : `Error: ${json.message || 'Delete failed'}`);
       }
     } catch (err) {
       console.error(`[LeadAction] Error deleting lead ${leadId}:`, err);
@@ -188,15 +191,18 @@ export default function Dashboard() {
         body: JSON.stringify({ lead_id: leadId, action: 'archive' }),
       });
 
-      if (res.ok) {
+      const json = await res.json();
+      console.log(`[LeadAction] Archive response:`, json);
+
+      if (json.success) {
         console.log(`[LeadAction] Archived lead ${leadId}`);
         showToast(locale === 'fr' ? 'Lead archivé avec succès.' : 'Lead archived successfully.');
         fetchRecentActions();
       } else {
         // Revert on failure
-        console.error(`[LeadAction] Failed to archive lead ${leadId}`);
+        console.error(`[LeadAction] Failed to archive lead ${leadId}:`, json.message || json.error);
         setLeads(originalLeads);
-        showToast(locale === 'fr' ? 'Erreur lors de l\'archivage.' : 'Archive failed.');
+        showToast(locale === 'fr' ? `Erreur: ${json.message || 'Archivage échoué'}` : `Error: ${json.message || 'Archive failed'}`);
       }
     } catch (err) {
       console.error(`[LeadAction] Error archiving lead ${leadId}:`, err);
@@ -216,15 +222,18 @@ export default function Dashboard() {
         body: JSON.stringify({ lead_id: tagLead, action: 'tag', tag: selectedTag }),
       });
 
-      if (res.ok) {
+      const json = await res.json();
+      console.log(`[LeadAction] Tag response:`, json);
+
+      if (json.success) {
         console.log(`[LeadAction] Tagged lead ${tagLead} as ${selectedTag}`);
         setTagLead(null);
         setSelectedTag('');
         showToast(locale === 'fr' ? `Lead étiqueté comme "${selectedTag}" avec succès.` : `Lead tagged as "${selectedTag}" successfully.`);
         fetchRecentActions();
       } else {
-        console.error(`[LeadAction] Failed to tag lead ${tagLead}`);
-        showToast(locale === 'fr' ? 'Erreur lors de l\'étiquetage.' : 'Tag failed.');
+        console.error(`[LeadAction] Failed to tag lead ${tagLead}:`, json.message || json.error);
+        showToast(locale === 'fr' ? `Erreur: ${json.message || 'Étiquetage échoué'}` : `Error: ${json.message || 'Tag failed'}`);
       }
     } catch (err) {
       console.error(`[LeadAction] Error tagging lead ${tagLead}:`, err);

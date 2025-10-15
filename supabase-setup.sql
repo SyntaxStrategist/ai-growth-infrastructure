@@ -50,14 +50,27 @@ CREATE TABLE IF NOT EXISTS lead_memory (
   tone TEXT,
   urgency TEXT,
   confidence_score NUMERIC(5,2),
-  client_id UUID REFERENCES clients(id) ON DELETE SET NULL
+  client_id UUID REFERENCES clients(id) ON DELETE SET NULL,
+  archived BOOLEAN DEFAULT FALSE
 );
+
+-- Add archived column if it doesn't exist (for existing tables)
+DO $$ 
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM information_schema.columns 
+    WHERE table_name = 'lead_memory' AND column_name = 'archived'
+  ) THEN
+    ALTER TABLE lead_memory ADD COLUMN archived BOOLEAN DEFAULT FALSE;
+  END IF;
+END $$;
 
 CREATE INDEX IF NOT EXISTS lead_memory_timestamp_idx ON lead_memory(timestamp);
 CREATE INDEX IF NOT EXISTS lead_memory_email_idx ON lead_memory(email);
 CREATE INDEX IF NOT EXISTS lead_memory_urgency_idx ON lead_memory(urgency);
 CREATE INDEX IF NOT EXISTS lead_memory_confidence_idx ON lead_memory(confidence_score);
 CREATE INDEX IF NOT EXISTS lead_memory_client_id_idx ON lead_memory(client_id);
+CREATE INDEX IF NOT EXISTS lead_memory_archived_idx ON lead_memory(archived);
 
 -- Enable Row Level Security (RLS) for clients table
 ALTER TABLE clients ENABLE ROW LEVEL SECURITY;

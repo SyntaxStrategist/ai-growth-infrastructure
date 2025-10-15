@@ -17,18 +17,70 @@ export async function POST(req: NextRequest) {
   try {
     const { lead_id, action, tag, performed_by } = await req.json();
 
+    console.log(`[LeadActions] POST received - type: ${action}, lead_id: ${lead_id}`);
+
     if (!lead_id || !action) {
+      console.error('[LeadActions] Missing required fields');
       return NextResponse.json(
-        { success: false, error: "lead_id and action are required" },
+        { success: false, message: "lead_id and action are required" },
         { status: 400 }
       );
     }
 
-    // Log the action
-    const { data, error } = await supabase
+    // Validate action type
+    if (!['delete', 'archive', 'tag'].includes(action)) {
+      console.error(`[LeadActions] Invalid action type: ${action}`);
+      return NextResponse.json(
+        { success: false, message: `Invalid action type: ${action}` },
+        { status: 400 }
+      );
+    }
+
+    // Perform the actual lead action first
+    if (action === 'delete') {
+      console.log(`[LeadActions] Deleting lead ${lead_id} from lead_memory...`);
+      
+      const { error: deleteError } = await supabase
+        .from('lead_memory')
+        .delete()
+        .eq('id', lead_id);
+
+      console.log(`[LeadActions] Delete response:`, { error: deleteError || 'success' });
+
+      if (deleteError) {
+        console.error('[LeadActions] Failed to delete lead from lead_memory:', JSON.stringify(deleteError));
+        return NextResponse.json(
+          { success: false, message: "Error deleting lead", error: deleteError.message },
+          { status: 500 }
+        );
+      }
+    } else if (action === 'archive') {
+      console.log(`[LeadActions] Archiving lead ${lead_id} in lead_memory...`);
+      
+      const { error: archiveError } = await supabase
+        .from('lead_memory')
+        .update({ archived: true })
+        .eq('id', lead_id);
+
+      console.log(`[LeadActions] Archive response:`, { error: archiveError || 'success' });
+
+      if (archiveError) {
+        console.error('[LeadActions] Failed to archive lead:', JSON.stringify(archiveError));
+        return NextResponse.json(
+          { success: false, message: "Error archiving lead", error: archiveError.message },
+          { status: 500 }
+        );
+      }
+    }
+
+    // Log the action to lead_actions table
+    console.log(`[LeadActions] Logging action to lead_actions table...`);
+    
+    const actionId = randomUUID();
+    const { data: logData, error: logError } = await supabase
       .from('lead_actions')
       .insert({
-        id: randomUUID(),
+        id: actionId,
         lead_id,
         action,
         tag: tag || null,
@@ -37,30 +89,39 @@ export async function POST(req: NextRequest) {
       .select()
       .single();
 
-    if (error) {
-      console.error('[API] Failed to log lead action:', error);
-      throw error;
+    console.log(`[LeadActions] Log response:`, JSON.stringify({ data: logData, error: logError || 'success' }));
+
+    if (logError) {
+      console.error('[LeadActions] Failed to log lead action:', JSON.stringify(logError));
+      // Don't fail the request if logging fails - the main action succeeded
+      console.warn('[LeadActions] Main action succeeded but logging failed');
     }
 
-    // Perform the actual lead action if it's a delete
-    if (action === 'delete') {
-      const { error: deleteError } = await supabase
-        .from('lead_memory')
-        .delete()
-        .eq('id', lead_id);
-
-      if (deleteError) {
-        console.error('[API] Failed to delete lead from lead_memory:', deleteError);
-        throw deleteError;
-      }
+    // Return success with appropriate message
+    let message = '';
+    switch (action) {
+      case 'delete':
+        message = 'Lead deleted successfully';
+        break;
+      case 'archive':
+        message = 'Lead archived successfully';
+        break;
+      case 'tag':
+        message = `Lead tagged successfully`;
+        break;
     }
-    // Archive and tag don't require additional database changes beyond logging
 
-    return NextResponse.json({ success: true, data });
+    console.log(`[LeadActions] ${message}`);
+    return NextResponse.json({ success: true, message, data: logData });
+    
   } catch (error) {
-    console.error('[API] Error processing lead action:', error);
+    console.error('[LeadActions] Error processing lead action:', error);
     return NextResponse.json(
-      { success: false, error: error instanceof Error ? error.message : "Internal Server Error" },
+      { 
+        success: false, 
+        message: "Internal server error", 
+        error: error instanceof Error ? error.message : "Unknown error" 
+      },
       { status: 500 }
     );
   }
