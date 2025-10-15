@@ -283,35 +283,62 @@ export async function analyzeClientLeads(
  */
 export async function storeGrowthInsights(insights: Omit<GrowthBrainRecord, 'id' | 'analyzed_at' | 'created_at'>) {
   try {
+    console.log('[Engine] ============================================');
     console.log('[Engine] Storing insights to growth_brain table...');
-    console.log('[Engine] Insights data:', {
+    console.log('[Engine] ============================================');
+    
+    // Log the complete data structure being inserted
+    console.log('[Engine] Complete insights object:', JSON.stringify(insights, null, 2));
+    
+    console.log('[Engine] Data summary:', {
       client_id: insights.client_id,
       total_leads: insights.total_leads,
-      period: `${insights.analysis_period_start} to ${insights.analysis_period_end}`,
+      period_start: insights.analysis_period_start,
+      period_end: insights.analysis_period_end,
+      avg_confidence: insights.avg_confidence,
+      engagement_score: insights.engagement_score,
+      has_top_intents: !!insights.top_intents,
+      has_urgency_dist: !!insights.urgency_distribution,
+      has_predictive: !!insights.predictive_insights,
     });
 
+    console.log('[Engine] Executing INSERT into growth_brain...');
     const { data, error } = await supabase
       .from('growth_brain')
       .insert(insights)
       .select()
       .single();
 
-    console.log('[Engine] Supabase insert response:', {
-      success: !error,
-      data: data ? 'inserted' : 'null',
-      error: error ? JSON.stringify(error) : 'none',
-    });
-
+    console.log('[Engine] ============================================');
+    console.log('[Engine] INSERT Result:');
+    console.log('[Engine] ============================================');
+    console.log('[Engine] Success:', !error);
+    console.log('[Engine] Data returned:', data ? 'YES' : 'NO');
+    console.log('[Engine] Error:', error ? 'YES' : 'NO');
+    
     if (error) {
-      console.error('[Engine] Insert error details:', JSON.stringify(error, null, 2));
+      console.error('[Engine] ❌ INSERT FAILED');
+      console.error('[Engine] Error code:', error.code);
+      console.error('[Engine] Error message:', error.message);
+      console.error('[Engine] Error details (full):', JSON.stringify(error, null, 2));
+      console.error('[Engine] Hint:', error.hint);
+      console.error('[Engine] Details:', error.details);
       throw error;
     }
 
-    console.log('[Engine] Growth insights stored successfully, ID:', data.id);
+    console.log('[Engine] ✅ Growth insights stored successfully');
+    console.log('[Engine] Inserted record ID:', data.id);
+    console.log('[Engine] ============================================');
     return data as GrowthBrainRecord;
   } catch (err) {
-    console.error('[Engine] Failed to store insights:', err instanceof Error ? err.message : err);
-    console.error('[Engine] Error details:', err);
+    console.error('[Engine] ============================================');
+    console.error('[Engine] ❌ CRITICAL ERROR in storeGrowthInsights');
+    console.error('[Engine] ============================================');
+    console.error('[Engine] Error type:', err instanceof Error ? err.constructor.name : typeof err);
+    console.error('[Engine] Error message:', err instanceof Error ? err.message : String(err));
+    console.error('[Engine] Error stack:', err instanceof Error ? err.stack : 'N/A');
+    console.error('[Engine] Full error object:', err);
+    console.error('[Engine] ============================================');
     throw err;
   }
 }
