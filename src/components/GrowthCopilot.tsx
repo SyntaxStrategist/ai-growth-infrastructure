@@ -254,7 +254,7 @@ export default function GrowthCopilot({ locale }: GrowthCopilotProps) {
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: 20 }}
             onClick={() => setIsOpen(true)}
-            className="fixed right-8 top-32 z-50 px-3 py-2 rounded-lg font-medium text-sm shadow-lg bg-purple-500/20 border border-purple-500/40 text-purple-400 hover:bg-purple-500/30 hover:shadow-[0_0_20px_rgba(168,85,247,0.5)] hover:border-purple-500/60 transition-all duration-100 max-w-[200px] text-center leading-tight"
+            className="fixed right-4 top-32 z-50 px-2.5 py-1.5 rounded-lg font-medium text-xs shadow-lg bg-purple-500/20 border border-purple-500/40 text-purple-400 hover:bg-purple-500/30 hover:shadow-[0_0_20px_rgba(168,85,247,0.5)] hover:border-purple-500/60 transition-all duration-100 max-w-[180px] text-center leading-tight whitespace-nowrap overflow-hidden text-ellipsis"
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
           >
