@@ -8,6 +8,7 @@ import type { LeadMemoryRecord } from "../../../lib/supabase";
 import PredictiveGrowthEngine from "../../../components/PredictiveGrowthEngine";
 import GrowthCopilot from "../../../components/GrowthCopilot";
 import ActivityLog from "../../../components/ActivityLog";
+import RelationshipInsights from "../../../components/RelationshipInsights";
 import type { LeadAction } from "../../api/lead-actions/route";
 
 type TranslatedLead = LeadMemoryRecord & {
@@ -658,6 +659,16 @@ export default function Dashboard() {
           className="mb-8"
         >
           <PredictiveGrowthEngine locale={locale} clientId={null} />
+        </motion.div>
+
+        {/* Relationship Insights */}
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.6, delay: 0.55 }}
+          className="mb-8"
+        >
+          <RelationshipInsights locale={locale} />
         </motion.div>
 
         {/* Leads Table */}
