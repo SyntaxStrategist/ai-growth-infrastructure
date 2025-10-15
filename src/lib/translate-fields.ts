@@ -36,6 +36,24 @@ const URGENCY_TRANSLATIONS: Record<string, { en: string; fr: string }> = {
   'n/a': { en: 'N/A', fr: 'N/A' },
 };
 
+// Helper function to detect language of text (simple heuristic)
+function detectLanguage(text: string | null | undefined): 'en' | 'fr' {
+  if (!text) return 'en';
+  
+  const frenchIndicators = [
+    'à', 'é', 'è', 'ê', 'ç', 'œ',
+    'demande', 'partenariat', 'entreprise', 'stratégique',
+    'élevée', 'moyenne', 'faible', 'professionnel', 'décontracté',
+    'urgence', 'confiance', 'ton', 'intention'
+  ];
+  
+  const lowerText = text.toLowerCase();
+  const frenchMatches = frenchIndicators.filter(indicator => lowerText.includes(indicator)).length;
+  
+  // If 2+ French indicators found, consider it French
+  return frenchMatches >= 2 ? 'fr' : 'en';
+}
+
 // Helper function to translate short terms using hardcoded maps
 function translateShortTerm(
   term: string | null | undefined,
@@ -87,19 +105,28 @@ export async function translateLeadFields(
     };
   }
 
-  // Check cache using lead ID and locale with field-specific keys
-  const cacheKey = `${fields.id}_aiSummary_${targetLocale}`;
+  // Check cache using lead ID and locale
+  const cacheKey = `translation_${fields.id}_${targetLocale}`;
   
-  console.log(`[Translation] Rendering for dashboard locale: ${targetLocale}`);
+  console.log(`[Translation] Locale detected: ${targetLocale}`);
   
   if (translationCache.has(cacheKey)) {
-    console.log(`[Translation] Using cached translation for ${fields.id} (${targetLocale})`);
-    console.log(`[Translation] Cache key: ${cacheKey}`);
+    console.log(`[Translation] Using cached translation for lead_${fields.id.slice(-8)} (locale: ${targetLocale})`);
     return translationCache.get(cacheKey);
   }
 
-  console.log(`[Translation] Re-translating AI summary to ${targetLocale}`);
-  console.log(`[Translation] Cache key: ${cacheKey}`);
+  // Detect source language of AI summary
+  const sourceLanguage = detectLanguage(fields.ai_summary || fields.intent || '');
+  console.log(`[Translation] AI summary source language: ${sourceLanguage}`);
+  
+  // If source language matches target, skip GPT translation (but still apply hardcoded maps)
+  const needsGptTranslation = sourceLanguage !== targetLocale;
+  
+  if (needsGptTranslation) {
+    console.log(`[Translation] Translating AI summary to ${targetLocale}...`);
+  } else {
+    console.log(`[Translation] Source already matches ${targetLocale} - applying hardcoded maps only`);
+  }
 
   try {
     if (!process.env.OPENAI_API_KEY) {
@@ -109,8 +136,22 @@ export async function translateLeadFields(
     const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
     const isFrench = targetLocale === 'fr';
+    const targetLanguageName = isFrench ? 'French' : 'English';
     
-    const prompt = isFrench
+    // If source matches target, skip GPT and just apply hardcoded maps
+    let translated: any;
+    
+    if (!needsGptTranslation) {
+      console.log(`[Translation] Skipping GPT - applying hardcoded maps for tone/urgency`);
+      translated = {
+        ai_summary: fields.ai_summary,
+        intent: fields.intent,
+        tone: fields.tone,
+        urgency: fields.urgency,
+      };
+    } else {
+      // Call GPT to translate
+      const prompt = isFrench
       ? `Translate ALL of these lead analysis fields to French. ALWAYS translate every field, even if it's short or looks already localized. Return ONLY JSON with these exact fields:
 
 {
@@ -144,22 +185,23 @@ Original fields:
 - Tone: ${fields.tone || 'N/A'}
 - Urgency: ${fields.urgency || 'N/A'}`;
 
-    const systemPrompt = isFrench
-      ? "You are a professional translator. Translate ALL fields to French, including short words. NEVER skip translation. Return only valid JSON."
-      : "You are a professional translator. Translate ALL fields to English, including short words. NEVER skip translation. Return only valid JSON.";
+      const systemPrompt = `You are a professional translator. Translate this text into ${targetLanguageName}, preserving tone and business context. ALWAYS translate ALL fields, including short words. Return only valid JSON.`;
 
-    const response = await openai.chat.completions.create({
-      model: "gpt-4o-mini",
-      messages: [
-        { role: "system", content: systemPrompt },
-        { role: "user", content: prompt },
-      ],
-      temperature: 0.2,
-      response_format: { type: "json_object" },
-    });
+      const response = await openai.chat.completions.create({
+        model: "gpt-4o-mini",
+        messages: [
+          { role: "system", content: systemPrompt },
+          { role: "user", content: prompt },
+        ],
+        temperature: 0.2,
+        response_format: { type: "json_object" },
+      });
 
-    const content = response.choices?.[0]?.message?.content || "{}";
-    const translated = JSON.parse(content);
+      const content = response.choices?.[0]?.message?.content || "{}";
+      translated = JSON.parse(content);
+      
+      console.log(`[Translation] Translation complete for lead_${fields.id.slice(-8)}`);
+    }
 
     // Apply hardcoded translations for tone and urgency (overrides GPT if needed)
     const translatedTone = translateShortTerm(
