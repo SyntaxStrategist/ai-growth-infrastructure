@@ -145,27 +145,67 @@ export async function POST(req: NextRequest) {
     }
 
     // Log the action to lead_actions table
-    console.log(`[LeadActions] Logging action to lead_actions table...`);
+    console.log('[LeadActions] ============================================');
+    console.log('[LeadActions] Logging action to lead_actions table...');
+    console.log('[LeadActions] ============================================');
     
     const actionId = randomUUID();
+    const logRecord = {
+      id: actionId,
+      lead_id,
+      action,
+      tag: tag || null,
+      performed_by: performed_by || 'admin',
+    };
+    
+    console.log('[LeadActions] Action log record to insert:', {
+      id: logRecord.id,
+      lead_id: logRecord.lead_id,
+      action: logRecord.action,
+      tag: logRecord.tag || 'null',
+      performed_by: logRecord.performed_by,
+      timestamp: 'AUTO (NOW())',
+    });
+    
+    const insertStart = Date.now();
     const { data: logData, error: logError } = await supabase
       .from('lead_actions')
-      .insert({
-        id: actionId,
-        lead_id,
-        action,
-        tag: tag || null,
-        performed_by: performed_by || 'admin',
-      })
+      .insert(logRecord)
       .select()
       .single();
+    const insertDuration = Date.now() - insertStart;
 
-    console.log(`[LeadActions] Log response:`, JSON.stringify({ data: logData, error: logError || 'success' }));
+    console.log('[LeadActions] INSERT to lead_actions completed in', insertDuration, 'ms');
+    console.log('[LeadActions] INSERT result:', {
+      success: !logError,
+      hasData: !!logData,
+      error: logError ? {
+        code: logError.code,
+        message: logError.message,
+        details: logError.details,
+        hint: logError.hint,
+      } : null,
+    });
 
     if (logError) {
-      console.error('[LeadActions] Failed to log lead action:', JSON.stringify(logError));
+      console.error('[LeadActions] ============================================');
+      console.error('[LeadActions] ❌ Failed to log lead action');
+      console.error('[LeadActions] ============================================');
+      console.error('[LeadActions] Error code:', logError.code);
+      console.error('[LeadActions] Error message:', logError.message);
+      console.error('[LeadActions] Error details:', logError.details);
+      console.error('[LeadActions] Error hint:', logError.hint);
+      console.error('[LeadActions] Full error object:', JSON.stringify(logError, null, 2));
+      console.error('[LeadActions] ============================================');
+      console.error('[LeadActions] Record that failed to insert:');
+      console.error(JSON.stringify(logRecord, null, 2));
+      console.error('[LeadActions] ============================================');
       // Don't fail the request if logging fails - the main action succeeded
-      console.warn('[LeadActions] Main action succeeded but logging failed');
+      console.warn('[LeadActions] ⚠️  Main action succeeded but logging failed');
+    } else {
+      console.log('[LeadActions] ✅ Action logged successfully');
+      console.log('[LeadActions] Log ID:', logData?.id);
+      console.log('[LeadActions] Timestamp:', logData?.timestamp);
     }
 
     // Return success with appropriate message
@@ -204,23 +244,71 @@ export async function POST(req: NextRequest) {
 // GET /api/lead-actions - Fetch recent lead actions
 export async function GET(req: NextRequest) {
   try {
+    console.log('[LeadActions] ============================================');
+    console.log('[LeadActions] GET /api/lead-actions triggered');
+    console.log('[LeadActions] ============================================');
+    
     const url = new URL(req.url);
     const limit = parseInt(url.searchParams.get('limit') || '5', 10);
+    
+    console.log('[LeadActions] Query params:', {
+      limit,
+      order: 'timestamp DESC',
+    });
 
+    const queryStart = Date.now();
     const { data, error } = await supabase
       .from('lead_actions')
       .select('*')
       .order('timestamp', { ascending: false })
       .limit(limit);
+    const queryDuration = Date.now() - queryStart;
+
+    console.log('[LeadActions] Query completed in', queryDuration, 'ms');
+    console.log('[LeadActions] Query result:', {
+      success: !error,
+      rowCount: data?.length || 0,
+      hasError: !!error,
+    });
 
     if (error) {
-      console.error('[API] Failed to fetch lead actions:', error);
+      console.error('[LeadActions] ============================================');
+      console.error('[LeadActions] ❌ Query FAILED');
+      console.error('[LeadActions] ============================================');
+      console.error('[LeadActions] Error code:', error.code);
+      console.error('[LeadActions] Error message:', error.message);
+      console.error('[LeadActions] Error details:', error.details);
+      console.error('[LeadActions] Error hint:', error.hint);
+      console.error('[LeadActions] Full error object:', JSON.stringify(error, null, 2));
+      console.error('[LeadActions] ============================================');
       throw error;
     }
 
+    if (data && data.length > 0) {
+      console.log('[LeadActions] ✅ Found', data.length, 'recent actions');
+      console.log('[LeadActions] Sample (first action):', {
+        id: data[0].id,
+        action: data[0].action,
+        lead_id: data[0].lead_id,
+        tag: data[0].tag || 'null',
+        performed_by: data[0].performed_by,
+        timestamp: data[0].timestamp,
+      });
+    } else {
+      console.log('[LeadActions] ℹ️  No actions found in lead_actions table');
+    }
+
+    console.log('[LeadActions] ============================================');
     return NextResponse.json({ success: true, data });
   } catch (error) {
-    console.error('[API] Error fetching lead actions:', error);
+    console.error('[LeadActions] ============================================');
+    console.error('[LeadActions] ❌ GET request failed');
+    console.error('[LeadActions] ============================================');
+    console.error('[LeadActions] Error type:', error instanceof Error ? error.constructor.name : typeof error);
+    console.error('[LeadActions] Error message:', error instanceof Error ? error.message : String(error));
+    console.error('[LeadActions] Full error object:', error);
+    console.error('[LeadActions] ============================================');
+    
     return NextResponse.json(
       { success: false, error: error instanceof Error ? error.message : "Internal Server Error" },
       { status: 500 }

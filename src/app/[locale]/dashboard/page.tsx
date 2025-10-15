@@ -151,15 +151,18 @@ export default function Dashboard() {
       
       // Check for exact matches first
       if (intentTranslations[intentLower]) {
-        console.log(`[Dashboard] Intent translation: "${intent}" → "${intentTranslations[intentLower]}"`);
-        return intentTranslations[intentLower].split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
+        const translated = intentTranslations[intentLower];
+        const capitalized = translated.charAt(0).toUpperCase() + translated.slice(1);
+        console.log(`[Dashboard] Intent translation: "${intent}" → "${capitalized}"`);
+        return capitalized;
       }
       
       // Check for partial matches
       for (const [fr, en] of Object.entries(intentTranslations)) {
         if (intentLower.includes(fr)) {
-          console.log(`[Dashboard] Intent translation (partial): "${intent}" → "${en}"`);
-          return en.split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
+          const capitalized = en.charAt(0).toUpperCase() + en.slice(1);
+          console.log(`[Dashboard] Intent translation (partial): "${intent}" → "${capitalized}"`);
+          return capitalized;
         }
       }
     }

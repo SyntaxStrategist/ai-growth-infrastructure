@@ -282,6 +282,20 @@ CREATE TABLE IF NOT EXISTS lead_actions (
   timestamp TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
+-- Ensure timestamp column exists in lead_actions
+DO $$ 
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM information_schema.columns 
+    WHERE table_name = 'lead_actions' AND column_name = 'timestamp'
+  ) THEN
+    ALTER TABLE lead_actions ADD COLUMN timestamp TIMESTAMPTZ NOT NULL DEFAULT NOW();
+    RAISE NOTICE '✅ Added timestamp column to lead_actions';
+  ELSE
+    RAISE NOTICE 'ℹ️  timestamp column already exists in lead_actions';
+  END IF;
+END $$;
+
 CREATE INDEX IF NOT EXISTS lead_actions_lead_id_idx ON lead_actions(lead_id);
 CREATE INDEX IF NOT EXISTS lead_actions_timestamp_idx ON lead_actions(timestamp);
 CREATE INDEX IF NOT EXISTS lead_actions_action_idx ON lead_actions(action);
