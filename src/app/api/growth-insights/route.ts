@@ -138,15 +138,22 @@ export async function GET(req: NextRequest) {
     console.error('[GrowthInsightsAPI] ============================================');
     console.error('[GrowthInsightsAPI] Error type:', error?.constructor?.name || typeof error);
     console.error('[GrowthInsightsAPI] Error message:', error?.message || String(error));
+    console.error('[GrowthInsightsAPI] Error code:', error?.code || 'N/A');
+    console.error('[GrowthInsightsAPI] Error details:', error?.details || 'N/A');
+    console.error('[GrowthInsightsAPI] Error hint:', error?.hint || 'N/A');
     console.error('[GrowthInsightsAPI] Error stack:', error?.stack || 'N/A');
+    console.error('[GrowthInsightsAPI] Full error object:', JSON.stringify(error, null, 2));
     console.error('[GrowthInsightsAPI] ============================================');
     
     return NextResponse.json(
       { 
         success: false, 
         error: error?.message || "Internal Server Error",
+        code: error?.code,
+        details: error?.details,
+        hint: error?.hint,
         errorType: error?.constructor?.name || 'Unknown',
-        stack: error?.stack,
+        stack: process.env.NODE_ENV === 'development' ? error?.stack : undefined,
       },
       { status: 500 }
     );
