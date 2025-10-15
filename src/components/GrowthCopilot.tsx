@@ -40,18 +40,33 @@ export default function GrowthCopilot({ locale }: GrowthCopilotProps) {
       const res = await fetch('/api/growth-insights');
       const json = await res.json();
 
-      console.log('[GrowthCopilot] API response:', {
+      console.log('[GrowthCopilot] Full API response:', json);
+      console.log('[GrowthCopilot] API response summary:', {
         success: json.success,
         hasData: !!json.data,
         message: json.message,
+        dataKeys: json.data ? Object.keys(json.data) : [],
       });
 
-      if (!json.success || !json.data) {
-        console.log('[GrowthCopilot] No data available');
+      if (!json.success) {
+        console.error('[GrowthCopilot] API returned success=false');
         setSummary({
           trendSummary: isFrench 
-            ? 'Aucune donnée disponible. Exécutez d\'abord le moteur d\'intelligence.'
-            : 'No data available. Run the intelligence engine first.',
+            ? 'Erreur lors du chargement des données.'
+            : 'Error loading data.',
+          recommendedActions: [],
+          prediction: '',
+        });
+        setLoading(false);
+        return;
+      }
+
+      if (!json.data) {
+        console.log('[GrowthCopilot] No data available - growth_brain table is empty or query returned nothing');
+        setSummary({
+          trendSummary: isFrench 
+            ? 'Aucune donnée disponible. Exécutez d\'abord le moteur d\'intelligence en visitant /api/intelligence-engine'
+            : 'No data available. Run the intelligence engine first by visiting /api/intelligence-engine',
           recommendedActions: [],
           prediction: '',
         });
@@ -64,16 +79,30 @@ export default function GrowthCopilot({ locale }: GrowthCopilotProps) {
         total_leads: insights.total_leads,
         engagement_score: insights.engagement_score,
         has_predictive_insights: !!insights.predictive_insights,
+        predictive_insights_type: typeof insights.predictive_insights,
         analyzed_at: insights.analyzed_at,
       });
+
+      if (insights.predictive_insights) {
+        console.log('[GrowthCopilot] predictive_insights structure:', {
+          has_en: !!insights.predictive_insights.en,
+          has_fr: !!insights.predictive_insights.fr,
+          en_keys: insights.predictive_insights.en ? Object.keys(insights.predictive_insights.en) : [],
+          fr_keys: insights.predictive_insights.fr ? Object.keys(insights.predictive_insights.fr) : [],
+        });
+      }
 
       // Use the predictive insights from growth_brain
       const predictions = isFrench ? insights.predictive_insights?.fr : insights.predictive_insights?.en;
       
-      console.log('[GrowthCopilot] Predictions for', isFrench ? 'FR' : 'EN', ':', {
+      console.log('[GrowthCopilot] Selected predictions for', isFrench ? 'FR' : 'EN', ':', predictions);
+      console.log('[GrowthCopilot] Predictions breakdown:', {
         has_urgency_trend: !!predictions?.urgency_trend,
+        urgency_trend_length: predictions?.urgency_trend?.length || 0,
         has_confidence_insight: !!predictions?.confidence_insight,
+        confidence_insight_length: predictions?.confidence_insight?.length || 0,
         has_tone_insight: !!predictions?.tone_insight,
+        tone_insight_length: predictions?.tone_insight?.length || 0,
       });
 
       const newSummary = {
