@@ -277,18 +277,56 @@ export async function upsertLeadWithHistory(params: {
   client_id?: string | null;
 }): Promise<{ isNew: boolean; leadId: string; insight: string | null }> {
   try {
+    console.log('[LeadMemory] ============================================');
+    console.log('[LeadMemory] upsertLeadWithHistory() called');
+    console.log('[LeadMemory] ============================================');
+    console.log('[LeadMemory] Input params:', {
+      email: params.email,
+      name: params.name,
+      language: params.language,
+      intent: params.intent,
+      tone: params.tone,
+      urgency: params.urgency,
+      confidence_score: params.confidence_score,
+      client_id: params.client_id || 'none',
+      message_length: params.message?.length || 0,
+      ai_summary_length: params.ai_summary?.length || 0,
+    });
+    
     console.log('[LeadMemory] Checking for existing lead with email:', params.email);
+    console.log('[LeadMemory] Supabase URL:', supabaseUrl);
+    console.log('[LeadMemory] Supabase key configured:', !!supabaseKey);
+    console.log('[LeadMemory] Service role key length:', supabaseKey?.length || 0);
     
     // Check if lead with this email already exists
+    console.log('[LeadMemory] Executing SELECT query...');
+    const selectStart = Date.now();
     const { data: existingLead, error: fetchError } = await supabase
       .from('lead_memory')
       .select('*')
       .eq('email', params.email)
       .eq('deleted', false)
       .single();
+    const selectDuration = Date.now() - selectStart;
+    
+    console.log('[LeadMemory] SELECT query completed in', selectDuration, 'ms');
+    console.log('[LeadMemory] SELECT result:', {
+      found: !!existingLead,
+      error: fetchError ? {
+        code: fetchError.code,
+        message: fetchError.message,
+        details: fetchError.details,
+        hint: fetchError.hint,
+      } : null,
+    });
     
     if (fetchError && fetchError.code !== 'PGRST116') { // PGRST116 = no rows returned
-      console.error('[LeadMemory] Error checking for existing lead:', fetchError);
+      console.error('[LeadMemory] ❌ Error checking for existing lead');
+      console.error('[LeadMemory] Error code:', fetchError.code);
+      console.error('[LeadMemory] Error message:', fetchError.message);
+      console.error('[LeadMemory] Error details:', fetchError.details);
+      console.error('[LeadMemory] Error hint:', fetchError.hint);
+      console.error('[LeadMemory] Full error object:', JSON.stringify(fetchError, null, 2));
       throw fetchError;
     }
     
@@ -377,10 +415,13 @@ export async function upsertLeadWithHistory(params: {
       return { isNew: false, leadId: existingLead.id, insight: insight || null };
       
     } else {
+      console.log('[LeadMemory] ============================================');
       console.log('[LeadMemory] No existing record found - creating new lead');
+      console.log('[LeadMemory] ============================================');
       
       // Generate unique ID
       const id = `lead_${Date.now()}_${Math.random().toString(36).slice(2, 11)}`;
+      console.log('[LeadMemory] Generated new ID:', id);
       
       // Initialize histories with first entry
       const initialToneHistory: HistoryEntry[] = [{ value: params.tone, timestamp: now }];
@@ -408,20 +449,65 @@ export async function upsertLeadWithHistory(params: {
       
       if (params.client_id) {
         newRecord.client_id = params.client_id;
+        console.log('[LeadMemory] Adding client_id to record:', params.client_id);
       }
       
+      console.log('[LeadMemory] Record to insert:', {
+        id: newRecord.id,
+        email: newRecord.email,
+        name: newRecord.name,
+        language: newRecord.language,
+        intent: newRecord.intent,
+        tone: newRecord.tone,
+        urgency: newRecord.urgency,
+        confidence_score: newRecord.confidence_score,
+        tone_history_length: newRecord.tone_history.length,
+        confidence_history_length: newRecord.confidence_history.length,
+        urgency_history_length: newRecord.urgency_history.length,
+        client_id: newRecord.client_id || 'null',
+      });
+      
+      console.log('[LeadMemory] Executing INSERT query to table: lead_memory');
+      const insertStart = Date.now();
       const { data: insertedLead, error: insertError } = await supabase
         .from('lead_memory')
         .insert(newRecord)
         .select()
         .single();
+      const insertDuration = Date.now() - insertStart;
+      
+      console.log('[LeadMemory] INSERT query completed in', insertDuration, 'ms');
+      console.log('[LeadMemory] INSERT result:', {
+        success: !insertError,
+        hasData: !!insertedLead,
+        error: insertError ? {
+          code: insertError.code,
+          message: insertError.message,
+          details: insertError.details,
+          hint: insertError.hint,
+        } : null,
+      });
       
       if (insertError) {
-        console.error('[LeadMemory] Failed to insert new lead:', insertError);
+        console.error('[LeadMemory] ============================================');
+        console.error('[LeadMemory] ❌ INSERT FAILED');
+        console.error('[LeadMemory] ============================================');
+        console.error('[LeadMemory] Error code:', insertError.code);
+        console.error('[LeadMemory] Error message:', insertError.message);
+        console.error('[LeadMemory] Error details:', insertError.details);
+        console.error('[LeadMemory] Error hint:', insertError.hint);
+        console.error('[LeadMemory] Full error object:', JSON.stringify(insertError, null, 2));
+        console.error('[LeadMemory] ============================================');
+        console.error('[LeadMemory] Record that failed to insert:');
+        console.error(JSON.stringify(newRecord, null, 2));
+        console.error('[LeadMemory] ============================================');
         throw insertError;
       }
       
+      console.log('[LeadMemory] ============================================');
       console.log('[LeadMemory] ✅ New lead created successfully');
+      console.log('[LeadMemory] Inserted lead ID:', insertedLead?.id);
+      console.log('[LeadMemory] ============================================');
       return { isNew: true, leadId: id, insight: null };
     }
   } catch (err) {

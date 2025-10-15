@@ -46,31 +46,47 @@ async function retry<T>(fn: () => Promise<T>, opts?: { maxAttempts?: number; bas
 
 export async function POST(req: NextRequest) {
 	try {
+		console.log('[Lead API] ============================================');
+		console.log('[Lead API] POST /api/lead triggered');
+		console.log('[Lead API] ============================================');
+		console.log('[Lead API] Request headers:', {
+			'content-type': req.headers.get('content-type'),
+			'x-api-key': req.headers.get('x-api-key') ? 'present' : 'none',
+			'user-agent': req.headers.get('user-agent')?.substring(0, 50) || 'unknown',
+		});
+		
 		// Check for API key authentication
 		const apiKey = req.headers.get('x-api-key');
 		let clientId: string | null = null;
 		
 		if (apiKey) {
+			console.log('[Lead API] API key provided - validating...');
 			// Validate API key for external clients
 			const client = await validateApiKey(apiKey);
 			if (!client) {
-				console.log('[API] Invalid API key provided');
+				console.log('[Lead API] ❌ Invalid API key');
 				return new Response(
-					JSON.stringify({ error: "Unauthorized: Invalid API key" }),
+					JSON.stringify({ success: false, error: "Unauthorized: Invalid API key" }),
 					{ status: 401, headers: { "Content-Type": "application/json" } }
 				);
 			}
 			clientId = client.id;
-			console.log(`[API] Authenticated request from client: ${client.company_name}`);
+			console.log(`[Lead API] ✅ Authenticated request from client: ${client.company_name} (${clientId})`);
 		} else {
 			// No API key = internal request (from website form)
-			console.log('[API] Internal request (no API key)');
+			console.log('[Lead API] Internal request (no API key)');
 		}
 		
-		const body = (await req.json().catch(() => null)) as LeadPayload | null;
+		console.log('[Lead API] Parsing request body...');
+		const body = (await req.json().catch((err) => {
+			console.error('[Lead API] ❌ Failed to parse JSON body:', err);
+			return null;
+		})) as LeadPayload | null;
+		
 		if (!body || typeof body !== "object") {
+			console.error('[Lead API] ❌ Invalid or missing JSON body');
 			return new Response(
-				JSON.stringify({ error: "Invalid JSON body" }),
+				JSON.stringify({ success: false, error: "Invalid JSON body" }),
 				{ status: 400, headers: { "Content-Type": "application/json" } }
 			);
 		}
@@ -81,9 +97,18 @@ export async function POST(req: NextRequest) {
 		const providedTimestamp = (body.timestamp || "").toString().trim();
 		const locale = (body.locale || "en").toString().trim();
 
+		console.log('[Lead API] Request body parsed:', {
+			name,
+			email,
+			message_length: message.length,
+			locale,
+			has_timestamp: !!providedTimestamp,
+		});
+
 		if (!name || !email || !message) {
+			console.error('[Lead API] ❌ Missing required fields');
 			return new Response(
-				JSON.stringify({ error: "'name', 'email', and 'message' are required" }),
+				JSON.stringify({ success: false, error: "'name', 'email', and 'message' are required" }),
 				{ status: 400, headers: { "Content-Type": "application/json" } }
 			);
 		}
@@ -91,11 +116,14 @@ export async function POST(req: NextRequest) {
 		// very light email validation
 		const emailOk = /.+@.+\..+/.test(email);
 		if (!emailOk) {
+			console.error('[Lead API] ❌ Invalid email format:', email);
 			return new Response(
-				JSON.stringify({ error: "Please provide a valid email" }),
+				JSON.stringify({ success: false, error: "Please provide a valid email" }),
 				{ status: 400, headers: { "Content-Type": "application/json" } }
 			);
 		}
+		
+		console.log('[Lead API] ✅ Validation passed - proceeding with lead processing');
 
 		// Append to Google Sheets
 		let savedVia = "sheets" as "sheets";
@@ -213,6 +241,9 @@ export async function POST(req: NextRequest) {
 
 			// AI Intelligence Layer + Historical Tracking: Analyze and store/update lead
 			try {
+				console.log('[Lead API] ============================================');
+				console.log('[Lead API] Starting AI Intelligence & Storage');
+				console.log('[Lead API] ============================================');
 				console.log('[AI Intelligence] Analyzing lead for enrichment...');
 				
 				const enrichment = await enrichLeadWithAI({
@@ -221,7 +252,7 @@ export async function POST(req: NextRequest) {
 					language: locale,
 				});
 				
-				console.log('[AI Intelligence] Enrichment complete:', {
+				console.log('[AI Intelligence] ✅ Enrichment complete:', {
 					intent: enrichment.intent,
 					tone: enrichment.tone,
 					urgency: enrichment.urgency,
@@ -229,8 +260,11 @@ export async function POST(req: NextRequest) {
 				});
 				
 				// Upsert lead with historical tracking
-				console.log('[AI Intelligence] Upserting lead with history tracking...');
-				const result = await upsertLeadWithHistory({
+				console.log('[AI Intelligence] ============================================');
+				console.log('[AI Intelligence] Calling upsertLeadWithHistory()...');
+				console.log('[AI Intelligence] ============================================');
+				
+				const upsertParams = {
 					email,
 					name,
 					message,
@@ -242,6 +276,31 @@ export async function POST(req: NextRequest) {
 					urgency: enrichment.urgency,
 					confidence_score: enrichment.confidence_score,
 					client_id: clientId,
+				};
+				
+				console.log('[AI Intelligence] Upsert params prepared:', {
+					email: upsertParams.email,
+					name: upsertParams.name,
+					language: upsertParams.language,
+					intent: upsertParams.intent,
+					tone: upsertParams.tone,
+					urgency: upsertParams.urgency,
+					confidence_score: upsertParams.confidence_score,
+					client_id: upsertParams.client_id || 'null',
+					message_length: upsertParams.message.length,
+					ai_summary_length: upsertParams.ai_summary?.length || 0,
+				});
+				
+				const result = await upsertLeadWithHistory(upsertParams);
+				
+				console.log('[AI Intelligence] ============================================');
+				console.log('[AI Intelligence] upsertLeadWithHistory() completed');
+				console.log('[AI Intelligence] ============================================');
+				console.log('[AI Intelligence] Result:', {
+					isNew: result.isNew,
+					leadId: result.leadId,
+					hasInsight: !!result.insight,
+					insight: result.insight || 'none',
 				});
 				
 				if (result.isNew) {
@@ -258,27 +317,54 @@ export async function POST(req: NextRequest) {
 				} else {
 					console.log('[Lead API] Lead processed (internal)');
 				}
+				
+				console.log('[Lead API] ============================================');
+				console.log('[Lead API] ✅ AI Intelligence & Storage COMPLETE');
+				console.log('[Lead API] ============================================');
+				
 			} catch (enrichError) {
 				// non-fatal: log for debugging but don't break the flow
-				console.error('[AI Intelligence] Enrichment/storage failed:', enrichError);
-				console.warn('[AI Intelligence] Continuing without enrichment');
+				console.error('[Lead API] ============================================');
+				console.error('[Lead API] ❌ AI Intelligence/Storage FAILED');
+				console.error('[Lead API] ============================================');
+				console.error('[AI Intelligence] Error type:', enrichError instanceof Error ? enrichError.constructor.name : typeof enrichError);
+				console.error('[AI Intelligence] Error message:', enrichError instanceof Error ? enrichError.message : String(enrichError));
+				console.error('[AI Intelligence] Error stack:', enrichError instanceof Error ? enrichError.stack : 'N/A');
+				console.error('[AI Intelligence] Full error object:', enrichError);
+				console.error('[Lead API] ============================================');
+				console.warn('[AI Intelligence] Continuing without enrichment (non-fatal)');
 			}
 		} catch (sheetsError) {
 			const msg = sheetsError instanceof Error ? sheetsError.message : "Failed to append to Google Sheet";
+			console.error('[Lead API] ❌ Google Sheets error:', msg);
 			return new Response(
-				JSON.stringify({ error: msg }),
+				JSON.stringify({ success: false, error: msg }),
 				{ status: 500, headers: { "Content-Type": "application/json" } }
 			);
 		}
 
+		console.log('[Lead API] ============================================');
+		console.log('[Lead API] ✅ Lead processing COMPLETE');
+		console.log('[Lead API] Storage:', savedVia);
+		console.log('[Lead API] ============================================');
+		
 		return new Response(
-			JSON.stringify({ success: true, storage: savedVia }),
+			JSON.stringify({ success: true, storage: savedVia, action: "inserted" }),
 			{ status: 200, headers: { "Content-Type": "application/json" } }
 		);
 	} catch (error) {
 		const message = error instanceof Error ? error.message : "Unknown error";
+		console.error('[Lead API] ============================================');
+		console.error('[Lead API] ❌ FATAL ERROR');
+		console.error('[Lead API] ============================================');
+		console.error('[Lead API] Error type:', error instanceof Error ? error.constructor.name : typeof error);
+		console.error('[Lead API] Error message:', message);
+		console.error('[Lead API] Error stack:', error instanceof Error ? error.stack : 'N/A');
+		console.error('[Lead API] Full error object:', error);
+		console.error('[Lead API] ============================================');
+		
 		return new Response(
-			JSON.stringify({ error: message }),
+			JSON.stringify({ success: false, error: message }),
 			{ status: 500, headers: { "Content-Type": "application/json" } }
 		);
 	}
