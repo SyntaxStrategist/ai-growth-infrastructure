@@ -6,6 +6,9 @@ import { useTranslations, useLocale } from 'next-intl';
 import { supabase } from "../../../lib/supabase";
 import type { LeadMemoryRecord } from "../../../lib/supabase";
 import PredictiveGrowthEngine from "../../../components/PredictiveGrowthEngine";
+import GrowthCopilot from "../../../components/GrowthCopilot";
+import ActivityLog from "../../../components/ActivityLog";
+import type { LeadAction } from "../../api/lead-actions/route";
 
 type TranslatedLead = LeadMemoryRecord & {
   translated_ai?: {
@@ -28,6 +31,11 @@ export default function Dashboard() {
   const [filter, setFilter] = useState({ urgency: 'all', language: 'all', minConfidence: 0 });
   const [stats, setStats] = useState({ total: 0, avgConfidence: 0, topIntent: '', highUrgency: 0 });
   const [isLive, setIsLive] = useState(false);
+  const [recentActions, setRecentActions] = useState<LeadAction[]>([]);
+  const [toast, setToast] = useState<{ message: string; show: boolean }>({ message: '', show: false });
+  const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
+  const [tagLead, setTagLead] = useState<string | null>(null);
+  const [selectedTag, setSelectedTag] = useState<string>('');
 
   // Check localStorage for existing auth
   useEffect(() => {
@@ -41,6 +49,7 @@ export default function Dashboard() {
     if (!authorized) return;
     
     fetchLeads();
+    fetchRecentActions();
     
     // Set up real-time subscription
     const channel = supabase
@@ -112,6 +121,84 @@ export default function Dashboard() {
     if ((lead.confidence_score || 0) < filter.minConfidence) return false;
     return true;
   });
+
+  const tagOptions = locale === 'fr' 
+    ? ['Contacté', 'Haute Valeur', 'Non Qualifié', 'Suivi']
+    : ['Contacted', 'High Value', 'Not Qualified', 'Follow-Up'];
+
+  async function fetchRecentActions() {
+    try {
+      const res = await fetch('/api/lead-actions?limit=5');
+      const json = await res.json();
+      if (json.success) {
+        setRecentActions(json.data || []);
+      }
+    } catch (err) {
+      console.error('Failed to fetch actions:', err);
+    }
+  }
+
+  function showToast(message: string) {
+    setToast({ message, show: true });
+    setTimeout(() => setToast({ message: '', show: false }), 3000);
+  }
+
+  async function handleDeleteLead(leadId: string) {
+    try {
+      const res = await fetch('/api/lead-actions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ lead_id: leadId, action: 'delete' }),
+      });
+
+      if (res.ok) {
+        setLeads(leads.filter(l => l.id !== leadId));
+        setConfirmDelete(null);
+        showToast(locale === 'fr' ? 'Lead supprimé avec succès.' : 'Lead deleted successfully.');
+        fetchRecentActions();
+      }
+    } catch (err) {
+      console.error('Failed to delete lead:', err);
+    }
+  }
+
+  async function handleArchiveLead(leadId: string) {
+    try {
+      const res = await fetch('/api/lead-actions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ lead_id: leadId, action: 'archive' }),
+      });
+
+      if (res.ok) {
+        showToast(locale === 'fr' ? 'Lead archivé avec succès.' : 'Lead archived successfully.');
+        fetchRecentActions();
+      }
+    } catch (err) {
+      console.error('Failed to archive lead:', err);
+    }
+  }
+
+  async function handleTagLead() {
+    if (!tagLead || !selectedTag) return;
+
+    try {
+      const res = await fetch('/api/lead-actions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ lead_id: tagLead, action: 'tag', tag: selectedTag }),
+      });
+
+      if (res.ok) {
+        setTagLead(null);
+        setSelectedTag('');
+        showToast(locale === 'fr' ? 'Lead étiqueté avec succès.' : 'Lead tagged successfully.');
+        fetchRecentActions();
+      }
+    } catch (err) {
+      console.error('Failed to tag lead:', err);
+    }
+  }
 
   async function handleAuth(e: React.FormEvent) {
     e.preventDefault();
@@ -432,6 +519,31 @@ export default function Dashboard() {
                   <p className="text-xs font-mono text-white/60">{new Date(lead.timestamp).toLocaleString()}</p>
                 </div>
               </div>
+
+              {/* Action Buttons */}
+              <div className="flex items-center gap-2 mt-4 pt-4 border-t border-white/5">
+                <button
+                  onClick={() => setTagLead(lead.id)}
+                  className="p-2 rounded-lg bg-blue-500/20 border border-blue-500/40 text-blue-400 hover:bg-blue-500/30 hover:shadow-[0_0_15px_rgba(59,130,246,0.5)] transition-all text-xs"
+                  title={locale === 'fr' ? 'Étiqueter' : 'Tag Lead'}
+                >
+                  🏷️
+                </button>
+                <button
+                  onClick={() => handleArchiveLead(lead.id)}
+                  className="p-2 rounded-lg bg-yellow-500/20 border border-yellow-500/40 text-yellow-400 hover:bg-yellow-500/30 hover:shadow-[0_0_15px_rgba(234,179,8,0.5)] transition-all text-xs"
+                  title={locale === 'fr' ? 'Archiver' : 'Archive Lead'}
+                >
+                  📦
+                </button>
+                <button
+                  onClick={() => setConfirmDelete(lead.id)}
+                  className="p-2 rounded-lg bg-red-500/20 border border-red-500/40 text-red-400 hover:bg-red-500/30 hover:shadow-[0_0_15px_rgba(239,68,68,0.5)] transition-all text-xs"
+                  title={locale === 'fr' ? 'Supprimer' : 'Delete Lead'}
+                >
+                  🗑️
+                </button>
+              </div>
             </motion.div>
           ))}
 
@@ -441,7 +553,109 @@ export default function Dashboard() {
             </div>
           )}
         </motion.div>
+
+        {/* Activity Log */}
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.6, delay: 0.8 }}
+          className="mt-8"
+        >
+          <ActivityLog actions={recentActions} locale={locale} />
+        </motion.div>
       </div>
+
+      {/* Delete Confirmation Modal */}
+      {confirmDelete && (
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <motion.div
+            initial={{ scale: 0.9, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            className="bg-black border border-white/10 rounded-lg p-6 max-w-md w-full shadow-[0_0_30px_rgba(239,68,68,0.3)]"
+          >
+            <h3 className="text-lg font-bold text-white mb-4">
+              {locale === 'fr' ? 'Confirmer la suppression' : 'Confirm Delete'}
+            </h3>
+            <p className="text-white/70 mb-6">
+              {locale === 'fr' 
+                ? 'Êtes-vous sûr de vouloir supprimer ce lead ? Cette action est irréversible.'
+                : 'Are you sure you want to delete this lead? This action is irreversible.'}
+            </p>
+            <div className="flex gap-3">
+              <button
+                onClick={() => handleDeleteLead(confirmDelete)}
+                className="flex-1 py-2 px-4 rounded-lg bg-red-600 hover:bg-red-700 transition-all font-medium"
+              >
+                {locale === 'fr' ? 'Supprimer' : 'Delete'}
+              </button>
+              <button
+                onClick={() => setConfirmDelete(null)}
+                className="flex-1 py-2 px-4 rounded-lg bg-white/5 border border-white/10 hover:bg-white/10 transition-all"
+              >
+                {locale === 'fr' ? 'Annuler' : 'Cancel'}
+              </button>
+            </div>
+          </motion.div>
+        </div>
+      )}
+
+      {/* Tag Modal */}
+      {tagLead && (
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <motion.div
+            initial={{ scale: 0.9, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            className="bg-black border border-white/10 rounded-lg p-6 max-w-md w-full shadow-[0_0_30px_rgba(59,130,246,0.3)]"
+          >
+            <h3 className="text-lg font-bold text-white mb-4">
+              {locale === 'fr' ? 'Étiqueter le lead' : 'Tag Lead'}
+            </h3>
+            <select
+              value={selectedTag}
+              onChange={(e) => setSelectedTag(e.target.value)}
+              className="w-full px-4 py-2 rounded-lg bg-white/5 border border-white/10 focus:border-blue-400/50 focus:outline-none mb-6 text-white"
+            >
+              <option value="">{locale === 'fr' ? 'Sélectionner une étiquette' : 'Select a tag'}</option>
+              {tagOptions.map(tag => (
+                <option key={tag} value={tag}>{tag}</option>
+              ))}
+            </select>
+            <div className="flex gap-3">
+              <button
+                onClick={handleTagLead}
+                disabled={!selectedTag}
+                className="flex-1 py-2 px-4 rounded-lg bg-blue-600 hover:bg-blue-700 transition-all font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {locale === 'fr' ? 'Étiqueter' : 'Tag'}
+              </button>
+              <button
+                onClick={() => {
+                  setTagLead(null);
+                  setSelectedTag('');
+                }}
+                className="flex-1 py-2 px-4 rounded-lg bg-white/5 border border-white/10 hover:bg-white/10 transition-all"
+              >
+                {locale === 'fr' ? 'Annuler' : 'Cancel'}
+              </button>
+            </div>
+          </motion.div>
+        </div>
+      )}
+
+      {/* Toast Notification */}
+      {toast.show && (
+        <motion.div
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -20 }}
+          className="fixed top-8 right-8 z-50 px-6 py-3 rounded-lg bg-green-600 border border-green-500 shadow-[0_0_30px_rgba(34,197,94,0.5)]"
+        >
+          <p className="text-white font-medium">{toast.message}</p>
+        </motion.div>
+      )}
+
+      {/* Growth Copilot */}
+      <GrowthCopilot locale={locale} />
     </div>
   );
 }

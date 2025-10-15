@@ -145,3 +145,29 @@ CREATE POLICY "Service role full access to growth_brain" ON growth_brain
 
 COMMENT ON TABLE growth_brain IS 'AI-generated meta-insights and predictive analytics from lead intelligence patterns';
 
+-- Create the lead_actions table for operational management audit trail
+CREATE TABLE IF NOT EXISTS lead_actions (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  lead_id TEXT NOT NULL REFERENCES lead_memory(id) ON DELETE CASCADE,
+  action TEXT NOT NULL,
+  tag TEXT,
+  performed_by TEXT NOT NULL DEFAULT 'admin',
+  timestamp TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS lead_actions_lead_id_idx ON lead_actions(lead_id);
+CREATE INDEX IF NOT EXISTS lead_actions_timestamp_idx ON lead_actions(timestamp);
+CREATE INDEX IF NOT EXISTS lead_actions_action_idx ON lead_actions(action);
+
+-- Enable Row Level Security (RLS) for lead_actions table
+ALTER TABLE lead_actions ENABLE ROW LEVEL SECURITY;
+
+-- Service role has full access (admin only)
+CREATE POLICY "Service role full access to lead_actions" ON lead_actions
+  FOR ALL
+  TO service_role
+  USING (true)
+  WITH CHECK (true);
+
+COMMENT ON TABLE lead_actions IS 'Audit trail for lead management actions (delete, archive, tag)';
+
