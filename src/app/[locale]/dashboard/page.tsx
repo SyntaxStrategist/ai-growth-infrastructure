@@ -4,17 +4,15 @@ import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { useTranslations, useLocale } from 'next-intl';
 import { supabase } from "../../../lib/supabase";
-import { translateLeadFields } from "../../../lib/translate-fields";
 import type { LeadMemoryRecord } from "../../../lib/supabase";
 import PredictiveGrowthEngine from "../../../components/PredictiveGrowthEngine";
 
 type TranslatedLead = LeadMemoryRecord & {
-  translated?: {
+  translated_ai?: {
     ai_summary: string;
     intent: string;
     tone: string;
     urgency: string;
-    locale: string;
   };
 };
 
@@ -30,7 +28,6 @@ export default function Dashboard() {
   const [filter, setFilter] = useState({ urgency: 'all', language: 'all', minConfidence: 0 });
   const [stats, setStats] = useState({ total: 0, avgConfidence: 0, topIntent: '', highUrgency: 0 });
   const [isLive, setIsLive] = useState(false);
-  const [translating, setTranslating] = useState(false);
 
   // Check localStorage for existing auth
   useEffect(() => {
@@ -65,69 +62,24 @@ export default function Dashboard() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [authorized]);
 
-  // Re-translate all leads when locale changes
+  // Re-fetch leads when locale changes (server-side translation)
   useEffect(() => {
-    if (!authorized || leads.length === 0) return;
-    
-    console.log(`[Dashboard] Locale changed to: ${locale} - re-translating all leads`);
-    
-    async function retranslate() {
-      setTranslating(true);
-      const translatedLeads = await Promise.all(
-        leads.map(async (lead: TranslatedLead) => {
-          // Force re-translation for new locale
-          const translated = await translateLeadFields({
-            id: lead.id,
-            ai_summary: lead.ai_summary,
-            intent: lead.intent,
-            tone: lead.tone,
-            urgency: lead.urgency,
-          }, locale);
-          
-          return {
-            ...lead,
-            translated,
-          } as TranslatedLead;
-        })
-      );
-      setLeads(translatedLeads);
-      calculateStats(translatedLeads);
-      setTranslating(false);
-    }
-    
-    retranslate();
+    if (!authorized) return;
+    console.log(`[Dashboard] Locale changed to: ${locale} - re-fetching with server translation`);
+    fetchLeads();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [locale]);
 
   async function fetchLeads() {
     try {
-      const res = await fetch('/api/leads?limit=100');
+      const res = await fetch(`/api/leads?limit=100&locale=${locale}`, { 
+        cache: 'no-store' 
+      });
       const json = await res.json();
       if (json.success) {
         const leadsData = json.data || [];
-        
-        // Translate fields to match current locale
-        setTranslating(true);
-        const translatedLeads = await Promise.all(
-          leadsData.map(async (lead: LeadMemoryRecord) => {
-            // Always translate to match current locale (uses cache internally)
-            const translated = await translateLeadFields({
-              id: lead.id,
-              ai_summary: lead.ai_summary,
-              intent: lead.intent,
-              tone: lead.tone,
-              urgency: lead.urgency,
-            }, locale);
-            
-            return {
-              ...lead,
-              translated,
-            } as TranslatedLead;
-          })
-        );
-        setLeads(translatedLeads);
-        calculateStats(translatedLeads);
-        setTranslating(false);
+        setLeads(leadsData);
+        calculateStats(leadsData);
       }
     } catch (err) {
       console.error('Failed to fetch leads:', err);
@@ -136,10 +88,13 @@ export default function Dashboard() {
     }
   }
 
-  function calculateStats(leadsData: LeadMemoryRecord[]) {
+  function calculateStats(leadsData: TranslatedLead[]) {
     const total = leadsData.length;
     const avgConfidence = leadsData.reduce((sum, l) => sum + (l.confidence_score || 0), 0) / total || 0;
-    const highUrgency = leadsData.filter(l => l.urgency === 'High' || l.urgency === 'Élevée').length;
+    const highUrgency = leadsData.filter(l => 
+      (l.translated_ai?.urgency || l.urgency) === 'High' || 
+      (l.translated_ai?.urgency || l.urgency) === 'Élevée'
+    ).length;
     const intentCounts: Record<string, number> = {};
     leadsData.forEach(l => {
       if (l.intent) {
@@ -151,7 +106,8 @@ export default function Dashboard() {
   }
 
   const filteredLeads = leads.filter(lead => {
-    if (filter.urgency !== 'all' && lead.urgency !== filter.urgency) return false;
+    const urgency = lead.translated_ai?.urgency || lead.urgency;
+    if (filter.urgency !== 'all' && urgency !== filter.urgency) return false;
     if (filter.language !== 'all' && lead.language !== filter.language) return false;
     if ((lead.confidence_score || 0) < filter.minConfidence) return false;
     return true;
@@ -434,27 +390,27 @@ export default function Dashboard() {
                 <div className="md:col-span-2 lg:col-span-3">
                   <span className="text-white/50 text-xs block mb-1">{t('dashboard.table.summary')}</span>
                   <p className="text-white/90">
-                    {lead.translated?.ai_summary || lead.ai_summary || 'N/A'}
+                    {lead.translated_ai?.ai_summary || lead.ai_summary || 'N/A'}
                   </p>
                 </div>
                 <div>
                   <span className="text-white/50 text-xs block mb-1">{t('dashboard.table.intent')}</span>
                   <p className="text-blue-300 font-medium">
-                    {lead.translated?.intent || lead.intent || 'N/A'}
+                    {lead.translated_ai?.intent || lead.intent || 'N/A'}
                   </p>
                 </div>
                 <div>
                   <span className="text-white/50 text-xs block mb-1">{t('dashboard.table.tone')}</span>
-                  <p>{lead.translated?.tone || lead.tone || 'N/A'}</p>
+                  <p>{lead.translated_ai?.tone || lead.tone || 'N/A'}</p>
                 </div>
                 <div>
                   <span className="text-white/50 text-xs block mb-1">{t('dashboard.table.urgency')}</span>
                   <p className={
-                    ((lead.translated?.urgency || lead.urgency) === 'High' || (lead.translated?.urgency || lead.urgency) === 'Élevée') ? 'text-red-400 font-semibold' :
-                    ((lead.translated?.urgency || lead.urgency) === 'Medium' || (lead.translated?.urgency || lead.urgency) === 'Moyenne') ? 'text-yellow-400' :
+                    ((lead.translated_ai?.urgency || lead.urgency) === 'High' || (lead.translated_ai?.urgency || lead.urgency) === 'Élevée') ? 'text-red-400 font-semibold' :
+                    ((lead.translated_ai?.urgency || lead.urgency) === 'Medium' || (lead.translated_ai?.urgency || lead.urgency) === 'Moyenne') ? 'text-yellow-400' :
                     'text-green-400'
                   }>
-                    {lead.translated?.urgency || lead.urgency || 'N/A'}
+                    {lead.translated_ai?.urgency || lead.urgency || 'N/A'}
                   </p>
                 </div>
                 <div className="md:col-span-2 lg:col-span-3">
