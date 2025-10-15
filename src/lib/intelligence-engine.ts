@@ -30,70 +30,98 @@ export async function analyzeClientLeads(
   periodStart: Date,
   periodEnd: Date
 ): Promise<Omit<GrowthBrainRecord, 'id' | 'analyzed_at' | 'created_at'>> {
-  console.log(`[Engine] Analyzing leads for client: ${clientId || 'global'}`);
-  console.log(`[Engine] Period: ${periodStart.toISOString()} to ${periodEnd.toISOString()}`);
-  
-  // Fetch leads for the period (only active leads: not archived, not deleted)
-  let query = supabase
-    .from('lead_memory')
-    .select('*')
-    .gte('timestamp', periodStart.toISOString())
-    .lte('timestamp', periodEnd.toISOString())
-    .eq('archived', false)
-    .eq('deleted', false);
+  try {
+    console.log(`[Engine] Analyzing leads for client: ${clientId || 'global'}`);
+    console.log(`[Engine] Period: ${periodStart.toISOString()} to ${periodEnd.toISOString()}`);
+    
+    // Fetch leads for the period
+    // Try with archived/deleted filters first, fallback if columns don't exist
+    let query = supabase
+      .from('lead_memory')
+      .select('*')
+      .gte('timestamp', periodStart.toISOString())
+      .lte('timestamp', periodEnd.toISOString());
 
-  if (clientId) {
-    query = query.eq('client_id', clientId);
-  }
+    if (clientId) {
+      query = query.eq('client_id', clientId);
+    }
 
-  console.log('[Engine] Executing Supabase query...');
-  const { data: leads, error, count } = await query;
+    console.log('[Engine] Executing Supabase query (with time range filter)...');
+    let { data: leads, error } = await query;
 
-  console.log(`[Engine] Supabase response:`, {
-    rowCount: leads?.length || 0,
-    totalCount: count,
-    error: error ? JSON.stringify(error) : 'none',
-  });
+    console.log(`[Engine] Initial query response:`, {
+      rowCount: leads?.length || 0,
+      error: error ? JSON.stringify(error) : 'none',
+    });
 
-  if (error) {
-    console.error('[Engine] Supabase query error:', JSON.stringify(error));
-    throw error;
-  }
+    // If query succeeded, filter out archived/deleted leads
+    if (!error && leads) {
+      const beforeFilter = leads.length;
+      // Client-side filter for archived/deleted (handles NULL values gracefully)
+      leads = leads.filter(lead => {
+        const isArchived = lead.archived === true;
+        const isDeleted = lead.deleted === true;
+        return !isArchived && !isDeleted;
+      });
+      console.log(`[Engine] Filtered leads: ${beforeFilter} → ${leads.length} (removed archived/deleted)`);
+    }
 
-  const allLeads = (leads || []) as LeadMemoryRecord[];
-  console.log(`[Engine] Fetched leads: ${allLeads.length}`);
-  
-  if (allLeads.length > 0) {
-    console.log(`[Engine] Sample lead IDs:`, allLeads.slice(0, 3).map(l => l.id));
-  }
+    if (error) {
+      console.error('[Engine] Supabase query error:', JSON.stringify(error));
+      throw error;
+    }
 
-  // 1. Top Intents Analysis
-  const intentCounts: Record<string, number> = {};
-  allLeads.forEach(lead => {
-    const intent = lead.intent || 'N/A';
-    intentCounts[intent] = (intentCounts[intent] || 0) + 1;
-  });
+    const allLeads = (leads || []) as LeadMemoryRecord[];
+    console.log(`[Engine] Fetched leads: ${allLeads.length}`);
+    
+    if (allLeads.length > 0) {
+      console.log(`[Engine] Sample lead IDs:`, allLeads.slice(0, 3).map(l => l.id));
+      console.log(`[Engine] Sample lead data:`, allLeads.slice(0, 1).map(l => ({
+        id: l.id,
+        intent: l.intent,
+        tone: l.tone,
+        urgency: l.urgency,
+        confidence: l.confidence_score,
+      })));
+    } else {
+      console.log('[Engine] ⚠️  No leads found in the specified period');
+    }
 
-  const topIntents = Object.entries(intentCounts)
-    .sort(([, a], [, b]) => b - a)
-    .slice(0, 5)
-    .map(([intent, count]) => ({ intent, count, percentage: (count / allLeads.length) * 100 }));
+    console.log('[Engine] Starting metrics calculation...');
 
-  // 2. Urgency Distribution & Trend
-  const normalizeUrgency = (urgency: string | null | undefined): 'high' | 'medium' | 'low' | 'unknown' => {
-    if (!urgency) return 'unknown';
-    const lower = urgency.toLowerCase();
-    if (lower === 'high' || lower === 'élevée') return 'high';
-    if (lower === 'medium' || lower === 'moyenne') return 'medium';
-    if (lower === 'low' || lower === 'faible') return 'low';
-    return 'unknown';
-  };
+    // 1. Top Intents Analysis
+    const intentCounts: Record<string, number> = {};
+    allLeads.forEach(lead => {
+      const intent = lead.intent || 'N/A';
+      intentCounts[intent] = (intentCounts[intent] || 0) + 1;
+    });
 
-  const urgencyDist = {
-    high: allLeads.filter(l => normalizeUrgency(l.urgency) === 'high').length,
-    medium: allLeads.filter(l => normalizeUrgency(l.urgency) === 'medium').length,
-    low: allLeads.filter(l => normalizeUrgency(l.urgency) === 'low').length,
-  };
+    const topIntents = Object.entries(intentCounts)
+      .sort(([, a], [, b]) => b - a)
+      .slice(0, 5)
+      .map(([intent, count]) => ({ 
+        intent, 
+        count, 
+        percentage: allLeads.length > 0 ? (count / allLeads.length) * 100 : 0 
+      }));
+
+    console.log('[Engine] Top intents calculated:', topIntents.length);
+
+    // 2. Urgency Distribution & Trend
+    const normalizeUrgency = (urgency: string | null | undefined): 'high' | 'medium' | 'low' | 'unknown' => {
+      if (!urgency) return 'unknown';
+      const lower = urgency.toLowerCase();
+      if (lower === 'high' || lower === 'élevée') return 'high';
+      if (lower === 'medium' || lower === 'moyenne') return 'medium';
+      if (lower === 'low' || lower === 'faible') return 'low';
+      return 'unknown';
+    };
+
+    const urgencyDist = {
+      high: allLeads.filter(l => normalizeUrgency(l.urgency) === 'high').length,
+      medium: allLeads.filter(l => normalizeUrgency(l.urgency) === 'medium').length,
+      low: allLeads.filter(l => normalizeUrgency(l.urgency) === 'low').length,
+    };
 
   // Calculate urgency trend (week-over-week)
   const highUrgencyRatio = allLeads.length > 0 ? (urgencyDist.high / allLeads.length) : 0;
@@ -132,7 +160,11 @@ export async function analyzeClientLeads(
   const toneDistribution = Object.entries(toneCounts)
     .sort(([, a], [, b]) => b - a)
     .slice(0, 5)
-    .map(([tone, count]) => ({ tone, count, percentage: (count / allLeads.length) * 100 }));
+    .map(([tone, count]) => ({ 
+      tone, 
+      count, 
+      percentage: allLeads.length > 0 ? (count / allLeads.length) * 100 : 0 
+    }));
 
   // Calculate tone sentiment score (0-100, higher = more positive/professional)
   const positiveTones = ['professional', 'professionnel', 'confident', 'confiant', 'strategic', 'stratégique'];
@@ -229,15 +261,21 @@ export async function analyzeClientLeads(
     predictive_insights: predictiveInsights,
   };
 
-  console.log('[Engine] Analysis complete:', {
-    client_id: clientId || 'global',
-    total_leads: result.total_leads,
-    top_intent: topIntents[0]?.intent || 'N/A',
-    high_urgency: urgencyDist.high,
-    avg_confidence: (avgConfidence * 100).toFixed(1) + '%',
-  });
+    console.log('[Engine] Analysis complete:', {
+      client_id: clientId || 'global',
+      total_leads: result.total_leads,
+      top_intent: topIntents[0]?.intent || 'N/A',
+      high_urgency: urgencyDist.high,
+      avg_confidence: (avgConfidence * 100).toFixed(1) + '%',
+    });
 
-  return result;
+    return result;
+  } catch (err) {
+    console.error('[Engine] ❌ analyzeClientLeads failed:', err instanceof Error ? err.message : err);
+    console.error('[Engine] Error details:', err);
+    console.error('[Engine] Stack trace:', err instanceof Error ? err.stack : 'N/A');
+    throw err;
+  }
 }
 
 /**
