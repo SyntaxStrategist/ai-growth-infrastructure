@@ -138,18 +138,19 @@ export async function translateLeadFields(
     return cached;
   }
 
-  // Detect source language of AI summary
-  const sourceLanguage = detectLanguage(fields.ai_summary || fields.intent || '');
+  // Detect current language of AI summary (not message!)
+  const summaryLang = detectLanguage(fields.ai_summary || fields.intent || '');
   
-  // Force translation if source doesn't match target OR if unknown
-  const needsGptTranslation = sourceLanguage !== targetLocale || sourceLanguage === 'unknown';
+  // ALWAYS force translation if summary language doesn't match dashboard locale
+  // OR if we can't detect the language (unknown)
+  const needsGptTranslation = summaryLang !== targetLocale || summaryLang === 'unknown';
   
-  if (sourceLanguage === 'unknown') {
-    console.log(`[Translation] SourceLang: unknown | Locale: ${targetLocale} → FORCE TRANSLATION`);
+  if (summaryLang === 'unknown') {
+    console.log(`[Translation] Dashboard locale=${targetLocale} | summaryLang=unknown | force translation → ${targetLocale === 'fr' ? 'French' : 'English'}`);
   } else if (needsGptTranslation) {
-    console.log(`[Translation] SourceLang: ${sourceLanguage} | Locale: ${targetLocale} → FORCE TRANSLATION`);
+    console.log(`[Translation] Dashboard locale=${targetLocale} | summaryLang=${summaryLang} | force translation → ${targetLocale === 'fr' ? 'French' : 'English'}`);
   } else {
-    console.log(`[Translation] SourceLang: ${sourceLanguage} | Locale: ${targetLocale} → SKIP`);
+    console.log(`[Translation] Dashboard locale=${targetLocale} | summaryLang=${summaryLang} | skip (already ${targetLocale === 'fr' ? 'French' : 'English'})`);
   }
 
   try {
