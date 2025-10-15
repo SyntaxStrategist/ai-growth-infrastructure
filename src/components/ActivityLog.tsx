@@ -17,6 +17,7 @@ export default function ActivityLog({ actions, locale }: ActivityLogProps) {
     delete: isFrench ? 'Supprimé' : 'Deleted',
     archive: isFrench ? 'Archivé' : 'Archived',
     tag: isFrench ? 'Étiqueté' : 'Tagged',
+    reactivate: isFrench ? 'Réactivé' : 'Reactivated',
     noActivity: isFrench ? 'Aucune activité récente' : 'No recent activity',
   };
 
@@ -24,13 +25,23 @@ export default function ActivityLog({ actions, locale }: ActivityLogProps) {
     if (action === 'delete') return t.delete;
     if (action === 'archive') return t.archive;
     if (action === 'tag') return t.tag;
+    if (action === 'reactivate') return t.reactivate;
     return action;
+  };
+
+  const getActionIcon = (action: string) => {
+    if (action === 'delete') return '🟥';
+    if (action === 'archive') return '🟧';
+    if (action === 'tag') return '🟨';
+    if (action === 'reactivate') return '🟩';
+    return '⚪';
   };
 
   const getActionColor = (action: string) => {
     if (action === 'delete') return 'text-red-400 border-red-400/30 bg-red-500/10';
-    if (action === 'archive') return 'text-yellow-400 border-yellow-400/30 bg-yellow-500/10';
-    if (action === 'tag') return 'text-blue-400 border-blue-400/30 bg-blue-500/10';
+    if (action === 'archive') return 'text-orange-400 border-orange-400/30 bg-orange-500/10';
+    if (action === 'tag') return 'text-yellow-400 border-yellow-400/30 bg-yellow-500/10';
+    if (action === 'reactivate') return 'text-green-400 border-green-400/30 bg-green-500/10';
     return 'text-white/60 border-white/10 bg-white/5';
   };
 
@@ -59,11 +70,12 @@ export default function ActivityLog({ actions, locale }: ActivityLogProps) {
             className="flex items-center justify-between p-3 rounded-lg border border-white/5 bg-white/5 hover:bg-white/10 transition-all"
           >
             <div className="flex items-center gap-3">
+              <span className="text-lg">{getActionIcon(action.action)}</span>
               <div className={`px-2 py-1 rounded text-xs font-medium border ${getActionColor(action.action)}`}>
                 {getActionLabel(action.action)}
               </div>
               {action.tag && (
-                <span className="text-xs text-purple-400 font-mono">
+                <span className="px-2 py-1 rounded text-xs font-medium bg-purple-500/20 border border-purple-500/40 text-purple-300">
                   {action.tag}
                 </span>
               )}

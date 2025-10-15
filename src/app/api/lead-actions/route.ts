@@ -28,7 +28,7 @@ export async function POST(req: NextRequest) {
     }
 
     // Validate action type
-    if (!['delete', 'archive', 'tag'].includes(action)) {
+    if (!['delete', 'archive', 'tag', 'reactivate'].includes(action)) {
       console.error(`[LeadActions] Invalid action type: ${action}`);
       return NextResponse.json(
         { success: false, message: `Invalid action type: ${action}` },
@@ -38,24 +38,24 @@ export async function POST(req: NextRequest) {
 
     // Perform the actual lead action first
     if (action === 'delete') {
-      console.log(`[LeadActions] Deleting lead ${lead_id} from lead_memory...`);
+      console.log(`[LeadActions] Soft deleting lead ${lead_id}...`);
       
       const { error: deleteError } = await supabase
         .from('lead_memory')
-        .delete()
+        .update({ deleted: true })
         .eq('id', lead_id);
 
       console.log(`[LeadActions] Delete response:`, { error: deleteError || 'success' });
 
       if (deleteError) {
-        console.error('[LeadActions] Failed to delete lead from lead_memory:', JSON.stringify(deleteError));
+        console.error('[LeadActions] Failed to soft delete lead:', JSON.stringify(deleteError));
         return NextResponse.json(
           { success: false, message: "Error deleting lead", error: deleteError.message },
           { status: 500 }
         );
       }
     } else if (action === 'archive') {
-      console.log(`[LeadActions] Archiving lead ${lead_id} in lead_memory...`);
+      console.log(`[LeadActions] Archiving lead ${lead_id}...`);
       
       const { error: archiveError } = await supabase
         .from('lead_memory')
@@ -68,6 +68,41 @@ export async function POST(req: NextRequest) {
         console.error('[LeadActions] Failed to archive lead:', JSON.stringify(archiveError));
         return NextResponse.json(
           { success: false, message: "Error archiving lead", error: archiveError.message },
+          { status: 500 }
+        );
+      }
+    } else if (action === 'reactivate') {
+      console.log(`[LeadActions] Reactivating lead ${lead_id}...`);
+      
+      const { error: reactivateError } = await supabase
+        .from('lead_memory')
+        .update({ archived: false, deleted: false })
+        .eq('id', lead_id);
+
+      console.log(`[LeadActions] Reactivate response:`, { error: reactivateError || 'success' });
+
+      if (reactivateError) {
+        console.error('[LeadActions] Failed to reactivate lead:', JSON.stringify(reactivateError));
+        return NextResponse.json(
+          { success: false, message: "Error reactivating lead", error: reactivateError.message },
+          { status: 500 }
+        );
+      }
+    } else if (action === 'tag') {
+      console.log(`[LeadActions] Tagging lead ${lead_id} with ${tag}...`);
+      
+      // Update current_tag in lead_memory
+      const { error: tagError } = await supabase
+        .from('lead_memory')
+        .update({ current_tag: tag })
+        .eq('id', lead_id);
+
+      console.log(`[LeadActions] Tag update response:`, { error: tagError || 'success' });
+
+      if (tagError) {
+        console.error('[LeadActions] Failed to update tag in lead_memory:', JSON.stringify(tagError));
+        return NextResponse.json(
+          { success: false, message: "Error tagging lead", error: tagError.message },
           { status: 500 }
         );
       }
@@ -108,6 +143,9 @@ export async function POST(req: NextRequest) {
         break;
       case 'tag':
         message = `Lead tagged successfully`;
+        break;
+      case 'reactivate':
+        message = 'Lead reactivated successfully';
         break;
     }
 

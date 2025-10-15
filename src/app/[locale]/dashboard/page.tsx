@@ -36,6 +36,8 @@ export default function Dashboard() {
   const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
   const [tagLead, setTagLead] = useState<string | null>(null);
   const [selectedTag, setSelectedTag] = useState<string>('');
+  const [activeTab, setActiveTab] = useState<'active' | 'archived' | 'deleted'>('active');
+  const [tagFilter, setTagFilter] = useState<string>('all');
 
   // Check localStorage for existing auth
   useEffect(() => {
@@ -79,16 +81,39 @@ export default function Dashboard() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [locale]);
 
+  // Re-fetch leads when tab changes
+  useEffect(() => {
+    if (!authorized) return;
+    console.log(`[Dashboard] Tab changed to: ${activeTab} - re-fetching leads`);
+    fetchLeads();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeTab]);
+
   async function fetchLeads() {
     try {
-      const res = await fetch(`/api/leads?limit=100&locale=${locale}`, { 
-        cache: 'no-store' 
-      });
+      setLoading(true);
+      let endpoint = '';
+      switch (activeTab) {
+        case 'active':
+          endpoint = `/api/leads?limit=100&locale=${locale}`;
+          break;
+        case 'archived':
+          endpoint = `/api/leads/archived?limit=100&locale=${locale}`;
+          break;
+        case 'deleted':
+          endpoint = `/api/leads/deleted?limit=100&locale=${locale}`;
+          break;
+      }
+      
+      console.log(`[Dashboard] Fetching ${activeTab} leads...`);
+      const res = await fetch(endpoint, { cache: 'no-store' });
       const json = await res.json();
+      
       if (json.success) {
         const leadsData = json.data || [];
         setLeads(leadsData);
         calculateStats(leadsData);
+        console.log(`[Dashboard] Loaded ${leadsData.length} ${activeTab} leads`);
       }
     } catch (err) {
       console.error('Failed to fetch leads:', err);
@@ -119,6 +144,7 @@ export default function Dashboard() {
     if (filter.urgency !== 'all' && urgency !== filter.urgency) return false;
     if (filter.language !== 'all' && lead.language !== filter.language) return false;
     if ((lead.confidence_score || 0) < filter.minConfidence) return false;
+    if (tagFilter !== 'all' && lead.current_tag !== tagFilter) return false;
     return true;
   });
 
@@ -230,6 +256,7 @@ export default function Dashboard() {
         setTagLead(null);
         setSelectedTag('');
         showToast(locale === 'fr' ? `Lead étiqueté comme "${selectedTag}" avec succès.` : `Lead tagged as "${selectedTag}" successfully.`);
+        fetchLeads(); // Refresh to show tag badge
         fetchRecentActions();
       } else {
         console.error(`[LeadAction] Failed to tag lead ${tagLead}:`, json.message || json.error);
@@ -238,6 +265,34 @@ export default function Dashboard() {
     } catch (err) {
       console.error(`[LeadAction] Error tagging lead ${tagLead}:`, err);
       showToast(locale === 'fr' ? 'Erreur lors de l\'étiquetage.' : 'Tag failed.');
+    }
+  }
+
+  async function handleReactivate(leadId: string) {
+    try {
+      console.log(`[LeadAction] Reactivating lead ${leadId}...`);
+
+      const res = await fetch('/api/lead-actions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ lead_id: leadId, action: 'reactivate' }),
+      });
+
+      const json = await res.json();
+      console.log(`[LeadAction] Reactivate response:`, json);
+
+      if (json.success) {
+        console.log(`[LeadAction] Reactivated lead ${leadId}`);
+        setLeads(leads.filter(l => l.id !== leadId)); // Remove from current view
+        showToast(locale === 'fr' ? 'Lead réactivé avec succès.' : 'Lead reactivated successfully.');
+        fetchRecentActions();
+      } else {
+        console.error(`[LeadAction] Failed to reactivate lead ${leadId}:`, json.message || json.error);
+        showToast(locale === 'fr' ? `Erreur: ${json.message || 'Réactivation échouée'}` : `Error: ${json.message || 'Reactivate failed'}`);
+      }
+    } catch (err) {
+      console.error(`[LeadAction] Error reactivating lead ${leadId}:`, err);
+      showToast(locale === 'fr' ? 'Erreur lors de la réactivation.' : 'Reactivate failed.');
     }
   }
 
@@ -345,6 +400,22 @@ export default function Dashboard() {
     );
   }
 
+  const getTagBadgeColor = (tag: string | null | undefined) => {
+    if (!tag) return '';
+    const tagLower = tag.toLowerCase();
+    if (tagLower.includes('contact')) return 'bg-blue-500/20 border-blue-500/40 text-blue-300';
+    if (tagLower.includes('high') || tagLower.includes('haute')) return 'bg-yellow-500/20 border-yellow-500/40 text-yellow-300';
+    if (tagLower.includes('not') || tagLower.includes('non')) return 'bg-gray-500/20 border-gray-500/40 text-gray-300';
+    if (tagLower.includes('follow') || tagLower.includes('suivi')) return 'bg-purple-500/20 border-purple-500/40 text-purple-300';
+    return 'bg-white/10 border-white/20 text-white/60';
+  };
+
+  const tabLabels = {
+    active: locale === 'fr' ? 'Leads Actifs' : 'Active Leads',
+    archived: locale === 'fr' ? 'Leads Archivés' : 'Archived Leads',
+    deleted: locale === 'fr' ? 'Leads Supprimés' : 'Deleted Leads',
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-black text-white">
@@ -429,6 +500,28 @@ export default function Dashboard() {
           </div>
         </motion.div>
 
+        {/* View Tabs */}
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.6, delay: 0.25 }}
+          className="mb-6 flex gap-2 border-b border-white/10"
+        >
+          {(['active', 'archived', 'deleted'] as const).map(tab => (
+            <button
+              key={tab}
+              onClick={() => setActiveTab(tab)}
+              className={`px-4 py-2 font-medium transition-all duration-200 border-b-2 ${
+                activeTab === tab
+                  ? 'border-blue-500 text-blue-400 shadow-[0_0_10px_rgba(59,130,246,0.5)]'
+                  : 'border-transparent text-white/60 hover:text-white/80'
+              }`}
+            >
+              {tabLabels[tab]}
+            </button>
+          ))}
+        </motion.div>
+
         {/* Filters */}
         <motion.div
           initial={{ opacity: 0 }}
@@ -455,6 +548,17 @@ export default function Dashboard() {
             <option value="all">{t('dashboard.filters.all')} {t('dashboard.filters.language')}</option>
             <option value="en">English</option>
             <option value="fr">Français</option>
+          </select>
+
+          <select
+            value={tagFilter}
+            onChange={(e) => setTagFilter(e.target.value)}
+            className="px-3 py-2 rounded-md bg-white/5 border border-white/10 text-sm hover:border-blue-400/40 transition-all"
+          >
+            <option value="all">{locale === 'fr' ? 'Tous les tags' : 'All Tags'}</option>
+            {tagOptions.map(tag => (
+              <option key={tag} value={tag}>{tag}</option>
+            ))}
           </select>
 
           <div className="flex items-center gap-2 flex-1 max-w-xs">
@@ -501,7 +605,14 @@ export default function Dashboard() {
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 text-sm">
                 <div>
                   <span className="text-white/50 text-xs block mb-1">{t('dashboard.table.name')}</span>
-                  <p className="font-semibold">{lead.name}</p>
+                  <div className="flex items-center gap-2">
+                    <p className="font-semibold">{lead.name}</p>
+                    {lead.current_tag && (
+                      <span className={`px-2 py-1 text-xs rounded border ${getTagBadgeColor(lead.current_tag)}`}>
+                        {lead.current_tag}
+                      </span>
+                    )}
+                  </div>
                 </div>
                 <div>
                   <span className="text-white/50 text-xs block mb-1">{t('dashboard.table.email')}</span>
@@ -563,39 +674,61 @@ export default function Dashboard() {
 
               {/* Action Buttons */}
               <div className="flex items-center gap-2 mt-4 pt-4 border-t border-white/5">
-                <div className="relative group">
-                  <button
-                    onClick={() => setTagLead(lead.id)}
-                    className="p-2 rounded-lg bg-blue-500/20 border border-blue-500/40 text-blue-400 hover:bg-blue-500/30 hover:shadow-[0_0_15px_rgba(59,130,246,0.5)] hover:border-blue-500/60 transition-all duration-100 text-xs"
-                  >
-                    🏷️
-                  </button>
-                  <span className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 bg-blue-600 text-white text-[0.9rem] rounded opacity-0 group-hover:opacity-100 transition-opacity duration-150 delay-150 whitespace-nowrap pointer-events-none z-10">
-                    {locale === 'fr' ? 'Étiqueter le lead' : 'Tag Lead'}
-                  </span>
-                </div>
-                <div className="relative group">
-                  <button
-                    onClick={() => handleArchiveLead(lead.id)}
-                    className="p-2 rounded-lg bg-yellow-500/20 border border-yellow-500/40 text-yellow-400 hover:bg-yellow-500/30 hover:shadow-[0_0_15px_rgba(234,179,8,0.5)] hover:border-yellow-500/60 transition-all duration-100 text-xs"
-                  >
-                    📦
-                  </button>
-                  <span className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 bg-yellow-600 text-white text-[0.9rem] rounded opacity-0 group-hover:opacity-100 transition-opacity duration-150 delay-150 whitespace-nowrap pointer-events-none z-10">
-                    {locale === 'fr' ? 'Archiver' : 'Archive'}
-                  </span>
-                </div>
-                <div className="relative group">
-                  <button
-                    onClick={() => setConfirmDelete(lead.id)}
-                    className="p-2 rounded-lg bg-red-500/20 border border-red-500/40 text-red-400 hover:bg-red-500/30 hover:shadow-[0_0_15px_rgba(239,68,68,0.5)] hover:border-red-500/60 transition-all duration-100 text-xs"
-                  >
-                    🗑️
-                  </button>
-                  <span className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 bg-red-600 text-white text-[0.9rem] rounded opacity-0 group-hover:opacity-100 transition-opacity duration-150 delay-150 whitespace-nowrap pointer-events-none z-10">
-                    {locale === 'fr' ? 'Supprimer' : 'Delete'}
-                  </span>
-                </div>
+                {activeTab === 'active' ? (
+                  <>
+                    {/* Tag Button */}
+                    <div className="relative group">
+                      <button
+                        onClick={() => setTagLead(lead.id)}
+                        className="p-2 rounded-lg bg-blue-500/20 border border-blue-500/40 text-blue-400 hover:bg-blue-500/30 hover:shadow-[0_0_15px_rgba(59,130,246,0.5)] hover:border-blue-500/60 transition-all duration-100 text-xs"
+                      >
+                        🏷️
+                      </button>
+                      <span className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 bg-blue-600 text-white text-[0.9rem] rounded opacity-0 group-hover:opacity-100 transition-opacity duration-150 delay-150 whitespace-nowrap pointer-events-none z-10">
+                        {locale === 'fr' ? 'Étiqueter le lead' : 'Tag Lead'}
+                      </span>
+                    </div>
+                    {/* Archive Button */}
+                    <div className="relative group">
+                      <button
+                        onClick={() => handleArchiveLead(lead.id)}
+                        className="p-2 rounded-lg bg-yellow-500/20 border border-yellow-500/40 text-yellow-400 hover:bg-yellow-500/30 hover:shadow-[0_0_15px_rgba(234,179,8,0.5)] hover:border-yellow-500/60 transition-all duration-100 text-xs"
+                      >
+                        📦
+                      </button>
+                      <span className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 bg-yellow-600 text-white text-[0.9rem] rounded opacity-0 group-hover:opacity-100 transition-opacity duration-150 delay-150 whitespace-nowrap pointer-events-none z-10">
+                        {locale === 'fr' ? 'Archiver' : 'Archive'}
+                      </span>
+                    </div>
+                    {/* Delete Button */}
+                    <div className="relative group">
+                      <button
+                        onClick={() => setConfirmDelete(lead.id)}
+                        className="p-2 rounded-lg bg-red-500/20 border border-red-500/40 text-red-400 hover:bg-red-500/30 hover:shadow-[0_0_15px_rgba(239,68,68,0.5)] hover:border-red-500/60 transition-all duration-100 text-xs"
+                      >
+                        🗑️
+                      </button>
+                      <span className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 bg-red-600 text-white text-[0.9rem] rounded opacity-0 group-hover:opacity-100 transition-opacity duration-150 delay-150 whitespace-nowrap pointer-events-none z-10">
+                        {locale === 'fr' ? 'Supprimer' : 'Delete'}
+                      </span>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    {/* Reactivate Button */}
+                    <div className="relative group">
+                      <button
+                        onClick={() => handleReactivate(lead.id)}
+                        className="p-2 rounded-lg bg-green-500/20 border border-green-500/40 text-green-400 hover:bg-green-500/30 hover:shadow-[0_0_15px_rgba(34,197,94,0.5)] hover:border-green-500/60 transition-all duration-100 text-xs"
+                      >
+                        🔄
+                      </button>
+                      <span className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 bg-green-600 text-white text-[0.9rem] rounded opacity-0 group-hover:opacity-100 transition-opacity duration-150 delay-150 whitespace-nowrap pointer-events-none z-10">
+                        {locale === 'fr' ? 'Réactiver' : 'Reactivate'}
+                      </span>
+                    </div>
+                  </>
+                )}
               </div>
             </motion.div>
           ))}

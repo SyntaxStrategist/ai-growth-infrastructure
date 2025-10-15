@@ -51,10 +51,12 @@ CREATE TABLE IF NOT EXISTS lead_memory (
   urgency TEXT,
   confidence_score NUMERIC(5,2),
   client_id UUID REFERENCES clients(id) ON DELETE SET NULL,
-  archived BOOLEAN DEFAULT FALSE
+  archived BOOLEAN DEFAULT FALSE,
+  deleted BOOLEAN DEFAULT FALSE,
+  current_tag TEXT
 );
 
--- Add archived column if it doesn't exist (for existing tables)
+-- Add columns if they don't exist (for existing tables)
 DO $$ 
 BEGIN
   IF NOT EXISTS (
@@ -62,6 +64,20 @@ BEGIN
     WHERE table_name = 'lead_memory' AND column_name = 'archived'
   ) THEN
     ALTER TABLE lead_memory ADD COLUMN archived BOOLEAN DEFAULT FALSE;
+  END IF;
+  
+  IF NOT EXISTS (
+    SELECT 1 FROM information_schema.columns 
+    WHERE table_name = 'lead_memory' AND column_name = 'deleted'
+  ) THEN
+    ALTER TABLE lead_memory ADD COLUMN deleted BOOLEAN DEFAULT FALSE;
+  END IF;
+  
+  IF NOT EXISTS (
+    SELECT 1 FROM information_schema.columns 
+    WHERE table_name = 'lead_memory' AND column_name = 'current_tag'
+  ) THEN
+    ALTER TABLE lead_memory ADD COLUMN current_tag TEXT;
   END IF;
 END $$;
 
@@ -71,6 +87,8 @@ CREATE INDEX IF NOT EXISTS lead_memory_urgency_idx ON lead_memory(urgency);
 CREATE INDEX IF NOT EXISTS lead_memory_confidence_idx ON lead_memory(confidence_score);
 CREATE INDEX IF NOT EXISTS lead_memory_client_id_idx ON lead_memory(client_id);
 CREATE INDEX IF NOT EXISTS lead_memory_archived_idx ON lead_memory(archived);
+CREATE INDEX IF NOT EXISTS lead_memory_deleted_idx ON lead_memory(deleted);
+CREATE INDEX IF NOT EXISTS lead_memory_current_tag_idx ON lead_memory(current_tag);
 
 -- Enable Row Level Security (RLS) for clients table
 ALTER TABLE clients ENABLE ROW LEVEL SECURITY;

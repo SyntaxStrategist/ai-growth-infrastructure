@@ -15,6 +15,9 @@ export type LeadMemoryRecord = {
   urgency?: string | null;
   confidence_score?: number | null;
   client_id?: string | null;
+  archived?: boolean;
+  deleted?: boolean;
+  current_tag?: string | null;
 };
 
 export type ClientRecord = {
@@ -255,7 +258,49 @@ export async function getRecentLeads(limit = 50, offset = 0) {
     const { data, error, count } = await supabase
       .from('lead_memory')
       .select('*', { count: 'exact' })
-      .eq('archived', false) // Only fetch non-archived leads
+      .eq('archived', false)
+      .eq('deleted', false) // Only fetch active (non-archived, non-deleted) leads
+      .order('timestamp', { ascending: false })
+      .range(offset, offset + limit - 1);
+    
+    if (error) {
+      throw error;
+    }
+    
+    return { data: data || [], total: count || 0 };
+  } catch (err) {
+    console.error('[Supabase] Query failed:', err instanceof Error ? err.message : err);
+    throw err;
+  }
+}
+
+export async function getArchivedLeads(limit = 50, offset = 0) {
+  try {
+    const { data, error, count } = await supabase
+      .from('lead_memory')
+      .select('*', { count: 'exact' })
+      .eq('archived', true)
+      .eq('deleted', false) // Archived but not deleted
+      .order('timestamp', { ascending: false })
+      .range(offset, offset + limit - 1);
+    
+    if (error) {
+      throw error;
+    }
+    
+    return { data: data || [], total: count || 0 };
+  } catch (err) {
+    console.error('[Supabase] Query failed:', err instanceof Error ? err.message : err);
+    throw err;
+  }
+}
+
+export async function getDeletedLeads(limit = 50, offset = 0) {
+  try {
+    const { data, error, count } = await supabase
+      .from('lead_memory')
+      .select('*', { count: 'exact' })
+      .eq('deleted', true) // All deleted leads (regardless of archived status)
       .order('timestamp', { ascending: false })
       .range(offset, offset + limit - 1);
     
