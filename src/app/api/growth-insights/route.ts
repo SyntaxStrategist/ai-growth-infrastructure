@@ -52,7 +52,7 @@ export async function GET(req: NextRequest) {
     let query = supabase
       .from('growth_brain')
       .select('*')
-      .order('analyzed_at', { ascending: false })
+      .order('created_at', { ascending: false })
       .limit(1);
 
     if (clientId) {
@@ -64,7 +64,7 @@ export async function GET(req: NextRequest) {
       query = query.is('client_id', null);
     }
 
-    console.log('[GrowthInsightsAPI] Executing Supabase query...');
+    console.log('[GrowthInsightsAPI] Executing Supabase query (ORDER BY created_at DESC)...');
     const queryStart = Date.now();
     const { data, error } = await query;
     const queryDuration = Date.now() - queryStart;
@@ -96,7 +96,7 @@ export async function GET(req: NextRequest) {
       console.log('[GrowthInsightsAPI] No insights found - growth_brain table is empty or no matching records');
       console.log('[GrowthInsightsAPI] Query filters:', {
         client_id: clientId || 'IS NULL',
-        order: 'analyzed_at DESC',
+        order: 'created_at DESC',
         limit: 1,
       });
       
@@ -114,7 +114,7 @@ export async function GET(req: NextRequest) {
     console.log('[GrowthInsightsAPI] Client ID:', insight.client_id || 'global');
     console.log('[GrowthInsightsAPI] Total leads:', insight.total_leads);
     console.log('[GrowthInsightsAPI] Engagement score:', insight.engagement_score);
-    console.log('[GrowthInsightsAPI] Analyzed at:', insight.analyzed_at);
+    console.log('[GrowthInsightsAPI] Created at:', insight.created_at);
     console.log('[GrowthInsightsAPI] Has predictive_insights:', !!insight.predictive_insights);
     
     if (insight.predictive_insights) {
