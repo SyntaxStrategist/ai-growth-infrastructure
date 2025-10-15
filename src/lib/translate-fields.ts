@@ -36,22 +36,41 @@ const URGENCY_TRANSLATIONS: Record<string, { en: string; fr: string }> = {
   'n/a': { en: 'N/A', fr: 'N/A' },
 };
 
-// Helper function to detect language of text (simple heuristic)
-function detectLanguage(text: string | null | undefined): 'en' | 'fr' {
-  if (!text) return 'en';
-  
-  const frenchIndicators = [
-    'à', 'é', 'è', 'ê', 'ç', 'œ',
-    'demande', 'partenariat', 'entreprise', 'stratégique',
-    'élevée', 'moyenne', 'faible', 'professionnel', 'décontracté',
-    'urgence', 'confiance', 'ton', 'intention'
-  ];
+// Helper function to detect language of text (enhanced heuristic)
+function detectLanguage(text: string | null | undefined): 'en' | 'fr' | 'unknown' {
+  if (!text || text.length < 3) return 'unknown';
   
   const lowerText = text.toLowerCase();
-  const frenchMatches = frenchIndicators.filter(indicator => lowerText.includes(indicator)).length;
   
-  // If 2+ French indicators found, consider it French
-  return frenchMatches >= 2 ? 'fr' : 'en';
+  // French indicators (accents + keywords)
+  const frenchIndicators = [
+    'à', 'é', 'è', 'ê', 'ç', 'œ', 'ù', 'û', 'î', 'ô',
+    'demande', 'partenariat', 'entreprise', 'stratégique', 'service',
+    'élevée', 'moyenne', 'faible', 'professionnel', 'décontracté',
+    'urgence', 'confiance', 'ton', 'intention', 'client', 'solution',
+    'opportunité', 'intérêt', 'besoin', 'recherche'
+  ];
+  
+  // English indicators (common words)
+  const englishIndicators = [
+    'the ', ' is ', ' and ', ' for ', ' with ', ' from ',
+    'partnership', 'inquiry', 'support', 'service', 'opportunity',
+    'interest', 'need', 'looking', 'want', 'help', 'information',
+    'high', 'medium', 'low', 'professional', 'casual', 'urgent'
+  ];
+  
+  const frenchMatches = frenchIndicators.filter(i => lowerText.includes(i)).length;
+  const englishMatches = englishIndicators.filter(i => lowerText.includes(i)).length;
+  
+  // Strong indicators
+  if (frenchMatches >= 2) return 'fr';
+  if (englishMatches >= 2) return 'en';
+  
+  // Weak indicators - check for accents
+  if (/[àâäéèêëïîôùûüÿæœç]/i.test(text)) return 'fr';
+  
+  // Default to unknown if can't determine
+  return 'unknown';
 }
 
 // Helper function to translate short terms using hardcoded maps
@@ -111,21 +130,26 @@ export async function translateLeadFields(
   console.log(`[Translation] Locale detected: ${targetLocale}`);
   
   if (translationCache.has(cacheKey)) {
+    const cached = translationCache.get(cacheKey);
     console.log(`[Translation] Using cached translation for lead_${fields.id.slice(-8)} (locale: ${targetLocale})`);
-    return translationCache.get(cacheKey);
+    console.log(`[Translation] Rendering for dashboard locale: ${targetLocale}`);
+    console.log(`[Translation] Final AI Summary language: ${targetLocale}`);
+    console.log(`[Translation] Final Intent language: ${targetLocale}`);
+    return cached;
   }
 
   // Detect source language of AI summary
   const sourceLanguage = detectLanguage(fields.ai_summary || fields.intent || '');
-  console.log(`[Translation] AI summary source language: ${sourceLanguage}`);
   
-  // If source language matches target, skip GPT translation (but still apply hardcoded maps)
-  const needsGptTranslation = sourceLanguage !== targetLocale;
+  // Force translation if source doesn't match target OR if unknown
+  const needsGptTranslation = sourceLanguage !== targetLocale || sourceLanguage === 'unknown';
   
-  if (needsGptTranslation) {
-    console.log(`[Translation] Translating AI summary to ${targetLocale}...`);
+  if (sourceLanguage === 'unknown') {
+    console.log(`[Translation] SourceLang: unknown | Locale: ${targetLocale} → FORCE TRANSLATION`);
+  } else if (needsGptTranslation) {
+    console.log(`[Translation] SourceLang: ${sourceLanguage} | Locale: ${targetLocale} → FORCE TRANSLATION`);
   } else {
-    console.log(`[Translation] Source already matches ${targetLocale} - applying hardcoded maps only`);
+    console.log(`[Translation] SourceLang: ${sourceLanguage} | Locale: ${targetLocale} → SKIP`);
   }
 
   try {
@@ -226,7 +250,11 @@ Original fields:
 
     // Cache the result
     translationCache.set(cacheKey, result);
-    console.log(`[Translation] Translation complete and cached for ${fields.id} (${targetLocale})`);
+    
+    // Final render debug logs
+    console.log(`[Translation] Rendering for dashboard locale: ${targetLocale}`);
+    console.log(`[Translation] Final AI Summary language: ${targetLocale}`);
+    console.log(`[Translation] Final Intent language: ${targetLocale}`);
 
     return result;
   } catch (error) {

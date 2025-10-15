@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { useTranslations, useLocale } from 'next-intl';
 import { supabase } from "../../../lib/supabase";
-import { translateLeadFields, clearTranslationCache } from "../../../lib/translate-fields";
+import { translateLeadFields } from "../../../lib/translate-fields";
 import type { LeadMemoryRecord } from "../../../lib/supabase";
 import PredictiveGrowthEngine from "../../../components/PredictiveGrowthEngine";
 
@@ -306,15 +306,6 @@ export default function Dashboard() {
             >
               {locale === 'fr' ? '📊 Aperçus' : '📊 Insights'}
             </a>
-            <button
-              onClick={() => {
-                clearTranslationCache();
-                fetchLeads();
-              }}
-              className="px-4 py-2 rounded-lg bg-purple-500/20 border border-purple-500/40 text-purple-400 hover:bg-purple-500/30 transition-all duration-300 text-sm font-medium"
-            >
-              {locale === 'fr' ? '🔄 Actualiser traductions' : '🔄 Refresh Translations'}
-            </button>
             <button
               onClick={() => {
                 localStorage.removeItem('admin_auth');
