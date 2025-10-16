@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Avenir AI Solutions - Architecture Technique</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        @page {
+            size: A4 landscape;
+            margin: 20mm;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 50%, #0f172a 100%);
+            color: #ffffff;
+            padding: 20mm;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .container {
+            width: 100%;
+            max-width: 100%;
+            height: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 8px;
+        }
+        
+        .logo {
+            font-size: 28px;
+            font-weight: 800;
+            background: linear-gradient(135deg, #60a5fa, #a78bfa);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            letter-spacing: 3px;
+            margin-bottom: 4px;
+        }
+        
+        .subtitle {
+            font-size: 11px;
+            color: rgba(255, 255, 255, 0.7);
+            font-weight: 400;
+        }
+        
+        .system-flow {
+            display: grid;
+            grid-template-columns: repeat(13, 1fr);
+            gap: 0;
+            align-items: stretch;
+            margin-bottom: 12px;
+        }
+        
+        .system-card {
+            grid-column: span 2;
+            background: linear-gradient(135deg, rgba(96, 165, 250, 0.12), rgba(167, 139, 250, 0.12));
+            border: 1.5px solid rgba(96, 165, 250, 0.5);
+            border-radius: 10px;
+            padding: 10px 8px;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            min-height: 110px;
+        }
+        
+        .system-number {
+            position: absolute;
+            top: 6px;
+            left: 6px;
+            width: 20px;
+            height: 20px;
+            background: linear-gradient(135deg, #60a5fa, #a78bfa);
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 11px;
+            font-weight: 700;
+            color: #fff;
+        }
+        
+        .system-title {
+            font-size: 10px;
+            font-weight: 700;
+            color: #60a5fa;
+            text-align: center;
+            margin-top: 22px;
+            margin-bottom: 6px;
+            line-height: 1.2;
+        }
+        
+        .system-desc {
+            font-size: 7px;
+            color: rgba(255, 255, 255, 0.7);
+            text-align: center;
+            line-height: 1.4;
+            margin-bottom: 6px;
+            flex: 1;
+        }
+        
+        .tech-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 3px;
+            justify-content: center;
+        }
+        
+        .tech-tag {
+            background: rgba(167, 139, 250, 0.25);
+            border: 1px solid rgba(167, 139, 250, 0.5);
+            border-radius: 6px;
+            padding: 2px 5px;
+            font-size: 6px;
+            font-weight: 600;
+            color: #c4b5fd;
+        }
+        
+        .arrow {
+            grid-column: span 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            color: #60a5fa;
+            font-weight: 700;
+        }
+        
+        .details-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+        }
+        
+        .detail-card {
+            background: linear-gradient(135deg, rgba(96, 165, 250, 0.08), rgba(167, 139, 250, 0.08));
+            border: 1.5px solid rgba(96, 165, 250, 0.4);
+            border-radius: 10px;
+            padding: 10px;
+        }
+        
+        .detail-title {
+            font-size: 9px;
+            font-weight: 700;
+            color: #60a5fa;
+            margin-bottom: 6px;
+            text-align: center;
+        }
+        
+        .detail-content {
+            font-size: 7px;
+            color: rgba(255, 255, 255, 0.75);
+            line-height: 1.5;
+        }
+        
+        .footer {
+            text-align: center;
+            margin-top: 8px;
+            font-size: 7px;
+            color: rgba(255, 255, 255, 0.5);
+            border-top: 1px solid rgba(96, 165, 250, 0.3);
+            padding-top: 6px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="logo">AVENIR AI SOLUTIONS</div>
+            <div class="subtitle">Architecture Technique — Infrastructure de Croissance IA</div>
+        </div>
+
+        <div class="system-flow">
+            <div class="system-card">
+                <div class="system-number">1</div>
+                <div class="system-title">Couche de Capture</div>
+                <div class="system-desc">
+                    Formulaire web avec enrichissement IA via GPT-4o-mini. Analyse intention, ton, urgence. Sync Gmail, Sheets et Supabase.
+                </div>
+                <div class="tech-tags">
+                    <span class="tech-tag">API Next.js</span>
+                    <span class="tech-tag">OpenAI</span>
+                    <span class="tech-tag">API Gmail</span>
+                </div>
+            </div>
+
+            <div class="arrow">→</div>
+
+            <div class="system-card">
+                <div class="system-number">2</div>
+                <div class="system-title">Système Mémoire IA</div>
+                <div class="system-desc">
+                    Déduplication courriel avec suivi historique JSONB. Stocke évolution ton, confiance, urgence. Génère aperçus bilingues.
+                </div>
+                <div class="tech-tags">
+                    <span class="tech-tag">PostgreSQL</span>
+                    <span class="tech-tag">JSONB</span>
+                    <span class="tech-tag">Supabase</span>
+                </div>
+            </div>
+
+            <div class="arrow">→</div>
+
+            <div class="system-card">
+                <div class="system-number">3</div>
+                <div class="system-title">Moteur Intelligence</div>
+                <div class="system-desc">
+                    Analyse automatisée hebdomadaire (Lun 00:00 UTC). Détection motifs, analyse tendances. Aperçus prédictifs EN/FR.
+                </div>
+                <div class="tech-tags">
+                    <span class="tech-tag">Vercel Cron</span>
+                    <span class="tech-tag">GPT-4o-mini</span>
+                    <span class="tech-tag">Analytiques</span>
+                </div>
+            </div>
+
+            <div class="arrow">→</div>
+
+            <div class="system-card">
+                <div class="system-number">4</div>
+                <div class="system-title">Copilote Croissance</div>
+                <div class="system-desc">
+                    Tableau bord temps réel avec màj live. Analyse tendances, prédictions, aperçus relationnels. Gestion complète leads.
+                </div>
+                <div class="tech-tags">
+                    <span class="tech-tag">Next.js 15</span>
+                    <span class="tech-tag">Framer Motion</span>
+                    <span class="tech-tag">Tailwind</span>
+                </div>
+            </div>
+
+            <div class="arrow">→</div>
+
+            <div class="system-card">
+                <div class="system-number">5</div>
+                <div class="system-title">API Multi-Tenant</div>
+                <div class="system-desc">
+                    Isolation client via RLS. Auth clé API avec journaux rotation. Analytiques et tableaux bord par client.
+                </div>
+                <div class="tech-tags">
+                    <span class="tech-tag">Supabase RLS</span>
+                    <span class="tech-tag">JWT</span>
+                    <span class="tech-tag">PostgREST</span>
+                </div>
+            </div>
+
+            <div class="arrow">→</div>
+
+            <div class="system-card">
+                <div class="system-number">6</div>
+                <div class="system-title">Boucle Automatisation</div>
+                <div class="system-desc">
+                    Souscriptions temps réel, notifications courriel, intégrations webhooks. Rétroaction intelligence continue.
+                </div>
+                <div class="tech-tags">
+                    <span class="tech-tag">Tâches Cron</span>
+                    <span class="tech-tag">WebSockets</span>
+                    <span class="tech-tag">Webhooks</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="details-grid">
+            <div class="detail-card">
+                <div class="detail-title">🗄️ Schéma Base Données</div>
+                <div class="detail-content">
+                    <strong style="color: #60a5fa;">lead_memory:</strong> id, nom, courriel, message, résumé_ia, intention, ton, urgence, score_confiance, historique_ton[], historique_confiance[], historique_urgence[], aperçu_relationnel, archivé, supprimé, étiquette_actuelle, id_client<br><br>
+                    <strong style="color: #a78bfa;">growth_brain:</strong> id, id_client, début/fin_période_analyse, total_leads, intentions_principales, distribution urgence/ton, confiance_moyenne, score_engagement, aperçus_prédictifs (EN/FR)
+                </div>
+            </div>
+
+            <div class="detail-card">
+                <div class="detail-title">🔄 Flux Données</div>
+                <div class="detail-content">
+                    <strong>1. Capture:</strong> Formulaire → /api/lead → Validation<br>
+                    <strong>2. Enrichissement IA:</strong> GPT-4o-mini → Intention/Ton/Urgence<br>
+                    <strong>3. Sync:</strong> Gmail → Sheets → Supabase<br>
+                    <strong>4. Upsert:</strong> Vérif. courriel → Ajout historique<br>
+                    <strong>5. Hebdo:</strong> Cron → Détection motifs<br>
+                    <strong>6. Affichage:</strong> Temps réel → Màj UI
+                </div>
+            </div>
+
+            <div class="detail-card">
+                <div class="detail-title">✨ Fonctionnalités Clés</div>
+                <div class="detail-content">
+                    <strong style="color: #60a5fa;">🌐 Bilingue:</strong> Support complet EN/FR<br>
+                    <strong style="color: #a78bfa;">🧠 Propulsé IA:</strong> Détection intention, ton, urgence<br>
+                    <strong style="color: #60a5fa;">🔄 Temps Réel:</strong> Tableau bord live, màj WebSocket<br>
+                    <strong style="color: #a78bfa;">📊 Analytiques:</strong> Score engagement, détection tendances
+                </div>
+            </div>
+        </div>
+
+        <div class="footer">
+            AVENIR AI SOLUTIONS — Nous construisons des infrastructures intelligentes qui pensent, apprennent et évoluent
+        </div>
+    </div>
+</body>
+</html>
+

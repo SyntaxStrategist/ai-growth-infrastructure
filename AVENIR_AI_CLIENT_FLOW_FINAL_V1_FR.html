@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Avenir AI Solutions - Flux Client</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        @page {
+            size: A4 landscape;
+            margin: 20mm;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 50%, #0f172a 100%);
+            color: #ffffff;
+            padding: 20mm;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .container {
+            width: 100%;
+            max-width: 100%;
+            height: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 8px;
+        }
+        
+        .logo {
+            font-size: 28px;
+            font-weight: 800;
+            background: linear-gradient(135deg, #60a5fa, #a78bfa);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            letter-spacing: 3px;
+            margin-bottom: 4px;
+        }
+        
+        .subtitle {
+            font-size: 11px;
+            color: rgba(255, 255, 255, 0.7);
+            font-weight: 400;
+        }
+        
+        .journey-flow {
+            display: grid;
+            grid-template-columns: repeat(13, 1fr);
+            gap: 0;
+            align-items: stretch;
+            margin-bottom: 12px;
+        }
+        
+        .journey-card {
+            grid-column: span 2;
+            background: linear-gradient(135deg, rgba(96, 165, 250, 0.12), rgba(167, 139, 250, 0.12));
+            border: 1.5px solid rgba(96, 165, 250, 0.5);
+            border-radius: 10px;
+            padding: 10px 8px;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 125px;
+        }
+        
+        .step-number {
+            position: absolute;
+            top: 6px;
+            left: 6px;
+            width: 20px;
+            height: 20px;
+            background: linear-gradient(135deg, #60a5fa, #a78bfa);
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 11px;
+            font-weight: 700;
+            color: #fff;
+        }
+        
+        .step-icon {
+            font-size: 28px;
+            margin-top: 18px;
+            margin-bottom: 8px;
+        }
+        
+        .step-title {
+            font-size: 10px;
+            font-weight: 700;
+            color: #60a5fa;
+            text-align: center;
+            margin-bottom: 6px;
+            line-height: 1.2;
+        }
+        
+        .step-desc {
+            font-size: 7px;
+            color: rgba(255, 255, 255, 0.7);
+            text-align: center;
+            line-height: 1.4;
+            margin-bottom: 6px;
+            flex: 1;
+        }
+        
+        .benefit-badge {
+            background: rgba(167, 139, 250, 0.25);
+            border: 1px solid rgba(167, 139, 250, 0.5);
+            border-radius: 6px;
+            padding: 3px 6px;
+            font-size: 7px;
+            font-weight: 600;
+            color: #c4b5fd;
+        }
+        
+        .arrow {
+            grid-column: span 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            color: #60a5fa;
+            font-weight: 700;
+        }
+        
+        .outcomes-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+        }
+        
+        .outcome-card {
+            background: linear-gradient(135deg, rgba(96, 165, 250, 0.08), rgba(167, 139, 250, 0.08));
+            border: 1.5px solid rgba(96, 165, 250, 0.4);
+            border-radius: 10px;
+            padding: 12px;
+            text-align: center;
+        }
+        
+        .outcome-metric {
+            font-size: 32px;
+            font-weight: 800;
+            background: linear-gradient(135deg, #60a5fa, #a78bfa);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 4px;
+        }
+        
+        .outcome-label {
+            font-size: 9px;
+            color: rgba(255, 255, 255, 0.8);
+            font-weight: 600;
+        }
+        
+        .footer {
+            text-align: center;
+            margin-top: 8px;
+            font-size: 7px;
+            color: rgba(255, 255, 255, 0.5);
+            border-top: 1px solid rgba(96, 165, 250, 0.3);
+            padding-top: 6px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="logo">AVENIR AI SOLUTIONS</div>
+            <div class="subtitle">Intelligence de Croissance Temps Réel — Parcours de Vos Leads</div>
+        </div>
+
+        <div class="journey-flow">
+            <div class="journey-card">
+                <div class="step-number">1</div>
+                <div class="step-icon">📝</div>
+                <div class="step-title">Lead Entre Système</div>
+                <div class="step-desc">
+                    Client potentiel soumet infos via formulaire intelligent. Capture instantanée.
+                </div>
+                <div class="benefit-badge">⏱ Instantané</div>
+            </div>
+
+            <div class="arrow">→</div>
+
+            <div class="journey-card">
+                <div class="step-number">2</div>
+                <div class="step-icon">🧠</div>
+                <div class="step-title">IA Analyse Intention</div>
+                <div class="step-desc">
+                    IA analyse ton, urgence, intention. Lead qualifié avec score confiance.
+                </div>
+                <div class="benefit-badge">🎯 Intelligent</div>
+            </div>
+
+            <div class="arrow">→</div>
+
+            <div class="journey-card">
+                <div class="step-number">3</div>
+                <div class="step-icon">💾</div>
+                <div class="step-title">Stocké et Suivi</div>
+                <div class="step-desc">
+                    Sauvegardé avec historique complet. Système se souvient, suit évolution.
+                </div>
+                <div class="benefit-badge">📈 Zéro Doublon</div>
+            </div>
+
+            <div class="arrow">→</div>
+
+            <div class="journey-card">
+                <div class="step-number">4</div>
+                <div class="step-icon">📊</div>
+                <div class="step-title">Intelligence Évolue</div>
+                <div class="step-desc">
+                    Analyse hebdomadaire détecte motifs, tendances. Système apprend.
+                </div>
+                <div class="benefit-badge">🧠 Apprend</div>
+            </div>
+
+            <div class="arrow">→</div>
+
+            <div class="journey-card">
+                <div class="step-number">5</div>
+                <div class="step-icon">🎯</div>
+                <div class="step-title">Aperçus Générés</div>
+                <div class="step-desc">
+                    Copilote montre qui contacter, quand, comment maximiser conversion.
+                </div>
+                <div class="benefit-badge">💡 Actionnable</div>
+            </div>
+
+            <div class="arrow">→</div>
+
+            <div class="journey-card">
+                <div class="step-number">6</div>
+                <div class="step-icon">🚀</div>
+                <div class="step-title">Meilleures Décisions</div>
+                <div class="step-desc">
+                    Équipe prend décisions basées données, soutenue par intelligence IA.
+                </div>
+                <div class="benefit-badge">📈 Conversion</div>
+            </div>
+        </div>
+
+        <div class="outcomes-grid">
+            <div class="outcome-card">
+                <div class="outcome-metric">3x</div>
+                <div class="outcome-label">Temps Réponse Plus Rapide</div>
+            </div>
+            <div class="outcome-card">
+                <div class="outcome-metric">85%</div>
+                <div class="outcome-label">Précision Qualification</div>
+            </div>
+            <div class="outcome-card">
+                <div class="outcome-metric">24/7</div>
+                <div class="outcome-label">Intelligence Automatisée</div>
+            </div>
+        </div>
+
+        <div class="footer">
+            AVENIR AI SOLUTIONS — Nous construisons infrastructures qui apprennent de chaque interaction
+        </div>
+    </div>
+</body>
+</html>
+
