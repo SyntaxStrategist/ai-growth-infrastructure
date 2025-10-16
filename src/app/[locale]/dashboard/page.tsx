@@ -3,13 +3,27 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { useTranslations, useLocale } from 'next-intl';
+import dynamic from 'next/dynamic';
 import { supabase } from "../../../lib/supabase";
 import type { LeadMemoryRecord } from "../../../lib/supabase";
-import PredictiveGrowthEngine from "../../../components/PredictiveGrowthEngine";
-import GrowthCopilot from "../../../components/GrowthCopilot";
-import ActivityLog from "../../../components/ActivityLog";
-import RelationshipInsights from "../../../components/RelationshipInsights";
 import type { LeadAction } from "../../api/lead-actions/route";
+
+// Dynamic imports to prevent hydration mismatches
+const PredictiveGrowthEngine = dynamic(() => import("../../../components/PredictiveGrowthEngine"), { 
+  ssr: false,
+  loading: () => <div className="h-32 animate-pulse bg-white/5 rounded-xl border border-white/10"></div>
+});
+const GrowthCopilot = dynamic(() => import("../../../components/GrowthCopilot"), { 
+  ssr: false 
+});
+const ActivityLog = dynamic(() => import("../../../components/ActivityLog"), { 
+  ssr: false,
+  loading: () => <div className="h-24 animate-pulse bg-white/5 rounded-xl border border-white/10"></div>
+});
+const RelationshipInsights = dynamic(() => import("../../../components/RelationshipInsights"), { 
+  ssr: false,
+  loading: () => <div className="h-48 animate-pulse bg-white/5 rounded-xl border border-white/10"></div>
+});
 
 type TranslatedLead = LeadMemoryRecord & {
   translated_ai?: {
@@ -44,6 +58,15 @@ export default function Dashboard() {
   const [revertLead, setRevertLead] = useState<string | null>(null);
   const [reversionReason, setReversionReason] = useState<'accident' | 'other'>('accident');
   const [customReversionReason, setCustomReversionReason] = useState<string>('');
+  const [selectedClientId, setSelectedClientId] = useState<string>('all');
+  const [clients, setClients] = useState<{ business_name: string; client_id: string; language: string }[]>([]);
+  const [commandCenterMetrics, setCommandCenterMetrics] = useState({
+    total: 0,
+    active: 0,
+    converted: 0,
+    archived: 0,
+    deleted: 0
+  });
 
   // Check localStorage for existing auth
   useEffect(() => {
@@ -67,6 +90,7 @@ export default function Dashboard() {
     console.log('[DashboardSync]   ✅ ActivityLog (global)');
     console.log('[DashboardSync] ============================================');
     
+    fetchClients();
     fetchLeads();
     fetchRecentActions();
     
@@ -90,6 +114,14 @@ export default function Dashboard() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [authorized]);
 
+  // Re-fetch leads when client filter changes
+  useEffect(() => {
+    if (!authorized) return;
+    console.log(`[CommandCenter] Client filter changed to: ${selectedClientId}`);
+    fetchLeads();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedClientId]);
+
   // Re-fetch leads when locale changes (server-side translation)
   useEffect(() => {
     if (!authorized) return;
@@ -105,6 +137,54 @@ export default function Dashboard() {
     fetchLeads();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeTab]);
+
+  async function fetchClients() {
+    try {
+      console.log('[CommandCenter] ============================================');
+      console.log('[CommandCenter] Fetching client list from Supabase...');
+      console.log('[CommandCenter] Using: Service Role Key (bypasses RLS)');
+      console.log('[CommandCenter] Table: clients');
+      console.log('[CommandCenter] Fields: client_id, business_name, language');
+      
+      // Fetch clients from API endpoint (which uses service role key)
+      const res = await fetch('/api/clients');
+      const json = await res.json();
+      
+      if (!json.success) {
+        console.error('[CommandCenter] ❌ API fetch error:', json.error);
+        console.error('[CommandCenter] Full error response:', JSON.stringify(json, null, 2));
+        console.log('[CommandCenter] ============================================');
+        return;
+      }
+      
+      const data = json.data || [];
+      
+      console.log('[CommandCenter] ✅ Loaded', data?.length || 0, 'clients:', data);
+      
+      if (data && data.length > 0) {
+        console.log('[CommandCenter] ============================================');
+        console.log('[CommandCenter] Client Details:');
+        data.forEach((client: { business_name: string; client_id: string; language: string }, idx: number) => {
+          console.log(`[CommandCenter]   ${idx + 1}. ${client.business_name || 'Unnamed Client'}`);
+          console.log(`[CommandCenter]      client_id: ${client.client_id}`);
+          console.log(`[CommandCenter]      language: ${client.language || 'en'}`);
+        });
+      } else {
+        console.log('[CommandCenter] ⚠️ No clients found in database');
+      }
+      
+      setClients(data || []);
+      console.log('[CommandCenter] ✅ Client state updated with', data?.length || 0, 'records');
+      console.log('[CommandCenter] ============================================');
+    } catch (err) {
+      console.error('[CommandCenter] ❌ Failed to fetch clients:', err);
+      console.error('[CommandCenter] Exception details:', {
+        message: err instanceof Error ? err.message : String(err),
+        stack: err instanceof Error ? err.stack : 'No stack trace'
+      });
+      console.log('[CommandCenter] ============================================');
+    }
+  }
 
   async function fetchLeads() {
     try {
@@ -125,29 +205,62 @@ export default function Dashboard() {
           break;
       }
       
+      // Add client filter if selected
+      if (selectedClientId !== 'all') {
+        endpoint += `&clientId=${selectedClientId}`;
+        console.log('[CommandCenter] ============================================');
+        console.log('[CommandCenter] Client filter ACTIVE');
+        console.log(`[CommandCenter] Filtering by client_id: ${selectedClientId}`);
+        console.log(`[CommandCenter] Selected client: ${clients.find(c => c.client_id === selectedClientId)?.business_name || 'Unknown'}`);
+        console.log('[CommandCenter] ============================================');
+      }
+      
       console.log(`[Dashboard] Fetching ${activeTab} leads...`);
+      console.log(`[Dashboard] Endpoint: ${endpoint}`);
+      
       const res = await fetch(endpoint, { cache: 'no-store' });
       const json = await res.json();
       
       if (json.success) {
         let leadsData = json.data || [];
         
+        console.log(`[Dashboard] API returned ${leadsData.length} leads`);
+        
         // For converted tab, filter only converted leads
         if (activeTab === 'converted') {
           leadsData = leadsData.filter((lead: TranslatedLead) => 
             lead.current_tag === 'Converted' || lead.current_tag === 'Converti'
           );
+          console.log(`[Dashboard] After converted filter: ${leadsData.length} leads`);
+        }
+        
+        // If client filter is active, confirm filtering worked
+        if (selectedClientId !== 'all') {
+          console.log('[CommandCenter] ✅ Client-filtered leads count:', leadsData.length);
+          console.log('[CommandCenter] Updating metrics for filtered view...');
         }
         
         setLeads(leadsData);
         calculateStats(leadsData);
-        console.log(`[Dashboard] Loaded ${leadsData.length} ${activeTab} leads`);
+        calculateCommandCenterMetrics(leadsData);
+        console.log(`[Dashboard] ✅ Loaded ${leadsData.length} ${activeTab} leads`);
       }
     } catch (err) {
       console.error('Failed to fetch leads:', err);
     } finally {
       setLoading(false);
     }
+  }
+
+  function calculateCommandCenterMetrics(allLeads: TranslatedLead[]) {
+    const total = allLeads.length;
+    const active = allLeads.filter(l => !l.archived && !l.deleted && l.current_tag !== 'Converted' && l.current_tag !== 'Converti').length;
+    const converted = allLeads.filter(l => l.current_tag === 'Converted' || l.current_tag === 'Converti').length;
+    const archived = allLeads.filter(l => l.archived && !l.deleted).length;
+    const deleted = allLeads.filter(l => l.deleted).length;
+    
+    setCommandCenterMetrics({ total, active, converted, archived, deleted });
+    console.log('[CommandCenter] Metrics:', { total, active, converted, archived, deleted });
   }
 
   // Intent translation mapping (French → English)
@@ -716,6 +829,85 @@ export default function Dashboard() {
             >
               {t('dashboard.auth.logout')}
             </button>
+          </div>
+        </motion.div>
+
+        {/* Command Center: Client Filter & Metrics Summary */}
+        <motion.div
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.15 }}
+          className="mb-6"
+        >
+          <div className="rounded-xl border border-purple-500/20 bg-gradient-to-r from-purple-900/10 via-blue-900/10 to-purple-900/10 p-4 backdrop-blur-sm">
+            <div className="flex flex-col lg:flex-row gap-4 items-start lg:items-center justify-between">
+              {/* Client Filter */}
+              <div className="flex items-center gap-3">
+                <div className="flex items-center gap-2">
+                  <span className="text-2xl">🎛️</span>
+                  <label className="text-sm font-medium text-white/80">
+                    {locale === 'fr' ? 'Filtre Client' : 'Client Filter'}:
+                  </label>
+                </div>
+                <select
+                  value={selectedClientId}
+                  onChange={(e) => setSelectedClientId(e.target.value)}
+                  className="px-4 py-2 rounded-lg bg-white/5 border border-white/20 text-white hover:border-purple-400/50 focus:border-purple-400/70 focus:outline-none transition-all min-w-[200px]"
+                >
+                  <option value="all">
+                    {locale === 'fr' ? '🌐 Tous les Clients' : '🌐 All Clients'}
+                  </option>
+                  {clients.map(client => (
+                    <option key={client.client_id} value={client.client_id}>
+                      {client.business_name || client.client_id.substring(0, 12)}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Metrics Summary Bar */}
+              <div className="flex flex-wrap gap-3">
+                <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-blue-500/10 border border-blue-500/20">
+                  <span className="text-lg">📊</span>
+                  <div className="text-xs">
+                    <div className="text-white/50">{locale === 'fr' ? 'Total' : 'Total'}</div>
+                    <div className="text-lg font-bold text-blue-400">{commandCenterMetrics.total}</div>
+                  </div>
+                </div>
+                
+                <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-green-500/10 border border-green-500/20">
+                  <span className="text-lg">✅</span>
+                  <div className="text-xs">
+                    <div className="text-white/50">{locale === 'fr' ? 'Actifs' : 'Active'}</div>
+                    <div className="text-lg font-bold text-green-400">{commandCenterMetrics.active}</div>
+                  </div>
+                </div>
+                
+                <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-emerald-500/10 border border-emerald-500/20">
+                  <span className="text-lg">🎯</span>
+                  <div className="text-xs">
+                    <div className="text-white/50">{locale === 'fr' ? 'Convertis' : 'Converted'}</div>
+                    <div className="text-lg font-bold text-emerald-400">{commandCenterMetrics.converted}</div>
+                  </div>
+                </div>
+                
+                <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-yellow-500/10 border border-yellow-500/20">
+                  <span className="text-lg">📦</span>
+                  <div className="text-xs">
+                    <div className="text-white/50">{locale === 'fr' ? 'Archivés' : 'Archived'}</div>
+                    <div className="text-lg font-bold text-yellow-400">{commandCenterMetrics.archived}</div>
+                  </div>
+                </div>
+                
+                <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-red-500/10 border border-red-500/20">
+                  <span className="text-lg">🗑️</span>
+                  <div className="text-xs">
+                    <div className="text-white/50">{locale === 'fr' ? 'Supprimés' : 'Deleted'}</div>
+                    <div className="text-lg font-bold text-red-400">{commandCenterMetrics.deleted}</div>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
         </motion.div>
 

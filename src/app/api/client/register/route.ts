@@ -55,11 +55,12 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Check if email already exists
+    // Check if email already exists (exclude internal clients)
     const { data: existing, error: checkError } = await supabase
       .from('clients')
-      .select('email')
+      .select('email, is_internal')
       .eq('email', email)
+      .eq('is_internal', false)  // Only check non-internal clients
       .single();
 
     console.log('[E2E-Test] [ClientRegistration] Email check result:', { 
@@ -96,6 +97,7 @@ export async function POST(req: NextRequest) {
       language: clientLanguage,
       api_key: apiKey,
       client_id: clientId,
+      is_internal: false, // Mark as external client (user signup)
     };
 
     console.log('[E2E-Test] [ClientRegistration] Inserting into Supabase with data:', {
@@ -150,6 +152,7 @@ export async function POST(req: NextRequest) {
         businessName: newClient.business_name,
         name: newClient.name,
         email: newClient.email,
+        apiKey: newClient.api_key, // Include for testing/onboarding
       },
     });
 

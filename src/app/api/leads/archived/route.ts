@@ -8,11 +8,15 @@ export async function GET(req: NextRequest) {
     const limit = parseInt(url.searchParams.get('limit') || '50', 10);
     const offset = parseInt(url.searchParams.get('offset') || '0', 10);
     const locale = (url.searchParams.get('locale') === 'fr' ? 'fr' : 'en') as 'en' | 'fr';
+    const clientId = url.searchParams.get('clientId');
 
     console.log(`[ArchivedLeadsAPI] Fetching archived leads, locale=${locale}`);
+    if (clientId) {
+      console.log(`[ArchivedLeadsAPI] [CommandCenter] Filtering by clientId=${clientId}`);
+    }
 
-    // Fetch archived leads from Supabase
-    const { data: leads, total } = await getArchivedLeads(Math.min(limit, 100), offset);
+    // Fetch archived leads from Supabase (with optional client filter)
+    const { data: leads, total } = await getArchivedLeads(Math.min(limit, 100), offset, clientId || undefined);
     
     // Translate AI fields server-side based on dashboard locale
     const translatedLeads = await Promise.all(

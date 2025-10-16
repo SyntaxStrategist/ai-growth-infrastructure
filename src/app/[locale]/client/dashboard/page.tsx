@@ -4,12 +4,26 @@ import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { useRouter } from "next/navigation";
 import { useLocale } from 'next-intl';
+import dynamic from 'next/dynamic';
 import AvenirLogo from '../../../../components/AvenirLogo';
-import PredictiveGrowthEngine from '../../../../components/PredictiveGrowthEngine';
-import GrowthCopilot from '../../../../components/GrowthCopilot';
-import ActivityLog from '../../../../components/ActivityLog';
-import RelationshipInsights from '../../../../components/RelationshipInsights';
 import type { LeadAction } from '../../../api/lead-actions/route';
+
+// Dynamic imports to prevent hydration mismatches
+const PredictiveGrowthEngine = dynamic(() => import('../../../../components/PredictiveGrowthEngine'), { 
+  ssr: false,
+  loading: () => <div className="h-32 animate-pulse bg-white/5 rounded-xl border border-white/10"></div>
+});
+const GrowthCopilot = dynamic(() => import('../../../../components/GrowthCopilot'), { 
+  ssr: false 
+});
+const ActivityLog = dynamic(() => import('../../../../components/ActivityLog'), { 
+  ssr: false,
+  loading: () => <div className="h-24 animate-pulse bg-white/5 rounded-xl border border-white/10"></div>
+});
+const RelationshipInsights = dynamic(() => import('../../../../components/RelationshipInsights'), { 
+  ssr: false,
+  loading: () => <div className="h-48 animate-pulse bg-white/5 rounded-xl border border-white/10"></div>
+});
 
 type ClientData = {
   id: string;

@@ -40,6 +40,7 @@ export type ClientRecord = {
   password_hash: string;
   language: string;
   api_key: string;
+  is_internal?: boolean;
   created_at: string;
   last_login?: string;
   last_connection?: string;
@@ -707,8 +708,49 @@ export async function upsertLeadWithHistory(params: {
   }
 }
 
-export async function getRecentLeads(limit = 50, offset = 0) {
+export async function getRecentLeads(limit = 50, offset = 0, clientId?: string) {
   try {
+    console.log('[Supabase] getRecentLeads called with:', { limit, offset, clientId });
+    
+    // If client filter is active, fetch via lead_actions join
+    if (clientId) {
+      console.log('[Supabase] [CommandCenter] Fetching client-filtered leads via lead_actions join');
+      
+      // Step 1: Get lead_ids for this client
+      const { data: leadActions, error: actionsError } = await supabase
+        .from('lead_actions')
+        .select('lead_id')
+        .eq('client_id', clientId);
+      
+      if (actionsError) {
+        console.error('[Supabase] Error fetching lead_actions:', actionsError);
+        throw actionsError;
+      }
+      
+      const leadIds = (leadActions || []).map(la => la.lead_id);
+      console.log('[Supabase] Found', leadIds.length, 'lead_ids for client');
+      
+      if (leadIds.length === 0) {
+        return { data: [], total: 0 };
+      }
+      
+      // Step 2: Fetch leads for those IDs
+      const { data, error, count } = await supabase
+        .from('lead_memory')
+        .select('*', { count: 'exact' })
+        .in('id', leadIds)
+        .eq('archived', false)
+        .eq('deleted', false)
+        .order('timestamp', { ascending: false })
+        .range(offset, offset + limit - 1);
+      
+      if (error) throw error;
+      
+      console.log('[Supabase] [CommandCenter] Returned', data?.length || 0, 'client-filtered leads');
+      return { data: data || [], total: count || 0 };
+    }
+    
+    // Default: fetch all leads (no client filter)
     const { data, error, count } = await supabase
       .from('lead_memory')
       .select('*', { count: 'exact' })
@@ -728,8 +770,34 @@ export async function getRecentLeads(limit = 50, offset = 0) {
   }
 }
 
-export async function getArchivedLeads(limit = 50, offset = 0) {
+export async function getArchivedLeads(limit = 50, offset = 0, clientId?: string) {
   try {
+    // If client filter is active, fetch via lead_actions join
+    if (clientId) {
+      const { data: leadActions } = await supabase
+        .from('lead_actions')
+        .select('lead_id')
+        .eq('client_id', clientId);
+      
+      const leadIds = (leadActions || []).map(la => la.lead_id);
+      
+      if (leadIds.length === 0) {
+        return { data: [], total: 0 };
+      }
+      
+      const { data, error, count } = await supabase
+        .from('lead_memory')
+        .select('*', { count: 'exact' })
+        .in('id', leadIds)
+        .eq('archived', true)
+        .eq('deleted', false)
+        .order('timestamp', { ascending: false })
+        .range(offset, offset + limit - 1);
+      
+      if (error) throw error;
+      return { data: data || [], total: count || 0 };
+    }
+    
     const { data, error, count } = await supabase
       .from('lead_memory')
       .select('*', { count: 'exact' })
@@ -749,8 +817,33 @@ export async function getArchivedLeads(limit = 50, offset = 0) {
   }
 }
 
-export async function getDeletedLeads(limit = 50, offset = 0) {
+export async function getDeletedLeads(limit = 50, offset = 0, clientId?: string) {
   try {
+    // If client filter is active, fetch via lead_actions join
+    if (clientId) {
+      const { data: leadActions } = await supabase
+        .from('lead_actions')
+        .select('lead_id')
+        .eq('client_id', clientId);
+      
+      const leadIds = (leadActions || []).map(la => la.lead_id);
+      
+      if (leadIds.length === 0) {
+        return { data: [], total: 0 };
+      }
+      
+      const { data, error, count } = await supabase
+        .from('lead_memory')
+        .select('*', { count: 'exact' })
+        .in('id', leadIds)
+        .eq('deleted', true)
+        .order('timestamp', { ascending: false })
+        .range(offset, offset + limit - 1);
+      
+      if (error) throw error;
+      return { data: data || [], total: count || 0 };
+    }
+    
     const { data, error, count } = await supabase
       .from('lead_memory')
       .select('*', { count: 'exact' })
@@ -810,13 +903,35 @@ export async function validateApiKey(apiKey: string): Promise<ClientRecord | nul
 
 export async function getAllClients(): Promise<ClientRecord[]> {
   try {
+    console.log('[Supabase] getAllClients() called');
+    console.log('[Supabase] Using service role key:', !!process.env.SUPABASE_SERVICE_ROLE_KEY);
+    console.log('[Supabase] Supabase URL:', process.env.NEXT_PUBLIC_SUPABASE_URL);
+    
     const { data, error } = await supabase
       .from('clients')
-      .select('*')
+      .select('client_id, business_name, language, created_at, email, api_key, is_internal')
       .order('created_at', { ascending: false });
     
     if (error) {
+      console.error('[Supabase] ❌ Query error:', error);
+      console.error('[Supabase] Error details:', {
+        code: error.code,
+        message: error.message,
+        details: error.details,
+        hint: error.hint
+      });
       throw error;
+    }
+    
+    console.log('[Supabase] ✅ Query successful');
+    console.log('[Supabase] Rows returned:', data?.length || 0);
+    
+    if (data && data.length > 0) {
+      console.log('[Supabase] Sample client:', {
+        client_id: data[0].client_id,
+        business_name: data[0].business_name,
+        language: data[0].language
+      });
     }
     
     return (data || []) as ClientRecord[];

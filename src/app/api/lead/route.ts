@@ -49,9 +49,18 @@ export async function POST(req: NextRequest) {
 		console.log('[Lead API] ============================================');
 		console.log('[Lead API] POST /api/lead triggered');
 		console.log('[Lead API] ============================================');
+		
+		// Get request origin/referer for domain detection
+		const origin = req.headers.get('origin') || '';
+		const referer = req.headers.get('referer') || '';
+		const host = req.headers.get('host') || '';
+		
 		console.log('[Lead API] Request headers:', {
 			'content-type': req.headers.get('content-type'),
 			'x-api-key': req.headers.get('x-api-key') ? 'present' : 'none',
+			'origin': origin,
+			'referer': referer,
+			'host': host,
 			'user-agent': req.headers.get('user-agent')?.substring(0, 50) || 'unknown',
 		});
 		
@@ -99,8 +108,27 @@ export async function POST(req: NextRequest) {
 				console.log('[E2E-Test] [LeadAPI] ✅ last_connection updated');
 			}
 		} else {
-			// No API key = internal request (from website form)
-			console.log('[E2E-Test] [LeadAPI] Internal request (no API key - website form)');
+			// No API key = check if request is from Avenir domain
+			// Check origin, referer, or host for aveniraisolutions.ca
+			const isAvenirDomain = 
+				origin.includes('aveniraisolutions.ca') ||
+				referer.includes('aveniraisolutions.ca') ||
+				host.includes('aveniraisolutions.ca');
+			
+			if (isAvenirDomain) {
+				// Auto-link to Avenir AI Solutions internal client
+				console.log('[Lead API] 🔍 Domain detection: aveniraisolutions.ca');
+				console.log('[Lead API] 🏢 Auto-linked lead to internal client \'Avenir AI Solutions\' (client_id: avenir-internal-client)');
+				console.log('[Lead API] ✅ Origin verification: EN/FR forms both supported');
+				clientId = 'avenir-internal-client';
+			} else {
+				// External request from unknown domain
+				console.log('[Lead API] ⚠️  Request from non-Avenir domain');
+				console.log('[Lead API] Origin:', origin || 'none');
+				console.log('[Lead API] Referer:', referer || 'none');
+				console.log('[Lead API] No client_id assigned (external/unknown source)');
+				clientId = null;
+			}
 		}
 		
 		console.log('[Lead API] Parsing request body...');
