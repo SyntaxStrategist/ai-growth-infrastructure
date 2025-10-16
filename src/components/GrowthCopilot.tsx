@@ -218,16 +218,35 @@ export default function GrowthCopilot({ locale, clientId = null }: GrowthCopilot
         ? `Basé sur ${insights.total_leads} leads analysés avec une confiance moyenne de ${avgConfidencePercent}%, votre score d'engagement est de ${engagementScoreValue}/100.`
         : `Based on ${insights.total_leads} analyzed leads with ${avgConfidencePercent}% average confidence, your engagement score is ${engagementScoreValue}/100.`;
 
-      // Fetch recent leads with relationship insights
-      console.log('[GrowthCopilot] Fetching recent leads with relationship insights...');
+      // Fetch recent leads with relationship insights (filtered by clientId)
+      console.log('[CopilotFilter] ============================================');
+      console.log('[CopilotFilter] Fetching relationship insights');
+      console.log('[CopilotFilter] Client ID:', clientId || 'admin (all leads)');
+      
       let relationshipInsights: Array<{ name: string; email: string; insight: string; lastUpdated: string }> = [];
       
       try {
-        const leadsRes = await fetch(`/api/leads?limit=10&locale=${locale}`);
+        let leadsEndpoint = '';
+        if (clientId) {
+          // Client mode: fetch only this client's leads
+          leadsEndpoint = `/api/client/leads?clientId=${clientId}&locale=${locale}&status=active`;
+          console.log('[CopilotFilter] Mode: CLIENT');
+          console.log('[CopilotFilter] Endpoint:', leadsEndpoint);
+        } else {
+          // Admin mode: fetch all leads
+          leadsEndpoint = `/api/leads?limit=10&locale=${locale}`;
+          console.log('[CopilotFilter] Mode: ADMIN');
+          console.log('[CopilotFilter] Endpoint:', leadsEndpoint);
+        }
+        
+        const leadsRes = await fetch(leadsEndpoint);
         const leadsJson = await leadsRes.json();
         
         if (leadsJson.success && leadsJson.data) {
-          relationshipInsights = leadsJson.data
+          const allLeads = leadsJson.data;
+          console.log('[CopilotFilter] Total leads fetched:', allLeads.length);
+          
+          relationshipInsights = allLeads
             .filter((lead: any) => lead.relationship_insight && lead.relationship_insight.trim())
             .map((lead: any) => ({
               name: lead.name,
@@ -237,10 +256,24 @@ export default function GrowthCopilot({ locale, clientId = null }: GrowthCopilot
             }))
             .slice(0, 5); // Show top 5
           
-          console.log('[GrowthCopilot] Found', relationshipInsights.length, 'leads with insights');
+          console.log('[CopilotFilter] Insights with relationship data:', relationshipInsights.length);
+          console.log('[CopilotFilter] ============================================');
+          
+          if (relationshipInsights.length > 0) {
+            console.log('[CopilotFilter] Leads shown in copilot:');
+            relationshipInsights.forEach((insight, idx) => {
+              console.log('[CopilotFilter]   ' + (idx + 1) + '. Name:', insight.name, '| Email:', insight.email);
+              console.log('[CopilotFilter]      Insight:', insight.insight.substring(0, 60) + '...');
+            });
+            console.log('[CopilotFilter] ============================================');
+          } else {
+            console.log('[CopilotFilter] ℹ️  No leads with relationship insights found');
+            console.log('[CopilotFilter] ============================================');
+          }
         }
       } catch (err) {
-        console.error('[GrowthCopilot] Failed to fetch relationship insights:', err);
+        console.error('[CopilotFilter] ❌ Failed to fetch relationship insights:', err);
+        console.log('[CopilotFilter] ============================================');
       }
 
       const newSummary = {
