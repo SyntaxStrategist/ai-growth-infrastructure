@@ -218,7 +218,7 @@ export default function BridgeAnimation({ locale = 'en' }: BridgeAnimationProps)
             </div>
 
             <p className="text-transparent bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text font-bold text-sm mt-6 text-center uppercase tracking-wider">
-              AI Intelligence
+              {isFrench ? 'Intelligence IA' : 'AI Intelligence'}
             </p>
           </motion.div>
 
