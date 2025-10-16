@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { supabase } from './supabase';
+import { createClient } from '@supabase/supabase-js';
 import type { LeadMemoryRecord } from './supabase';
 
 export type GrowthBrainRecord = {
@@ -28,8 +29,10 @@ export type GrowthBrainRecord = {
 export async function analyzeClientLeads(
   clientId: string | null,
   periodStart: Date,
-  periodEnd: Date
+  periodEnd: Date,
+  supabaseClient?: any
 ): Promise<Omit<GrowthBrainRecord, 'id' | 'analyzed_at' | 'created_at'>> {
+  const db = supabaseClient || supabase;
   try {
     console.log(`[Engine] ============================================`);
     console.log(`[Engine] Analyzing leads for client: ${clientId || 'global'}`);
@@ -46,7 +49,7 @@ export async function analyzeClientLeads(
       console.log('[Engine] AND: lead_memory.timestamp BETWEEN', periodStart.toISOString(), 'AND', periodEnd.toISOString());
       
       // Step 1: Get all lead_ids for this client
-      const { data: leadActions, error: actionsError } = await supabase
+      const { data: leadActions, error: actionsError } = await db
         .from('lead_actions')
         .select('lead_id')
         .eq('client_id', clientId);
@@ -56,7 +59,7 @@ export async function analyzeClientLeads(
         throw actionsError;
       }
       
-      const leadIds = (leadActions || []).map(la => la.lead_id);
+      const leadIds = (leadActions || []).map((la: any) => la.lead_id);
       console.log('[Engine] Found', leadIds.length, 'total leads for client via lead_actions');
       
       if (leadIds.length === 0) {
@@ -64,7 +67,7 @@ export async function analyzeClientLeads(
         leads = [];
       } else {
         // Step 2: Get full lead data for those IDs within the time period
-        const { data: leadData, error: leadError } = await supabase
+        const { data: leadData, error: leadError } = await db
           .from('lead_memory')
           .select('*')
           .in('id', leadIds)
@@ -83,7 +86,7 @@ export async function analyzeClientLeads(
       // For global analysis, query all leads directly
       console.log('[Engine] Global mode: fetching all leads from lead_memory');
       
-      const { data: leadData, error } = await supabase
+      const { data: leadData, error } = await db
         .from('lead_memory')
         .select('*')
         .gte('timestamp', periodStart.toISOString())
@@ -323,7 +326,11 @@ export async function analyzeClientLeads(
 /**
  * Store growth brain insights in database
  */
-export async function storeGrowthInsights(insights: Omit<GrowthBrainRecord, 'id' | 'analyzed_at' | 'created_at'>) {
+export async function storeGrowthInsights(
+  insights: Omit<GrowthBrainRecord, 'id' | 'analyzed_at' | 'created_at'>,
+  supabaseClient?: any
+) {
+  const db = supabaseClient || supabase;
   try {
     console.log('[Engine] ============================================');
     console.log('[Engine] Storing insights to growth_brain table...');
@@ -362,7 +369,7 @@ export async function storeGrowthInsights(insights: Omit<GrowthBrainRecord, 'id'
     console.log('[Engine] Executing INSERT into growth_brain...');
     
     const insertStart = Date.now();
-    const { data, error } = await supabase
+    const { data, error } = await db
       .from('growth_brain')
       .insert(insights)
       .select()
@@ -480,6 +487,29 @@ export async function runWeeklyAnalysis(): Promise<{ processed: number; errors: 
   console.log('[Engine] Starting weekly intelligence analysis...');
   console.log('[Engine] ============================================');
   
+  // Create service role Supabase client for admin operations
+  const supabaseUrl = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  
+  console.log('[Engine] Environment check:', {
+    hasUrl: !!supabaseUrl,
+    hasServiceKey: !!supabaseServiceKey,
+    urlValue: supabaseUrl || 'MISSING',
+  });
+  
+  if (!supabaseUrl || !supabaseServiceKey) {
+    console.error('[Engine] ❌ Missing Supabase credentials');
+    console.error('[Engine] SUPABASE_URL:', supabaseUrl ? 'present' : 'MISSING');
+    console.error('[Engine] SUPABASE_SERVICE_ROLE_KEY:', supabaseServiceKey ? 'present' : 'MISSING');
+    throw new Error('Missing Supabase credentials');
+  }
+  
+  const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey, {
+    auth: { persistSession: false, autoRefreshToken: false },
+  });
+  
+  console.log('[Engine] ✅ Service role Supabase client created');
+  
   const now = new Date();
   const weekAgo = new Date(now);
   weekAgo.setDate(weekAgo.getDate() - 7);
@@ -497,7 +527,7 @@ export async function runWeeklyAnalysis(): Promise<{ processed: number; errors: 
     // 1. Analyze global leads (all clients combined)
     console.log('[Engine] -------- Global Analysis --------');
     try {
-      const globalInsights = await analyzeClientLeads(null, weekAgo, now);
+      const globalInsights = await analyzeClientLeads(null, weekAgo, now, supabaseAdmin);
       console.log('[Engine] Global insights generated:', {
         total_leads: globalInsights.total_leads,
         avg_confidence: globalInsights.avg_confidence,
@@ -505,7 +535,7 @@ export async function runWeeklyAnalysis(): Promise<{ processed: number; errors: 
       });
       
       if (globalInsights.total_leads > 0) {
-        await storeGrowthInsights(globalInsights);
+        await storeGrowthInsights(globalInsights, supabaseAdmin);
         processed++;
         console.log('[Engine] ✅ Global analysis complete and stored');
       } else {
@@ -521,8 +551,11 @@ export async function runWeeklyAnalysis(): Promise<{ processed: number; errors: 
     console.log('[Engine] ============================================');
     console.log('[Engine] Per-Client Analysis Starting');
     console.log('[Engine] ============================================');
+    console.log('[Engine] Querying clients table...');
+    console.log('[Engine] Query: SELECT id, client_id, business_name, name, email FROM clients');
+    console.log('[Engine] Filters: NONE (fetch all clients)');
     
-    const { data: clients, error: clientError } = await supabase
+    const { data: clients, error: clientError } = await supabaseAdmin
       .from('clients')
       .select('id, client_id, business_name, name, email');
 
@@ -531,9 +564,20 @@ export async function runWeeklyAnalysis(): Promise<{ processed: number; errors: 
       console.error('[Engine] Error code:', clientError.code);
       console.error('[Engine] Error message:', clientError.message);
       console.error('[Engine] Error details:', clientError.details);
+      console.error('[Engine] Error hint:', clientError.hint);
     }
 
-    console.log('[Engine] Client count found:', clients?.length || 0);
+    console.log('[Engine] ============================================');
+    console.log('[Engine] Total clients fetched:', clients?.length || 0);
+    console.log('[Engine] ============================================');
+    
+    if (clients && clients.length > 0) {
+      console.log('[Engine] Client list:');
+      clients.forEach((c, idx) => {
+        console.log('[Engine]   ' + (idx + 1) + '.', c.business_name || c.name, '(client_id:', c.client_id + ')');
+      });
+      console.log('[Engine] ============================================');
+    }
     
     if (clients && clients.length > 0) {
       console.log('[Engine] ============================================');
@@ -552,7 +596,7 @@ export async function runWeeklyAnalysis(): Promise<{ processed: number; errors: 
         
         try {
           // Use client_id (the UUID) for analysis, not the database id
-          const clientInsights = await analyzeClientLeads(client.client_id, weekAgo, now);
+          const clientInsights = await analyzeClientLeads(client.client_id, weekAgo, now, supabaseAdmin);
           
           console.log('[Engine] ============================================');
           console.log('[Engine] Analytics Summary for', client.business_name || client.name);
@@ -572,13 +616,15 @@ export async function runWeeklyAnalysis(): Promise<{ processed: number; errors: 
           // Only store if client has leads in this period
           if (clientInsights.total_leads > 0) {
             console.log('[Engine] Storing growth insights for client_id:', client.client_id);
-            await storeGrowthInsights(clientInsights);
+            await storeGrowthInsights(clientInsights, supabaseAdmin);
             processed++;
             console.log('[Engine] ✅ Insert/Update status: SUCCESS');
             console.log('[Engine] ✅ Analysis complete for:', client.business_name || client.name);
             console.log('[Engine] ✅ Client can now view analytics in dashboard');
           } else {
             console.log('[Engine] ⚠️  No leads found for', client.business_name || client.name, '- skipping storage');
+            console.log('[Engine] Reason: Client has no leads in the analysis period (last 7 days)');
+            console.log('[Engine] Skipped client_id:', client.client_id);
           }
         } catch (err) {
           console.error('[Engine] ❌ Insert/Update status: FAILED');
