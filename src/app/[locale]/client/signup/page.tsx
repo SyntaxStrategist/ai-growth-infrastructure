@@ -160,8 +160,10 @@ export default function ClientSignup() {
             <form onSubmit={handleSubmit} className="space-y-4">
               {/* Business Name */}
               <div>
-                <label className="block text-sm font-medium mb-2">{t.businessName} *</label>
+                <label htmlFor="business_name" className="block text-sm font-medium mb-2">{t.businessName} *</label>
                 <input
+                  id="business_name"
+                  name="business_name"
                   type="text"
                   value={formData.businessName}
                   onChange={(e) => setFormData({ ...formData, businessName: e.target.value })}
@@ -172,8 +174,10 @@ export default function ClientSignup() {
 
               {/* Contact Name */}
               <div>
-                <label className="block text-sm font-medium mb-2">{t.contactName} *</label>
+                <label htmlFor="contact_name" className="block text-sm font-medium mb-2">{t.contactName} *</label>
                 <input
+                  id="contact_name"
+                  name="contact_name"
                   type="text"
                   value={formData.contactName}
                   onChange={(e) => setFormData({ ...formData, contactName: e.target.value })}
@@ -184,8 +188,10 @@ export default function ClientSignup() {
 
               {/* Email */}
               <div>
-                <label className="block text-sm font-medium mb-2">{t.email} *</label>
+                <label htmlFor="email" className="block text-sm font-medium mb-2">{t.email} *</label>
                 <input
+                  id="email"
+                  name="email"
                   type="email"
                   value={formData.email}
                   onChange={(e) => setFormData({ ...formData, email: e.target.value })}
@@ -197,8 +203,10 @@ export default function ClientSignup() {
               {/* Password */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium mb-2">{t.password} *</label>
+                  <label htmlFor="password" className="block text-sm font-medium mb-2">{t.password} *</label>
                   <input
+                    id="password"
+                    name="password"
                     type="password"
                     value={formData.password}
                     onChange={(e) => setFormData({ ...formData, password: e.target.value })}
@@ -208,8 +216,10 @@ export default function ClientSignup() {
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium mb-2">{t.confirmPassword} *</label>
+                  <label htmlFor="confirm_password" className="block text-sm font-medium mb-2">{t.confirmPassword} *</label>
                   <input
+                    id="confirm_password"
+                    name="confirm_password"
                     type="password"
                     value={formData.confirmPassword}
                     onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
@@ -222,8 +232,10 @@ export default function ClientSignup() {
 
               {/* Language */}
               <div>
-                <label className="block text-sm font-medium mb-2">{t.language} *</label>
+                <label htmlFor="language" className="block text-sm font-medium mb-2">{t.language} *</label>
                 <select
+                  id="language"
+                  name="language"
                   value={formData.language}
                   onChange={(e) => setFormData({ ...formData, language: e.target.value })}
                   className="w-full px-4 py-3 rounded-md bg-white/5 border border-white/10 text-white focus:border-blue-400/50 focus:outline-none transition-all"
@@ -236,8 +248,10 @@ export default function ClientSignup() {
 
               {/* Optional Fields */}
               <div>
-                <label className="block text-sm font-medium mb-2">{t.leadSource} {t.optional}</label>
+                <label htmlFor="lead_source" className="block text-sm font-medium mb-2">{t.leadSource} {t.optional}</label>
                 <textarea
+                  id="lead_source"
+                  name="lead_source"
                   value={formData.leadSourceDescription}
                   onChange={(e) => setFormData({ ...formData, leadSourceDescription: e.target.value })}
                   className="w-full px-4 py-3 rounded-md bg-white/5 border border-white/10 text-white placeholder:text-white/40 focus:border-blue-400/50 focus:outline-none transition-all resize-none"
@@ -247,8 +261,10 @@ export default function ClientSignup() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium mb-2">{t.estimatedLeads} {t.optional}</label>
+                <label htmlFor="estimated_leads" className="block text-sm font-medium mb-2">{t.estimatedLeads} {t.optional}</label>
                 <input
+                  id="estimated_leads"
+                  name="estimated_leads"
                   type="number"
                   value={formData.estimatedLeadsPerWeek}
                   onChange={(e) => setFormData({ ...formData, estimatedLeadsPerWeek: e.target.value })}
