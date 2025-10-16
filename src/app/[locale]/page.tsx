@@ -197,7 +197,7 @@ export default function Home() {
               transition={{ duration: 0.8, delay: 0.2, ease: "easeOut" }}
               style={{ opacity: logoGlow }}
             >
-              <AvenirLogo className="h-14 w-14 sm:h-16 sm:w-16 max-w-[80px] sm:max-w-[120px]" />
+              <AvenirLogo locale={locale} showText={false} className="scale-125 sm:scale-150" />
             </motion.div>
             
             <motion.h1

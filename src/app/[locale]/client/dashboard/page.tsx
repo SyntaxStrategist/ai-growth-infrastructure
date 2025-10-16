@@ -190,7 +190,9 @@ export default function ClientDashboard() {
         {/* Header with Logo */}
         <header className="fixed top-0 left-0 right-0 z-50 bg-black/20 backdrop-blur-lg border-b border-white/10">
           <div className="max-w-7xl mx-auto px-6 py-4">
-            <AvenirLogo locale={locale} />
+            <a href={`/${locale}`} className="inline-block">
+              <AvenirLogo locale={locale} showText={true} />
+            </a>
           </div>
         </header>
 
@@ -270,7 +272,9 @@ export default function ClientDashboard() {
       {/* Header with Logo */}
       <header className="sticky top-0 z-50 bg-black/20 backdrop-blur-lg border-b border-white/10">
         <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
-          <AvenirLogo locale={locale} />
+          <a href={`/${locale}`} className="inline-block">
+            <AvenirLogo locale={locale} showText={true} />
+          </a>
           <div className="flex items-center gap-3">
             <a
               href={`/${locale}/client/api-access`}

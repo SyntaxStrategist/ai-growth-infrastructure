@@ -133,7 +133,9 @@ export default function ClientSignup() {
       {/* Header with Logo */}
       <header className="fixed top-0 left-0 right-0 z-50 bg-black/20 backdrop-blur-lg border-b border-white/10">
         <div className="max-w-7xl mx-auto px-6 py-4">
-          <AvenirLogo locale={locale} />
+          <a href={`/${locale}`} className="inline-block">
+            <AvenirLogo locale={locale} showText={true} />
+          </a>
         </div>
       </header>
 

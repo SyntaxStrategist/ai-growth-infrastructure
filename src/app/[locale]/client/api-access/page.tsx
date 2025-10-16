@@ -80,7 +80,9 @@ export default function ApiAccess() {
       {/* Header with Logo */}
       <header className="sticky top-0 z-50 bg-black/20 backdrop-blur-lg border-b border-white/10">
         <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
-          <AvenirLogo locale={locale} />
+          <a href={`/${locale}`} className="inline-block">
+            <AvenirLogo locale={locale} showText={true} />
+          </a>
           <a
             href={`/${locale}/client/dashboard`}
             className="px-4 py-2 rounded-lg bg-white/5 border border-white/10 text-white/70 hover:text-white hover:border-white/20 transition-all text-sm font-medium"
