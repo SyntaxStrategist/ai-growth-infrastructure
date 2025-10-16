@@ -530,6 +530,19 @@ export async function upsertLeadWithHistory(params: {
       console.log('[LeadMemory] Insight length:', insight.length);
       console.log('[LeadMemory] ============================================');
       
+      // Check if we need to add client_id to existing lead
+      let shouldUpdateClientId = false;
+      if (existingLead.client_id == null && params.client_id) {
+        console.log('[LeadMemory] ============================================');
+        console.log('[LeadMemory] 🔗 Missing client_id detected on existing lead');
+        console.log('[LeadMemory] Lead ID:', existingLead.id);
+        console.log('[LeadMemory] Current client_id:', existingLead.client_id);
+        console.log('[LeadMemory] Incoming client_id:', params.client_id);
+        console.log('[LeadMemory] 🔗 Will add missing client_id for existing lead:', existingLead.id);
+        console.log('[LeadMemory] ============================================');
+        shouldUpdateClientId = true;
+      }
+      
       // Update the existing lead
       console.log('[LeadMemory] Preparing UPDATE query...');
       console.log('[LeadMemory] Fields to update:', {
@@ -545,27 +558,36 @@ export async function upsertLeadWithHistory(params: {
         relationship_insight: insight,
         relationship_insight_length: insight.length,
         last_updated: now,
+        client_id: shouldUpdateClientId ? params.client_id : undefined,
       });
+      
+      // Prepare update object
+      const updateData: any = {
+        name: params.name,
+        message: params.message,
+        ai_summary: params.ai_summary,
+        language: params.language,
+        timestamp: params.timestamp,
+        intent: params.intent,
+        tone: params.tone,
+        urgency: params.urgency,
+        confidence_score: params.confidence_score,
+        tone_history: toneHistory,
+        confidence_history: confidenceHistory,
+        urgency_history: urgencyHistory,
+        last_updated: now,
+        relationship_insight: insight,
+      };
+      
+      // Add client_id if needed
+      if (shouldUpdateClientId) {
+        updateData.client_id = params.client_id;
+      }
       
       const updateStart = Date.now();
       const { data: updatedLead, error: updateError } = await supabase
         .from('lead_memory')
-        .update({
-          name: params.name,
-          message: params.message,
-          ai_summary: params.ai_summary,
-          language: params.language,
-          timestamp: params.timestamp,
-          intent: params.intent,
-          tone: params.tone,
-          urgency: params.urgency,
-          confidence_score: params.confidence_score,
-          tone_history: toneHistory,
-          confidence_history: confidenceHistory,
-          urgency_history: urgencyHistory,
-          last_updated: now,
-          relationship_insight: insight,
-        })
+        .update(updateData)
         .eq('id', existingLead.id)
         .select()
         .single();
