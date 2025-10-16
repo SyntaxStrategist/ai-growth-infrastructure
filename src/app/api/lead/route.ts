@@ -180,7 +180,132 @@ export async function POST(req: NextRequest) {
 		
 		console.log('[Lead API] ✅ Validation passed - proceeding with lead processing');
 
-		// Append to Google Sheets
+		// Development mode: Skip Gmail/Sheets and go directly to AI enrichment
+		// Detect development mode by: NODE_ENV=development OR missing Google credentials
+		const isDevelopment = 
+			process.env.NODE_ENV === 'development' || 
+			!process.env.NODE_ENV ||
+			!process.env.GOOGLE_CREDENTIALS_JSON;
+		
+		if (isDevelopment) {
+			console.log('[Lead API] ============================================');
+			console.log('[Lead API] 🧪 DEVELOPMENT MODE DETECTED');
+			console.log('[Lead API] ============================================');
+			console.log('[Lead API] Detection reasons:');
+			console.log('[Lead API]   NODE_ENV:', process.env.NODE_ENV || 'not set');
+			console.log('[Lead API]   Has GOOGLE_CREDENTIALS_JSON:', !!process.env.GOOGLE_CREDENTIALS_JSON);
+			console.log('[Lead API] 🧪 Skipping Gmail send (development mode)');
+			console.log('[Lead API] 🧪 Skipping Google Sheets append (development mode)');
+			console.log('[Lead API] Email would have been sent to:', email);
+			console.log('[Lead API] Proceeding directly to AI enrichment and storage...');
+			console.log('[Lead API] ============================================');
+			
+			const timestamp = providedTimestamp || new Date().toISOString();
+			
+			// Mock AI summary for development
+			const aiSummary = `[DEV MODE] Lead inquiry from ${name}`;
+			
+			// Detect if this is test data
+			const isTest = isTestLead({ name, email, message });
+			logTestDetection('Lead submission', isTest,
+				isTest ? 'Contains test keywords or example domain' : undefined);
+			
+			// AI Intelligence Layer: Analyze and store/update lead
+			try {
+				console.log('[AI Intelligence] ============================================');
+				console.log('[AI Intelligence] Starting AI Intelligence & Storage');
+				console.log('[AI Intelligence] ============================================');
+				console.log('[AI Intelligence] Analyzing lead for enrichment...');
+				
+				const enrichment = await enrichLeadWithAI({
+					message,
+					aiSummary,
+					language: locale,
+				});
+				
+				console.log('[AI Intelligence] ✅ Enrichment complete:', {
+					intent: enrichment.intent,
+					tone: enrichment.tone,
+					urgency: enrichment.urgency,
+					confidence: enrichment.confidence_score,
+				});
+				
+				// Upsert lead with historical tracking
+				console.log('[AI Intelligence] Calling upsertLeadWithHistory()...');
+				
+				const upsertParams = {
+					email,
+					name,
+					message,
+					ai_summary: aiSummary || null,
+					language: locale,
+					timestamp,
+					intent: enrichment.intent,
+					tone: enrichment.tone,
+					urgency: enrichment.urgency,
+					confidence_score: enrichment.confidence_score,
+					client_id: clientId,
+					is_test: isTest,
+				};
+				
+				const result = await upsertLeadWithHistory(upsertParams);
+				
+				console.log('[AI Intelligence] upsertLeadWithHistory() completed');
+				console.log('[AI Intelligence] Result:', {
+					isNew: result.isNew,
+					leadId: result.leadId,
+					hasInsight: !!result.insight,
+				});
+				
+				// Link to client in lead_actions
+				if (clientId && result.leadId) {
+					console.log('[LeadActions] Linking lead to client in lead_actions table');
+					
+					const now = new Date().toISOString();
+					const actionInsertData = {
+						lead_id: result.leadId,
+						client_id: clientId,
+						action_type: 'insert',
+						tag: 'New Lead',
+						created_at: now,
+						timestamp: now,
+						is_test: isTest,
+					};
+					
+					const { error: actionError } = await supabase
+						.from('lead_actions')
+						.insert(actionInsertData);
+					
+					if (actionError) {
+						console.error('[LeadActions] ❌ Insert failed:', actionError);
+					} else {
+						console.log('[LeadActions] ✅ Lead linked successfully');
+					}
+				}
+				
+				console.log('[Lead API] ============================================');
+				console.log('[Lead API] ✅ Development mode processing complete');
+				console.log('[Lead API] ============================================');
+				
+				return new Response(
+					JSON.stringify({ 
+						success: true, 
+						leadId: result.leadId,
+						message: 'Lead processed successfully (development mode)',
+						note: 'Gmail and Sheets skipped in development'
+					}),
+					{ status: 200, headers: { "Content-Type": "application/json" } }
+				);
+			} catch (devError) {
+				console.error('[Lead API] ❌ Development mode error:', devError);
+				return new Response(
+					JSON.stringify({ success: false, error: devError instanceof Error ? devError.message : 'Processing failed' }),
+					{ status: 500, headers: { "Content-Type": "application/json" } }
+				);
+			}
+		}
+
+		// Production mode: Continue with full Gmail/Sheets flow
 		let savedVia = "sheets" as "sheets";
 		const timestamp = providedTimestamp || new Date().toISOString();
 		try {
@@ -256,42 +381,50 @@ export async function POST(req: NextRequest) {
 				requestBody: { values: [[aiSummary, aiConfidence ?? ""]] },
 			}), { maxAttempts: 5, baseMs: 200 });
 
-			// Send follow-up email via Gmail
-			try {
-				const gmail = await getAuthorizedGmail();
-				
-				// Force refresh Gmail profile to get current sender identity and avatar
-				const profile = await retry(async () => await gmail.users.getProfile({ userId: 'me' }), { maxAttempts: 3, baseMs: 200 });
-				const profileEmail = profile.data?.emailAddress || process.env.GMAIL_FROM_ADDRESS || "contact@aveniraisolutions.ca";
-				
-				console.log('Using Gmail profile for sender identity:', {
-					email: profile.data?.emailAddress,
-					messagesTotal: profile.data?.messagesTotal,
-					threadsTotal: profile.data?.threadsTotal
-				});
-				
-				const subject = isFrench 
-					? "Merci d'avoir contacté Avenir AI Solutions"
-					: "Thanks for contacting Avenir AI Solutions";
-				const raw = buildHtmlEmail({ 
-					to: email, 
-					from: "contact@aveniraisolutions.ca", // Always use the business email
-					subject, 
-					name, 
-					aiSummary: aiSummary || "",
-					locale: locale,
-					profileEmail: profileEmail // Use profile email for proper sender identity
-				});
-				
-				// Send with explicit reference to current profile
-				await retry(async () => await gmail.users.messages.send({
-					userId: "me",
-					requestBody: { raw },
-				}), { maxAttempts: 5, baseMs: 300 });
-				
-				console.log('Email sent successfully with refreshed sender identity');
-			} catch (mailErr) {
-				console.error("gmail_send_error", mailErr);
+			// Send follow-up email via Gmail (skip in development mode)
+			const isDevMode = process.env.NODE_ENV === 'development' || !process.env.NODE_ENV;
+			if (isDevMode) {
+				console.log('[Lead API] 🧪 Skipping Gmail send (development mode)');
+				console.log('[Lead API] Environment: development');
+				console.log('[Lead API] Email would have been sent to:', email);
+				console.log('[Lead API] Continuing with AI enrichment and storage...');
+			} else {
+				try {
+					const gmail = await getAuthorizedGmail();
+					
+					// Force refresh Gmail profile to get current sender identity and avatar
+					const profile = await retry(async () => await gmail.users.getProfile({ userId: 'me' }), { maxAttempts: 3, baseMs: 200 });
+					const profileEmail = profile.data?.emailAddress || process.env.GMAIL_FROM_ADDRESS || "contact@aveniraisolutions.ca";
+					
+					console.log('Using Gmail profile for sender identity:', {
+						email: profile.data?.emailAddress,
+						messagesTotal: profile.data?.messagesTotal,
+						threadsTotal: profile.data?.threadsTotal
+					});
+					
+					const subject = isFrench 
+						? "Merci d'avoir contacté Avenir AI Solutions"
+						: "Thanks for contacting Avenir AI Solutions";
+					const raw = buildHtmlEmail({ 
+						to: email, 
+						from: "contact@aveniraisolutions.ca", // Always use the business email
+						subject, 
+						name, 
+						aiSummary: aiSummary || "",
+						locale: locale,
+						profileEmail: profileEmail // Use profile email for proper sender identity
+					});
+					
+					// Send with explicit reference to current profile
+					await retry(async () => await gmail.users.messages.send({
+						userId: "me",
+						requestBody: { raw },
+					}), { maxAttempts: 5, baseMs: 300 });
+					
+					console.log('[Lead API] ✅ Email sent successfully');
+				} catch (mailErr) {
+					console.error("[Lead API] ❌ Gmail send error:", mailErr);
+				}
 			}
 
 			// AI Intelligence Layer + Historical Tracking: Analyze and store/update lead

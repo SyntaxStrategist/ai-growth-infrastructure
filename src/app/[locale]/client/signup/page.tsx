@@ -37,7 +37,6 @@ export default function ClientSignup() {
     language: isFrench ? 'Langue préférée' : 'Preferred Language',
     leadSource: isFrench ? 'Description de la source de leads' : 'Lead Source Description',
     estimatedLeads: isFrench ? 'Leads estimés par semaine' : 'Estimated Leads per Week',
-    optional: isFrench ? '(optionnel)' : '(optional)',
     submit: isFrench ? 'Créer mon compte' : 'Create Account',
     loading: isFrench ? 'Création en cours...' : 'Creating account...',
     haveAccount: isFrench ? 'Vous avez déjà un compte ?' : 'Already have an account?',
@@ -246,9 +245,9 @@ export default function ClientSignup() {
                 </select>
               </div>
 
-              {/* Optional Fields */}
+              {/* Lead Source Description */}
               <div>
-                <label htmlFor="lead_source" className="block text-sm font-medium mb-2">{t.leadSource} {t.optional}</label>
+                <label htmlFor="lead_source" className="block text-sm font-medium mb-2">{t.leadSource}</label>
                 <textarea
                   id="lead_source"
                   name="lead_source"
@@ -261,7 +260,7 @@ export default function ClientSignup() {
               </div>
 
               <div>
-                <label htmlFor="estimated_leads" className="block text-sm font-medium mb-2">{t.estimatedLeads} {t.optional}</label>
+                <label htmlFor="estimated_leads" className="block text-sm font-medium mb-2">{t.estimatedLeads}</label>
                 <input
                   id="estimated_leads"
                   name="estimated_leads"

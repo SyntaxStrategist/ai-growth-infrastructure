@@ -7,13 +7,13 @@ import { google } from 'googleapis';
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const { 
-      name,
-      email, 
-      business_name,
-      password, 
-      language
-    } = body;
+    
+    // Accept both camelCase (from frontend) and snake_case (from tests)
+    const name = body.name || body.contactName;
+    const email = body.email;
+    const business_name = body.business_name || body.businessName;
+    const password = body.password;
+    const language = body.language;
 
     console.log('[E2E-Test] [ClientRegistration] New registration request:', { 
       name, 
