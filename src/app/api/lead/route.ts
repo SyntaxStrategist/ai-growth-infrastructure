@@ -4,7 +4,7 @@ import { NextRequest } from "next/server";
 import { google } from "googleapis";
 import OpenAI from "openai";
 import { getAuthorizedGmail, buildHtmlEmail } from "../../../lib/gmail";
-import { validateApiKey, upsertLeadWithHistory } from "../../../lib/supabase";
+import { supabase, validateApiKey, upsertLeadWithHistory } from "../../../lib/supabase";
 import { enrichLeadWithAI } from "../../../lib/ai-enrichment";
 
 type LeadPayload = {
@@ -60,21 +60,29 @@ export async function POST(req: NextRequest) {
 		let clientId: string | null = null;
 		
 		if (apiKey) {
-			console.log('[Lead API] API key provided - validating...');
+			console.log('[LeadAPI] API key provided - validating...');
 			// Validate API key for external clients
 			const client = await validateApiKey(apiKey);
 			if (!client) {
-				console.log('[Lead API] ❌ Invalid API key');
+				console.log('[LeadAPI] ❌ Invalid API key — rejected');
 				return new Response(
 					JSON.stringify({ success: false, error: "Unauthorized: Invalid API key" }),
 					{ status: 401, headers: { "Content-Type": "application/json" } }
 				);
 			}
-			clientId = client.id;
-			console.log(`[Lead API] ✅ Authenticated request from client: ${client.company_name} (${clientId})`);
+			clientId = client.client_id || client.id;
+			console.log(`[LeadAPI] ✅ Valid API key`);
+			console.log(`[LeadAPI] Lead received from client_id: ${clientId}`);
+			console.log(`[LeadAPI] Business: ${client.business_name || client.company_name || 'N/A'}`);
+			
+			// Update last_connection timestamp
+			await supabase
+				.from('clients')
+				.update({ last_connection: new Date().toISOString() })
+				.eq('api_key', apiKey);
 		} else {
 			// No API key = internal request (from website form)
-			console.log('[Lead API] Internal request (no API key)');
+			console.log('[LeadAPI] Internal request (no API key - website form)');
 		}
 		
 		console.log('[Lead API] Parsing request body...');
@@ -313,9 +321,10 @@ export async function POST(req: NextRequest) {
 				}
 				
 				if (clientId) {
-					console.log(`[Lead API] Lead processed with client_id: ${clientId}`);
+					console.log(`[LeadAPI] ✅ Lead processed with client_id: ${clientId}`);
+					console.log(`[LeadAPI] Stored lead successfully`);
 				} else {
-					console.log('[Lead API] Lead processed (internal)');
+					console.log('[LeadAPI] Lead processed (internal - website form)');
 				}
 				
 				console.log('[Lead API] ============================================');

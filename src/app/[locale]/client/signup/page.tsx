@@ -1,0 +1,290 @@
+"use client";
+
+import { useState } from "react";
+import { motion } from "framer-motion";
+import { useRouter } from "next/navigation";
+import { useLocale } from 'next-intl';
+
+export default function ClientSignup() {
+  const locale = useLocale();
+  const router = useRouter();
+  const isFrench = locale === 'fr';
+
+  const [formData, setFormData] = useState({
+    businessName: '',
+    contactName: '',
+    email: '',
+    password: '',
+    confirmPassword: '',
+    language: locale,
+    leadSourceDescription: '',
+    estimatedLeadsPerWeek: '',
+  });
+
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState(false);
+
+  const t = {
+    title: isFrench ? 'Créer votre compte' : 'Create Your Account',
+    subtitle: isFrench ? 'Commencez à analyser vos leads avec l\'IA' : 'Start analyzing your leads with AI',
+    businessName: isFrench ? 'Nom de l\'entreprise' : 'Business Name',
+    contactName: isFrench ? 'Nom du contact' : 'Contact Name',
+    email: isFrench ? 'Courriel' : 'Email',
+    password: isFrench ? 'Mot de passe' : 'Password',
+    confirmPassword: isFrench ? 'Confirmer le mot de passe' : 'Confirm Password',
+    language: isFrench ? 'Langue préférée' : 'Preferred Language',
+    leadSource: isFrench ? 'Description de la source de leads' : 'Lead Source Description',
+    estimatedLeads: isFrench ? 'Leads estimés par semaine' : 'Estimated Leads per Week',
+    optional: isFrench ? '(optionnel)' : '(optional)',
+    submit: isFrench ? 'Créer mon compte' : 'Create Account',
+    loading: isFrench ? 'Création en cours...' : 'Creating account...',
+    haveAccount: isFrench ? 'Vous avez déjà un compte ?' : 'Already have an account?',
+    login: isFrench ? 'Se connecter' : 'Log in',
+    successTitle: isFrench ? 'Compte créé avec succès !' : 'Account Created Successfully!',
+    successMessage: isFrench ? 'Vérifiez votre courriel pour vos informations de connexion.' : 'Check your email for your login credentials.',
+    redirecting: isFrench ? 'Redirection...' : 'Redirecting...',
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError('');
+
+    // Validation
+    if (!formData.businessName || !formData.contactName || !formData.email || !formData.password) {
+      setError(isFrench ? 'Veuillez remplir tous les champs requis' : 'Please fill in all required fields');
+      return;
+    }
+
+    if (formData.password !== formData.confirmPassword) {
+      setError(isFrench ? 'Les mots de passe ne correspondent pas' : 'Passwords do not match');
+      return;
+    }
+
+    if (formData.password.length < 8) {
+      setError(isFrench ? 'Le mot de passe doit contenir au moins 8 caractères' : 'Password must be at least 8 characters');
+      return;
+    }
+
+    setLoading(true);
+
+    try {
+      const res = await fetch('/api/client/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          businessName: formData.businessName,
+          contactName: formData.contactName,
+          email: formData.email,
+          password: formData.password,
+          language: formData.language,
+          leadSourceDescription: formData.leadSourceDescription || null,
+          estimatedLeadsPerWeek: formData.estimatedLeadsPerWeek ? parseInt(formData.estimatedLeadsPerWeek) : null,
+        }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok || !data.success) {
+        throw new Error(data.error || 'Registration failed');
+      }
+
+      console.log('[ClientSignup] ✅ Account created:', data.data);
+      setSuccess(true);
+
+      // Redirect to login after 2 seconds
+      setTimeout(() => {
+        router.push(`/${locale}/client/dashboard`);
+      }, 2000);
+
+    } catch (err) {
+      console.error('[ClientSignup] ❌ Error:', err);
+      const message = err instanceof Error ? err.message : 'Registration failed';
+      setError(message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (success) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#0f172a] to-[#1e1b4b] text-white p-4">
+        <motion.div
+          initial={{ scale: 0.9, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          className="max-w-md w-full text-center"
+        >
+          <div className="h-20 w-20 rounded-full bg-green-500/20 border-2 border-green-400/40 flex items-center justify-center mx-auto mb-6">
+            <svg className="h-10 w-10 text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+            </svg>
+          </div>
+          <h2 className="text-2xl font-bold mb-4">{t.successTitle}</h2>
+          <p className="text-white/70 mb-6">{t.successMessage}</p>
+          <p className="text-sm text-white/50">{t.redirecting}</p>
+        </motion.div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#0f172a] to-[#1e1b4b] text-white p-4">
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6 }}
+        className="w-full max-w-2xl"
+      >
+        {/* Logo */}
+        <div className="text-center mb-8">
+          <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent mb-2">
+            AVENIR AI SOLUTIONS
+          </h1>
+          <p className="text-white/60 text-sm">
+            {isFrench ? 'Infrastructure de Croissance IA' : 'AI Growth Infrastructure'}
+          </p>
+        </div>
+
+        <div className="rounded-lg border border-white/10 p-8 bg-gradient-to-br from-blue-500/5 to-purple-500/5 relative overflow-hidden">
+          <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 to-purple-500/5 blur-xl"></div>
+          
+          <div className="relative">
+            <h2 className="text-2xl font-bold mb-2">{t.title}</h2>
+            <p className="text-white/60 mb-6 text-sm">{t.subtitle}</p>
+
+            <form onSubmit={handleSubmit} className="space-y-4">
+              {/* Business Name */}
+              <div>
+                <label className="block text-sm font-medium mb-2">{t.businessName} *</label>
+                <input
+                  type="text"
+                  value={formData.businessName}
+                  onChange={(e) => setFormData({ ...formData, businessName: e.target.value })}
+                  className="w-full px-4 py-3 rounded-md bg-white/5 border border-white/10 text-white placeholder:text-white/40 focus:border-blue-400/50 focus:outline-none transition-all"
+                  required
+                />
+              </div>
+
+              {/* Contact Name */}
+              <div>
+                <label className="block text-sm font-medium mb-2">{t.contactName} *</label>
+                <input
+                  type="text"
+                  value={formData.contactName}
+                  onChange={(e) => setFormData({ ...formData, contactName: e.target.value })}
+                  className="w-full px-4 py-3 rounded-md bg-white/5 border border-white/10 text-white placeholder:text-white/40 focus:border-blue-400/50 focus:outline-none transition-all"
+                  required
+                />
+              </div>
+
+              {/* Email */}
+              <div>
+                <label className="block text-sm font-medium mb-2">{t.email} *</label>
+                <input
+                  type="email"
+                  value={formData.email}
+                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                  className="w-full px-4 py-3 rounded-md bg-white/5 border border-white/10 text-white placeholder:text-white/40 focus:border-blue-400/50 focus:outline-none transition-all"
+                  required
+                />
+              </div>
+
+              {/* Password */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium mb-2">{t.password} *</label>
+                  <input
+                    type="password"
+                    value={formData.password}
+                    onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                    className="w-full px-4 py-3 rounded-md bg-white/5 border border-white/10 text-white placeholder:text-white/40 focus:border-blue-400/50 focus:outline-none transition-all"
+                    minLength={8}
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-2">{t.confirmPassword} *</label>
+                  <input
+                    type="password"
+                    value={formData.confirmPassword}
+                    onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
+                    className="w-full px-4 py-3 rounded-md bg-white/5 border border-white/10 text-white placeholder:text-white/40 focus:border-blue-400/50 focus:outline-none transition-all"
+                    minLength={8}
+                    required
+                  />
+                </div>
+              </div>
+
+              {/* Language */}
+              <div>
+                <label className="block text-sm font-medium mb-2">{t.language} *</label>
+                <select
+                  value={formData.language}
+                  onChange={(e) => setFormData({ ...formData, language: e.target.value })}
+                  className="w-full px-4 py-3 rounded-md bg-white/5 border border-white/10 text-white focus:border-blue-400/50 focus:outline-none transition-all"
+                  required
+                >
+                  <option value="en">English</option>
+                  <option value="fr">Français</option>
+                </select>
+              </div>
+
+              {/* Optional Fields */}
+              <div>
+                <label className="block text-sm font-medium mb-2">{t.leadSource} {t.optional}</label>
+                <textarea
+                  value={formData.leadSourceDescription}
+                  onChange={(e) => setFormData({ ...formData, leadSourceDescription: e.target.value })}
+                  className="w-full px-4 py-3 rounded-md bg-white/5 border border-white/10 text-white placeholder:text-white/40 focus:border-blue-400/50 focus:outline-none transition-all resize-none"
+                  rows={3}
+                  placeholder={isFrench ? 'Ex: Formulaire du site web, événements, références...' : 'e.g., Website form, events, referrals...'}
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium mb-2">{t.estimatedLeads} {t.optional}</label>
+                <input
+                  type="number"
+                  value={formData.estimatedLeadsPerWeek}
+                  onChange={(e) => setFormData({ ...formData, estimatedLeadsPerWeek: e.target.value })}
+                  className="w-full px-4 py-3 rounded-md bg-white/5 border border-white/10 text-white placeholder:text-white/40 focus:border-blue-400/50 focus:outline-none transition-all"
+                  min="0"
+                  placeholder="50"
+                />
+              </div>
+
+              {/* Error Message */}
+              {error && (
+                <motion.div
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="p-3 rounded-md bg-red-500/10 border border-red-500/30 text-red-400 text-sm"
+                >
+                  {error}
+                </motion.div>
+              )}
+
+              {/* Submit Button */}
+              <button
+                type="submit"
+                disabled={loading}
+                className="w-full px-4 py-3 rounded-md bg-gradient-to-r from-blue-500 to-purple-500 text-white font-medium hover:from-blue-600 hover:to-purple-600 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-blue-500/50"
+              >
+                {loading ? t.loading : t.submit}
+              </button>
+
+              {/* Login Link */}
+              <div className="text-center text-sm text-white/60">
+                {t.haveAccount}{' '}
+                <a href={`/${locale}/client/dashboard`} className="text-blue-400 hover:text-blue-300 transition-colors">
+                  {t.login}
+                </a>
+              </div>
+            </form>
+          </div>
+        </div>
+      </motion.div>
+    </div>
+  );
+}
+
