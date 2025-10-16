@@ -118,9 +118,9 @@ export async function POST(req: NextRequest) {
 			if (isAvenirDomain) {
 				// Auto-link to Avenir AI Solutions internal client
 				console.log('[Lead API] 🔍 Domain detection: aveniraisolutions.ca');
-				console.log('[Lead API] 🏢 Auto-linked lead to internal client \'Avenir AI Solutions\' (client_id: avenir-internal-client)');
+				console.log('[Lead API] 🏢 Auto-linked lead to internal client \'Avenir AI Solutions\' (client_id: 00000000-0000-0000-0000-000000000001)');
 				console.log('[Lead API] ✅ Origin verification: EN/FR forms both supported');
-				clientId = 'avenir-internal-client';
+				clientId = '00000000-0000-0000-0000-000000000001';
 			} else {
 				// External request from unknown domain
 				console.log('[Lead API] ⚠️  Request from non-Avenir domain');
