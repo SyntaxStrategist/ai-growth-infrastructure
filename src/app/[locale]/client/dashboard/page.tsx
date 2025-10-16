@@ -181,19 +181,42 @@ export default function ClientDashboard() {
 
     try {
       setLoading(true);
-      console.log('[ClientDashboard] Fetching', activeTab, 'leads for client:', client.clientId);
+      console.log('[ClientDashboard] ============================================');
+      console.log('[ClientDashboard] Fetching leads');
+      console.log('[ClientDashboard] Client ID:', client.clientId);
+      console.log('[ClientDashboard] Business:', client.businessName);
+      console.log('[ClientDashboard] Tab:', activeTab);
+      console.log('[ClientDashboard] Locale:', locale);
       
-      const res = await fetch(`/api/client/leads?clientId=${client.clientId}&locale=${locale}&status=${activeTab}`);
+      const endpoint = `/api/client/leads?clientId=${client.clientId}&locale=${locale}&status=${activeTab}`;
+      console.log('[ClientDashboard] Endpoint:', endpoint);
+      
+      const res = await fetch(endpoint);
       const data = await res.json();
+
+      console.log('[ClientDashboard] API Response:', {
+        success: data.success,
+        leadCount: data.data?.length || 0,
+        status: res.status,
+      });
 
       if (data.success) {
         const leadsData = data.data || [];
         setLeads(leadsData);
         calculateStats(leadsData);
         console.log('[ClientDashboard] ✅ Loaded', leadsData.length, activeTab, 'leads');
+        console.log('[ClientDashboard] ============================================');
+      } else {
+        console.error('[ClientDashboard] ❌ API returned error:', data.error);
+        console.log('[ClientDashboard] ============================================');
       }
     } catch (err) {
       console.error('[ClientDashboard] ❌ Failed to fetch leads:', err);
+      console.error('[ClientDashboard] ❌ Error details:', {
+        message: err instanceof Error ? err.message : String(err),
+        stack: err instanceof Error ? err.stack : 'No stack trace',
+      });
+      console.log('[ClientDashboard] ============================================');
     } finally {
       setLoading(false);
     }
@@ -214,6 +237,10 @@ export default function ClientDashboard() {
   }
 
   function calculateStats(leadsData: Lead[]) {
+    console.log('[ClientDashboard] ============================================');
+    console.log('[ClientDashboard] Calculating statistics');
+    console.log('[ClientDashboard] Total leads:', leadsData.length);
+    
     const total = leadsData.length;
     const avgConfidence = total > 0
       ? leadsData.reduce((sum, l) => sum + (l.confidence_score || 0), 0) / total
@@ -234,7 +261,17 @@ export default function ClientDashboard() {
       intentCounts[b] - intentCounts[a]
     )[0] || (isFrench ? 'Aucun' : 'None');
 
-    setStats({ total, avgConfidence, topIntent, highUrgency });
+    const calculatedStats = { total, avgConfidence, topIntent, highUrgency };
+    
+    console.log('[ClientDashboard] Stats calculated:', {
+      total: calculatedStats.total,
+      avgConfidence: (calculatedStats.avgConfidence * 100).toFixed(1) + '%',
+      topIntent: calculatedStats.topIntent,
+      highUrgency: calculatedStats.highUrgency,
+    });
+    console.log('[ClientDashboard] ============================================');
+    
+    setStats(calculatedStats);
   }
 
   function showToast(message: string) {
@@ -636,6 +673,14 @@ export default function ClientDashboard() {
           animate={{ opacity: 1 }}
           transition={{ duration: 0.6, delay: 0.5 }}
           className="mb-8"
+          onAnimationComplete={() => {
+            console.log('[ClientDashboard] ============================================');
+            console.log('[ClientDashboard] Rendering Predictive Growth Engine');
+            console.log('[ClientDashboard] Client ID for analytics:', client?.clientId || 'null');
+            console.log('[ClientDashboard] Locale:', locale);
+            console.log('[ClientDashboard] Component will fetch from: /api/growth-insights?client_id=' + (client?.clientId || 'none'));
+            console.log('[ClientDashboard] ============================================');
+          }}
         >
           <PredictiveGrowthEngine locale={locale} clientId={client?.clientId || null} />
         </motion.div>

@@ -38,19 +38,56 @@ export default function PredictiveGrowthEngine({ locale, clientId = null }: Pred
 
   async function fetchInsights() {
     try {
+      console.log('[PredictiveGrowthEngine] ============================================');
+      console.log('[PredictiveGrowthEngine] Fetching analytics data');
+      console.log('[PredictiveGrowthEngine] Client ID:', clientId || 'all (admin mode)');
+      console.log('[PredictiveGrowthEngine] Locale:', locale);
+      
       const params = new URLSearchParams();
       if (clientId) {
         params.set('client_id', clientId);
       }
       
-      const res = await fetch(`/api/growth-insights?${params.toString()}`);
+      const endpoint = `/api/growth-insights?${params.toString()}`;
+      console.log('[PredictiveGrowthEngine] Endpoint:', endpoint);
+      
+      const res = await fetch(endpoint);
       const json = await res.json();
       
+      console.log('[PredictiveGrowthEngine] API Response:', {
+        success: json.success,
+        hasData: !!json.data,
+        status: res.status,
+      });
+
       if (json.success && json.data) {
+        console.log('[PredictiveGrowthEngine] Data fetch complete:', {
+          engagementScore: json.data.engagement_score,
+          avgConfidence: (json.data.avg_confidence * 100).toFixed(1) + '%',
+          urgencyTrendPct: json.data.urgency_trend_percentage?.toFixed(1) + '%',
+          toneSentiment: json.data.tone_sentiment_score?.toFixed(0) + '/100',
+          languageRatio: {
+            en: json.data.language_ratio?.en?.toFixed(0) + '%',
+            fr: json.data.language_ratio?.fr?.toFixed(0) + '%',
+          },
+          totalLeads: json.data.total_leads,
+          analyzedAt: json.data.analyzed_at,
+        });
         setInsights(json.data);
+        console.log('[PredictiveGrowthEngine] ✅ Analytics render success');
+        console.log('[PredictiveGrowthEngine] ============================================');
+      } else {
+        console.warn('[PredictiveGrowthEngine] ⚠️  No data available');
+        console.log('[PredictiveGrowthEngine] Response:', json);
+        console.log('[PredictiveGrowthEngine] ============================================');
       }
     } catch (err) {
-      console.error('Failed to fetch growth insights:', err);
+      console.error('[PredictiveGrowthEngine] ❌ Analytics fetch failed');
+      console.error('[PredictiveGrowthEngine] ❌ Error:', {
+        message: err instanceof Error ? err.message : String(err),
+        stack: err instanceof Error ? err.stack : 'No stack trace',
+      });
+      console.log('[PredictiveGrowthEngine] ============================================');
     } finally {
       setLoading(false);
     }
