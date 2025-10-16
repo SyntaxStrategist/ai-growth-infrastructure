@@ -338,6 +338,43 @@ export async function POST(req: NextRequest) {
 					}
 				}
 				
+				// If this lead is from a client (has client_id), create a record in lead_actions
+				if (clientId && result.leadId) {
+					console.log('[E2E-Test] [LeadAPI] ============================================');
+					console.log('[E2E-Test] [LeadAPI] Creating lead_actions record for client ownership');
+					console.log('[E2E-Test] [LeadAPI] lead_id:', result.leadId);
+					console.log('[E2E-Test] [LeadAPI] client_id:', clientId);
+					
+					const { data: actionRecord, error: actionError } = await supabase
+						.from('lead_actions')
+						.insert({
+							lead_id: result.leadId,
+							client_id: clientId,
+							action_type: 'insert',
+							tag: 'New Lead',
+							timestamp: new Date().toISOString(),
+						})
+						.select()
+						.single();
+					
+					if (actionError) {
+						console.error('[E2E-Test] [LeadAPI] ❌ Failed to create lead_actions record:', actionError);
+						console.error('[E2E-Test] [LeadAPI] ❌ Error details:', {
+							message: actionError.message,
+							code: actionError.code,
+							hint: actionError.hint,
+							details: actionError.details,
+						});
+						// Don't fail the whole request if action insert fails
+						console.warn('[E2E-Test] [LeadAPI] ⚠️  Lead created but not linked to client in lead_actions');
+					} else {
+						console.log('[E2E-Test] [LeadAPI] ✅ lead_actions record created:', actionRecord.id);
+						console.log('[E2E-Test] [LeadAPI] ✅ Lead linked to client in lead_actions table');
+						console.log('[E2E-Test] [LeadAPI] ✅ Client will see this lead in their dashboard');
+					}
+					console.log('[E2E-Test] [LeadAPI] ============================================');
+				}
+				
 				if (clientId) {
 					console.log(`[E2E-Test] [LeadAPI] ✅ Lead processed with client_id: ${clientId}`);
 					console.log(`[E2E-Test] [LeadAPI] ✅ Stored lead successfully for client`);
