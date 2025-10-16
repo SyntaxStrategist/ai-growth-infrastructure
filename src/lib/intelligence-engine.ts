@@ -554,11 +554,20 @@ export async function runWeeklyAnalysis(): Promise<{ processed: number; errors: 
           // Use client_id (the UUID) for analysis, not the database id
           const clientInsights = await analyzeClientLeads(client.client_id, weekAgo, now);
           
-          console.log('[Engine] Analysis results for', client.business_name || client.name, ':', {
-            totalLeads: clientInsights.total_leads,
-            avgConfidence: clientInsights.avg_confidence,
-            engagementScore: clientInsights.engagement_score,
+          console.log('[Engine] ============================================');
+          console.log('[Engine] Analytics Summary for', client.business_name || client.name);
+          console.log('[Engine] ============================================');
+          console.log('[Engine] Total leads analyzed:', clientInsights.total_leads);
+          console.log('[Engine] Engagement Score:', clientInsights.engagement_score, '/100');
+          console.log('[Engine] Avg Confidence:', (clientInsights.avg_confidence * 100).toFixed(1), '%');
+          console.log('[Engine] Urgency Trend:', clientInsights.urgency_trend_percentage?.toFixed(1), '%');
+          console.log('[Engine] Tone Sentiment:', clientInsights.tone_sentiment_score, '/100');
+          console.log('[Engine] Language Ratio:', {
+            en: clientInsights.language_ratio?.en?.toFixed(0) + '%',
+            fr: clientInsights.language_ratio?.fr?.toFixed(0) + '%',
           });
+          console.log('[Engine] Top Intents:', clientInsights.top_intents?.slice(0, 3).map((i: any) => i.intent).join(', '));
+          console.log('[Engine] ============================================');
           
           // Only store if client has leads in this period
           if (clientInsights.total_leads > 0) {
@@ -567,6 +576,7 @@ export async function runWeeklyAnalysis(): Promise<{ processed: number; errors: 
             processed++;
             console.log('[Engine] ✅ Insert/Update status: SUCCESS');
             console.log('[Engine] ✅ Analysis complete for:', client.business_name || client.name);
+            console.log('[Engine] ✅ Client can now view analytics in dashboard');
           } else {
             console.log('[Engine] ⚠️  No leads found for', client.business_name || client.name, '- skipping storage');
           }
