@@ -551,13 +551,26 @@ export async function runWeeklyAnalysis(): Promise<{ processed: number; errors: 
     console.log('[Engine] ============================================');
     console.log('[Engine] Per-Client Analysis Starting');
     console.log('[Engine] ============================================');
+    
+    // First, verify clients exist in database
+    console.log('[Engine] Verifying clients table has data...');
+    const { count: clientCount, error: countError } = await supabaseAdmin
+      .from('clients')
+      .select('*', { count: 'exact', head: true });
+    
+    console.log('[Engine] Total rows in clients table:', clientCount);
+    if (countError) {
+      console.error('[Engine] ❌ Error counting clients:', countError);
+    }
+    
+    // Now fetch full client data
     console.log('[Engine] Querying clients table...');
-    console.log('[Engine] Query: SELECT id, client_id, business_name, name, email FROM clients');
-    console.log('[Engine] Filters: NONE (fetch all clients)');
+    console.log('[Engine] Query: SELECT id, client_id, business_name, name, email FROM clients WHERE client_id IS NOT NULL');
     
     const { data: clients, error: clientError } = await supabaseAdmin
       .from('clients')
-      .select('id, client_id, business_name, name, email');
+      .select('id, client_id, business_name, name, email')
+      .not('client_id', 'is', null);
 
     if (clientError) {
       console.error('[Engine] ❌ Error querying clients table:', clientError);
@@ -568,15 +581,38 @@ export async function runWeeklyAnalysis(): Promise<{ processed: number; errors: 
     }
 
     console.log('[Engine] ============================================');
-    console.log('[Engine] Total clients fetched:', clients?.length || 0);
+    console.log('[Engine] Clients fetched:', clients?.length || 0);
     console.log('[Engine] ============================================');
     
     if (clients && clients.length > 0) {
+      console.log('[Engine] Example client_id:', clients[0].client_id);
+      console.log('[Engine] Example business_name:', clients[0].business_name || clients[0].name);
+      console.log('[Engine] ============================================');
       console.log('[Engine] Client list:');
       clients.forEach((c, idx) => {
         console.log('[Engine]   ' + (idx + 1) + '.', c.business_name || c.name, '(client_id:', c.client_id + ')');
       });
       console.log('[Engine] ============================================');
+    } else {
+      // If no clients found, try a simpler query to verify table has data
+      console.log('[Engine] ⚠️  No clients returned - verifying table has data...');
+      const { data: verifyClients, error: verifyError } = await supabaseAdmin
+        .from('clients')
+        .select('client_id');
+      
+      if (verifyError) {
+        console.error('[Engine] ❌ Verification query error:', verifyError);
+      } else {
+        console.log('[Engine] Verification query returned:', verifyClients?.length || 0, 'rows');
+        if (verifyClients && verifyClients.length > 0) {
+          console.log('[Engine] All client IDs in database:');
+          verifyClients.forEach((c: any, idx: number) => {
+            console.log('[Engine]   ' + (idx + 1) + '. client_id:', c.client_id);
+          });
+        } else {
+          console.log('[Engine] ⚠️  Clients table is empty - no clients have signed up yet');
+        }
+      }
     }
     
     if (clients && clients.length > 0) {
