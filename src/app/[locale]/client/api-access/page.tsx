@@ -26,13 +26,16 @@ export default function ApiAccess() {
     subtitle: isFrench ? 'Intégrez Avenir AI à vos systèmes' : 'Integrate Avenir AI into your systems',
     apiEndpoint: isFrench ? 'Point de terminaison API' : 'API Endpoint',
     apiKey: isFrench ? 'Clé API' : 'API Key',
+    securityWarning: isFrench 
+      ? '⚠️ Ne partagez jamais cette clé API publiquement. Elle donne un accès complet à votre point de soumission de leads Avenir AI.'
+      : '⚠️ Never share this API key publicly. It provides full access to your Avenir AI lead submission endpoint.',
     show: isFrench ? 'Afficher' : 'Show',
     hide: isFrench ? 'Masquer' : 'Hide',
     copy: isFrench ? 'Copier' : 'Copy',
     copied: isFrench ? 'Copié !' : 'Copied!',
     exampleRequest: isFrench ? 'Exemple de requête JSON' : 'Example JSON Request',
     zapierIntegration: isFrench ? 'Intégration Zapier' : 'Zapier Integration',
-    backToDashboard: isFrench ? '← Retour au tableau de bord' : '← Back to Dashboard',
+    backToDashboard: isFrench ? 'Retour au tableau de bord' : 'Back to Dashboard',
     notAuthenticated: isFrench ? 'Veuillez vous connecter' : 'Please log in',
   };
 
@@ -132,7 +135,7 @@ export default function ApiAccess() {
           className="rounded-xl border border-white/10 p-6 bg-gradient-to-br from-purple-500/5 to-pink-500/5 mb-6 shadow-lg hover:border-purple-400/30 transition-all"
         >
           <h3 className="text-xl font-bold mb-4 bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">{t.apiKey}</h3>
-          <div className="flex items-center gap-3 flex-wrap">
+          <div className="flex items-center gap-3 flex-wrap mb-4">
             <code className="flex-1 px-4 py-3 rounded-lg bg-black/40 border border-white/10 text-purple-400 font-mono text-sm min-w-[200px]">
               {showKey ? client.apiKey : '•'.repeat(40)}
             </code>
@@ -148,6 +151,13 @@ export default function ApiAccess() {
             >
               {copied ? t.copied : t.copy}
             </button>
+          </div>
+          
+          {/* Security Warning */}
+          <div className="pt-3 border-t border-white/10">
+            <p className="text-xs italic text-amber-400/80 leading-relaxed">
+              {t.securityWarning}
+            </p>
           </div>
         </motion.div>
 
