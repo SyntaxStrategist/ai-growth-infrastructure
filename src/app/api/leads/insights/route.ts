@@ -31,15 +31,18 @@ export async function GET(req: NextRequest) {
 
     const url = new URL(req.url);
     const locale = url.searchParams.get('locale') || 'en';
+    const clientId = url.searchParams.get('clientId');
 
     console.log('[LeadsInsightsAPI] Query params:', {
       locale,
+      clientId: clientId || 'all (admin)',
       table: 'lead_memory',
       columns: 'name, email, tone_history, confidence_history, urgency_history, relationship_insight, last_updated',
       filters: {
         archived: false,
         deleted: false,
         relationship_insight: 'IS NOT NULL',
+        ...(clientId ? { client_id: clientId } : {}),
       },
       order: 'last_updated DESC',
       limit: 20,
@@ -47,14 +50,57 @@ export async function GET(req: NextRequest) {
 
     console.log('[LeadsInsightsAPI] Executing Supabase query...');
     const queryStart = Date.now();
-    const { data, error } = await supabase
-      .from('lead_memory')
-      .select('name, email, tone_history, confidence_history, urgency_history, relationship_insight, last_updated')
-      .eq('archived', false)
-      .eq('deleted', false)
-      .not('relationship_insight', 'is', null)
-      .order('last_updated', { ascending: false })
-      .limit(20);
+    
+    // If clientId provided, need to join with lead_actions
+    let query;
+    if (clientId) {
+      console.log('[LeadsInsightsAPI] Filtering by client_id:', clientId);
+      // Join with lead_actions to get client-specific leads
+      const { data: leadActionsData, error: leadActionsError } = await supabase
+        .from('lead_actions')
+        .select('lead_id')
+        .eq('client_id', clientId);
+      
+      if (leadActionsError) {
+        console.error('[LeadsInsightsAPI] Error fetching lead_actions:', leadActionsError);
+        throw leadActionsError;
+      }
+      
+      const leadIds = leadActionsData?.map(la => la.lead_id) || [];
+      console.log('[LeadsInsightsAPI] Found', leadIds.length, 'leads for client');
+      
+      if (leadIds.length === 0) {
+        console.log('[LeadsInsightsAPI] No leads found for client, returning empty array');
+        return NextResponse.json({
+          success: true,
+          data: [],
+          count: 0,
+          locale,
+        });
+      }
+      
+      query = supabase
+        .from('lead_memory')
+        .select('name, email, tone_history, confidence_history, urgency_history, relationship_insight, last_updated')
+        .in('id', leadIds)
+        .eq('archived', false)
+        .eq('deleted', false)
+        .not('relationship_insight', 'is', null)
+        .order('last_updated', { ascending: false })
+        .limit(20);
+    } else {
+      // Admin mode - get all leads
+      query = supabase
+        .from('lead_memory')
+        .select('name, email, tone_history, confidence_history, urgency_history, relationship_insight, last_updated')
+        .eq('archived', false)
+        .eq('deleted', false)
+        .not('relationship_insight', 'is', null)
+        .order('last_updated', { ascending: false })
+        .limit(20);
+    }
+    
+    const { data, error } = await query;
     const queryDuration = Date.now() - queryStart;
 
     console.log('[LeadsInsightsAPI] Query completed in', queryDuration, 'ms');

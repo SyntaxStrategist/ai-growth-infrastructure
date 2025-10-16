@@ -10,6 +10,7 @@ type HistoryEntry = {
 
 interface RelationshipInsightsProps {
   locale: string;
+  clientId?: string | null;
 }
 
 type LeadWithHistory = {
@@ -22,7 +23,7 @@ type LeadWithHistory = {
   last_updated: string;
 };
 
-export default function RelationshipInsights({ locale }: RelationshipInsightsProps) {
+export default function RelationshipInsights({ locale, clientId = null }: RelationshipInsightsProps) {
   const [leads, setLeads] = useState<LeadWithHistory[]>([]);
   const [loading, setLoading] = useState(true);
   const [expandedLead, setExpandedLead] = useState<string | null>(null);
@@ -55,9 +56,12 @@ export default function RelationshipInsights({ locale }: RelationshipInsightsPro
       console.log('[RelationshipInsights] ============================================');
       console.log('[RelationshipInsights] Using API endpoint approach for client component');
       console.log('[RelationshipInsights] Locale:', locale);
+      console.log('[RelationshipInsights] Client ID:', clientId || 'admin (all clients)');
       
       // Use API endpoint instead of direct Supabase client (client component limitation)
-      const endpoint = `/api/leads/insights?locale=${locale}`;
+      const endpoint = clientId 
+        ? `/api/leads/insights?locale=${locale}&clientId=${clientId}`
+        : `/api/leads/insights?locale=${locale}`;
       console.log('[RelationshipInsights] Fetching from:', endpoint);
       
       const queryStart = Date.now();

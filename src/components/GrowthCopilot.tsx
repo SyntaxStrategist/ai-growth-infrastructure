@@ -6,6 +6,7 @@ import OpenAI from "openai";
 
 interface GrowthCopilotProps {
   locale: string;
+  clientId?: string | null;
 }
 
 type CopilotSummary = {
@@ -20,7 +21,7 @@ type CopilotSummary = {
   }>;
 };
 
-export default function GrowthCopilot({ locale }: GrowthCopilotProps) {
+export default function GrowthCopilot({ locale, clientId = null }: GrowthCopilotProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [summary, setSummary] = useState<CopilotSummary | null>(null);
   const [loading, setLoading] = useState(false);
@@ -99,9 +100,15 @@ export default function GrowthCopilot({ locale }: GrowthCopilotProps) {
     setLoading(true);
     try {
       console.log('[GrowthCopilot] Fetching growth insights...');
+      console.log('[GrowthCopilot] Client ID:', clientId || 'admin (all clients)');
       
-      // Fetch latest growth insights
-      const res = await fetch('/api/growth-insights');
+      // Fetch latest growth insights (filtered by clientId if provided)
+      const endpoint = clientId 
+        ? `/api/growth-insights?client_id=${clientId}`
+        : '/api/growth-insights';
+      console.log('[GrowthCopilot] Fetching from:', endpoint);
+      
+      const res = await fetch(endpoint);
       const json = await res.json();
 
       console.log('[GrowthCopilot] Full API response:', json);

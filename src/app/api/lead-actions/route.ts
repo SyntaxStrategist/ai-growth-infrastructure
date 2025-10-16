@@ -250,18 +250,30 @@ export async function GET(req: NextRequest) {
     
     const url = new URL(req.url);
     const limit = parseInt(url.searchParams.get('limit') || '5', 10);
+    const clientId = url.searchParams.get('clientId');
     
     console.log('[LeadActions] Query params:', {
       limit,
+      clientId: clientId || 'all (admin)',
       order: 'timestamp DESC',
     });
 
     const queryStart = Date.now();
-    const { data, error } = await supabase
+    
+    // Build query with optional client filtering
+    let query = supabase
       .from('lead_actions')
       .select('*')
       .order('timestamp', { ascending: false })
       .limit(limit);
+    
+    // Filter by clientId if provided (client dashboard mode)
+    if (clientId) {
+      console.log('[LeadActions] Filtering by client_id:', clientId);
+      query = query.eq('client_id', clientId);
+    }
+    
+    const { data, error } = await query;
     const queryDuration = Date.now() - queryStart;
 
     console.log('[LeadActions] Query completed in', queryDuration, 'ms');
