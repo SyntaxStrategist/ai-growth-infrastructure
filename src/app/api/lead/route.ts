@@ -70,10 +70,10 @@ export async function POST(req: NextRequest) {
 					{ status: 401, headers: { "Content-Type": "application/json" } }
 				);
 			}
-			clientId = client.client_id || client.id;
+			clientId = client.id;
 			console.log(`[LeadAPI] ✅ Valid API key`);
 			console.log(`[LeadAPI] Lead received from client_id: ${clientId}`);
-			console.log(`[LeadAPI] Business: ${client.business_name || client.company_name || 'N/A'}`);
+			console.log(`[LeadAPI] Business: ${client.business_name || 'N/A'}`);
 			
 			// Update last_connection timestamp
 			await supabase

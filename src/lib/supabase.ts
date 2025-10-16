@@ -32,11 +32,19 @@ export type LeadMemoryRecord = {
 
 export type ClientRecord = {
   id: string;
-  company_name: string;
-  contact_email: string;
+  client_id: string;
+  business_name: string;
+  contact_name: string;
+  email: string;
+  password_hash: string;
+  language: string;
   api_key: string;
+  lead_source_description?: string;
+  estimated_leads_per_week?: number;
   created_at: string;
-  last_rotated: string;
+  last_login?: string;
+  last_connection?: string;
+  is_active: boolean;
 };
 
 export type ApiKeyLog = {

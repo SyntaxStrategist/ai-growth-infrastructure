@@ -28,8 +28,8 @@ export async function POST(req: NextRequest) {
       success: true,
       data: {
         client_id: client.id,
-        company_name: client.company_name,
-        contact_email: client.contact_email,
+        company_name: client.business_name,
+        contact_email: client.email,
       },
     });
   } catch (error) {

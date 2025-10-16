@@ -380,11 +380,11 @@ export default function ClientsPage() {
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 items-start">
                   <div>
                     <span className="text-white/50 text-xs block mb-1">{t.companyName}</span>
-                    <p className="font-semibold">{client.company_name}</p>
+                    <p className="font-semibold">{client.business_name}</p>
                   </div>
                   <div>
                     <span className="text-white/50 text-xs block mb-1">{t.contactEmail}</span>
-                    <p className="text-blue-400 text-sm">{client.contact_email}</p>
+                    <p className="text-blue-400 text-sm">{client.email}</p>
                   </div>
                   <div>
                     <span className="text-white/50 text-xs block mb-1">{t.apiKey}</span>
@@ -410,10 +410,10 @@ export default function ClientsPage() {
                   <div>
                     <span className="text-white/50 text-xs block mb-1">{t.lastRotated}</span>
                     <p className="text-xs">
-                      {new Date(client.last_rotated).toLocaleDateString(locale === 'fr' ? 'fr-CA' : 'en-US')}
+                      {client.last_connection ? new Date(client.last_connection).toLocaleDateString(locale === 'fr' ? 'fr-CA' : 'en-US') : 'N/A'}
                     </p>
                     <p className="text-xs text-white/40">
-                      {new Date(client.last_rotated).toLocaleTimeString(locale === 'fr' ? 'fr-CA' : 'en-US', { hour: '2-digit', minute: '2-digit' })}
+                      {client.last_connection ? new Date(client.last_connection).toLocaleTimeString(locale === 'fr' ? 'fr-CA' : 'en-US', { hour: '2-digit', minute: '2-digit' }) : ''}
                     </p>
                   </div>
                   <div className="flex items-center justify-end gap-2">
