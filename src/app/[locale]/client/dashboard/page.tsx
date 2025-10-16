@@ -139,6 +139,18 @@ export default function ClientDashboard() {
   // Fetch client leads when authenticated or tab changes
   useEffect(() => {
     if (authenticated && client) {
+      console.log('[DashboardSync] ============================================');
+      console.log('[DashboardSync] Dashboard Type: CLIENT');
+      console.log('[DashboardSync] Client ID:', client.clientId);
+      console.log('[DashboardSync] Business:', client.businessName);
+      console.log('[DashboardSync] Data Source: client_id filtered');
+      console.log('[DashboardSync] Components Loading:');
+      console.log('[DashboardSync]   ✅ PredictiveGrowthEngine (with clientId)');
+      console.log('[DashboardSync]   ✅ RelationshipInsights (with clientId)');
+      console.log('[DashboardSync]   ✅ GrowthCopilot (with clientId)');
+      console.log('[DashboardSync]   ✅ ActivityLog (with clientId)');
+      console.log('[DashboardSync] ============================================');
+      
       fetchLeads();
       fetchRecentActions();
     }
@@ -674,12 +686,20 @@ export default function ClientDashboard() {
           transition={{ duration: 0.6, delay: 0.5 }}
           className="mb-8"
           onAnimationComplete={() => {
-            console.log('[ClientDashboard] ============================================');
-            console.log('[ClientDashboard] Rendering Predictive Growth Engine');
-            console.log('[ClientDashboard] Client ID for analytics:', client?.clientId || 'null');
-            console.log('[ClientDashboard] Locale:', locale);
-            console.log('[ClientDashboard] Component will fetch from: /api/growth-insights?client_id=' + (client?.clientId || 'none'));
-            console.log('[ClientDashboard] ============================================');
+            console.log('[DashboardSync] ============================================');
+            console.log('[DashboardSync] ✅ Predictive Growth Engine Rendered');
+            console.log('[DashboardSync] Component: PredictiveGrowthEngine');
+            console.log('[DashboardSync] Props: {locale: "' + locale + '", clientId: "' + (client?.clientId || 'null') + '"}');
+            console.log('[DashboardSync] Expected sections:');
+            console.log('[DashboardSync]   1. Title: "Predictive Growth Engine" / "Moteur de Croissance Prédictif"');
+            console.log('[DashboardSync]   2. Subtitle: "AI-powered trends and predictions"');
+            console.log('[DashboardSync]   3. Engagement Score card (0-100 with gradient bar)');
+            console.log('[DashboardSync]   4. Urgency Trend card (with percentage)');
+            console.log('[DashboardSync]   5. Confidence Insight card (with percentage)');
+            console.log('[DashboardSync]   6. Tone Insight card (sentiment score)');
+            console.log('[DashboardSync]   7. Language Ratio card (EN/FR bars)');
+            console.log('[DashboardSync] Data endpoint: /api/growth-insights?client_id=' + (client?.clientId || '(none)'));
+            console.log('[DashboardSync] ============================================');
           }}
         >
           <PredictiveGrowthEngine locale={locale} clientId={client?.clientId || null} />

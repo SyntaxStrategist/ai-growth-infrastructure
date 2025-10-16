@@ -52,6 +52,17 @@ export default function Dashboard() {
   useEffect(() => {
     if (!authorized) return;
     
+    console.log('[DashboardSync] ============================================');
+    console.log('[DashboardSync] Dashboard Type: ADMIN');
+    console.log('[DashboardSync] Client ID: null (global aggregation)');
+    console.log('[DashboardSync] Data Source: all leads (admin mode)');
+    console.log('[DashboardSync] Components Loading:');
+    console.log('[DashboardSync]   ✅ PredictiveGrowthEngine (global)');
+    console.log('[DashboardSync]   ✅ RelationshipInsights (global)');
+    console.log('[DashboardSync]   ✅ GrowthCopilot (global)');
+    console.log('[DashboardSync]   ✅ ActivityLog (global)');
+    console.log('[DashboardSync] ============================================');
+    
     fetchLeads();
     fetchRecentActions();
     
