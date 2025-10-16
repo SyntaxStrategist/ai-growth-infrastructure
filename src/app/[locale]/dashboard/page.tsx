@@ -38,8 +38,12 @@ export default function Dashboard() {
   const [confirmPermanentDelete, setConfirmPermanentDelete] = useState<string | null>(null);
   const [tagLead, setTagLead] = useState<string | null>(null);
   const [selectedTag, setSelectedTag] = useState<string>('');
-  const [activeTab, setActiveTab] = useState<'active' | 'archived' | 'deleted'>('active');
+  const [isTagging, setIsTagging] = useState(false);
+  const [activeTab, setActiveTab] = useState<'active' | 'archived' | 'deleted' | 'converted'>('active');
   const [tagFilter, setTagFilter] = useState<string>('all');
+  const [revertLead, setRevertLead] = useState<string | null>(null);
+  const [reversionReason, setReversionReason] = useState<'accident' | 'other'>('accident');
+  const [customReversionReason, setCustomReversionReason] = useState<string>('');
 
   // Check localStorage for existing auth
   useEffect(() => {
@@ -116,6 +120,9 @@ export default function Dashboard() {
         case 'deleted':
           endpoint = `/api/leads/deleted?limit=100&locale=${locale}`;
           break;
+        case 'converted':
+          endpoint = `/api/leads?limit=100&locale=${locale}&converted=true`;
+          break;
       }
       
       console.log(`[Dashboard] Fetching ${activeTab} leads...`);
@@ -123,7 +130,15 @@ export default function Dashboard() {
       const json = await res.json();
       
       if (json.success) {
-        const leadsData = json.data || [];
+        let leadsData = json.data || [];
+        
+        // For converted tab, filter only converted leads
+        if (activeTab === 'converted') {
+          leadsData = leadsData.filter((lead: TranslatedLead) => 
+            lead.current_tag === 'Converted' || lead.current_tag === 'Converti'
+          );
+        }
+        
         setLeads(leadsData);
         calculateStats(leadsData);
         console.log(`[Dashboard] Loaded ${leadsData.length} ${activeTab} leads`);
@@ -227,6 +242,14 @@ export default function Dashboard() {
   }
 
   const filteredLeads = leads.filter(lead => {
+    // For converted tab, only show converted leads
+    const isConverted = lead.current_tag === 'Converted' || lead.current_tag === 'Converti';
+    if (activeTab === 'converted' && !isConverted) return false;
+    
+    // Exclude converted leads from Active and Archived tabs
+    if (activeTab === 'active' && isConverted) return false;
+    if (activeTab === 'archived' && isConverted) return false;
+    
     const urgency = lead.translated_ai?.urgency || lead.urgency;
     if (filter.urgency !== 'all' && urgency !== filter.urgency) return false;
     if (filter.language !== 'all' && lead.language !== filter.language) return false;
@@ -236,8 +259,8 @@ export default function Dashboard() {
   });
 
   const tagOptions = locale === 'fr' 
-    ? ['Contacté', 'Haute Valeur', 'Non Qualifié', 'Suivi']
-    : ['Contacted', 'High Value', 'Not Qualified', 'Follow-Up'];
+    ? ['Contacté', 'Haute Valeur', 'Non Qualifié', 'Suivi', 'Converti']
+    : ['Contacted', 'High Value', 'Not Qualified', 'Follow-Up', 'Converted'];
 
   async function fetchRecentActions() {
     try {
@@ -327,6 +350,7 @@ export default function Dashboard() {
     if (!tagLead || !selectedTag) return;
 
     try {
+      setIsTagging(true);
       console.log(`[LeadAction] Tagging lead ${tagLead} as ${selectedTag}...`);
 
       const res = await fetch('/api/lead-actions', {
@@ -340,18 +364,78 @@ export default function Dashboard() {
 
       if (json.success) {
         console.log(`[LeadAction] Tagged lead ${tagLead} as ${selectedTag}`);
+        
+        // Small delay for visual feedback
+        await new Promise(resolve => setTimeout(resolve, 800));
+        
         setTagLead(null);
         setSelectedTag('');
+        setIsTagging(false);
         showToast(locale === 'fr' ? `Lead étiqueté comme "${selectedTag}" avec succès.` : `Lead tagged as "${selectedTag}" successfully.`);
         fetchLeads(); // Refresh to show tag badge
         fetchRecentActions();
       } else {
+        setIsTagging(false);
         console.error(`[LeadAction] Failed to tag lead ${tagLead}:`, json.message || json.error);
         showToast(locale === 'fr' ? `Erreur: ${json.message || 'Étiquetage échoué'}` : `Error: ${json.message || 'Tag failed'}`);
       }
     } catch (err) {
+      setIsTagging(false);
       console.error(`[LeadAction] Error tagging lead ${tagLead}:`, err);
       showToast(locale === 'fr' ? 'Erreur lors de l\'étiquetage.' : 'Tag failed.');
+    }
+  }
+
+  async function handleRevertToActive() {
+    if (!revertLead) return;
+
+    try {
+      const reasonText = reversionReason === 'accident' 
+        ? (locale === 'fr' ? 'Placé dans convertis par erreur' : 'Placed in converted by accident')
+        : `${locale === 'fr' ? 'Autre' : 'Other'}: ${customReversionReason}`;
+
+      console.log(`[LeadAction] 🔄 Reverting converted lead ${revertLead} to active...`);
+      console.log(`[LeadAction] Reversion reason: ${reasonText}`);
+
+      // First, update the tag back to active
+      const tagRes = await fetch('/api/lead-actions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          lead_id: revertLead, 
+          action: 'tag', 
+          tag: locale === 'fr' ? 'Actif' : 'Active',
+          reversion_reason: reasonText,
+          is_reversion: true
+        }),
+      });
+
+      const tagJson = await tagRes.json();
+      console.log(`[LeadAction] Reversion tag response:`, tagJson);
+
+      if (tagJson.success) {
+        console.log(`[LeadAction] ✅ Lead reverted to active successfully`);
+        setRevertLead(null);
+        setReversionReason('accident');
+        setCustomReversionReason('');
+        showToast(
+          locale === 'fr' 
+            ? 'Lead remis en actif avec succès.' 
+            : 'Lead returned to active successfully.'
+        );
+        fetchLeads();
+        fetchRecentActions();
+      } else {
+        console.error(`[LeadAction] Failed to revert lead:`, tagJson.message || tagJson.error);
+        showToast(
+          locale === 'fr' 
+            ? `Erreur: ${tagJson.message || 'Échec du retour'}` 
+            : `Error: ${tagJson.message || 'Reversion failed'}`
+        );
+      }
+    } catch (err) {
+      console.error(`[LeadAction] Error reverting lead:`, err);
+      showToast(locale === 'fr' ? 'Erreur lors du retour.' : 'Reversion failed.');
     }
   }
 
@@ -573,6 +657,7 @@ export default function Dashboard() {
     active: locale === 'fr' ? 'Leads Actifs' : 'Active Leads',
     archived: locale === 'fr' ? 'Leads Archivés' : 'Archived Leads',
     deleted: locale === 'fr' ? 'Leads Supprimés' : 'Deleted Leads',
+    converted: locale === 'fr' ? 'Leads Convertis' : 'Converted Leads',
   };
 
   if (loading) {
@@ -666,13 +751,15 @@ export default function Dashboard() {
           transition={{ duration: 0.6, delay: 0.25 }}
           className="mb-6 flex gap-2 border-b border-white/10"
         >
-          {(['active', 'archived', 'deleted'] as const).map(tab => (
+          {(['active', 'archived', 'deleted', 'converted'] as const).map(tab => (
             <button
               key={tab}
               onClick={() => setActiveTab(tab)}
               className={`px-4 py-2 font-medium transition-all duration-200 border-b-2 ${
                 activeTab === tab
-                  ? 'border-blue-500 text-blue-400 shadow-[0_0_10px_rgba(59,130,246,0.5)]'
+                  ? tab === 'converted'
+                    ? 'border-green-500 text-green-400 shadow-[0_0_10px_rgba(34,197,94,0.5)]'
+                    : 'border-blue-500 text-blue-400 shadow-[0_0_10px_rgba(59,130,246,0.5)]'
                   : 'border-transparent text-white/60 hover:text-white/80'
               }`}
             >
@@ -882,6 +969,16 @@ export default function Dashboard() {
                       </span>
                     </div>
                   </>
+                ) : activeTab === 'converted' ? (
+                  <>
+                    {/* Return to Active Button */}
+                    <button
+                      onClick={() => setRevertLead(lead.id)}
+                      className="px-4 py-2 rounded-lg bg-gradient-to-r from-green-500/20 to-blue-500/20 border border-green-500/40 text-green-300 hover:from-green-500/30 hover:to-blue-500/30 hover:shadow-[0_0_20px_rgba(34,197,94,0.5)] transition-all duration-200 text-sm font-medium"
+                    >
+                      ↩️ {locale === 'fr' ? 'Revenir à Actif' : 'Return to Active'}
+                    </button>
+                  </>
                 ) : (
                   <>
                     {/* Reactivate Button */}
@@ -1033,15 +1130,116 @@ export default function Dashboard() {
             <div className="flex gap-3">
               <button
                 onClick={handleTagLead}
-                disabled={!selectedTag}
-                className="flex-1 py-2 px-4 rounded-lg bg-blue-600 hover:bg-blue-700 transition-all font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                disabled={!selectedTag || isTagging}
+                className="flex-1 py-2 px-4 rounded-lg bg-blue-600 hover:bg-blue-700 transition-all font-medium disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
               >
-                {locale === 'fr' ? 'Étiqueter' : 'Tag'}
+                {isTagging ? (
+                  <>
+                    <span className="inline-block w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
+                    <span>{locale === 'fr' ? 'Étiquetage…' : 'Tagging…'}</span>
+                  </>
+                ) : (
+                  <span>{locale === 'fr' ? 'Étiqueter' : 'Tag'}</span>
+                )}
               </button>
               <button
                 onClick={() => {
                   setTagLead(null);
                   setSelectedTag('');
+                  setIsTagging(false);
+                }}
+                disabled={isTagging}
+                className="flex-1 py-2 px-4 rounded-lg bg-white/5 border border-white/10 hover:bg-white/10 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {locale === 'fr' ? 'Annuler' : 'Cancel'}
+              </button>
+            </div>
+          </motion.div>
+        </div>
+      )}
+
+      {/* Revert to Active Modal */}
+      {revertLead && (
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <motion.div
+            initial={{ scale: 0.9, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            className="bg-gradient-to-br from-black via-green-900/10 to-black border border-green-500/30 rounded-lg p-6 max-w-md w-full shadow-[0_0_40px_rgba(34,197,94,0.4)]"
+          >
+            <div className="flex items-center gap-3 mb-4">
+              <div className="h-10 w-10 rounded-full bg-green-500/20 border border-green-500/40 flex items-center justify-center">
+                <span className="text-xl">↩️</span>
+              </div>
+              <h3 className="text-lg font-bold text-white">
+                {locale === 'fr' ? 'Revenir à Actif' : 'Return to Active'}
+              </h3>
+            </div>
+            
+            <p className="text-white/70 mb-6 text-sm">
+              {locale === 'fr' 
+                ? 'Veuillez confirmer pourquoi ce lead doit être remis en actif.' 
+                : 'Please confirm why this lead should be moved back to active.'}
+            </p>
+
+            <div className="space-y-3 mb-6">
+              <label className="flex items-center gap-3 p-3 rounded-lg bg-white/5 border border-white/10 hover:border-green-500/40 cursor-pointer transition-all">
+                <input
+                  type="radio"
+                  name="reversionReason"
+                  value="accident"
+                  checked={reversionReason === 'accident'}
+                  onChange={() => setReversionReason('accident')}
+                  className="w-4 h-4"
+                />
+                <span className="text-white/90">
+                  {locale === 'fr' ? 'Placé dans convertis par erreur ?' : 'Placed in converted by accident?'}
+                </span>
+              </label>
+
+              <label className="flex items-center gap-3 p-3 rounded-lg bg-white/5 border border-white/10 hover:border-green-500/40 cursor-pointer transition-all">
+                <input
+                  type="radio"
+                  name="reversionReason"
+                  value="other"
+                  checked={reversionReason === 'other'}
+                  onChange={() => setReversionReason('other')}
+                  className="w-4 h-4"
+                />
+                <span className="text-white/90">
+                  {locale === 'fr' ? 'Autre' : 'Other'}
+                </span>
+              </label>
+
+              {reversionReason === 'other' && (
+                <motion.div
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: 'auto' }}
+                  exit={{ opacity: 0, height: 0 }}
+                >
+                  <textarea
+                    value={customReversionReason}
+                    onChange={(e) => setCustomReversionReason(e.target.value)}
+                    placeholder={locale === 'fr' ? 'Veuillez préciser la raison...' : 'Please specify the reason...'}
+                    className="w-full px-4 py-3 rounded-lg bg-white/5 border border-white/10 focus:border-green-400/50 focus:outline-none text-white placeholder:text-white/40 resize-none"
+                    rows={3}
+                  />
+                </motion.div>
+              )}
+            </div>
+
+            <div className="flex gap-3">
+              <button
+                onClick={handleRevertToActive}
+                disabled={reversionReason === 'other' && !customReversionReason.trim()}
+                className="flex-1 py-2 px-4 rounded-lg bg-gradient-to-r from-green-600 to-blue-600 hover:from-green-700 hover:to-blue-700 transition-all font-medium shadow-[0_0_15px_rgba(34,197,94,0.3)] disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {locale === 'fr' ? 'Confirmer le retour' : 'Confirm Return'}
+              </button>
+              <button
+                onClick={() => {
+                  setRevertLead(null);
+                  setReversionReason('accident');
+                  setCustomReversionReason('');
                 }}
                 className="flex-1 py-2 px-4 rounded-lg bg-white/5 border border-white/10 hover:bg-white/10 transition-all"
               >

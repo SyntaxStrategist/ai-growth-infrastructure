@@ -32,6 +32,7 @@ type Lead = {
   urgency: string;
   confidence_score: number;
   timestamp: string;
+  last_updated: string | null;
   relationship_insight?: string;
   current_tag?: string | null;
   language?: string;
@@ -54,12 +55,16 @@ export default function ClientDashboard() {
   const [recentActions, setRecentActions] = useState<LeadAction[]>([]);
   const [filter, setFilter] = useState({ urgency: 'all', language: 'all', minConfidence: 0 });
   const [tagFilter, setTagFilter] = useState<string>('all');
-  const [activeTab, setActiveTab] = useState<'active' | 'archived' | 'deleted'>('active');
+  const [activeTab, setActiveTab] = useState<'active' | 'archived' | 'deleted' | 'converted'>('active');
   const [toast, setToast] = useState<{ message: string; show: boolean }>({ message: '', show: false });
   const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
   const [confirmPermanentDelete, setConfirmPermanentDelete] = useState<string | null>(null);
   const [tagLead, setTagLead] = useState<string | null>(null);
   const [selectedTag, setSelectedTag] = useState<string>('');
+  const [isTagging, setIsTagging] = useState(false);
+  const [revertLead, setRevertLead] = useState<string | null>(null);
+  const [reversionReason, setReversionReason] = useState<'accident' | 'other'>('accident');
+  const [customReversionReason, setCustomReversionReason] = useState<string>('');
   const [stats, setStats] = useState({
     total: 0,
     avgConfidence: 0,
@@ -109,6 +114,7 @@ export default function ClientDashboard() {
       active: isFrench ? 'Leads Actifs' : 'Active Leads',
       archived: isFrench ? 'Leads Archivés' : 'Archived Leads',
       deleted: isFrench ? 'Leads Supprimés' : 'Deleted Leads',
+      converted: isFrench ? 'Leads Convertis' : 'Converted Leads',
     },
     actions: {
       tag: isFrench ? 'Étiqueter le lead' : 'Tag Lead',
@@ -213,7 +219,16 @@ export default function ClientDashboard() {
       });
 
       if (data.success) {
-        const leadsData = data.data || [];
+        let leadsData = data.data || [];
+        
+        // For converted tab, filter only converted leads
+        if (activeTab === 'converted') {
+          leadsData = leadsData.filter((lead: Lead) => 
+            lead.current_tag === 'Converted' || lead.current_tag === 'Converti'
+          );
+          console.log('[ClientDashboard] Filtered to', leadsData.length, 'converted leads');
+        }
+        
         setLeads(leadsData);
         calculateStats(leadsData);
         console.log('[ClientDashboard] ✅ Loaded', leadsData.length, activeTab, 'leads');
@@ -295,6 +310,7 @@ export default function ClientDashboard() {
     if (!tagLead || !selectedTag) return;
 
     try {
+      setIsTagging(true);
       console.log(`[ClientDashboard] Tagging lead ${tagLead} as ${selectedTag}...`);
 
       const res = await fetch('/api/lead-actions', {
@@ -306,17 +322,65 @@ export default function ClientDashboard() {
       const json = await res.json();
 
       if (json.success) {
+        // Small delay for visual feedback
+        await new Promise(resolve => setTimeout(resolve, 800));
+        
         setTagLead(null);
         setSelectedTag('');
+        setIsTagging(false);
         showToast(isFrench ? `Lead étiqueté comme "${selectedTag}"` : `Lead tagged as "${selectedTag}"`);
         fetchLeads();
         fetchRecentActions();
       } else {
+        setIsTagging(false);
         showToast(isFrench ? 'Erreur lors de l\'étiquetage' : 'Tag failed');
       }
     } catch (err) {
+      setIsTagging(false);
       console.error('[ClientDashboard] Tag error:', err);
       showToast(isFrench ? 'Erreur lors de l\'étiquetage' : 'Tag failed');
+    }
+  }
+
+  async function handleRevertToActive() {
+    if (!revertLead) return;
+
+    try {
+      const reasonText = reversionReason === 'accident' 
+        ? (isFrench ? 'Placé dans convertis par erreur' : 'Placed in converted by accident')
+        : `${isFrench ? 'Autre' : 'Other'}: ${customReversionReason}`;
+
+      console.log(`[ClientDashboard] 🔄 Reverting converted lead ${revertLead} to active...`);
+      console.log(`[ClientDashboard] Reversion reason: ${reasonText}`);
+
+      const tagRes = await fetch('/api/lead-actions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          lead_id: revertLead, 
+          action: 'tag', 
+          tag: isFrench ? 'Actif' : 'Active',
+          reversion_reason: reasonText,
+          is_reversion: true
+        }),
+      });
+
+      const tagJson = await tagRes.json();
+
+      if (tagJson.success) {
+        console.log(`[ClientDashboard] ✅ Lead reverted to active successfully`);
+        setRevertLead(null);
+        setReversionReason('accident');
+        setCustomReversionReason('');
+        showToast(isFrench ? 'Lead remis en actif avec succès.' : 'Lead returned to active successfully.');
+        fetchLeads();
+        fetchRecentActions();
+      } else {
+        showToast(isFrench ? 'Erreur lors du retour' : 'Reversion failed');
+      }
+    } catch (err) {
+      console.error(`[ClientDashboard] Error reverting lead:`, err);
+      showToast(isFrench ? 'Erreur lors du retour.' : 'Reversion failed.');
     }
   }
 
@@ -430,6 +494,14 @@ export default function ClientDashboard() {
   }
 
   const filteredLeads = leads.filter(lead => {
+    // For converted tab, only show converted leads
+    const isConverted = lead.current_tag === 'Converted' || lead.current_tag === 'Converti';
+    if (activeTab === 'converted' && !isConverted) return false;
+    
+    // Exclude converted leads from Active and Archived tabs
+    if (activeTab === 'active' && isConverted) return false;
+    if (activeTab === 'archived' && isConverted) return false;
+    
     if (filter.urgency !== 'all' && lead.urgency !== filter.urgency) return false;
     if (filter.language !== 'all' && lead.language !== filter.language) return false;
     if ((lead.confidence_score || 0) < filter.minConfidence) return false;
@@ -438,8 +510,8 @@ export default function ClientDashboard() {
   });
 
   const tagOptions = isFrench 
-    ? ['Contacté', 'Haute Valeur', 'Non Qualifié', 'Suivi']
-    : ['Contacted', 'High Value', 'Not Qualified', 'Follow-Up'];
+    ? ['Contacté', 'Haute Valeur', 'Non Qualifié', 'Suivi', 'Converti']
+    : ['Contacted', 'High Value', 'Not Qualified', 'Follow-Up', 'Converted'];
 
   const getTagBadgeColor = (tag: string | null | undefined) => {
     if (!tag) return '';
@@ -448,6 +520,7 @@ export default function ClientDashboard() {
     if (tagLower.includes('high') || tagLower.includes('haute')) return 'bg-yellow-500/20 border-yellow-500/40 text-yellow-300';
     if (tagLower.includes('not') || tagLower.includes('non')) return 'bg-gray-500/20 border-gray-500/40 text-gray-300';
     if (tagLower.includes('follow') || tagLower.includes('suivi')) return 'bg-purple-500/20 border-purple-500/40 text-purple-300';
+    if (tagLower.includes('convert') || tagLower.includes('converti')) return 'bg-green-500/20 border-green-500/40 text-green-300 shadow-[0_0_10px_rgba(34,197,94,0.3)]';
     return 'bg-white/10 border-white/20 text-white/60';
   };
 
@@ -609,13 +682,15 @@ export default function ClientDashboard() {
           transition={{ duration: 0.6, delay: 0.25 }}
           className="mb-6 flex gap-2 border-b border-white/10"
         >
-          {(['active', 'archived', 'deleted'] as const).map(tab => (
+          {(['active', 'archived', 'deleted', 'converted'] as const).map(tab => (
             <button
               key={tab}
               onClick={() => setActiveTab(tab)}
               className={`px-4 py-2 font-medium transition-all duration-200 border-b-2 ${
                 activeTab === tab
-                  ? 'border-blue-500 text-blue-400 shadow-[0_0_10px_rgba(59,130,246,0.5)]'
+                  ? tab === 'converted'
+                    ? 'border-green-500 text-green-400 shadow-[0_0_10px_rgba(34,197,94,0.5)]'
+                    : 'border-blue-500 text-blue-400 shadow-[0_0_10px_rgba(59,130,246,0.5)]'
                   : 'border-transparent text-white/60 hover:text-white/80'
               }`}
             >
@@ -845,6 +920,16 @@ export default function ClientDashboard() {
                       </span>
                     </div>
                   </>
+                ) : activeTab === 'converted' ? (
+                  <>
+                    {/* Return to Active Button */}
+                    <button
+                      onClick={() => setRevertLead(lead.id)}
+                      className="px-4 py-2 rounded-lg bg-gradient-to-r from-green-500/20 to-blue-500/20 border border-green-500/40 text-green-300 hover:from-green-500/30 hover:to-blue-500/30 hover:shadow-[0_0_20px_rgba(34,197,94,0.5)] transition-all duration-200 text-sm font-medium"
+                    >
+                      ↩️ {isFrench ? 'Revenir à Actif' : 'Return to Active'}
+                    </button>
+                  </>
                 ) : activeTab === 'archived' || activeTab === 'deleted' ? (
                   <>
                     {/* Reactivate Button */}
@@ -935,17 +1020,118 @@ export default function ClientDashboard() {
                 onClick={() => {
                   setTagLead(null);
                   setSelectedTag('');
+                  setIsTagging(false);
                 }}
-                className="flex-1 px-4 py-2 rounded-lg bg-gray-500/20 border border-gray-500/40 text-gray-400 hover:bg-gray-500/30 transition-all"
+                disabled={isTagging}
+                className="flex-1 px-4 py-2 rounded-lg bg-gray-500/20 border border-gray-500/40 text-gray-400 hover:bg-gray-500/30 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {t.actions.cancel}
               </button>
               <button
                 onClick={handleTagLead}
-                disabled={!selectedTag}
-                className="flex-1 px-4 py-2 rounded-lg bg-blue-500/20 border border-blue-500/40 text-blue-400 hover:bg-blue-500/30 transition-all disabled:opacity-50"
+                disabled={!selectedTag || isTagging}
+                className="flex-1 px-4 py-2 rounded-lg bg-blue-500/20 border border-blue-500/40 text-blue-400 hover:bg-blue-500/30 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
               >
-                {t.actions.confirm}
+                {isTagging ? (
+                  <>
+                    <span className="inline-block w-4 h-4 border-2 border-blue-400/30 border-t-blue-400 rounded-full animate-spin"></span>
+                    <span>{isFrench ? 'Étiquetage…' : 'Tagging…'}</span>
+                  </>
+                ) : (
+                  <span>{t.actions.confirm}</span>
+                )}
+              </button>
+            </div>
+          </motion.div>
+        </div>
+      )}
+
+      {/* Revert to Active Modal */}
+      {revertLead && (
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <motion.div
+            initial={{ scale: 0.9, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            className="bg-gradient-to-br from-black via-green-900/10 to-black border border-green-500/30 rounded-lg p-6 max-w-md w-full shadow-[0_0_40px_rgba(34,197,94,0.4)]"
+          >
+            <div className="flex items-center gap-3 mb-4">
+              <div className="h-10 w-10 rounded-full bg-green-500/20 border border-green-500/40 flex items-center justify-center">
+                <span className="text-xl">↩️</span>
+              </div>
+              <h3 className="text-lg font-bold text-white">
+                {isFrench ? 'Revenir à Actif' : 'Return to Active'}
+              </h3>
+            </div>
+            
+            <p className="text-white/70 mb-6 text-sm">
+              {isFrench 
+                ? 'Veuillez confirmer pourquoi ce lead doit être remis en actif.' 
+                : 'Please confirm why this lead should be moved back to active.'}
+            </p>
+
+            <div className="space-y-3 mb-6">
+              <label className="flex items-center gap-3 p-3 rounded-lg bg-white/5 border border-white/10 hover:border-green-500/40 cursor-pointer transition-all">
+                <input
+                  type="radio"
+                  name="reversionReason"
+                  value="accident"
+                  checked={reversionReason === 'accident'}
+                  onChange={() => setReversionReason('accident')}
+                  className="w-4 h-4"
+                />
+                <span className="text-white/90">
+                  {isFrench ? 'Placé dans convertis par erreur ?' : 'Placed in converted by accident?'}
+                </span>
+              </label>
+
+              <label className="flex items-center gap-3 p-3 rounded-lg bg-white/5 border border-white/10 hover:border-green-500/40 cursor-pointer transition-all">
+                <input
+                  type="radio"
+                  name="reversionReason"
+                  value="other"
+                  checked={reversionReason === 'other'}
+                  onChange={() => setReversionReason('other')}
+                  className="w-4 h-4"
+                />
+                <span className="text-white/90">
+                  {isFrench ? 'Autre' : 'Other'}
+                </span>
+              </label>
+
+              {reversionReason === 'other' && (
+                <motion.div
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: 'auto' }}
+                  exit={{ opacity: 0, height: 0 }}
+                >
+                  <textarea
+                    value={customReversionReason}
+                    onChange={(e) => setCustomReversionReason(e.target.value)}
+                    placeholder={isFrench ? 'Veuillez préciser la raison...' : 'Please specify the reason...'}
+                    className="w-full px-4 py-3 rounded-lg bg-white/5 border border-white/10 focus:border-green-400/50 focus:outline-none text-white placeholder:text-white/40 resize-none"
+                    rows={3}
+                  />
+                </motion.div>
+              )}
+            </div>
+
+            <div className="flex gap-3">
+              <button
+                onClick={handleRevertToActive}
+                disabled={reversionReason === 'other' && !customReversionReason.trim()}
+                className="flex-1 py-2 px-4 rounded-lg bg-gradient-to-r from-green-600 to-blue-600 hover:from-green-700 hover:to-blue-700 transition-all font-medium shadow-[0_0_15px_rgba(34,197,94,0.3)] disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {isFrench ? 'Confirmer le retour' : 'Confirm Return'}
+              </button>
+              <button
+                onClick={() => {
+                  setRevertLead(null);
+                  setReversionReason('accident');
+                  setCustomReversionReason('');
+                }}
+                className="flex-1 py-2 px-4 rounded-lg bg-white/5 border border-white/10 hover:bg-white/10 transition-all"
+              >
+                {isFrench ? 'Annuler' : 'Cancel'}
               </button>
             </div>
           </motion.div>

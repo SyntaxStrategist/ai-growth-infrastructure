@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 
 interface BridgeAnimationProps {
@@ -8,10 +9,39 @@ interface BridgeAnimationProps {
 
 export default function BridgeAnimation({ locale = 'en' }: BridgeAnimationProps) {
   const isFrench = locale === 'fr';
+  const [mounted, setMounted] = useState(false);
   
   const caption = isFrench 
     ? "Du chaos des données à la croissance intelligente."
     : "From data chaos to intelligent growth.";
+
+  // Prevent hydration mismatch from framer-motion animations
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  // Return static version during SSR
+  if (!mounted) {
+    return (
+      <div className="w-full max-w-6xl mx-auto py-16 px-4">
+        <div className="relative">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 items-center">
+            <div className="flex flex-col items-center justify-center space-y-6 relative opacity-0">
+              {/* Placeholder for animations */}
+            </div>
+            <div className="flex flex-col items-center justify-center relative">
+              <p className="text-center text-white/60 text-sm mb-8">
+                {caption}
+              </p>
+            </div>
+            <div className="flex flex-col items-center justify-center space-y-6 relative opacity-0">
+              {/* Placeholder for animations */}
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <motion.div

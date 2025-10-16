@@ -15,9 +15,12 @@ export interface LeadAction {
 // POST /api/lead-actions - Log a lead action (delete, archive, tag)
 export async function POST(req: NextRequest) {
   try {
-    const { lead_id, action, tag, performed_by } = await req.json();
+    const { lead_id, action, tag, performed_by, reversion_reason, is_reversion } = await req.json();
 
     console.log(`[LeadActions] POST received - type: ${action}, lead_id: ${lead_id}`);
+    if (is_reversion) {
+      console.log(`[LeadActions] 🔄 Reversion detected - reason: ${reversion_reason}`);
+    }
 
     if (!lead_id || !action) {
       console.error('[LeadActions] Missing required fields');
@@ -91,6 +94,18 @@ export async function POST(req: NextRequest) {
     } else if (action === 'tag') {
       console.log(`[LeadActions] Tagging lead ${lead_id} with ${tag}...`);
       
+      // Check if this is a conversion tag or reversion
+      const isConversion = tag === 'Converted' || tag === 'Converti';
+      
+      if (isConversion) {
+        console.log(`[LeadActions] 🎯 CONVERSION EVENT DETECTED for lead ${lead_id}`);
+      }
+      
+      if (is_reversion) {
+        console.log(`[LeadActions] 🔄 REVERSION EVENT DETECTED for lead ${lead_id}`);
+        console.log(`[LeadActions] Reversion reason: ${reversion_reason}`);
+      }
+      
       // Update current_tag in lead_memory
       const { error: tagError } = await supabase
         .from('lead_memory')
@@ -105,6 +120,84 @@ export async function POST(req: NextRequest) {
           { success: false, message: "Error tagging lead", error: tagError.message },
           { status: 500 }
         );
+      }
+      
+      // Fetch lead data for growth_brain logging (used for both conversion and reversion)
+      const { data: leadData, error: fetchError } = await supabase
+        .from('lead_memory')
+        .select('*')
+        .eq('id', lead_id)
+        .single();
+      
+      // If conversion, log to growth_brain for learning loop
+      if (isConversion && !fetchError && leadData) {
+        try {
+          console.log(`[LeadActions] Logging conversion to growth_brain...`);
+          
+          const learningSnapshot = {
+            id: randomUUID(),
+            event_type: 'conversion',
+            lead_id: lead_id,
+            intent: leadData.intent,
+            tone: leadData.tone,
+            urgency: leadData.urgency,
+            confidence_score: leadData.confidence_score,
+            conversion_tag: tag,
+            timestamp: new Date().toISOString(),
+          };
+          
+          const { error: growthError } = await supabase
+            .from('growth_brain')
+            .insert({
+              id: learningSnapshot.id,
+              learning_snapshot: learningSnapshot,
+              created_at: new Date().toISOString(),
+            });
+          
+          if (growthError) {
+            console.error('[LeadActions] ⚠️ Failed to log conversion to growth_brain:', growthError);
+          } else {
+            console.log('[LeadActions] ✅ Conversion logged to growth_brain successfully');
+          }
+        } catch (conversionErr) {
+          console.error('[LeadActions] ⚠️ Error during conversion logging:', conversionErr);
+        }
+      }
+      
+      // If reversion, log to growth_brain for learning loop
+      if (is_reversion && !fetchError && leadData) {
+        try {
+          console.log(`[LeadActions] Logging reversion to growth_brain...`);
+          
+          const learningSnapshot = {
+            id: randomUUID(),
+            event_type: 'reversion',
+            lead_id: lead_id,
+            intent: leadData.intent,
+            tone: leadData.tone,
+            urgency: leadData.urgency,
+            confidence_score: leadData.confidence_score,
+            reversion_reason: reversion_reason,
+            reverted_to_tag: tag,
+            timestamp: new Date().toISOString(),
+          };
+          
+          const { error: growthError } = await supabase
+            .from('growth_brain')
+            .insert({
+              id: learningSnapshot.id,
+              learning_snapshot: learningSnapshot,
+              created_at: new Date().toISOString(),
+            });
+          
+          if (growthError) {
+            console.error('[LeadActions] ⚠️ Failed to log reversion to growth_brain:', growthError);
+          } else {
+            console.log('[LeadActions] ✅ Reversion logged to growth_brain successfully');
+          }
+        } catch (reversionErr) {
+          console.error('[LeadActions] ⚠️ Error during reversion logging:', reversionErr);
+        }
       }
     } else if (action === 'permanent_delete') {
       console.log(`[LeadActions] PERMANENTLY deleting lead ${lead_id}...`);
@@ -150,13 +243,22 @@ export async function POST(req: NextRequest) {
     console.log('[LeadActions] ============================================');
     
     const actionId = randomUUID();
-    const logRecord = {
+    const isConversion = tag === 'Converted' || tag === 'Converti';
+    const logRecord: any = {
       id: actionId,
       lead_id,
       action,
       tag: tag || null,
       performed_by: performed_by || 'admin',
+      conversion_outcome: isConversion || null,
     };
+    
+    // Add reversion_reason if this is a reversion
+    if (is_reversion && reversion_reason) {
+      logRecord.reversion_reason = reversion_reason;
+      // Set conversion_outcome to false for reversions
+      logRecord.conversion_outcome = false;
+    }
     
     console.log('[LeadActions] Action log record to insert:', {
       id: logRecord.id,
@@ -164,6 +266,8 @@ export async function POST(req: NextRequest) {
       action: logRecord.action,
       tag: logRecord.tag || 'null',
       performed_by: logRecord.performed_by,
+      conversion_outcome: logRecord.conversion_outcome,
+      reversion_reason: logRecord.reversion_reason || 'null',
       timestamp: 'AUTO (NOW())',
     });
     
