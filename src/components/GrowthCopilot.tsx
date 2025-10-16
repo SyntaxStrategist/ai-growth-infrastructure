@@ -47,18 +47,32 @@ export default function GrowthCopilot({ locale, clientId = null }: GrowthCopilot
   async function manualRefresh() {
     setRefreshing(true);
     try {
-      console.log('[GrowthCopilot] ============================================');
-      console.log('[GrowthCopilot] Manual refresh triggered by user');
-      console.log('[GrowthCopilot] ============================================');
+      console.log('[Copilot] ============================================');
+      console.log('[Copilot] Generate Fresh Summary triggered — client_id:', clientId || 'admin (global)');
+      console.log('[Copilot] User clicked refresh button');
+      console.log('[Copilot] ============================================');
       
       // Call Intelligence Engine to regenerate insights
-      console.log('[GrowthCopilot] Calling /api/intelligence-engine...');
+      console.log('[Copilot] Calling intelligence engine endpoint...');
+      console.log('[Copilot] Endpoint: POST /api/intelligence-engine');
+      console.log('[Copilot] This will refresh:');
+      if (clientId) {
+        console.log('[Copilot]   - Analytics for client_id:', clientId);
+      } else {
+        console.log('[Copilot]   - Global analytics (all clients)');
+        console.log('[Copilot]   - Per-client analytics (all clients in database)');
+      }
+      
       const engineRes = await fetch('/api/intelligence-engine', {
         method: 'POST',
       });
       
       const engineJson = await engineRes.json();
-      console.log('[GrowthCopilot] Intelligence Engine response:', engineJson);
+      console.log('[Copilot] Intelligence Engine response:', {
+        success: engineJson.success,
+        processed: engineJson.data?.processed,
+        errors: engineJson.data?.errors,
+      });
       
       if (!engineJson.success) {
         console.error('[GrowthCopilot] ❌ Intelligence Engine failed:', engineJson.error);
@@ -81,8 +95,12 @@ export default function GrowthCopilot({ locale, clientId = null }: GrowthCopilot
       await new Promise(resolve => setTimeout(resolve, 500));
       
       // Now fetch the fresh insights
-      console.log('[GrowthCopilot] Fetching fresh growth insights...');
+      console.log('[Copilot] Fetching refreshed analytics...');
+      console.log('[Copilot] For client_id:', clientId || 'global (admin)');
       await generateSummary();
+      
+      console.log('[Copilot] ✅ Summary refreshed via intelligence engine');
+      console.log('[Copilot] ============================================');
       
     } catch (err) {
       console.error('[GrowthCopilot] ❌ Manual refresh failed:', err);
