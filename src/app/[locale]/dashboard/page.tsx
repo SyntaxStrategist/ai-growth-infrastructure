@@ -129,6 +129,7 @@ export default function Dashboard() {
     'annulation d\'intérêt': 'interest withdrawn',
     'retrait d\'intérêt': 'interest withdrawn',
     'intérêt retiré': 'interest withdrawn',
+    'abandon de la relation commerciale': 'business relationship withdrawal',
     'annulation': 'cancellation',
     'consultation': 'consultation',
     'partenariat': 'partnership',
@@ -149,13 +150,13 @@ export default function Dashboard() {
   function translateIntent(intent: string): string {
     // If English dashboard and intent looks French, translate it
     if (locale === 'en') {
-      const intentLower = intent.toLowerCase();
+      const intentLower = intent.toLowerCase().trim();
       
       // Check for exact matches first
       if (intentTranslations[intentLower]) {
         const translated = intentTranslations[intentLower];
         const capitalized = translated.charAt(0).toUpperCase() + translated.slice(1);
-        console.log(`[Dashboard] Intent translation: "${intent}" → "${capitalized}"`);
+        console.log(`[DashboardTranslation] locale: en | intent: "${intent}" → "${capitalized}"`);
         return capitalized;
       }
       
@@ -163,13 +164,25 @@ export default function Dashboard() {
       for (const [fr, en] of Object.entries(intentTranslations)) {
         if (intentLower.includes(fr)) {
           const capitalized = en.charAt(0).toUpperCase() + en.slice(1);
-          console.log(`[Dashboard] Intent translation (partial): "${intent}" → "${capitalized}"`);
+          console.log(`[DashboardTranslation] locale: en | intent (partial match): "${intent}" → "${capitalized}"`);
           return capitalized;
         }
       }
+      
+      // No translation found - log and return as-is
+      console.log(`[DashboardTranslation] locale: en | intent (no translation): "${intent}"`);
+      return intent;
     }
     
-    // Return as-is if French dashboard or no translation found
+    // French dashboard - capitalize first letter
+    if (locale === 'fr' && intent) {
+      const capitalized = intent.charAt(0).toUpperCase() + intent.slice(1);
+      console.log(`[DashboardTranslation] locale: fr | intent: "${capitalized}"`);
+      return capitalized;
+    }
+    
+    // Return as-is
+    console.log(`[DashboardTranslation] locale: ${locale} | intent: "${intent}"`);
     return intent;
   }
 
@@ -197,6 +210,7 @@ export default function Dashboard() {
       highUrgency,
       locale,
     });
+    console.log(`[DashboardTranslation] Top Intent - locale: ${locale} | raw: "${rawTopIntent}" | translated: "${topIntent}"`);
     
     setStats({ total, avgConfidence, topIntent, highUrgency });
   }
@@ -574,8 +588,8 @@ export default function Dashboard() {
             <h1 className="text-3xl font-bold mb-2">{t('dashboard.title')}</h1>
             <p className="text-white/60">
               {locale === 'fr' 
-                ? 'Intelligence de leads en temps réel depuis Supabase'
-                : 'Real-time lead intelligence from Supabase'}
+                ? 'Tableau d\'intelligence en temps réel'
+                : 'Real-time lead intelligence dashboard'}
             </p>
           </div>
           <div className="flex items-center gap-3">

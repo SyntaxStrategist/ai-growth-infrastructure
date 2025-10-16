@@ -37,10 +37,11 @@ export default function GrowthCopilot({ locale }: GrowthCopilotProps) {
     generateSummary: isFrench ? 'Générer un nouveau résumé' : 'Generate Fresh Summary',
     loading: isFrench ? 'Analyse en cours...' : 'Analyzing...',
     refreshing: isFrench ? 'Actualisation des données...' : 'Refreshing data...',
-    poweredBy: isFrench ? 'Propulsé par GPT-4o-mini' : 'Powered by GPT-4o-mini',
     refreshError: isFrench ? 'Impossible d\'actualiser le résumé. Réessayez plus tard.' : 'Unable to refresh summary. Try again later.',
     noInsights: isFrench ? 'Aucun aperçu disponible' : 'No insights available',
   };
+  
+  console.log(`[DashboardTranslation] GrowthCopilot - locale: ${locale} | title: "${t.title}"`);
 
   async function manualRefresh() {
     setRefreshing(true);
@@ -320,8 +321,6 @@ export default function GrowthCopilot({ locale }: GrowthCopilotProps) {
                   ✕
                 </button>
               </div>
-
-              <p className="text-xs text-white/40">{t.poweredBy}</p>
 
               {/* Generate Button */}
               <button
