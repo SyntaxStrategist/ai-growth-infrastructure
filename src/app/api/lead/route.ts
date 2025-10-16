@@ -340,39 +340,49 @@ export async function POST(req: NextRequest) {
 				
 				// If this lead is from a client (has client_id), create a record in lead_actions
 				if (clientId && result.leadId) {
-					console.log('[E2E-Test] [LeadAPI] ============================================');
-					console.log('[E2E-Test] [LeadAPI] Creating lead_actions record for client ownership');
-					console.log('[E2E-Test] [LeadAPI] lead_id:', result.leadId);
-					console.log('[E2E-Test] [LeadAPI] client_id:', clientId);
+					console.log('[E2E-Test] [LeadLink] ============================================');
+					console.log('[E2E-Test] [LeadLink] Creating lead_actions record for client ownership');
+					console.log('[E2E-Test] [LeadLink] lead_id:', result.leadId);
+					console.log('[E2E-Test] [LeadLink] client_id:', clientId);
+					
+					const now = new Date().toISOString();
+					const actionInsertData = {
+						lead_id: result.leadId,
+						client_id: clientId,
+						action_type: 'insert',
+						tag: 'New Lead',
+						created_at: now,
+						timestamp: now,
+					};
+					
+					console.log('[E2E-Test] [LeadLink] Insert data:', actionInsertData);
 					
 					const { data: actionRecord, error: actionError } = await supabase
 						.from('lead_actions')
-						.insert({
-							lead_id: result.leadId,
-							client_id: clientId,
-							action_type: 'insert',
-							tag: 'New Lead',
-							timestamp: new Date().toISOString(),
-						})
+						.insert(actionInsertData)
 						.select()
 						.single();
 					
 					if (actionError) {
-						console.error('[E2E-Test] [LeadAPI] ❌ Failed to create lead_actions record:', actionError);
-						console.error('[E2E-Test] [LeadAPI] ❌ Error details:', {
+						console.error('[E2E-Test] [LeadLink] ❌ Failed to create lead_actions record');
+						console.error('[E2E-Test] [LeadLink] ❌ Supabase error:', actionError);
+						console.error('[E2E-Test] [LeadLink] ❌ Error details:', {
 							message: actionError.message,
 							code: actionError.code,
 							hint: actionError.hint,
 							details: actionError.details,
 						});
 						// Don't fail the whole request if action insert fails
-						console.warn('[E2E-Test] [LeadAPI] ⚠️  Lead created but not linked to client in lead_actions');
+						console.warn('[E2E-Test] [LeadLink] ⚠️  Lead created but not linked to client in lead_actions');
 					} else {
-						console.log('[E2E-Test] [LeadAPI] ✅ lead_actions record created:', actionRecord.id);
-						console.log('[E2E-Test] [LeadAPI] ✅ Lead linked to client in lead_actions table');
-						console.log('[E2E-Test] [LeadAPI] ✅ Client will see this lead in their dashboard');
+						console.log('[E2E-Test] [LeadLink] ✅ Lead inserted into lead_actions');
+						console.log('[E2E-Test] [LeadLink] ✅ Action record ID:', actionRecord.id);
+						console.log('[E2E-Test] [LeadLink] ✅ lead_id:', actionRecord.lead_id);
+						console.log('[E2E-Test] [LeadLink] ✅ client_id:', actionRecord.client_id);
+						console.log('[E2E-Test] [LeadLink] ✅ Lead linked to client in lead_actions table');
+						console.log('[E2E-Test] [LeadLink] ✅ Client will see this lead in their dashboard');
 					}
-					console.log('[E2E-Test] [LeadAPI] ============================================');
+					console.log('[E2E-Test] [LeadLink] ============================================');
 				}
 				
 				if (clientId) {
