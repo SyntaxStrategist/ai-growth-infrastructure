@@ -565,12 +565,12 @@ export async function runWeeklyAnalysis(): Promise<{ processed: number; errors: 
     
     // Now fetch full client data
     console.log('[Engine] Querying clients table...');
-    console.log('[Engine] Query: SELECT id, client_id, business_name, name, email FROM clients WHERE client_id IS NOT NULL');
+    console.log('[Engine] Query: SELECT id, client_id, business_name, name, email FROM clients');
+    console.log('[Engine] Using supabaseAdmin (service role) for query');
     
     const { data: clients, error: clientError } = await supabaseAdmin
       .from('clients')
-      .select('id, client_id, business_name, name, email')
-      .not('client_id', 'is', null);
+      .select('id, client_id, business_name, name, email');
 
     if (clientError) {
       console.error('[Engine] ❌ Error querying clients table:', clientError);
@@ -581,16 +581,28 @@ export async function runWeeklyAnalysis(): Promise<{ processed: number; errors: 
     }
 
     console.log('[Engine] ============================================');
+    console.log('[Engine] Query executed successfully');
     console.log('[Engine] Clients fetched:', clients?.length || 0);
+    console.log('[Engine] Error:', clientError ? 'YES' : 'NO');
+    console.log('[Engine] Data returned:', clients ? 'YES' : 'NO');
+    console.log('[Engine] Data is array:', Array.isArray(clients));
+    console.log('[Engine] Raw response:', { 
+      dataType: typeof clients, 
+      isNull: clients === null,
+      isUndefined: clients === undefined,
+      length: clients?.length 
+    });
     console.log('[Engine] ============================================');
     
     if (clients && clients.length > 0) {
+      console.log('[Engine] ✅ SUCCESS - Clients found!');
       console.log('[Engine] Example client_id:', clients[0].client_id);
       console.log('[Engine] Example business_name:', clients[0].business_name || clients[0].name);
+      console.log('[Engine] Example email:', clients[0].email);
       console.log('[Engine] ============================================');
-      console.log('[Engine] Client list:');
+      console.log('[Engine] Complete client list:');
       clients.forEach((c, idx) => {
-        console.log('[Engine]   ' + (idx + 1) + '.', c.business_name || c.name, '(client_id:', c.client_id + ')');
+        console.log('[Engine]   ' + (idx + 1) + '. Business:', c.business_name || c.name, '| client_id:', c.client_id, '| email:', c.email);
       });
       console.log('[Engine] ============================================');
     } else {
