@@ -6,11 +6,13 @@ export async function GET(req: NextRequest) {
     const { searchParams } = new URL(req.url);
     const clientId = searchParams.get('clientId');
     const locale = searchParams.get('locale') || 'en';
+    const status = searchParams.get('status') || 'active';
 
     console.log('[E2E-Test] [ClientLeads] ============================================');
     console.log('[E2E-Test] [ClientLeads] Request received');
     console.log('[E2E-Test] [ClientLeads] Client ID:', clientId);
     console.log('[E2E-Test] [ClientLeads] Locale:', locale);
+    console.log('[E2E-Test] [ClientLeads] Status filter:', status);
 
     if (!clientId) {
       console.error('[E2E-Test] [ClientLeads] ❌ Missing clientId parameter');
@@ -27,7 +29,7 @@ export async function GET(req: NextRequest) {
     console.log('[E2E-Test] [ClientLeads] Query: SELECT lead_memory.*, lead_actions.client_id, lead_actions.tag');
     console.log('[E2E-Test] [ClientLeads] JOIN: lead_actions.lead_id = lead_memory.id');
     console.log('[E2E-Test] [ClientLeads] WHERE: lead_actions.client_id = ' + clientId);
-    console.log('[E2E-Test] [ClientLeads] AND: lead_memory.deleted = false, archived = false');
+    console.log('[E2E-Test] [ClientLeads] Filter: status = ' + status);
 
     const { data: leadActions, error: actionsError } = await supabase
       .from('lead_actions')
@@ -84,7 +86,17 @@ export async function GET(req: NextRequest) {
     const leads = (leadActions || [])
       .filter(action => {
         const leadMemory = Array.isArray(action.lead_memory) ? action.lead_memory[0] : action.lead_memory;
-        return leadMemory && !leadMemory.deleted && !leadMemory.archived;
+        if (!leadMemory) return false;
+        
+        // Filter by status
+        if (status === 'active') {
+          return !leadMemory.deleted && !leadMemory.archived;
+        } else if (status === 'archived') {
+          return leadMemory.archived && !leadMemory.deleted;
+        } else if (status === 'deleted') {
+          return leadMemory.deleted;
+        }
+        return true;
       })
       .map(action => {
         const leadMemory = Array.isArray(action.lead_memory) ? action.lead_memory[0] : action.lead_memory;
@@ -97,7 +109,7 @@ export async function GET(req: NextRequest) {
       .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
 
     console.log('[E2E-Test] [ClientLeads] ✅ Found', leadActions?.length || 0, 'lead actions for client', clientId);
-    console.log('[E2E-Test] [ClientLeads] ✅ Filtered to', leads.length, 'active leads');
+    console.log('[E2E-Test] [ClientLeads] ✅ Filtered to', leads.length, status, 'leads');
     console.log('[E2E-Test] [ClientLeads] ✅ Client-scoped data loaded successfully');
     
     if (leads.length > 0) {
