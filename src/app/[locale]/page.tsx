@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from "react";
 import { useTranslations, useLocale } from 'next-intl';
 import { motion, useScroll, useTransform } from 'framer-motion';
-import { AvenirLogo } from "../../components/AvenirLogo";
+import AvenirLogo from "../../components/AvenirLogo";
 import { LanguageToggle } from "../../components/LanguageToggle";
 import BridgeAnimation from "../../components/BridgeAnimation";
 

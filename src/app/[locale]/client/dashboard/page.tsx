@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { useRouter } from "next/navigation";
 import { useLocale } from 'next-intl';
+import AvenirLogo from '../../../../components/AvenirLogo';
 
 type ClientData = {
   id: string;
@@ -185,26 +186,28 @@ export default function ClientDashboard() {
   // Login Screen
   if (!authenticated) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#0f172a] to-[#1e1b4b] text-white p-4">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6 }}
-          className="w-full max-w-md"
-        >
-          {/* Logo */}
-          <div className="text-center mb-8">
-            <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent mb-2">
-              AVENIR AI SOLUTIONS
-            </h1>
-            <p className="text-white/60 text-sm">
-              {isFrench ? 'Infrastructure de Croissance IA' : 'AI Growth Infrastructure'}
-            </p>
+      <div className="min-h-screen bg-gradient-to-br from-[#0f172a] via-[#1e1b4b] to-[#0f172a] text-white">
+        {/* Header with Logo */}
+        <header className="fixed top-0 left-0 right-0 z-50 bg-black/20 backdrop-blur-lg border-b border-white/10">
+          <div className="max-w-7xl mx-auto px-6 py-4">
+            <AvenirLogo locale={locale} />
           </div>
+        </header>
 
-          <div className="rounded-lg border border-white/10 p-8 bg-gradient-to-br from-blue-500/5 to-purple-500/5">
-            <h2 className="text-2xl font-bold mb-2">{t.loginTitle}</h2>
-            <p className="text-white/60 mb-6 text-sm">{t.loginSubtitle}</p>
+        <div className="min-h-screen flex items-center justify-center p-4 pt-24">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6 }}
+            className="w-full max-w-md"
+          >
+            <div className="rounded-2xl border border-white/10 p-8 bg-gradient-to-br from-blue-500/5 to-purple-500/5 shadow-2xl">
+              <div className="text-center mb-8">
+                <h1 className="text-3xl font-bold mb-3 bg-gradient-to-r from-blue-400 via-purple-400 to-blue-400 bg-clip-text text-transparent">
+                  {t.loginTitle}
+                </h1>
+                <p className="text-white/60 text-base">{t.loginSubtitle}</p>
+              </div>
 
             <form onSubmit={handleLogin} className="space-y-4">
               <div>
@@ -242,54 +245,60 @@ export default function ClientDashboard() {
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full px-4 py-3 rounded-md bg-gradient-to-r from-blue-500 to-purple-500 text-white font-medium hover:from-blue-600 hover:to-purple-600 transition-all disabled:opacity-50"
+                className="w-full px-4 py-3 rounded-lg bg-gradient-to-r from-blue-500 to-purple-500 text-white font-semibold hover:from-blue-600 hover:to-purple-600 transition-all disabled:opacity-50 shadow-lg hover:shadow-xl hover:shadow-blue-500/30 transform hover:scale-[1.02]"
               >
                 {loading ? t.loggingIn : t.login}
               </button>
 
-              <div className="text-center text-sm text-white/60">
+              <div className="text-center text-sm text-white/60 pt-2">
                 {t.noAccount}{' '}
-                <a href={`/${locale}/client/signup`} className="text-blue-400 hover:text-blue-300 transition-colors">
+                <a href={`/${locale}/client/signup`} className="text-blue-400 hover:text-blue-300 transition-colors font-medium">
                   {t.signup}
                 </a>
               </div>
             </form>
-          </div>
-        </motion.div>
+            </div>
+          </motion.div>
+        </div>
       </div>
     );
   }
 
   // Dashboard Screen
   return (
-    <div className="min-h-screen p-8 bg-gradient-to-br from-[#0f172a] to-[#1e1b4b] text-white">
-      <div className="max-w-7xl mx-auto">
-        {/* Header */}
-        <motion.div
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="mb-8 flex items-center justify-between flex-wrap gap-4"
-        >
-          <div>
-            <h1 className="text-3xl font-bold mb-2">
-              {t.welcome}, {client?.contactName}
-            </h1>
-            <p className="text-white/60">{client?.businessName}</p>
-          </div>
+    <div className="min-h-screen bg-gradient-to-br from-[#0f172a] via-[#1e1b4b] to-[#0f172a] text-white">
+      {/* Header with Logo */}
+      <header className="sticky top-0 z-50 bg-black/20 backdrop-blur-lg border-b border-white/10">
+        <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
+          <AvenirLogo locale={locale} />
           <div className="flex items-center gap-3">
             <a
               href={`/${locale}/client/api-access`}
-              className="px-4 py-2 rounded-lg bg-cyan-500/20 border border-cyan-500/40 text-cyan-400 hover:bg-cyan-500/30 transition-all text-sm font-medium"
+              className="px-4 py-2 rounded-lg bg-cyan-500/20 border border-cyan-500/40 text-cyan-400 hover:bg-cyan-500/30 transition-all text-sm font-medium shadow-lg hover:shadow-cyan-500/30"
             >
               {t.apiAccess}
             </a>
             <button
               onClick={handleLogout}
-              className="px-4 py-2 rounded-md bg-red-500/20 border border-red-400/30 text-red-400 hover:bg-red-500/30 transition-all text-sm font-medium"
+              className="px-4 py-2 rounded-lg bg-red-500/20 border border-red-400/30 text-red-400 hover:bg-red-500/30 transition-all text-sm font-medium shadow-lg hover:shadow-red-500/30"
             >
               {t.logout}
             </button>
           </div>
+        </div>
+      </header>
+
+      <div className="max-w-7xl mx-auto px-6 py-8">
+        {/* Welcome Section */}
+        <motion.div
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="mb-8"
+        >
+          <h1 className="text-3xl md:text-4xl font-bold mb-2 bg-gradient-to-r from-blue-400 via-purple-400 to-blue-400 bg-clip-text text-transparent">
+            {t.welcome}, {client?.contactName}
+          </h1>
+          <p className="text-white/70 text-lg">{client?.businessName}</p>
         </motion.div>
 
         {/* Stats */}
@@ -297,23 +306,23 @@ export default function ClientDashboard() {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.2 }}
-          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8"
+          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8"
         >
-          <div className="rounded-lg border border-white/10 p-4 bg-gradient-to-br from-blue-500/10 to-purple-500/10">
-            <div className="text-sm text-white/60 mb-1">{t.totalLeads}</div>
-            <div className="text-3xl font-bold">{stats.total}</div>
+          <div className="rounded-xl border border-white/10 p-6 bg-gradient-to-br from-blue-500/10 to-purple-500/10 hover:border-blue-400/30 transition-all shadow-lg hover:shadow-blue-500/20">
+            <div className="text-sm font-medium text-white/60 mb-2">{t.totalLeads}</div>
+            <div className="text-4xl font-bold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">{stats.total}</div>
           </div>
-          <div className="rounded-lg border border-white/10 p-4 bg-gradient-to-br from-blue-500/10 to-purple-500/10">
-            <div className="text-sm text-white/60 mb-1">{t.avgConfidence}</div>
-            <div className="text-3xl font-bold">{(stats.avgConfidence * 100).toFixed(0)}%</div>
+          <div className="rounded-xl border border-white/10 p-6 bg-gradient-to-br from-blue-500/10 to-purple-500/10 hover:border-blue-400/30 transition-all shadow-lg hover:shadow-purple-500/20">
+            <div className="text-sm font-medium text-white/60 mb-2">{t.avgConfidence}</div>
+            <div className="text-4xl font-bold bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">{(stats.avgConfidence * 100).toFixed(0)}%</div>
           </div>
-          <div className="rounded-lg border border-white/10 p-4 bg-gradient-to-br from-blue-500/10 to-purple-500/10">
-            <div className="text-sm text-white/60 mb-1">{t.topIntent}</div>
-            <div className="text-xl font-semibold truncate">{stats.topIntent}</div>
+          <div className="rounded-xl border border-white/10 p-6 bg-gradient-to-br from-blue-500/10 to-purple-500/10 hover:border-blue-400/30 transition-all shadow-lg hover:shadow-cyan-500/20">
+            <div className="text-sm font-medium text-white/60 mb-2">{t.topIntent}</div>
+            <div className="text-xl font-semibold text-cyan-400 truncate">{stats.topIntent}</div>
           </div>
-          <div className="rounded-lg border border-white/10 p-4 bg-gradient-to-br from-blue-500/10 to-purple-500/10">
-            <div className="text-sm text-white/60 mb-1">{t.highUrgency}</div>
-            <div className="text-3xl font-bold text-red-400">{stats.highUrgency}</div>
+          <div className="rounded-xl border border-white/10 p-6 bg-gradient-to-br from-blue-500/10 to-purple-500/10 hover:border-red-400/30 transition-all shadow-lg hover:shadow-red-500/20">
+            <div className="text-sm font-medium text-white/60 mb-2">{t.highUrgency}</div>
+            <div className="text-4xl font-bold text-red-400">{stats.highUrgency}</div>
           </div>
         </motion.div>
 
@@ -323,12 +332,15 @@ export default function ClientDashboard() {
           animate={{ opacity: 1 }}
           transition={{ delay: 0.4 }}
         >
-          <h2 className="text-xl font-bold mb-4">{t.recentLeads}</h2>
+          <h2 className="text-2xl font-bold mb-6 bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">{t.recentLeads}</h2>
           
-          <div className="space-y-3">
+          <div className="space-y-4">
             {leads.length === 0 ? (
-              <div className="text-center py-12 text-white/50 rounded-lg border border-white/10 bg-white/5">
-                {t.noLeads}
+              <div className="text-center py-16 text-white/50 rounded-xl border border-white/10 bg-white/5 shadow-lg">
+                <svg className="h-16 w-16 mx-auto mb-4 text-white/30" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
+                </svg>
+                <p className="text-lg font-medium">{t.noLeads}</p>
               </div>
             ) : (
               leads.map((lead, idx) => (
@@ -337,7 +349,7 @@ export default function ClientDashboard() {
                   initial={{ opacity: 0, x: -20 }}
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ delay: idx * 0.05 }}
-                  className="rounded-lg border border-white/10 p-5 bg-white/5 hover:bg-white/10 transition-all"
+                  className="rounded-xl border border-white/10 p-6 bg-white/5 hover:bg-white/10 hover:border-blue-400/30 transition-all shadow-lg hover:shadow-blue-500/20"
                 >
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 text-sm">
                     <div>

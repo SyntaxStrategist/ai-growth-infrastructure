@@ -4,6 +4,7 @@ import { useState } from "react";
 import { motion } from "framer-motion";
 import { useRouter } from "next/navigation";
 import { useLocale } from 'next-intl';
+import AvenirLogo from '../../../../components/AvenirLogo';
 
 export default function ClientSignup() {
   const locale = useLocale();
@@ -128,29 +129,31 @@ export default function ClientSignup() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#0f172a] to-[#1e1b4b] text-white p-4">
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6 }}
-        className="w-full max-w-2xl"
-      >
-        {/* Logo */}
-        <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent mb-2">
-            AVENIR AI SOLUTIONS
-          </h1>
-          <p className="text-white/60 text-sm">
-            {isFrench ? 'Infrastructure de Croissance IA' : 'AI Growth Infrastructure'}
-          </p>
+    <div className="min-h-screen bg-gradient-to-br from-[#0f172a] via-[#1e1b4b] to-[#0f172a] text-white">
+      {/* Header with Logo */}
+      <header className="fixed top-0 left-0 right-0 z-50 bg-black/20 backdrop-blur-lg border-b border-white/10">
+        <div className="max-w-7xl mx-auto px-6 py-4">
+          <AvenirLogo locale={locale} />
         </div>
+      </header>
 
-        <div className="rounded-lg border border-white/10 p-8 bg-gradient-to-br from-blue-500/5 to-purple-500/5 relative overflow-hidden">
-          <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 to-purple-500/5 blur-xl"></div>
-          
-          <div className="relative">
-            <h2 className="text-2xl font-bold mb-2">{t.title}</h2>
-            <p className="text-white/60 mb-6 text-sm">{t.subtitle}</p>
+      <div className="min-h-screen flex items-center justify-center p-4 pt-24">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6 }}
+          className="w-full max-w-2xl"
+        >
+          <div className="rounded-2xl border border-white/10 p-8 md:p-10 bg-gradient-to-br from-blue-500/5 to-purple-500/5 relative overflow-hidden shadow-2xl">
+            <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 to-purple-500/5 blur-xl"></div>
+            
+            <div className="relative">
+              <div className="text-center mb-8">
+                <h1 className="text-3xl md:text-4xl font-bold mb-3 bg-gradient-to-r from-blue-400 via-purple-400 to-blue-400 bg-clip-text text-transparent">
+                  {t.title}
+                </h1>
+                <p className="text-white/60 text-base">{t.subtitle}</p>
+              </div>
 
             <form onSubmit={handleSubmit} className="space-y-4">
               {/* Business Name */}
@@ -268,22 +271,23 @@ export default function ClientSignup() {
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full px-4 py-3 rounded-md bg-gradient-to-r from-blue-500 to-purple-500 text-white font-medium hover:from-blue-600 hover:to-purple-600 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-blue-500/50"
+                className="w-full px-4 py-3 rounded-lg bg-gradient-to-r from-blue-500 to-purple-500 text-white font-semibold hover:from-blue-600 hover:to-purple-600 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-xl hover:shadow-blue-500/30 transform hover:scale-[1.02]"
               >
                 {loading ? t.loading : t.submit}
               </button>
 
               {/* Login Link */}
-              <div className="text-center text-sm text-white/60">
+              <div className="text-center text-sm text-white/60 pt-2">
                 {t.haveAccount}{' '}
-                <a href={`/${locale}/client/dashboard`} className="text-blue-400 hover:text-blue-300 transition-colors">
+                <a href={`/${locale}/client/dashboard`} className="text-blue-400 hover:text-blue-300 transition-colors font-medium">
                   {t.login}
                 </a>
               </div>
             </form>
+            </div>
           </div>
-        </div>
-      </motion.div>
+        </motion.div>
+      </div>
     </div>
   );
 }

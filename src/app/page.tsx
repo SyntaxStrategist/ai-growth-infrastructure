@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { AvenirLogo } from "../components/AvenirLogo";
+import AvenirLogo from "../components/AvenirLogo";
 
 type ChatMessage = {
   role: "user" | "assistant" | "system";
