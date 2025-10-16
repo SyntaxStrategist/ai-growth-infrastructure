@@ -31,31 +31,78 @@ export async function analyzeClientLeads(
   periodEnd: Date
 ): Promise<Omit<GrowthBrainRecord, 'id' | 'analyzed_at' | 'created_at'>> {
   try {
+    console.log(`[Engine] ============================================`);
     console.log(`[Engine] Analyzing leads for client: ${clientId || 'global'}`);
     console.log(`[Engine] Period: ${periodStart.toISOString()} to ${periodEnd.toISOString()}`);
+    console.log(`[Engine] ============================================`);
     
-    // Fetch leads for the period
-    // Try with archived/deleted filters first, fallback if columns don't exist
-    let query = supabase
-      .from('lead_memory')
-      .select('*')
-      .gte('timestamp', periodStart.toISOString())
-      .lte('timestamp', periodEnd.toISOString());
-
+    let leads: any[] = [];
+    
     if (clientId) {
-      query = query.eq('client_id', clientId);
+      // For client-specific analysis, join through lead_actions
+      console.log('[Engine] Client mode: fetching leads via lead_actions join');
+      console.log('[Engine] Query: SELECT lead_memory.* FROM lead_actions JOIN lead_memory');
+      console.log('[Engine] WHERE: lead_actions.client_id =', clientId);
+      console.log('[Engine] AND: lead_memory.timestamp BETWEEN', periodStart.toISOString(), 'AND', periodEnd.toISOString());
+      
+      // Step 1: Get all lead_ids for this client
+      const { data: leadActions, error: actionsError } = await supabase
+        .from('lead_actions')
+        .select('lead_id')
+        .eq('client_id', clientId);
+      
+      if (actionsError) {
+        console.error('[Engine] ❌ Error fetching lead_actions:', actionsError);
+        throw actionsError;
+      }
+      
+      const leadIds = (leadActions || []).map(la => la.lead_id);
+      console.log('[Engine] Found', leadIds.length, 'total leads for client via lead_actions');
+      
+      if (leadIds.length === 0) {
+        console.log('[Engine] No leads found for client - returning empty analysis');
+        leads = [];
+      } else {
+        // Step 2: Get full lead data for those IDs within the time period
+        const { data: leadData, error: leadError } = await supabase
+          .from('lead_memory')
+          .select('*')
+          .in('id', leadIds)
+          .gte('timestamp', periodStart.toISOString())
+          .lte('timestamp', periodEnd.toISOString());
+        
+        if (leadError) {
+          console.error('[Engine] ❌ Error fetching lead_memory:', leadError);
+          throw leadError;
+        }
+        
+        leads = leadData || [];
+        console.log('[Engine] Filtered to', leads.length, 'leads in time period');
+      }
+    } else {
+      // For global analysis, query all leads directly
+      console.log('[Engine] Global mode: fetching all leads from lead_memory');
+      
+      const { data: leadData, error } = await supabase
+        .from('lead_memory')
+        .select('*')
+        .gte('timestamp', periodStart.toISOString())
+        .lte('timestamp', periodEnd.toISOString());
+      
+      if (error) {
+        console.error('[Engine] ❌ Supabase query error:', JSON.stringify(error));
+        throw error;
+      }
+      
+      leads = leadData || [];
     }
-
-    console.log('[Engine] Executing Supabase query (with time range filter)...');
-    let { data: leads, error } = await query;
 
     console.log(`[Engine] Initial query response:`, {
       rowCount: leads?.length || 0,
-      error: error ? JSON.stringify(error) : 'none',
     });
 
-    // If query succeeded, filter out archived/deleted leads
-    if (!error && leads) {
+    // Filter out archived/deleted leads
+    if (leads && leads.length > 0) {
       const beforeFilter = leads.length;
       // Client-side filter for archived/deleted (handles NULL values gracefully)
       leads = leads.filter(lead => {
@@ -64,11 +111,6 @@ export async function analyzeClientLeads(
         return !isArchived && !isDeleted;
       });
       console.log(`[Engine] Filtered leads: ${beforeFilter} → ${leads.length} (removed archived/deleted)`);
-    }
-
-    if (error) {
-      console.error('[Engine] Supabase query error:', JSON.stringify(error));
-      throw error;
     }
 
     const allLeads = (leads || []) as LeadMemoryRecord[];
@@ -476,40 +518,79 @@ export async function runWeeklyAnalysis(): Promise<{ processed: number; errors: 
     }
 
     // 2. Analyze per-client leads
-    console.log('[Engine] -------- Per-Client Analysis --------');
+    console.log('[Engine] ============================================');
+    console.log('[Engine] Per-Client Analysis Starting');
+    console.log('[Engine] ============================================');
+    
     const { data: clients, error: clientError } = await supabase
       .from('clients')
-      .select('id, company_name');
+      .select('id, client_id, business_name, name, email');
 
-    console.log('[Engine] Clients query result:', {
-      count: clients?.length || 0,
-      error: clientError ? JSON.stringify(clientError) : 'none',
-    });
+    if (clientError) {
+      console.error('[Engine] ❌ Error querying clients table:', clientError);
+      console.error('[Engine] Error code:', clientError.code);
+      console.error('[Engine] Error message:', clientError.message);
+      console.error('[Engine] Error details:', clientError.details);
+    }
 
+    console.log('[Engine] Client count found:', clients?.length || 0);
+    
     if (clients && clients.length > 0) {
-      console.log(`[Engine] Found ${clients.length} clients to analyze`);
+      console.log('[Engine] ============================================');
+      console.log('[Engine] Processing', clients.length, 'client(s)');
+      console.log('[Engine] ============================================');
       
-      for (const client of clients) {
-        console.log(`[Engine] ---- Analyzing client: ${client.company_name} (${client.id}) ----`);
+      for (let i = 0; i < clients.length; i++) {
+        const client = clients[i];
+        console.log('[Engine] ============================================');
+        console.log('[Engine] Processing client', (i + 1), 'of', clients.length);
+        console.log('[Engine] Processing client_id:', client.client_id);
+        console.log('[Engine] Business name:', client.business_name || client.name);
+        console.log('[Engine] Email:', client.email);
+        console.log('[Engine] Database ID:', client.id);
+        console.log('[Engine] ============================================');
+        
         try {
-          const clientInsights = await analyzeClientLeads(client.id, weekAgo, now);
+          // Use client_id (the UUID) for analysis, not the database id
+          const clientInsights = await analyzeClientLeads(client.client_id, weekAgo, now);
+          
+          console.log('[Engine] Analysis results for', client.business_name || client.name, ':', {
+            totalLeads: clientInsights.total_leads,
+            avgConfidence: clientInsights.avg_confidence,
+            engagementScore: clientInsights.engagement_score,
+          });
           
           // Only store if client has leads in this period
           if (clientInsights.total_leads > 0) {
+            console.log('[Engine] Storing growth insights for client_id:', client.client_id);
             await storeGrowthInsights(clientInsights);
             processed++;
-            console.log(`[Engine] ✅ Analysis complete for client: ${client.company_name}`);
+            console.log('[Engine] ✅ Insert/Update status: SUCCESS');
+            console.log('[Engine] ✅ Analysis complete for:', client.business_name || client.name);
           } else {
-            console.log(`[Engine] ⚠️  No leads for ${client.company_name} - skipping`);
+            console.log('[Engine] ⚠️  No leads found for', client.business_name || client.name, '- skipping storage');
           }
         } catch (err) {
-          console.error(`[Engine] ❌ Failed to analyze client ${client.company_name}:`, err instanceof Error ? err.message : err);
-          console.error(`[Engine] Error details:`, err);
+          console.error('[Engine] ❌ Insert/Update status: FAILED');
+          console.error('[Engine] ❌ Failed to analyze client', client.business_name || client.name);
+          console.error('[Engine] ❌ Error:', err instanceof Error ? err.message : String(err));
+          console.error('[Engine] ❌ Error stack:', err instanceof Error ? err.stack : 'No stack');
           errors++;
         }
       }
+      
+      console.log('[Engine] ============================================');
+      console.log('[Engine] Completed all clients successfully');
+      console.log('[Engine] Total processed:', processed);
+      console.log('[Engine] Total errors:', errors);
+      console.log('[Engine] ============================================');
     } else {
-      console.log('[Engine] No clients found - skipping per-client analysis');
+      console.log('[Engine] ⚠️  No clients found in database');
+      console.log('[Engine] This might mean:');
+      console.log('[Engine]   - No clients have signed up yet');
+      console.log('[Engine]   - The clients table is empty');
+      console.log('[Engine]   - There was an error querying the table');
+      console.log('[Engine] Skipping per-client analysis');
     }
 
     console.log('[Engine] ============================================');
