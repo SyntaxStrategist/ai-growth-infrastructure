@@ -6,6 +6,7 @@ import OpenAI from "openai";
 import { getAuthorizedGmail, buildHtmlEmail } from "../../../lib/gmail";
 import { supabase, validateApiKey, upsertLeadWithHistory } from "../../../lib/supabase";
 import { enrichLeadWithAI } from "../../../lib/ai-enrichment";
+import { isTestLead, logTestDetection } from "../../../lib/test-detection";
 
 type LeadPayload = {
 	name?: string;
@@ -313,6 +314,11 @@ export async function POST(req: NextRequest) {
 					confidence: enrichment.confidence_score,
 				});
 				
+				// Detect if this is test data
+				const isTest = isTestLead({ name, email, message });
+				logTestDetection('Lead submission', isTest,
+					isTest ? 'Contains test keywords or example domain' : undefined);
+				
 				// Upsert lead with historical tracking
 				console.log('[AI Intelligence] ============================================');
 				console.log('[AI Intelligence] Calling upsertLeadWithHistory()...');
@@ -330,6 +336,7 @@ export async function POST(req: NextRequest) {
 					urgency: enrichment.urgency,
 					confidence_score: enrichment.confidence_score,
 					client_id: clientId,
+					is_test: isTest,
 				};
 				
 				console.log('[E2E-Test] [LeadAPI] Upsert params prepared:', {
@@ -381,6 +388,7 @@ export async function POST(req: NextRequest) {
 						tag: 'New Lead',
 						created_at: now,
 						timestamp: now,
+						is_test: isTest,
 					};
 					
 					console.log('[LeadActions] Preparing insert into lead_actions:', {

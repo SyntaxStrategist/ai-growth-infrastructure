@@ -324,6 +324,7 @@ export async function upsertLeadWithHistory(params: {
   urgency: string;
   confidence_score: number;
   client_id?: string | null;
+  is_test?: boolean;
 }): Promise<{ isNew: boolean; leadId: string; insight: string | null }> {
   try {
     console.log('[LeadMemory] ============================================');
@@ -676,6 +677,11 @@ export async function upsertLeadWithHistory(params: {
       if (params.client_id) {
         newRecord.client_id = params.client_id;
         console.log('[LeadMemory] Adding client_id to record:', params.client_id);
+      }
+      
+      if (params.is_test !== undefined) {
+        newRecord.is_test = params.is_test;
+        console.log('[LeadMemory] Marking record as test data:', params.is_test);
       }
       
       console.log('[LeadMemory] Record to insert:', {

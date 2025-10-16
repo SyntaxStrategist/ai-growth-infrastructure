@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabase } from '../../../../lib/supabase';
 import { generateApiKey, hashPassword, generateClientId } from '../../../../lib/clients';
+import { isTestClient, logTestDetection } from '../../../../lib/test-detection';
 import { google } from 'googleapis';
 
 export async function POST(req: NextRequest) {
@@ -87,6 +88,11 @@ export async function POST(req: NextRequest) {
       passwordHashLength: passwordHash.length,
     });
 
+    // Detect if this is test data
+    const isTest = isTestClient({ business_name, name, email });
+    logTestDetection('Client registration', isTest, 
+      isTest ? 'Contains test keywords or example domain' : undefined);
+    
     // Insert into database using actual column names
     const insertData = {
       name: name,
@@ -98,6 +104,7 @@ export async function POST(req: NextRequest) {
       api_key: apiKey,
       client_id: clientId,
       is_internal: false, // Mark as external client (user signup)
+      is_test: isTest, // Mark as test data if detected
     };
 
     console.log('[E2E-Test] [ClientRegistration] Inserting into Supabase with data:', {
