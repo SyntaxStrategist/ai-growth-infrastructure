@@ -530,15 +530,27 @@ export async function upsertLeadWithHistory(params: {
       console.log('[LeadMemory] Insight length:', insight.length);
       console.log('[LeadMemory] ============================================');
       
-      // Check if we need to add client_id to existing lead
+      // Check if we need to add or correct client_id on existing lead
       let shouldUpdateClientId = false;
-      if (existingLead.client_id == null && params.client_id) {
+      const needsClientIdUpdate = 
+        existingLead.client_id == null || 
+        existingLead.client_id === 'avenir-internal-client';
+      
+      if (needsClientIdUpdate && params.client_id) {
         console.log('[LeadMemory] ============================================');
-        console.log('[LeadMemory] 🔗 Missing client_id detected on existing lead');
+        console.log('[LeadMemory] 🔗 Client ID correction needed on existing lead');
         console.log('[LeadMemory] Lead ID:', existingLead.id);
-        console.log('[LeadMemory] Current client_id:', existingLead.client_id);
+        console.log('[LeadMemory] Current client_id:', existingLead.client_id || 'NULL');
         console.log('[LeadMemory] Incoming client_id:', params.client_id);
-        console.log('[LeadMemory] 🔗 Will add missing client_id for existing lead:', existingLead.id);
+        
+        if (existingLead.client_id === 'avenir-internal-client') {
+          console.log('[LeadMemory] 🔄 Correcting old string format to UUID');
+          console.log('[LeadMemory] Old: \'avenir-internal-client\' → New: \'00000000-0000-0000-0000-000000000001\'');
+        } else {
+          console.log('[LeadMemory] 🔗 Adding missing client_id to existing lead');
+        }
+        
+        console.log('[LeadMemory] ✅ Will update client_id for lead:', existingLead.id);
         console.log('[LeadMemory] ============================================');
         shouldUpdateClientId = true;
       }
