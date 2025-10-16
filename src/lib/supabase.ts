@@ -34,17 +34,16 @@ export type ClientRecord = {
   id: string;
   client_id: string;
   business_name: string;
-  contact_name: string;
+  name: string;
+  contact_name?: string;
   email: string;
   password_hash: string;
   language: string;
   api_key: string;
-  lead_source_description?: string;
-  estimated_leads_per_week?: number;
   created_at: string;
   last_login?: string;
   last_connection?: string;
-  is_active: boolean;
+  last_rotated?: string;
 };
 
 export type ApiKeyLog = {
@@ -774,18 +773,37 @@ export async function getDeletedLeads(limit = 50, offset = 0) {
 
 export async function validateApiKey(apiKey: string): Promise<ClientRecord | null> {
   try {
+    console.log('[E2E-Test] [validateApiKey] Validating API key:', apiKey.substring(0, 20) + '...');
+    
     const { data, error } = await supabase
       .from('clients')
       .select('*')
       .eq('api_key', apiKey)
       .single();
     
+    console.log('[E2E-Test] [validateApiKey] Query result:', {
+      found: !!data,
+      error: error?.message || 'none',
+      errorCode: error?.code || 'none',
+    });
+    
     if (error) {
+      console.error('[E2E-Test] [validateApiKey] ❌ API key validation failed:', error);
       return null;
     }
     
+    if (data) {
+      console.log('[E2E-Test] [validateApiKey] ✅ Valid API key for client:', {
+        id: data.id,
+        client_id: data.client_id,
+        business_name: data.business_name,
+        email: data.email,
+      });
+    }
+    
     return data as ClientRecord;
-  } catch {
+  } catch (err) {
+    console.error('[E2E-Test] [validateApiKey] ❌ Unexpected error:', err);
     return null;
   }
 }

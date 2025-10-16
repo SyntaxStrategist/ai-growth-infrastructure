@@ -14,7 +14,7 @@ export async function GET(req: NextRequest) {
       );
     }
 
-    console.log('[ClientLeads] Fetching leads for client:', clientId, 'locale:', locale);
+    console.log('[E2E-Test] [ClientLeads] Fetching leads for client:', clientId, 'locale:', locale);
 
     // Fetch leads filtered by client_id
     const { data, error } = await supabase
@@ -27,14 +27,15 @@ export async function GET(req: NextRequest) {
       .limit(100);
 
     if (error) {
-      console.error('[ClientLeads] ❌ Database error:', error);
+      console.error('[E2E-Test] [ClientLeads] ❌ Database error:', error);
       return NextResponse.json(
         { success: false, error: 'Failed to fetch leads' },
         { status: 500 }
       );
     }
 
-    console.log('[ClientLeads] ✅ Found', data?.length || 0, 'leads for client', clientId);
+    console.log('[E2E-Test] [ClientLeads] ✅ Found', data?.length || 0, 'leads for client', clientId);
+    console.log('[E2E-Test] [ClientLeads] ✅ Client-scoped data loaded successfully');
 
     // Translate if needed (server-side)
     // For now, return as-is since the AI already generates in the correct language

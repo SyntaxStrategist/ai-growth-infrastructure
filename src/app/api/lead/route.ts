@@ -60,29 +60,47 @@ export async function POST(req: NextRequest) {
 		let clientId: string | null = null;
 		
 		if (apiKey) {
-			console.log('[LeadAPI] API key provided - validating...');
+			console.log('[E2E-Test] [LeadAPI] API key provided - validating...');
+			console.log('[E2E-Test] [LeadAPI] API key format:', apiKey.substring(0, 20) + '...');
+			
 			// Validate API key for external clients
 			const client = await validateApiKey(apiKey);
+			
 			if (!client) {
-				console.log('[LeadAPI] ❌ Invalid API key — rejected');
+				console.log('[E2E-Test] [LeadAPI] ❌ Invalid API key — rejected');
 				return new Response(
 					JSON.stringify({ success: false, error: "Unauthorized: Invalid API key" }),
 					{ status: 401, headers: { "Content-Type": "application/json" } }
 				);
 			}
-			clientId = client.id;
-			console.log(`[LeadAPI] ✅ Valid API key`);
-			console.log(`[LeadAPI] Lead received from client_id: ${clientId}`);
-			console.log(`[LeadAPI] Business: ${client.business_name || 'N/A'}`);
+			
+			clientId = client.client_id;
+			console.log(`[E2E-Test] [LeadAPI] ✅ Valid API key`);
+			console.log(`[E2E-Test] [LeadAPI] Lead received from client_id: ${clientId}`);
+			console.log(`[E2E-Test] [LeadAPI] Business: ${client.business_name || 'N/A'}`);
+			console.log(`[E2E-Test] [LeadAPI] Client info:`, {
+				id: client.id,
+				client_id: client.client_id,
+				name: client.name,
+				email: client.email,
+				business_name: client.business_name,
+			});
 			
 			// Update last_connection timestamp
-			await supabase
+			console.log('[E2E-Test] [LeadAPI] Updating last_connection timestamp...');
+			const { error: updateError } = await supabase
 				.from('clients')
 				.update({ last_connection: new Date().toISOString() })
 				.eq('api_key', apiKey);
+			
+			if (updateError) {
+				console.warn('[E2E-Test] [LeadAPI] ⚠️  Failed to update last_connection:', updateError);
+			} else {
+				console.log('[E2E-Test] [LeadAPI] ✅ last_connection updated');
+			}
 		} else {
 			// No API key = internal request (from website form)
-			console.log('[LeadAPI] Internal request (no API key - website form)');
+			console.log('[E2E-Test] [LeadAPI] Internal request (no API key - website form)');
 		}
 		
 		console.log('[Lead API] Parsing request body...');
@@ -286,7 +304,7 @@ export async function POST(req: NextRequest) {
 					client_id: clientId,
 				};
 				
-				console.log('[AI Intelligence] Upsert params prepared:', {
+				console.log('[E2E-Test] [LeadAPI] Upsert params prepared:', {
 					email: upsertParams.email,
 					name: upsertParams.name,
 					language: upsertParams.language,
@@ -294,7 +312,7 @@ export async function POST(req: NextRequest) {
 					tone: upsertParams.tone,
 					urgency: upsertParams.urgency,
 					confidence_score: upsertParams.confidence_score,
-					client_id: upsertParams.client_id || 'null',
+					client_id: upsertParams.client_id || 'null (internal)',
 					message_length: upsertParams.message.length,
 					ai_summary_length: upsertParams.ai_summary?.length || 0,
 				});
@@ -321,10 +339,11 @@ export async function POST(req: NextRequest) {
 				}
 				
 				if (clientId) {
-					console.log(`[LeadAPI] ✅ Lead processed with client_id: ${clientId}`);
-					console.log(`[LeadAPI] Stored lead successfully`);
+					console.log(`[E2E-Test] [LeadAPI] ✅ Lead processed with client_id: ${clientId}`);
+					console.log(`[E2E-Test] [LeadAPI] ✅ Stored lead successfully for client`);
+					console.log(`[E2E-Test] [LeadAPI] ✅ Lead ID: ${result.leadId}`);
 				} else {
-					console.log('[LeadAPI] Lead processed (internal - website form)');
+					console.log('[E2E-Test] [LeadAPI] Lead processed (internal - website form)');
 				}
 				
 				console.log('[Lead API] ============================================');

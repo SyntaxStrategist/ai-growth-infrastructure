@@ -7,22 +7,30 @@ export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
     const { 
-      businessName, 
-      contactName, 
+      name,
       email, 
+      business_name,
       password, 
-      language, 
-      leadSourceDescription, 
-      estimatedLeadsPerWeek 
+      language
     } = body;
 
-    console.log('[ClientRegistration] New registration request:', { businessName, email, language });
+    console.log('[E2E-Test] [ClientRegistration] New registration request:', { 
+      name, 
+      email, 
+      business_name, 
+      language 
+    });
 
     // Validation
-    if (!businessName || !contactName || !email || !password || !language) {
-      console.error('[ClientRegistration] ❌ Missing required fields');
+    if (!name || !email || !business_name || !password) {
+      console.error('[E2E-Test] [ClientRegistration] ❌ Missing required fields:', { 
+        hasName: !!name, 
+        hasEmail: !!email, 
+        hasBusinessName: !!business_name, 
+        hasPassword: !!password 
+      });
       return NextResponse.json(
-        { success: false, error: 'All required fields must be filled' },
+        { success: false, error: 'All required fields must be filled (name, email, business_name, password)' },
         { status: 400 }
       );
     }
@@ -30,16 +38,17 @@ export async function POST(req: NextRequest) {
     // Validate email format
     const emailRegex = /.+@.+\..+/;
     if (!emailRegex.test(email)) {
-      console.error('[ClientRegistration] ❌ Invalid email format');
+      console.error('[E2E-Test] [ClientRegistration] ❌ Invalid email format');
       return NextResponse.json(
         { success: false, error: 'Invalid email format' },
         { status: 400 }
       );
     }
 
-    // Validate language
-    if (!['en', 'fr'].includes(language)) {
-      console.error('[ClientRegistration] ❌ Invalid language');
+    // Validate language (default to 'en' if not provided)
+    const clientLanguage = language || 'en';
+    if (!['en', 'fr'].includes(clientLanguage)) {
+      console.error('[E2E-Test] [ClientRegistration] ❌ Invalid language');
       return NextResponse.json(
         { success: false, error: 'Language must be en or fr' },
         { status: 400 }
@@ -47,14 +56,19 @@ export async function POST(req: NextRequest) {
     }
 
     // Check if email already exists
-    const { data: existing } = await supabase
+    const { data: existing, error: checkError } = await supabase
       .from('clients')
       .select('email')
       .eq('email', email)
       .single();
 
+    console.log('[E2E-Test] [ClientRegistration] Email check result:', { 
+      exists: !!existing, 
+      error: checkError?.message || 'none' 
+    });
+
     if (existing) {
-      console.error('[ClientRegistration] ❌ Email already registered');
+      console.error('[E2E-Test] [ClientRegistration] ❌ Email already registered:', email);
       return NextResponse.json(
         { success: false, error: 'Email already registered' },
         { status: 409 }
@@ -66,66 +80,85 @@ export async function POST(req: NextRequest) {
     const clientId = generateClientId();
     const passwordHash = await hashPassword(password);
 
-    console.log('[ClientRegistration] Generated credentials:', { 
+    console.log('[E2E-Test] [ClientRegistration] Generated credentials:', { 
       clientId, 
       apiKey: apiKey.substring(0, 15) + '...',
+      passwordHashLength: passwordHash.length,
     });
 
-    // Insert into database
+    // Insert into database using actual column names
+    const insertData = {
+      name: name,
+      email: email,
+      business_name: business_name,
+      contact_name: name, // Use name for contact_name as well
+      password_hash: passwordHash,
+      language: clientLanguage,
+      api_key: apiKey,
+      client_id: clientId,
+    };
+
+    console.log('[E2E-Test] [ClientRegistration] Inserting into Supabase with data:', {
+      name: insertData.name,
+      email: insertData.email,
+      business_name: insertData.business_name,
+      language: insertData.language,
+      has_password_hash: !!insertData.password_hash,
+      has_api_key: !!insertData.api_key,
+      has_client_id: !!insertData.client_id,
+    });
+
     const { data: newClient, error: dbError } = await supabase
       .from('clients')
-      .insert({
-        business_name: businessName,
-        contact_name: contactName,
-        email: email,
-        password_hash: passwordHash,
-        language: language,
-        api_key: apiKey,
-        client_id: clientId,
-        lead_source_description: leadSourceDescription || null,
-        estimated_leads_per_week: estimatedLeadsPerWeek || null,
-      })
+      .insert(insertData)
       .select()
       .single();
 
     if (dbError) {
-      console.error('[ClientRegistration] ❌ Database error:', dbError);
+      console.error('[E2E-Test] [ClientRegistration] ❌ Database error:', dbError);
+      console.error('[E2E-Test] [ClientRegistration] ❌ Error details:', {
+        message: dbError.message,
+        code: dbError.code,
+        hint: dbError.hint,
+        details: dbError.details,
+      });
       return NextResponse.json(
-        { success: false, error: 'Failed to create account' },
+        { success: false, error: 'Failed to create account: ' + dbError.message },
         { status: 500 }
       );
     }
 
-    console.log('[ClientRegistration] ✅ Client created:', newClient.id);
+    console.log('[E2E-Test] [ClientRegistration] ✅ Client created in Supabase:', newClient.id);
+    console.log('[E2E-Test] [ClientRegistration] ✅ Full client data:', {
+      id: newClient.id,
+      client_id: newClient.client_id,
+      name: newClient.name,
+      email: newClient.email,
+      business_name: newClient.business_name,
+      language: newClient.language,
+    });
+    console.log('[E2E-Test] [ClientRegistration] ✅ API key assigned:', apiKey);
 
-    // Send welcome email
-    try {
-      await sendWelcomeEmail({
-        contactName,
-        email,
-        apiKey,
-        language,
-        businessName,
-      });
-      console.log('[ClientRegistration] ✅ Welcome email sent to:', email);
-    } catch (emailError) {
-      console.error('[ClientRegistration] ⚠️  Welcome email failed:', emailError);
-      // Don't fail registration if email fails
-    }
+    // TODO: Send welcome email (currently disabled for E2E testing)
+    // sendWelcomeEmail(...) would go here
+    console.log('[E2E-Test] [ClientRegistration] ℹ️  Welcome email disabled for testing');
 
     return NextResponse.json({
       success: true,
       data: {
         clientId: newClient.client_id,
         businessName: newClient.business_name,
+        name: newClient.name,
         email: newClient.email,
       },
     });
 
   } catch (error) {
-    console.error('[ClientRegistration] ❌ Unexpected error:', error);
+    console.error('[E2E-Test] [ClientRegistration] ❌ Unexpected error:', error);
+    console.error('[E2E-Test] [ClientRegistration] ❌ Error stack:', error instanceof Error ? error.stack : 'No stack');
+    console.error('[E2E-Test] [ClientRegistration] ❌ Error message:', error instanceof Error ? error.message : String(error));
     return NextResponse.json(
-      { success: false, error: 'Internal server error' },
+      { success: false, error: 'Internal server error: ' + (error instanceof Error ? error.message : String(error)) },
       { status: 500 }
     );
   }
