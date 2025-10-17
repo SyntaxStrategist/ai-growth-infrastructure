@@ -184,11 +184,14 @@ export default function ProspectIntelligencePage() {
 
   const fetchServerConfig = async () => {
     try {
+      console.log('[ProspectDashboard] Fetching server configuration...');
       const response = await fetch('/api/prospect-intelligence/config');
       const data = await response.json();
 
       if (data.success) {
-        console.log('[ProspectDashboard] Server config loaded:', data.data);
+        console.log('[ProspectDashboard] ✅ Server config loaded:', data.data);
+        
+        // Force update server config state
         setServerConfig({
           hasPdl: data.data.hasPdl,
           hasApollo: data.data.hasApollo,
@@ -197,11 +200,14 @@ export default function ProspectIntelligencePage() {
 
         // Auto-enable PDL if API key is present
         if (data.data.hasPdl) {
+          console.log('[ProspectDashboard] ✅ PDL API key detected - auto-enabling PDL toggle');
           setConfig(prev => ({ ...prev, usePdl: true }));
+        } else {
+          console.log('[ProspectDashboard] ℹ️  PDL API key not configured - toggle will be hidden');
         }
       }
     } catch (err) {
-      console.warn('[ProspectDashboard] Failed to fetch server config:', err);
+      console.error('[ProspectDashboard] ❌ Failed to fetch server config:', err);
     }
   };
 
@@ -530,7 +536,7 @@ export default function ProspectIntelligencePage() {
 
             {/* PDL Toggle - Only show if API key is configured server-side */}
             {serverConfig.hasPdl && (
-              <div className="flex items-end">
+              <div className="flex items-end" key="pdl-toggle">
                 <label className="flex items-center cursor-pointer">
                   <input
                     type="checkbox"
@@ -540,7 +546,7 @@ export default function ProspectIntelligencePage() {
                     disabled={config.testMode}
                   />
                   <span className="text-sm text-white/70">
-                    {isFrench ? 'Utiliser People Data Labs' : 'Use People Data Labs'}
+                    {isFrench ? 'Utiliser People Data Labs ✨' : 'Use People Data Labs ✨'}
                   </span>
                 </label>
               </div>
