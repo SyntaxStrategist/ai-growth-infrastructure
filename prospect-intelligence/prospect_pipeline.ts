@@ -5,6 +5,7 @@
 import { ProspectCandidate, FormTestResult, ProspectPipelineResult } from './types';
 import { searchProspects, searchByIndustry } from './crawler/google_scraper';
 import { generateTestProspects } from './crawler/test_data_generator';
+import { searchMultipleIndustries as searchApolloMultiple } from '../src/lib/integrations/apollo_connector';
 import { testContactForm, batchTestProspects } from './signal-analyzer/form_tester';
 import { calculateAutomationScore, sortByAutomationNeed, filterByMinScore } from './signal-analyzer/site_score';
 import { generateOutreachEmail, batchGenerateOutreach } from './outreach/generate_outreach_email';
@@ -64,21 +65,73 @@ export async function runProspectPipeline(config: PipelineConfig): Promise<Prosp
       allProspects = generateTestProspects(config.maxProspectsPerRun, config.industries, config.regions);
       console.log(`✅ Generated ${allProspects.length} test prospects\n`);
     } else {
-      // Production mode: use real crawler
-      for (const industry of config.industries) {
-        for (const region of config.regions) {
-          console.log(`🔍 Searching: ${industry} in ${region}...`);
-          
-          try {
-            const prospects = await searchByIndustry(industry, region);
-            allProspects = allProspects.concat(prospects);
-            console.log(`✅ Found ${prospects.length} prospects\n`);
-          } catch (error) {
-            const errorMsg = `Failed to search ${industry} in ${region}`;
-            console.error(`❌ ${errorMsg}:`, error);
-            result.errors.push(errorMsg);
+      // Production mode: Try Apollo API first, fallback to Google scraper
+      console.log('🌐 PRODUCTION MODE: Using real data sources');
+      
+      try {
+        console.log('📡 Attempting Apollo API connection...');
+        
+        // Search Apollo for each industry/region combination
+        for (const industry of config.industries) {
+          for (const region of config.regions) {
+            console.log(`🔍 Apollo Search: ${industry} in ${region}...`);
+            
+            try {
+              const apolloModule = await import('../src/lib/integrations/apollo_connector');
+              
+              // Check if Apollo is configured
+              if (!apolloModule.ApolloAPI.isConfigured()) {
+                console.log('⚠️  Apollo API not configured, falling back to Google scraper');
+                const prospects = await searchByIndustry(industry, region);
+                allProspects = allProspects.concat(prospects);
+                console.log(`✅ Google: Found ${prospects.length} prospects\n`);
+                continue;
+              }
+              
+              // Use Apollo API
+              const apolloProspects = await apolloModule.ApolloAPI.searchProspects(industry, region, Math.ceil(config.maxProspectsPerRun / (config.industries.length * config.regions.length)));
+              
+              // Transform Apollo prospects to ProspectCandidate format
+              const transformedProspects: ProspectCandidate[] = apolloProspects.map(ap => ({
+                id: undefined,
+                business_name: ap.business_name,
+                website: ap.website,
+                contact_email: ap.contact_email,
+                industry: ap.industry || industry,
+                region: ap.region || region,
+                language: region.includes('QC') || region === 'FR' ? 'fr' : 'en',
+                form_url: ap.website ? `${ap.website}/contact` : undefined,
+                last_tested: undefined,
+                response_score: 0,
+                automation_need_score: ap.automation_need_score,
+                contacted: false,
+                metadata: ap.metadata
+              }));
+              
+              allProspects = allProspects.concat(transformedProspects);
+              console.log(`✅ Apollo: Found ${transformedProspects.length} prospects\n`);
+              
+            } catch (error) {
+              const errorMsg = `Apollo search failed for ${industry} in ${region}, trying fallback`;
+              console.warn(`⚠️  ${errorMsg}:`, error);
+              
+              // Fallback to Google scraper
+              try {
+                const prospects = await searchByIndustry(industry, region);
+                allProspects = allProspects.concat(prospects);
+                console.log(`✅ Google (fallback): Found ${prospects.length} prospects\n`);
+              } catch (fallbackError) {
+                const fallbackErrorMsg = `Both Apollo and Google search failed for ${industry} in ${region}`;
+                console.error(`❌ ${fallbackErrorMsg}:`, fallbackError);
+                result.errors.push(fallbackErrorMsg);
+              }
+            }
           }
         }
+      } catch (error) {
+        const errorMsg = 'Production data source initialization failed';
+        console.error(`❌ ${errorMsg}:`, error);
+        result.errors.push(errorMsg);
       }
     }
 

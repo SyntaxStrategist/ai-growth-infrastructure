@@ -1,0 +1,26 @@
+╔════════════════════════════════════════════════════════════════╗
+║  🔑 APOLLO API KEY SETUP - ACTION REQUIRED                     ║
+╚════════════════════════════════════════════════════════════════╝
+
+📁 File: .env.local (line 38)
+🔑 Variable: APOLLO_API_KEY
+
+STEPS:
+1. Get your Apollo API key from: https://app.apollo.io/#/settings/integrations/api
+2. Open .env.local in your text editor
+3. Find line 38: APOLLO_API_KEY=
+4. Add your key after the = sign
+5. Save the file
+6. Restart dev server: npm run dev
+
+Example:
+APOLLO_API_KEY=abc123def456ghi789jkl012mno345pqr678
+
+Then test:
+- Navigate to /en/admin/prospect-intelligence
+- Uncheck "Test Mode"
+- Click "Run Prospect Scan"
+- Watch real prospects appear!
+
+Logs: logs/apollo_integration.log
+
