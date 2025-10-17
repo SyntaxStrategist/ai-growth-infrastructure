@@ -1,5 +1,7 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
+// ============================================
+// Prisma Schema - Synced with Supabase Production
+// Last Updated: October 17, 2025
+// ============================================
 
 generator client {
   provider = "prisma-client-js"
@@ -8,19 +10,271 @@ generator client {
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
+  // Alternative: Use SUPABASE_URL if DATABASE_URL is not set
+  // url      = env("SUPABASE_URL")
 }
 
-model LeadMemory {
-  id         String   @id @default(cuid())
-  name       String
-  email      String
-  message    String   @db.Text
-  aiSummary  String?  @db.Text
-  language   String   @default("en")
-  timestamp  DateTime @default(now())
+// ============================================
+// CLIENTS TABLE - Client accounts and API access
+// ============================================
+model Client {
+  id                     String    @id @default(uuid()) @db.Uuid
+  clientId               String    @unique @map("client_id")
+  businessName           String    @map("business_name")
+  name                   String?
+  contactName            String    @map("contact_name")
+  email                  String    @unique
+  passwordHash           String    @map("password_hash")
+  language               String    @default("en")
+  apiKey                 String    @unique @map("api_key")
+  leadSourceDescription  String?   @map("lead_source_description") @db.Text
+  estimatedLeadsPerWeek  Int?      @map("estimated_leads_per_week")
+  createdAt              DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  lastLogin              DateTime? @map("last_login") @db.Timestamptz(6)
+  lastConnection         DateTime? @map("last_connection") @db.Timestamptz(6)
+  isActive               Boolean   @default(true) @map("is_active")
   
+  // Branding & Personalization
+  customTagline          String?   @map("custom_tagline")
+  emailTone              String    @default("Friendly") @map("email_tone")
+  followupSpeed          String    @default("Instant") @map("followup_speed")
+  aiPersonalizedReply    Boolean   @default(true) @map("ai_personalized_reply")
+  industryCategory       String?   @map("industry_category")
+  primaryService         String?   @map("primary_service")
+  bookingLink            String?   @map("booking_link")
+  
+  // SMTP Configuration
+  outboundEmail          String?   @map("outbound_email")
+  smtpHost               String?   @map("smtp_host")
+  smtpPort               Int?      @map("smtp_port")
+  smtpUsername           String?   @map("smtp_username")
+  smtpPassword           String?   @map("smtp_password")
+  
+  // Flags
+  isInternal             Boolean   @default(false) @map("is_internal")
+  isTest                 Boolean   @default(false) @map("is_test")
+
+  // Relations
+  leadMemory             LeadMemory[]
+  growthBrain            GrowthBrain[]
+
+  @@index([apiKey])
+  @@index([email])
+  @@index([clientId])
+  @@index([emailTone])
+  @@index([followupSpeed])
+  @@index([aiPersonalizedReply])
+  @@index([industryCategory])
+  @@index([isInternal])
+  @@index([isTest])
+  @@map("clients")
+}
+
+// ============================================
+// LEAD_MEMORY TABLE - Lead capture and AI enrichment
+// ============================================
+model LeadMemory {
+  id                   String    @id
+  name                 String
+  email                String
+  message              String    @db.Text
+  aiSummary            String?   @map("ai_summary") @db.Text
+  language             String    @default("en")
+  timestamp            DateTime  @default(now()) @db.Timestamptz(6)
+  
+  // AI Enrichment
+  intent               String?
+  tone                 String?
+  urgency              String?
+  confidenceScore      Decimal?  @map("confidence_score") @db.Decimal(5, 2)
+  
+  // History Tracking (JSONB)
+  toneHistory          Json      @default("[]") @map("tone_history")
+  confidenceHistory    Json      @default("[]") @map("confidence_history")
+  urgencyHistory       Json      @default("[]") @map("urgency_history")
+  
+  // Status & Tags
+  archived             Boolean   @default(false)
+  deleted              Boolean   @default(false)
+  currentTag           String?   @map("current_tag")
+  relationshipInsight  String?   @map("relationship_insight") @db.Text
+  lastUpdated          DateTime  @default(now()) @map("last_updated") @db.Timestamptz(6)
+  
+  // Client Association
+  clientId             String?   @map("client_id") @db.Uuid
+  client               Client?   @relation(fields: [clientId], references: [id], onDelete: SetNull)
+  
+  // Flags
+  isTest               Boolean   @default(false) @map("is_test")
+  
+  // Relations
+  leadActions          LeadAction[]
+
   @@index([timestamp])
   @@index([email])
+  @@index([urgency])
+  @@index([confidenceScore])
+  @@index([clientId])
+  @@index([archived])
+  @@index([deleted])
+  @@index([currentTag])
+  @@index([lastUpdated])
+  @@index([isTest])
   @@map("lead_memory")
 }
 
+// ============================================
+// LEAD_ACTIONS TABLE - Audit trail for lead operations
+// ============================================
+model LeadAction {
+  id                 String    @id @default(uuid()) @db.Uuid
+  leadId             String    @map("lead_id")
+  lead               LeadMemory @relation(fields: [leadId], references: [id], onDelete: Cascade)
+  clientId           String?   @map("client_id")
+  action             String
+  tag                String?
+  performedBy        String    @default("admin") @map("performed_by")
+  timestamp          DateTime  @default(now()) @db.Timestamptz(6)
+  createdAt          DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  
+  // Conversion Tracking
+  conversionOutcome  Boolean?  @map("conversion_outcome")
+  reversionReason    String?   @map("reversion_reason")
+  
+  // Flags
+  isTest             Boolean   @default(false) @map("is_test")
+
+  @@index([leadId])
+  @@index([timestamp])
+  @@index([action])
+  @@index([clientId])
+  @@index([conversionOutcome])
+  @@index([reversionReason])
+  @@index([isTest])
+  @@map("lead_actions")
+}
+
+// ============================================
+// GROWTH_BRAIN TABLE - AI meta-insights and analytics
+// ============================================
+model GrowthBrain {
+  id                      String    @id @default(uuid()) @db.Uuid
+  clientId                String    @map("client_id") @db.Uuid
+  client                  Client    @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  
+  analysisPeriodStart     DateTime  @map("analysis_period_start") @db.Timestamptz(6)
+  analysisPeriodEnd       DateTime  @map("analysis_period_end") @db.Timestamptz(6)
+  totalLeads              Int       @default(0) @map("total_leads")
+  
+  // AI-Generated Insights (JSONB)
+  topIntents              Json?     @map("top_intents")
+  urgencyDistribution     Json?     @map("urgency_distribution")
+  urgencyTrendPercentage  Decimal?  @map("urgency_trend_percentage") @db.Decimal(5, 2)
+  toneDistribution        Json?     @map("tone_distribution")
+  toneSentimentScore      Decimal?  @map("tone_sentiment_score") @db.Decimal(5, 2)
+  avgConfidence           Decimal?  @map("avg_confidence") @db.Decimal(5, 2)
+  confidenceTrajectory    Json?     @map("confidence_trajectory")
+  languageRatio           Json?     @map("language_ratio")
+  engagementScore         Decimal?  @map("engagement_score") @db.Decimal(5, 2)
+  predictiveInsights      Json?     @map("predictive_insights")
+  
+  analyzedAt              DateTime  @default(now()) @map("analyzed_at") @db.Timestamptz(6)
+  createdAt               DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  @@index([clientId])
+  @@index([analyzedAt])
+  @@index([analysisPeriodStart, analysisPeriodEnd])
+  @@map("growth_brain")
+}
+
+// ============================================
+// PROSPECT_CANDIDATES TABLE - Discovered prospects
+// ============================================
+model ProspectCandidate {
+  id                   String    @id @default(uuid()) @db.Uuid
+  businessName         String    @map("business_name")
+  website              String    @unique
+  contactEmail         String?   @map("contact_email")
+  industry             String?
+  region               String?
+  language             String    @default("en")
+  formUrl              String?   @map("form_url")
+  lastTested           DateTime? @map("last_tested") @db.Timestamptz(6)
+  responseScore        Decimal   @default(0) @map("response_score") @db.Decimal
+  automationNeedScore  Decimal   @default(0) @map("automation_need_score") @db.Decimal
+  contacted            Boolean   @default(false)
+  createdAt            DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt            DateTime  @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+  metadata             Json?
+
+  // Relations
+  outreachLogs         ProspectOutreachLog[]
+  formTests            ProspectFormTest[]
+
+  @@index([automationNeedScore(sort: Desc)])
+  @@index([contacted])
+  @@index([industry])
+  @@index([region])
+  @@map("prospect_candidates")
+}
+
+// ============================================
+// PROSPECT_OUTREACH_LOG TABLE - Outreach tracking
+// ============================================
+model ProspectOutreachLog {
+  id             String    @id @default(uuid()) @db.Uuid
+  prospectId     String    @map("prospect_id") @db.Uuid
+  prospect       ProspectCandidate @relation(fields: [prospectId], references: [id], onDelete: Cascade)
+  subject        String
+  emailBody      String    @map("email_body") @db.Text
+  sentAt         DateTime  @default(now()) @map("sent_at") @db.Timestamptz(6)
+  openedAt       DateTime? @map("opened_at") @db.Timestamptz(6)
+  repliedAt      DateTime? @map("replied_at") @db.Timestamptz(6)
+  status         String    @default("sent")
+  replyContent   String?   @map("reply_content") @db.Text
+  metadata       Json?
+
+  @@index([prospectId])
+  @@index([status])
+  @@map("prospect_outreach_log")
+}
+
+// ============================================
+// PROSPECT_INDUSTRY_PERFORMANCE TABLE - Learning metrics
+// ============================================
+model ProspectIndustryPerformance {
+  id                    String    @id @default(uuid()) @db.Uuid
+  industry              String    @unique
+  totalContacted        Int       @default(0) @map("total_contacted")
+  totalOpened           Int       @default(0) @map("total_opened")
+  totalReplied          Int       @default(0) @map("total_replied")
+  openRate              Decimal   @default(0) @map("open_rate") @db.Decimal
+  replyRate             Decimal   @default(0) @map("reply_rate") @db.Decimal
+  avgResponseTimeHours  Decimal?  @map("avg_response_time_hours") @db.Decimal
+  priorityScore         Decimal   @default(50) @map("priority_score") @db.Decimal
+  lastUpdated           DateTime  @default(now()) @map("last_updated") @db.Timestamptz(6)
+
+  @@index([priorityScore(sort: Desc)])
+  @@map("prospect_industry_performance")
+}
+
+// ============================================
+// PROSPECT_FORM_TESTS TABLE - Form testing results
+// ============================================
+model ProspectFormTest {
+  id                   String    @id @default(uuid()) @db.Uuid
+  prospectId           String    @map("prospect_id") @db.Uuid
+  prospect             ProspectCandidate @relation(fields: [prospectId], references: [id], onDelete: Cascade)
+  testSubmittedAt      DateTime  @map("test_submitted_at") @db.Timestamptz(6)
+  responseReceivedAt   DateTime? @map("response_received_at") @db.Timestamptz(6)
+  responseTimeMinutes  Decimal?  @map("response_time_minutes") @db.Decimal
+  hasAutoresponder     Boolean   @default(false) @map("has_autoresponder")
+  autoresponderTone    String?   @map("autoresponder_tone")
+  autoresponderContent String?   @map("autoresponder_content") @db.Text
+  score                Decimal   @default(0) @db.Decimal
+  testStatus           String    @default("pending") @map("test_status")
+  metadata             Json?
+
+  @@index([prospectId])
+  @@map("prospect_form_tests")
+}
