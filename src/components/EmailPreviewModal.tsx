@@ -35,6 +35,12 @@ export default function EmailPreviewModal({
   useEffect(() => {
     if (isOpen) {
       console.log('[EmailPreview] Opening for prospect:', prospect.business_name);
+      console.log('[EmailPreview] Loaded contact_email:', prospect.contact_email || 'null');
+      
+      if (!prospect.contact_email) {
+        console.warn('[EmailPreview] ⚠️  No contact email available for this prospect');
+      }
+      
       generateEmailContent();
     }
 
@@ -149,14 +155,30 @@ export default function EmailPreviewModal({
             )}
 
             {/* Recipient */}
-            <div className="bg-white/5 rounded-lg p-4">
+            <div className={`rounded-lg p-4 ${prospect.contact_email ? 'bg-white/5' : 'bg-red-500/10 border border-red-500/30'}`}>
               <p className="text-sm text-white/50 mb-1">To:</p>
-              <p className="text-white font-medium">
-                {prospect.contact_email || 'No email available'}
-              </p>
-              <p className="text-sm text-white/70 mt-1">
-                {prospect.business_name} • {prospect.industry}
-              </p>
+              {prospect.contact_email ? (
+                <>
+                  <p className="text-white font-medium">
+                    {prospect.contact_email}
+                  </p>
+                  <p className="text-sm text-white/70 mt-1">
+                    {prospect.business_name} • {prospect.industry}
+                  </p>
+                </>
+              ) : (
+                <>
+                  <p className="text-red-400 font-medium">
+                    ❌ No email available
+                  </p>
+                  <p className="text-sm text-red-300/70 mt-2">
+                    {prospect.business_name} • {prospect.industry}
+                  </p>
+                  <p className="text-xs text-red-300/70 mt-2">
+                    This prospect does not have a contact email address. Please add one before sending outreach.
+                  </p>
+                </>
+              )}
             </div>
 
             {/* Subject */}
@@ -213,6 +235,7 @@ export default function EmailPreviewModal({
               onClick={handleSend}
               disabled={sending || testMode || !prospect.contact_email}
               className="px-6 py-2 bg-gradient-to-r from-purple-500 to-blue-500 hover:from-purple-600 hover:to-blue-600 text-white rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+              title={!prospect.contact_email ? 'No contact email available' : (testMode ? 'Test Mode is ON' : 'Send email')}
             >
               {sending ? (
                 <>
@@ -222,6 +245,7 @@ export default function EmailPreviewModal({
               ) : (
                 <>
                   ✉️ Send Now
+                  {!prospect.contact_email && <span className="text-xs">(No Email)</span>}
                 </>
               )}
             </button>
