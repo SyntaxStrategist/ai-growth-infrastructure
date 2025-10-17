@@ -1,7 +1,7 @@
 // ============================================
-// Prospect Update API
+// Prospects API
 // ============================================
-// Update prospect details (e.g., contact_email)
+// Fetch and update prospect details from prospect_candidates table
 
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
@@ -19,49 +19,52 @@ const supabase = createClient(supabaseUrl, supabaseKey, {
 
 /**
  * GET - Fetch all prospects from prospect_candidates table
+ * Always returns { data: [...] } structure for safe client parsing
  */
 export async function GET() {
-  console.log('[ProspectsAPI] ============================================');
-  console.log('[ProspectsAPI] Fetching all prospects from prospect_candidates');
+  console.log('[ProspectsAPI] GET request - Fetching prospects from prospect_candidates');
 
   try {
-    // Fetch all prospects from prospect_candidates table, ordered by creation date descending
+    // Fetch all prospects from prospect_candidates table
     const { data, error } = await supabase
       .from('prospect_candidates')
       .select('*')
       .order('created_at', { ascending: false });
 
+    // Handle Supabase errors
     if (error) {
-      console.error('[ProspectsAPI] ❌ Database error:', error.message);
-      throw error;
+      console.error('[ProspectsAPI] Supabase error:', error);
+      return new Response(
+        JSON.stringify({ data: [], error: error.message }),
+        { 
+          status: 500, 
+          headers: { 'Content-Type': 'application/json' } 
+        }
+      );
     }
 
-    console.log('[ProspectsAPI] ✅ Fetched', data?.length || 0, 'prospects from prospect_candidates');
-    console.log('[ProspectsAPI] ============================================');
-
-    // Always return { data: [] } structure
+    // Success - return prospects with safe fallback
+    console.log('[ProspectsAPI] ✅ Successfully fetched', data?.length || 0, 'prospects');
     return new Response(
       JSON.stringify({ data: data || [] }),
-      {
-        status: 200,
-        headers: { 'Content-Type': 'application/json' }
+      { 
+        status: 200, 
+        headers: { 'Content-Type': 'application/json' } 
       }
     );
 
   } catch (err) {
-    console.error('[ProspectsAPI] ❌ Error fetching prospects:', err);
-    console.log('[ProspectsAPI] ============================================');
-    
-    // Return safe structure with empty data array on error
+    // Catch unexpected errors
+    console.error('[ProspectsAPI] Unexpected error:', err);
     return new Response(
-      JSON.stringify({
-        data: [],
-        error: 'Database connection failed',
+      JSON.stringify({ 
+        data: [], 
+        error: 'Unexpected server error',
         details: err instanceof Error ? err.message : String(err)
       }),
-      {
-        status: 500,
-        headers: { 'Content-Type': 'application/json' }
+      { 
+        status: 500, 
+        headers: { 'Content-Type': 'application/json' } 
       }
     );
   }
