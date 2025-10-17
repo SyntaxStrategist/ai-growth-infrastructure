@@ -46,35 +46,21 @@ export default function EmailPreviewModal({
   }, [isOpen, prospect]);
 
   const generateEmailContent = () => {
-    // Generate personalized email subject
-    const subject = `Streamline Operations at ${prospect.business_name}`;
+    // Import at runtime to avoid SSR issues
+    const { generateBrandedEmailTemplate, getEmailSubject } = require('../lib/email/branded_templates');
     
-    // Generate personalized email body
-    const body = `Hello,
-
-I noticed ${prospect.business_name} is in the ${prospect.industry} industry, and wanted to reach out about an opportunity to streamline your operations.
-
-We specialize in AI-powered automation solutions that can help businesses like yours:
-• Automate lead intake and qualification
-• Reduce manual data entry by 80%
-• Improve response times to customer inquiries
-• Free up your team to focus on high-value tasks
-
-I'd love to schedule a brief 15-minute call to discuss how we can help ${prospect.business_name} achieve similar results.
-
-Would you be available for a quick chat this week?
-
-Best regards,
-Avenir AI Solutions Team
-
-Website: ${prospect.website}
-Industry: ${prospect.industry}
-
----
-This email was sent as part of our prospect outreach program. If you'd prefer not to receive future communications, please let us know.`;
+    // Generate branded email template
+    const template = generateBrandedEmailTemplate({
+      business_name: prospect.business_name,
+      industry: prospect.industry,
+      website: prospect.website
+    });
+    
+    const subject = getEmailSubject(prospect.business_name);
 
     setEmailSubject(subject);
-    setEmailBody(body);
+    // Use HTML template for display, will send both HTML and text
+    setEmailBody(template.html);
   };
 
   const handleSend = async () => {
@@ -185,16 +171,20 @@ This email was sent as part of our prospect outreach program. If you'd prefer no
               />
             </div>
 
-            {/* Body */}
+            {/* Body Preview */}
             <div>
-              <label className="block text-sm text-white/70 mb-2">Message</label>
-              <textarea
-                value={emailBody}
-                onChange={(e) => setEmailBody(e.target.value)}
-                rows={16}
-                className="w-full px-4 py-3 rounded-lg bg-white/10 border border-white/20 text-white focus:border-purple-400 focus:outline-none font-mono text-sm"
-                disabled={sending}
-              />
+              <label className="block text-sm text-white/70 mb-2">Message Preview</label>
+              <div className="bg-white rounded-lg border border-white/20 overflow-hidden">
+                <iframe
+                  srcDoc={emailBody}
+                  title="Email Preview"
+                  className="w-full h-[500px] border-0"
+                  sandbox="allow-same-origin"
+                />
+              </div>
+              <p className="text-xs text-white/50 mt-2">
+                ℹ️ Preview shows the branded HTML email template that will be sent
+              </p>
             </div>
 
             {/* Variable Info */}
