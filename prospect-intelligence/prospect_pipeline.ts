@@ -6,6 +6,9 @@ import { ProspectCandidate, FormTestResult, ProspectPipelineResult } from './typ
 import { searchProspects, searchByIndustry } from './crawler/google_scraper';
 import { generateTestProspects } from './crawler/test_data_generator';
 import { searchMultipleIndustries as searchApolloMultiple } from '../src/lib/integrations/apollo_connector';
+import { PdlAPI } from '../src/lib/integrations/pdl_connector';
+import { FormScanner } from '../src/lib/form_scanner';
+import { logIntegration } from '../src/lib/integration_logger';
 import { testContactForm, batchTestProspects } from './signal-analyzer/form_tester';
 import { calculateAutomationScore, sortByAutomationNeed, filterByMinScore } from './signal-analyzer/site_score';
 import { generateOutreachEmail, batchGenerateOutreach } from './outreach/generate_outreach_email';
@@ -19,6 +22,8 @@ export interface PipelineConfig {
   minAutomationScore: number;
   maxProspectsPerRun: number;
   testMode: boolean;
+  usePdl?: boolean; // Enable People Data Labs
+  scanForms?: boolean; // Enable form scanning
 }
 
 /**
@@ -71,60 +76,118 @@ export async function runProspectPipeline(config: PipelineConfig): Promise<Prosp
       try {
         console.log('📡 Attempting Apollo API connection...');
         
-        // Search Apollo for each industry/region combination
+        // Search using data source cascade: Apollo → PDL → Google
         for (const industry of config.industries) {
           for (const region of config.regions) {
-            console.log(`🔍 Apollo Search: ${industry} in ${region}...`);
+            console.log(`🔍 Searching: ${industry} in ${region}...`);
+            
+            let prospects: ProspectCandidate[] = [];
+            let dataSource = 'unknown';
             
             try {
+              // DATA SOURCE 1: Apollo API
               const apolloModule = await import('../src/lib/integrations/apollo_connector');
               
-              // Check if Apollo is configured
-              if (!apolloModule.ApolloAPI.isConfigured()) {
-                console.log('⚠️  Apollo API not configured, falling back to Google scraper');
-                const prospects = await searchByIndustry(industry, region);
-                allProspects = allProspects.concat(prospects);
-                console.log(`✅ Google: Found ${prospects.length} prospects\n`);
-                continue;
+              if (apolloModule.ApolloAPI.isConfigured()) {
+                try {
+                  console.log('📡 Trying Apollo...');
+                  await logIntegration('apollo', 'info', `Searching: ${industry} in ${region}`);
+                  
+                  const apolloProspects = await apolloModule.ApolloAPI.searchProspects(
+                    industry, 
+                    region, 
+                    Math.ceil(config.maxProspectsPerRun / (config.industries.length * config.regions.length))
+                  );
+                  
+                  prospects = apolloProspects.map(ap => ({
+                    id: undefined,
+                    business_name: ap.business_name,
+                    website: ap.website,
+                    contact_email: ap.contact_email || undefined,
+                    industry: ap.industry || industry,
+                    region: ap.region || region,
+                    language: region.includes('QC') || region === 'FR' ? 'fr' : 'en',
+                    form_url: ap.website ? `${ap.website}/contact` : undefined,
+                    last_tested: undefined,
+                    response_score: 0,
+                    automation_need_score: ap.automation_need_score,
+                    contacted: false,
+                    metadata: ap.metadata
+                  }));
+                  
+                  dataSource = 'apollo';
+                  console.log(`✅ Apollo: ${prospects.length} prospects`);
+                  await logIntegration('apollo', 'info', 'Success', { count: prospects.length });
+                  
+                } catch (apolloError) {
+                  console.warn('⚠️  Apollo failed');
+                  await logIntegration('apollo', 'warn', 'API failed', {
+                    error: apolloError instanceof Error ? apolloError.message : 'Unknown'
+                  });
+                }
               }
               
-              // Use Apollo API
-              const apolloProspects = await apolloModule.ApolloAPI.searchProspects(industry, region, Math.ceil(config.maxProspectsPerRun / (config.industries.length * config.regions.length)));
+              // DATA SOURCE 2: People Data Labs
+              if (prospects.length === 0 && config.usePdl !== false && PdlAPI.isConfigured()) {
+                try {
+                  console.log('📡 Trying PDL...');
+                  await logIntegration('pdl', 'info', `Searching: ${industry} in ${region}`);
+                  
+                  const pdlProspects = await PdlAPI.searchProspects(industry, region, Math.ceil(config.maxProspectsPerRun / (config.industries.length * config.regions.length)));
+                  
+                  prospects = pdlProspects.map(pp => ({
+                    id: undefined,
+                    business_name: pp.business_name,
+                    website: pp.website,
+                    contact_email: pp.contact_email || undefined,
+                    industry: pp.industry || industry,
+                    region: pp.region || region,
+                    language: region.includes('QC') || region === 'FR' ? 'fr' : 'en',
+                    form_url: pp.website ? `${pp.website}/contact` : undefined,
+                    last_tested: undefined,
+                    response_score: 0,
+                    automation_need_score: pp.automation_need_score,
+                    contacted: false,
+                    metadata: pp.metadata
+                  }));
+                  
+                  dataSource = 'pdl';
+                  console.log(`✅ PDL: ${prospects.length} prospects`);
+                  await logIntegration('pdl', 'info', 'Success', { count: prospects.length });
+                  
+                } catch (pdlError) {
+                  if (pdlError instanceof Error && pdlError.message.includes('not allowed')) {
+                    console.warn('⚠️  PDL not available on current plan');
+                    await logIntegration('pdl', 'warn', 'API_INACCESSIBLE');
+                    result.errors.push(`PDL not available - ${industry}`);
+                  } else {
+                    console.warn('⚠️  PDL failed');
+                    await logIntegration('pdl', 'warn', 'API failed', {
+                      error: pdlError instanceof Error ? pdlError.message : 'Unknown'
+                    });
+                  }
+                }
+              }
               
-              // Transform Apollo prospects to ProspectCandidate format
-              const transformedProspects: ProspectCandidate[] = apolloProspects.map(ap => ({
-                id: undefined,
-                business_name: ap.business_name,
-                website: ap.website,
-                contact_email: ap.contact_email,
-                industry: ap.industry || industry,
-                region: ap.region || region,
-                language: region.includes('QC') || region === 'FR' ? 'fr' : 'en',
-                form_url: ap.website ? `${ap.website}/contact` : undefined,
-                last_tested: undefined,
-                response_score: 0,
-                automation_need_score: ap.automation_need_score,
-                contacted: false,
-                metadata: ap.metadata
-              }));
+              // DATA SOURCE 3: Google Scraper (final fallback)
+              if (prospects.length === 0) {
+                console.log('📡 Using Google fallback...');
+                await logIntegration('google', 'info', `Fallback: ${industry} in ${region}`);
+                prospects = await searchByIndustry(industry, region);
+                dataSource = 'google';
+                console.log(`✅ Google: ${prospects.length} prospects`);
+              }
               
-              allProspects = allProspects.concat(transformedProspects);
-              console.log(`✅ Apollo: Found ${transformedProspects.length} prospects\n`);
+              allProspects = allProspects.concat(prospects);
+              console.log(`✅ ${dataSource.toUpperCase()}: Total ${prospects.length} for ${industry}\n`);
               
             } catch (error) {
-              const errorMsg = `Apollo search failed for ${industry} in ${region}, trying fallback`;
-              console.warn(`⚠️  ${errorMsg}:`, error);
-              
-              // Fallback to Google scraper
-              try {
-                const prospects = await searchByIndustry(industry, region);
-                allProspects = allProspects.concat(prospects);
-                console.log(`✅ Google (fallback): Found ${prospects.length} prospects\n`);
-              } catch (fallbackError) {
-                const fallbackErrorMsg = `Both Apollo and Google search failed for ${industry} in ${region}`;
-                console.error(`❌ ${fallbackErrorMsg}:`, fallbackError);
-                result.errors.push(fallbackErrorMsg);
-              }
+              const errorMsg = `All sources failed: ${industry} in ${region}`;
+              console.error(`❌ ${errorMsg}:`, error);
+              await logIntegration('pipeline', 'error', errorMsg, {
+                error: error instanceof Error ? error.message : 'Unknown'
+              });
+              result.errors.push(errorMsg);
             }
           }
         }
@@ -152,14 +215,76 @@ export async function runProspectPipeline(config: PipelineConfig): Promise<Prosp
     }
 
     // ============================================
+    // FORM SCANNING (Optional)
+    // ============================================
+    if (config.scanForms !== false) {
+      console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+      console.log('🔍 STAGE 1.5: FORM SCANNING');
+      console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+      console.log('');
+      
+      await logIntegration('form_scanner', 'info', `Scanning ${allProspects.length} websites for forms`);
+      
+      for (let i = 0; i < allProspects.length; i++) {
+        const prospect = allProspects[i];
+        console.log(`[${i + 1}/${allProspects.length}] Scanning: ${prospect.website}`);
+        
+        try {
+          const formScanResult = await FormScanner.scan(prospect.website);
+          
+          // Add form scan results to metadata
+          prospect.metadata = {
+            ...prospect.metadata,
+            form_scan: {
+              has_form: formScanResult.hasForm,
+              form_count: formScanResult.formCount,
+              has_mailto: formScanResult.hasMailto,
+              has_captcha: formScanResult.hasCaptcha,
+              submit_method: formScanResult.submitMethod,
+              recommended_approach: formScanResult.recommendedApproach,
+              scanned_at: formScanResult.metadata.scanned_at,
+              contact_paths: formScanResult.metadata.contact_paths_found
+            }
+          };
+          
+          console.log(`   ${formScanResult.hasForm ? '✅' : '❌'} Form: ${formScanResult.formCount} | Mailto: ${formScanResult.hasMailto} | CAPTCHA: ${formScanResult.hasCaptcha}`);
+          
+        } catch (scanError) {
+          console.warn(`   ⚠️  Scan failed for ${prospect.website}`);
+          await logIntegration('form_scanner', 'warn', 'Scan failed', {
+            website: prospect.website,
+            error: scanError instanceof Error ? scanError.message : 'Unknown'
+          });
+        }
+        
+        // Small delay between scans
+        if (i < allProspects.length - 1) {
+          await new Promise(r => setTimeout(r, 500));
+        }
+      }
+      
+      console.log('');
+      const withForms = allProspects.filter(p => p.metadata?.form_scan?.has_form).length;
+      console.log(`✅ Form scanning complete: ${withForms}/${allProspects.length} have contact forms\n`);
+      await logIntegration('form_scanner', 'info', 'Scanning complete', {
+        total: allProspects.length,
+        with_forms: withForms
+      });
+    }
+
+    // ============================================
     // Save to Database
     // ============================================
     console.log('💾 Saving prospects to database...');
     try {
       await saveProspectsToDatabase(allProspects);
       console.log('✅ Prospects saved to database\n');
+      await logIntegration('database', 'info', 'Prospects saved', { count: allProspects.length });
     } catch (error) {
       console.error('❌ Failed to save prospects:', error);
+      await logIntegration('database', 'error', 'Save failed', {
+        error: error instanceof Error ? error.message : 'Unknown'
+      });
       result.errors.push('Database save failed');
     }
 

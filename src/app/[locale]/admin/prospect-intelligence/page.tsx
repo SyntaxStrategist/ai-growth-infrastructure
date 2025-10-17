@@ -18,6 +18,22 @@ interface ProspectCandidate {
   contacted?: boolean;
   created_at: string;
   last_tested?: string;
+  metadata?: {
+    source?: string;
+    apollo_id?: string;
+    pdl_id?: string;
+    form_scan?: {
+      has_form: boolean;
+      form_count: number;
+      has_mailto: boolean;
+      has_captcha: boolean;
+      submit_method: string | null;
+      recommended_approach: string;
+      scanned_at: string;
+      contact_paths: string[];
+    };
+    [key: string]: any;
+  };
 }
 
 interface ScanResult {
@@ -60,7 +76,9 @@ export default function ProspectIntelligencePage() {
     regions: ['CA'],
     minScore: 70,
     maxResults: 10,
-    testMode: true
+    testMode: true,
+    usePdl: true, // Enable PDL by default if API key present
+    scanForms: true // Enable form scanning by default
   });
 
   const t = {
@@ -470,6 +488,53 @@ export default function ProspectIntelligencePage() {
                 <span className="text-sm text-white/70">{t.testMode}</span>
               </label>
             </div>
+
+            <div className="flex items-end">
+              <label className="flex items-center cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={config.usePdl}
+                  onChange={(e) => setConfig({ ...config, usePdl: e.target.checked })}
+                  className="mr-2"
+                  disabled={config.testMode}
+                />
+                <span className="text-sm text-white/70">
+                  {isFrench ? 'Utiliser People Data Labs' : 'Use People Data Labs'}
+                </span>
+              </label>
+            </div>
+
+            <div className="flex items-end">
+              <label className="flex items-center cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={config.scanForms}
+                  onChange={(e) => setConfig({ ...config, scanForms: e.target.checked })}
+                  className="mr-2"
+                />
+                <span className="text-sm text-white/70">
+                  {isFrench ? 'Scanner les formulaires' : 'Scan Forms'}
+                </span>
+              </label>
+            </div>
+          </div>
+
+          {/* Data Source Info */}
+          <div className="mt-4 p-3 bg-blue-500/10 border border-blue-400/30 rounded-lg text-xs text-white/70">
+            <p className="font-semibold text-blue-400 mb-1">
+              {isFrench ? '📊 Sources de données :' : '📊 Data Sources:'}
+            </p>
+            <ul className="list-disc list-inside space-y-1">
+              <li>
+                <strong>Apollo:</strong> {isFrench ? '50 req/heure (gratuit)' : '50 req/hour (free)'}
+              </li>
+              <li>
+                <strong>People Data Labs:</strong> {isFrench ? '1,000 req/mois (gratuit)' : '1,000 req/month (free)'}
+              </li>
+              <li>
+                <strong>{isFrench ? 'Secours' : 'Fallback'}:</strong> Google Scraper {isFrench ? '(gratuit)' : '(free)'}
+              </li>
+            </ul>
           </div>
 
           <button
@@ -692,14 +757,42 @@ export default function ProspectIntelligencePage() {
                         </span>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <a
-                          href={prospect.website}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-sm text-blue-400 hover:text-blue-300 transition-colors"
-                        >
-                          {prospect.website.replace(/^https?:\/\//, '')}
-                        </a>
+                        <div className="flex flex-col gap-1">
+                          <a
+                            href={prospect.website}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-sm text-blue-400 hover:text-blue-300 transition-colors"
+                          >
+                            {prospect.website.replace(/^https?:\/\//, '')}
+                          </a>
+                          {/* Form Scan Indicators */}
+                          {prospect.metadata?.form_scan && (
+                            <div className="flex gap-1 text-xs">
+                              {prospect.metadata.form_scan.has_form && (
+                                <span className="px-2 py-0.5 rounded bg-green-500/20 text-green-400" title="Has contact form">
+                                  📝 Form
+                                </span>
+                              )}
+                              {prospect.metadata.form_scan.has_mailto && (
+                                <span className="px-2 py-0.5 rounded bg-blue-500/20 text-blue-400" title="Has mailto link">
+                                  ✉️ Email
+                                </span>
+                              )}
+                              {prospect.metadata.form_scan.has_captcha && (
+                                <span className="px-2 py-0.5 rounded bg-orange-500/20 text-orange-400" title="Has CAPTCHA">
+                                  🛡️ CAPTCHA
+                                </span>
+                              )}
+                              {prospect.metadata.form_scan.recommended_approach && (
+                                <span className="px-2 py-0.5 rounded bg-purple-500/20 text-purple-400" title={`Recommended: ${prospect.metadata.form_scan.recommended_approach}`}>
+                                  {prospect.metadata.form_scan.recommended_approach === 'form-response-bot' ? '🤖' : 
+                                   prospect.metadata.form_scan.recommended_approach === 'email' ? '📧' : '👤'}
+                                </span>
+                              )}
+                            </div>
+                          )}
+                        </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="flex gap-2">
