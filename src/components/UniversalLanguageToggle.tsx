@@ -22,7 +22,7 @@ export default function UniversalLanguageToggle() {
   if (!mounted) {
     return (
       <div 
-        className="fixed top-4 right-4 z-[60]"
+        className="fixed top-4 right-4 z-[20]"
         style={{ marginTop: '0.5rem', marginRight: '0.5rem' }}
       >
         <div className="flex items-center gap-3 px-5 py-3 rounded-xl bg-white/10 shadow-lg backdrop-blur-sm border border-white/20">
@@ -108,7 +108,7 @@ export default function UniversalLanguageToggle() {
 
       {/* Language Toggle */}
       <div 
-        className="fixed top-4 right-4 z-[60]"
+        className="fixed top-4 right-4 z-[20]"
         onMouseEnter={() => setShowTooltip(true)}
         onMouseLeave={() => setShowTooltip(false)}
         style={{ marginTop: '0.5rem', marginRight: '0.5rem' }}

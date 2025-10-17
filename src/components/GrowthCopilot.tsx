@@ -347,7 +347,7 @@ export default function GrowthCopilot({ locale, clientId = null }: GrowthCopilot
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: 20 }}
             onClick={() => setIsOpen(true)}
-            className="fixed right-4 top-32 z-50 px-2.5 py-1.5 rounded-lg font-medium text-xs shadow-lg bg-purple-500/20 border border-purple-500/40 text-purple-400 hover:bg-purple-500/30 hover:shadow-[0_0_20px_rgba(168,85,247,0.5)] hover:border-purple-500/60 transition-all duration-100 max-w-[180px] text-center leading-tight whitespace-nowrap overflow-hidden text-ellipsis"
+            className="fixed right-4 top-32 z-[60] px-2.5 py-1.5 rounded-lg font-medium text-xs shadow-lg bg-purple-500/20 border border-purple-500/40 text-purple-400 hover:bg-purple-500/30 hover:shadow-[0_0_20px_rgba(168,85,247,0.5)] hover:border-purple-500/60 transition-all duration-100 max-w-[180px] text-center leading-tight whitespace-nowrap overflow-hidden text-ellipsis"
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
           >
@@ -364,7 +364,7 @@ export default function GrowthCopilot({ locale, clientId = null }: GrowthCopilot
             animate={{ x: 0 }}
             exit={{ x: '100%' }}
             transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-            className="fixed right-0 top-0 bottom-0 w-full md:w-96 lg:w-[420px] bg-black/95 backdrop-blur-xl border-l border-white/10 shadow-2xl z-50 overflow-y-auto"
+            className="fixed right-0 top-0 bottom-0 w-full md:w-96 lg:w-[420px] bg-black/95 backdrop-blur-xl border-l border-white/10 shadow-2xl z-[60] overflow-y-auto"
           >
             <div className="p-6 space-y-6">
               {/* Header */}
@@ -374,7 +374,7 @@ export default function GrowthCopilot({ locale, clientId = null }: GrowthCopilot
                 </h2>
                 <button
                   onClick={() => setIsOpen(false)}
-                  className="text-white/40 hover:text-white/80 transition-colors"
+                  className="text-white/40 hover:text-white/80 transition-colors text-2xl leading-none p-2 hover:bg-white/10 rounded z-[70]"
                 >
                   ✕
                 </button>
@@ -506,7 +506,7 @@ export default function GrowthCopilot({ locale, clientId = null }: GrowthCopilot
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={() => setIsOpen(false)}
-            className="fixed inset-0 bg-black/50 backdrop-blur-sm z-40 md:hidden"
+            className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[55] md:hidden"
           />
         )}
       </AnimatePresence>

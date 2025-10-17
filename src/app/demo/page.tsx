@@ -208,7 +208,7 @@ export default function DemoClientDashboard() {
   return (
     <div className="min-h-screen p-8 bg-black text-white">
       {/* Language Toggle (Custom for demo - fixed top-right) */}
-      <div className="fixed top-4 right-4 z-50">
+      <div className="fixed top-4 right-4 z-[20]">
         <div className="flex items-center gap-2 bg-black/80 backdrop-blur-sm px-4 py-2 rounded-lg border border-white/10">
           <button
             onClick={() => setLocale('en')}
