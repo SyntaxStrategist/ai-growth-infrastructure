@@ -37,7 +37,7 @@ export async function saveProspectsToDatabase(prospects: ProspectCandidate[]): P
     region: p.region || null,
     language: p.language || 'en',
     form_url: p.form_url || null,
-    last_tested: p.last_tested || new Date().toISOString(),
+    last_tested: p.last_tested || new Date(),
     response_score: p.response_score || 0,
     automation_need_score: p.automation_need_score || 0,
     contacted: p.contacted || false,

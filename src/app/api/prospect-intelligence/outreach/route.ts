@@ -60,7 +60,7 @@ export async function POST(req: NextRequest) {
     // Create mock form test result for email generation
     const mockFormTest = {
       prospect_id: prospectId,
-      test_submitted_at: new Date().toISOString(),
+      test_submitted_at: new Date(),
       response_received_at: null,
       response_time_minutes: prospect.metadata?.response_time_minutes || 120,
       has_autoresponder: prospect.metadata?.has_autoresponder || false,
