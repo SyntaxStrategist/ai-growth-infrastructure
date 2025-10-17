@@ -206,7 +206,7 @@ export default function DemoClientDashboard() {
 
   // Demo Dashboard UI (Exact Mirror of Real Dashboard - No Database Dependencies)
   return (
-    <div className="min-h-screen p-8 bg-black text-white">
+    <div className="min-h-screen p-8 bg-gradient-to-br from-black via-[#0a0a0a] to-black text-white">
       {/* Language Toggle (Custom for demo - fixed top-right) */}
       <div className="fixed top-4 right-4 z-[20]">
         <div className="flex items-center gap-2 bg-black/80 backdrop-blur-sm px-4 py-2 rounded-lg border border-white/10">

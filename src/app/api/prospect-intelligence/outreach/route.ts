@@ -5,8 +5,8 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
-import { generateOutreachEmail } from '../../../../../prospect-intelligence/outreach/generate_outreach_email';
-import { saveOutreachLog } from '../../../../../prospect-intelligence/database/supabase_connector';
+import { sendOutreachEmail } from '../../../../lib/outreach/gmail_sender';
+import { generateBrandedEmailTemplate } from '../../../../lib/email/branded_templates';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
@@ -20,7 +20,7 @@ const supabase = createClient(supabaseUrl, supabaseKey, {
 });
 
 /**
- * Send outreach email to a prospect
+ * Send outreach email to a prospect via Gmail
  */
 export async function POST(req: NextRequest) {
   console.log('[OutreachAPI] ============================================');
@@ -28,135 +28,181 @@ export async function POST(req: NextRequest) {
 
   try {
     const body = await req.json();
-    const { prospectId, testMode = true } = body;
+    const { prospect_id, to, subject, htmlBody, textBody } = body;
 
-    if (!prospectId) {
+    // Check for Test Mode
+    const testMode = process.env.TEST_MODE === 'true' || process.env.NODE_ENV === 'development';
+
+    if (!prospect_id || !to || !subject) {
+      console.error('[OutreachAPI] ❌ Missing required fields');
       return NextResponse.json(
-        { success: false, error: 'prospectId is required' },
+        { success: false, error: 'prospect_id, to, and subject are required' },
         { status: 400 }
       );
     }
 
-    console.log('[OutreachAPI] Prospect ID:', prospectId);
-    console.log('[OutreachAPI] Test Mode:', testMode);
-
-    // Fetch prospect from database
-    const { data: prospect, error: prospectError } = await supabase
-      .from('prospect_candidates')
-      .select('*')
-      .eq('id', prospectId)
-      .single();
-
-    if (prospectError || !prospect) {
-      console.error('[OutreachAPI] ❌ Prospect not found:', prospectError);
+    // Validate email format
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(to)) {
+      console.error('[OutreachAPI] ❌ Invalid email format:', to);
       return NextResponse.json(
-        { success: false, error: 'Prospect not found' },
-        { status: 404 }
+        { success: false, error: 'Invalid email format' },
+        { status: 400 }
       );
     }
 
-    console.log('[OutreachAPI] Prospect:', prospect.business_name);
+    console.log('[OutreachAPI] Prospect ID:', prospect_id);
+    console.log('[OutreachAPI] Recipient:', to);
+    console.log('[OutreachAPI] Subject:', subject);
+    console.log('[OutreachAPI] Test Mode:', testMode);
 
-    // Create mock form test result for email generation
-    const mockFormTest = {
-      prospect_id: prospectId,
-      test_submitted_at: new Date(),
-      response_received_at: null,
-      response_time_minutes: prospect.metadata?.response_time_minutes || 120,
-      has_autoresponder: prospect.metadata?.has_autoresponder || false,
-      autoresponder_tone: 'none' as const,
-      autoresponder_content: null,
-      score: prospect.response_score || 0,
-      test_status: 'completed' as const
-    };
+    // Fetch prospect from database for metadata
+    const { data: prospect, error: prospectError } = await supabase
+      .from('prospect_candidates')
+      .select('*')
+      .eq('id', prospect_id)
+      .single();
 
-    // Generate personalized outreach email
-    console.log('[OutreachAPI] Generating outreach email...');
-    const outreachTemplate = generateOutreachEmail(
-      prospect,
-      mockFormTest,
-      prospect.automation_need_score || 70
-    );
+    if (prospectError) {
+      console.warn('[OutreachAPI] ⚠️ Could not fetch prospect details:', prospectError.message);
+    }
 
-    console.log('[OutreachAPI] Email generated');
-    console.log('[OutreachAPI] Subject:', outreachTemplate.subject);
-    console.log('[OutreachAPI] Language:', outreachTemplate.language);
+    // Generate email template if not provided
+    let finalHtmlBody = htmlBody;
+    let finalTextBody = textBody;
+
+    if (!htmlBody && prospect) {
+      console.log('[OutreachAPI] Generating branded email template...');
+      const template = generateBrandedEmailTemplate({
+        business_name: prospect.business_name,
+        industry: prospect.industry || 'your industry',
+        website: prospect.website || ''
+      });
+      finalHtmlBody = template.html;
+      finalTextBody = template.text;
+    }
 
     if (testMode) {
-      console.log('[OutreachAPI] 🧪 TEST MODE: Not sending actual email');
+      console.log('[OutreachAPI] 🧪 TEST MODE: Email will NOT be sent');
       console.log('[OutreachAPI] Preview:');
       console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-      console.log('To:', prospect.contact_email);
-      console.log('Subject:', outreachTemplate.subject);
+      console.log('To:', to);
+      console.log('Subject:', subject);
       console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-      console.log(outreachTemplate.body);
+      console.log(finalTextBody?.substring(0, 200) || '(no preview)');
       console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n');
 
-      // Save to outreach log (but mark as test)
-      const outreachId = await saveOutreachLog({
-        prospect_id: prospectId,
-        subject: outreachTemplate.subject,
-        email_body: outreachTemplate.body,
-        status: 'sent',
-        metadata: {
-          test_mode: true,
-          to: prospect.contact_email,
-          language: outreachTemplate.language,
-          automation_score: prospect.automation_need_score
-        }
-      });
+      // Log to database (mark as test)
+      const { data: logEntry, error: logError } = await supabase
+        .from('prospect_outreach_logs')
+        .insert([{
+          prospect_id,
+          recipient_email: to,
+          subject,
+          email_body: finalHtmlBody || finalTextBody || '',
+          status: 'test',
+          metadata: {
+            test_mode: true,
+            sent_at: new Date().toISOString()
+          }
+        }])
+        .select()
+        .single();
+
+      if (logError) {
+        console.error('[OutreachAPI] ⚠️ Failed to log test email:', logError.message);
+      }
+
+      console.log('[OutreachAPI] ✅ Test email logged (not sent)');
+      console.log('[OutreachAPI] ============================================');
 
       return NextResponse.json({
         success: true,
         data: {
-          outreachId,
-          prospectId,
-          businessName: prospect.business_name,
-          email: prospect.contact_email,
-          subject: outreachTemplate.subject,
-          preview: outreachTemplate.body.substring(0, 200) + '...',
-          status: 'test_mode_logged',
-          message: 'Outreach email logged (test mode - not actually sent)'
+          messageId: 'test-mode-' + Date.now(),
+          status: 'test',
+          message: 'Test mode - email logged but not sent'
         }
       });
     }
 
-    // Production mode: Actually send the email (placeholder - would integrate with email service)
-    console.log('[OutreachAPI] 📧 PRODUCTION MODE: Sending email...');
-    
-    // TODO: Integrate with actual email service (SendGrid, Mailgun, etc.)
-    // For now, just log and save
-    
-    const outreachId = await saveOutreachLog({
-      prospect_id: prospectId,
-      subject: outreachTemplate.subject,
-      email_body: outreachTemplate.body,
-      status: 'sent',
-      metadata: {
-        test_mode: false,
-        to: prospect.contact_email,
-        language: outreachTemplate.language,
-        automation_score: prospect.automation_need_score
-      }
+    // Production mode: Send via Gmail
+    console.log('[OutreachAPI] 📧 PRODUCTION MODE: Sending via Gmail...');
+
+    const gmailResult = await sendOutreachEmail({
+      to,
+      subject,
+      htmlBody: finalHtmlBody || '',
+      textBody: finalTextBody || '',
+      fromName: 'Avenir AI Solutions',
+      replyTo: process.env.GMAIL_FROM_ADDRESS || 'contact@aveniraisolutions.ca'
     });
 
-    console.log('[OutreachAPI] ✅ Outreach sent and logged');
+    if (!gmailResult.success) {
+      console.error('[OutreachAPI] ❌ Gmail sending failed:', gmailResult.error);
+      
+      // Log failure to database
+      await supabase
+        .from('prospect_outreach_logs')
+        .insert([{
+          prospect_id,
+          recipient_email: to,
+          subject,
+          email_body: finalHtmlBody || finalTextBody || '',
+          status: 'failed',
+          metadata: {
+            error: gmailResult.error,
+            sent_at: new Date().toISOString()
+          }
+        }]);
+
+      return NextResponse.json(
+        { success: false, error: gmailResult.error || 'Failed to send email' },
+        { status: 500 }
+      );
+    }
+
+    console.log('[OutreachAPI] ✅ Email sent via Gmail');
+    console.log('[OutreachAPI] Message ID:', gmailResult.messageId);
+
+    // Log success to database
+    const { data: logEntry, error: logError } = await supabase
+      .from('prospect_outreach_logs')
+      .insert([{
+        prospect_id,
+        recipient_email: to,
+        subject,
+        email_body: finalHtmlBody || finalTextBody || '',
+        status: 'sent',
+        metadata: {
+          message_id: gmailResult.messageId,
+          sent_at: new Date().toISOString()
+        }
+      }])
+      .select()
+      .single();
+
+    if (logError) {
+      console.warn('[OutreachAPI] ⚠️ Email sent but logging failed:', logError.message);
+    }
+
+    console.log('[OutreachAPI] ✅ Outreach complete and logged');
+    console.log('[OutreachAPI] ============================================');
 
     return NextResponse.json({
       success: true,
       data: {
-        outreachId,
-        prospectId,
-        businessName: prospect.business_name,
-        email: prospect.contact_email,
-        subject: outreachTemplate.subject,
+        messageId: gmailResult.messageId,
         status: 'sent',
-        message: 'Outreach email sent successfully'
+        message: 'Email sent successfully via Gmail',
+        logId: logEntry?.id
       }
     });
 
   } catch (error) {
     console.error('[OutreachAPI] ❌ Error:', error);
+    console.log('[OutreachAPI] ============================================');
+    
     return NextResponse.json(
       {
         success: false,
@@ -183,7 +229,7 @@ export async function GET(req: NextRequest) {
 
   try {
     const { data: logs, error } = await supabase
-      .from('prospect_outreach_log')
+      .from('prospect_outreach_logs')
       .select('*')
       .eq('prospect_id', prospectId)
       .order('sent_at', { ascending: false });

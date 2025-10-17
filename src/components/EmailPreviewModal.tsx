@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { getTranslation } from '../translations/prospect-intelligence';
 
 interface Prospect {
   id: string;
@@ -16,6 +17,7 @@ interface EmailPreviewModalProps {
   onClose: () => void;
   prospect: Prospect;
   testMode: boolean;
+  locale?: string;
   onSendSuccess: () => void;
   onSendError: (error: string) => void;
 }
@@ -25,12 +27,18 @@ export default function EmailPreviewModal({
   onClose,
   prospect,
   testMode,
+  locale = 'en',
   onSendSuccess,
   onSendError
 }: EmailPreviewModalProps) {
   const [sending, setSending] = useState(false);
   const [emailSubject, setEmailSubject] = useState('');
   const [emailBody, setEmailBody] = useState('');
+  const [editingEmail, setEditingEmail] = useState(false);
+  const [manualEmail, setManualEmail] = useState('');
+  const [emailError, setEmailError] = useState('');
+  
+  const t = (key: string) => getTranslation(locale, key as never);
 
   useEffect(() => {
     if (isOpen) {
@@ -39,14 +47,22 @@ export default function EmailPreviewModal({
       
       if (!prospect.contact_email) {
         console.warn('[EmailPreview] ⚠️  No contact email available for this prospect');
+        setEditingEmail(true); // Auto-open email editor if no email
+      } else {
+        setEditingEmail(false);
+        setManualEmail('');
       }
       
+      setEmailError('');
       generateEmailContent();
     }
 
     return () => {
       if (!isOpen) {
         console.log('[EmailPreview] Closed');
+        setEditingEmail(false);
+        setManualEmail('');
+        setEmailError('');
       }
     };
   }, [isOpen, prospect]);
@@ -69,19 +85,71 @@ export default function EmailPreviewModal({
     setEmailBody(template.html);
   };
 
+  const handleSaveEmail = async () => {
+    // Validate email
+    const emailToSave = manualEmail.trim();
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    
+    if (!emailRegex.test(emailToSave)) {
+      setEmailError('Please enter a valid email address');
+      return;
+    }
+
+    console.log('[EmailPreview] Saving manual email:', emailToSave);
+    setEmailError('');
+
+    try {
+      // Save email to Supabase
+      const response = await fetch('/api/prospect-intelligence/prospects', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          id: prospect.id,
+          contact_email: emailToSave,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok || !data.success) {
+        throw new Error(data.error || 'Failed to save email');
+      }
+
+      console.log('[EmailPreview] ✅ Email saved to Supabase');
+      
+      // Update local prospect object
+      prospect.contact_email = emailToSave;
+      setEditingEmail(false);
+      setManualEmail('');
+      
+    } catch (err) {
+      console.error('[EmailPreview] ❌ Error saving email:', err);
+      setEmailError(err instanceof Error ? err.message : 'Failed to save email');
+    }
+  };
+
   const handleSend = async () => {
     if (testMode) {
       onSendError('Cannot send emails in Test Mode. Please disable Test Mode first.');
       return;
     }
 
-    if (!prospect.contact_email) {
+    const emailToUse = prospect.contact_email || manualEmail.trim();
+    
+    if (!emailToUse) {
       onSendError(`No contact email found for ${prospect.business_name}`);
       return;
     }
 
+    // Validate email before sending
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(emailToUse)) {
+      onSendError('Invalid email format. Please enter a valid email address.');
+      return;
+    }
+
     setSending(true);
-    console.log('[EmailPreview] Sending email to:', prospect.contact_email);
+    console.log('[EmailPreview] Sending email to:', emailToUse);
 
     try {
       const response = await fetch('/api/prospect-intelligence/outreach', {
@@ -91,9 +159,10 @@ export default function EmailPreviewModal({
         },
         body: JSON.stringify({
           prospect_id: prospect.id,
-          to: prospect.contact_email,
+          to: emailToUse,
           subject: emailSubject,
-          body: emailBody,
+          htmlBody: emailBody,
+          textBody: emailBody, // Will be converted server-side
         }),
       });
 
@@ -104,6 +173,7 @@ export default function EmailPreviewModal({
       }
 
       console.log('[EmailPreview] ✅ Email sent successfully');
+      console.log('[EmailPreview] Message ID:', data.data?.messageId);
       onSendSuccess();
       onClose();
     } catch (err) {
@@ -155,27 +225,71 @@ export default function EmailPreviewModal({
             )}
 
             {/* Recipient */}
-            <div className={`rounded-lg p-4 ${prospect.contact_email ? 'bg-white/5' : 'bg-red-500/10 border border-red-500/30'}`}>
-              <p className="text-sm text-white/50 mb-1">To:</p>
-              {prospect.contact_email ? (
+            <div className={`rounded-lg p-4 ${prospect.contact_email && !editingEmail ? 'bg-white/5' : 'bg-yellow-500/10 border border-yellow-500/30'}`}>
+              <p className="text-sm text-white/50 mb-1">{t('to')}:</p>
+              
+              {prospect.contact_email && !editingEmail ? (
                 <>
-                  <p className="text-white font-medium">
-                    {prospect.contact_email}
-                  </p>
-                  <p className="text-sm text-white/70 mt-1">
-                    {prospect.business_name} • {prospect.industry}
-                  </p>
+                  <div className="flex items-center justify-between">
+                    <div className="flex-1">
+                      <p className="text-white font-medium">
+                        {prospect.contact_email}
+                      </p>
+                      <p className="text-sm text-white/70 mt-1">
+                        {prospect.business_name} • {prospect.industry}
+                      </p>
+                    </div>
+                    <button
+                      onClick={() => {
+                        setEditingEmail(true);
+                        setManualEmail(prospect.contact_email || '');
+                      }}
+                      className="text-xs text-blue-400 hover:text-blue-300 ml-2"
+                    >
+                      Edit
+                    </button>
+                  </div>
                 </>
               ) : (
                 <>
-                  <p className="text-red-400 font-medium">
-                    ❌ No email available
+                  <p className="text-yellow-300 font-medium mb-2">
+                    {prospect.contact_email ? '✏️ Editing Email' : '➕ Add Contact Email'}
                   </p>
-                  <p className="text-sm text-red-300/70 mt-2">
+                  <div className="flex gap-2">
+                    <input
+                      type="email"
+                      value={manualEmail}
+                      onChange={(e) => {
+                        setManualEmail(e.target.value);
+                        setEmailError('');
+                      }}
+                      placeholder="email@example.com"
+                      className="flex-1 px-3 py-2 rounded bg-white/10 border border-white/20 text-white placeholder:text-white/30 focus:border-blue-400 focus:outline-none text-sm"
+                    />
+                    <button
+                      onClick={handleSaveEmail}
+                      className="px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded text-sm font-medium transition-colors"
+                    >
+                      Save
+                    </button>
+                    {prospect.contact_email && (
+                      <button
+                        onClick={() => {
+                          setEditingEmail(false);
+                          setManualEmail('');
+                          setEmailError('');
+                        }}
+                        className="px-4 py-2 bg-white/10 hover:bg-white/20 text-white rounded text-sm transition-colors"
+                      >
+                        Cancel
+                      </button>
+                    )}
+                  </div>
+                  {emailError && (
+                    <p className="text-red-400 text-xs mt-2">❌ {emailError}</p>
+                  )}
+                  <p className="text-xs text-yellow-300/70 mt-2">
                     {prospect.business_name} • {prospect.industry}
-                  </p>
-                  <p className="text-xs text-red-300/70 mt-2">
-                    This prospect does not have a contact email address. Please add one before sending outreach.
                   </p>
                 </>
               )}
