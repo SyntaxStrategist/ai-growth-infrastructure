@@ -96,10 +96,10 @@ export default function UniversalLanguageToggle() {
       <AnimatePresence>
         {showToast && (
           <motion.div
-            initial={{ opacity: 0, y: -20 }}
+            initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
-            className="fixed top-16 right-4 z-50 bg-green-500/20 border border-green-400/50 text-green-400 px-6 py-3 rounded-lg shadow-lg backdrop-blur-sm"
+            exit={{ opacity: 0, y: 20 }}
+            className="fixed bottom-8 right-8 z-50 bg-green-500/20 border border-green-400/50 text-green-400 px-6 py-3 rounded-lg shadow-lg backdrop-blur-sm"
           >
             {toastMessage}
           </motion.div>

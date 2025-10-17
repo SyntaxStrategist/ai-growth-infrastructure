@@ -506,10 +506,10 @@ export default function ProspectIntelligencePage() {
         {/* Success Toast */}
         {showToast && (
           <motion.div
-            initial={{ opacity: 0, y: -20 }}
+            initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0 }}
-            className="fixed top-8 right-8 z-50 bg-green-500/20 border border-green-400/50 text-green-400 px-6 py-3 rounded-lg shadow-lg"
+            exit={{ opacity: 0, y: 20 }}
+            className="fixed bottom-8 right-8 z-50 bg-green-500/20 border border-green-400/50 text-green-400 px-6 py-3 rounded-lg shadow-lg"
           >
             {toastMessage}
           </motion.div>

@@ -1461,10 +1461,10 @@ export default function Dashboard() {
       {/* Toast Notification */}
       {toast.show && (
         <motion.div
-          initial={{ opacity: 0, y: -20 }}
+          initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: -20 }}
-          className="fixed top-8 right-8 z-50 px-6 py-3 rounded-lg bg-green-600 border border-green-500 shadow-[0_0_30px_rgba(34,197,94,0.5)]"
+          exit={{ opacity: 0, y: 20 }}
+          className="fixed bottom-8 right-8 z-50 px-6 py-3 rounded-lg bg-green-600 border border-green-500 shadow-[0_0_30px_rgba(34,197,94,0.5)]"
         >
           <p className="text-white font-medium">{toast.message}</p>
         </motion.div>
