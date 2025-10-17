@@ -77,8 +77,19 @@ export default function ProspectIntelligencePage() {
     minScore: 70,
     maxResults: 10,
     testMode: true,
-    usePdl: true, // Enable PDL by default if API key present
+    usePdl: false, // Will be set from server config
     scanForms: true // Enable form scanning by default
+  });
+
+  // Server-side configuration status
+  const [serverConfig, setServerConfig] = useState<{
+    hasPdl: boolean;
+    hasApollo: boolean;
+    autoSubmitEnabled: boolean;
+  }>({
+    hasPdl: false,
+    hasApollo: false,
+    autoSubmitEnabled: false
   });
 
   const t = {
@@ -161,10 +172,38 @@ export default function ProspectIntelligencePage() {
     return industry;
   };
 
+  // Load server configuration on mount
+  useEffect(() => {
+    fetchServerConfig();
+  }, []);
+
   // Load existing prospects on mount
   useEffect(() => {
     loadProspects();
   }, []);
+
+  const fetchServerConfig = async () => {
+    try {
+      const response = await fetch('/api/prospect-intelligence/config');
+      const data = await response.json();
+
+      if (data.success) {
+        console.log('[ProspectDashboard] Server config loaded:', data.data);
+        setServerConfig({
+          hasPdl: data.data.hasPdl,
+          hasApollo: data.data.hasApollo,
+          autoSubmitEnabled: data.data.autoSubmitEnabled
+        });
+
+        // Auto-enable PDL if API key is present
+        if (data.data.hasPdl) {
+          setConfig(prev => ({ ...prev, usePdl: true }));
+        }
+      }
+    } catch (err) {
+      console.warn('[ProspectDashboard] Failed to fetch server config:', err);
+    }
+  };
 
   const loadProspects = async () => {
     try {
@@ -489,20 +528,23 @@ export default function ProspectIntelligencePage() {
               </label>
             </div>
 
-            <div className="flex items-end">
-              <label className="flex items-center cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={config.usePdl}
-                  onChange={(e) => setConfig({ ...config, usePdl: e.target.checked })}
-                  className="mr-2"
-                  disabled={config.testMode}
-                />
-                <span className="text-sm text-white/70">
-                  {isFrench ? 'Utiliser People Data Labs' : 'Use People Data Labs'}
-                </span>
-              </label>
-            </div>
+            {/* PDL Toggle - Only show if API key is configured server-side */}
+            {serverConfig.hasPdl && (
+              <div className="flex items-end">
+                <label className="flex items-center cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={config.usePdl}
+                    onChange={(e) => setConfig({ ...config, usePdl: e.target.checked })}
+                    className="mr-2"
+                    disabled={config.testMode}
+                  />
+                  <span className="text-sm text-white/70">
+                    {isFrench ? 'Utiliser People Data Labs' : 'Use People Data Labs'}
+                  </span>
+                </label>
+              </div>
+            )}
 
             <div className="flex items-end">
               <label className="flex items-center cursor-pointer">
