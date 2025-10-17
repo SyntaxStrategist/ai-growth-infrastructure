@@ -42,6 +42,8 @@ export default function ProspectIntelligencePage() {
   const [showToast, setShowToast] = useState(false);
   const [toastMessage, setToastMessage] = useState('');
   const [showOnlyHighPriority, setShowOnlyHighPriority] = useState(false);
+  const [sendingOutreach, setSendingOutreach] = useState<Record<string, boolean>>({});
+  const [generatingProof, setGeneratingProof] = useState(false);
   
   // Metrics state
   const [metrics, setMetrics] = useState({
@@ -104,6 +106,13 @@ export default function ProspectIntelligencePage() {
     medium: isFrench ? 'Moyen' : 'Medium',
     low: isFrench ? 'Faible' : 'Low',
     noHighPriorityFound: isFrench ? 'Aucun prospect hautement prioritaire trouvé' : 'No high-priority prospects found',
+    sendOutreach: isFrench ? '📧 Envoyer' : '📧 Send Outreach',
+    sending: isFrench ? 'Envoi...' : 'Sending...',
+    outreachSent: isFrench ? '✅ Envoyé' : '✅ Sent',
+    viewProof: isFrench ? '📊 Voir preuve' : '📊 View Proof',
+    generating: isFrench ? 'Génération...' : 'Generating...',
+    simulateFeedback: isFrench ? '🎲 Simuler feedback' : '🎲 Simulate Feedback',
+    actions: isFrench ? 'Actions' : 'Actions',
   };
 
   // Industry translations (EN → FR)
@@ -227,6 +236,117 @@ export default function ProspectIntelligencePage() {
       setError(err instanceof Error ? err.message : 'Scan failed');
     } finally {
       setScanning(false);
+    }
+  };
+
+  const handleSendOutreach = async (prospectId: string, businessName: string) => {
+    console.log('[ProspectDashboard] Sending outreach to:', businessName);
+    
+    setSendingOutreach(prev => ({ ...prev, [prospectId]: true }));
+
+    try {
+      const response = await fetch('/api/prospect-intelligence/outreach', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          prospectId,
+          testMode: true
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok || !data.success) {
+        throw new Error(data.error || 'Failed to send outreach');
+      }
+
+      console.log('[ProspectDashboard] ✅ Outreach sent');
+      setToastMessage(isFrench ? `✅ E-mail envoyé à ${businessName}` : `✅ Outreach sent to ${businessName}`);
+      setShowToast(true);
+      setTimeout(() => setShowToast(false), 3000);
+
+      // Reload prospects to update contacted status
+      await loadProspects();
+    } catch (err) {
+      console.error('[ProspectDashboard] ❌ Error sending outreach:', err);
+      setError(err instanceof Error ? err.message : 'Failed to send outreach');
+    } finally {
+      setSendingOutreach(prev => ({ ...prev, [prospectId]: false }));
+    }
+  };
+
+  const handleSimulateFeedback = async () => {
+    console.log('[ProspectDashboard] Simulating feedback...');
+    setGeneratingProof(true);
+
+    try {
+      const response = await fetch('/api/prospect-intelligence/feedback', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ count: 10 }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok || !data.success) {
+        throw new Error(data.error || 'Failed to simulate feedback');
+      }
+
+      console.log('[ProspectDashboard] ✅ Feedback simulated');
+      setToastMessage(isFrench ? `✅ Feedback simulé pour ${data.data.updated} e-mails` : `✅ Feedback simulated for ${data.data.updated} emails`);
+      setShowToast(true);
+      setTimeout(() => setShowToast(false), 3000);
+
+      await loadProspects();
+    } catch (err) {
+      console.error('[ProspectDashboard] ❌ Error:', err);
+      setError(err instanceof Error ? err.message : 'Failed to simulate feedback');
+    } finally {
+      setGeneratingProof(false);
+    }
+  };
+
+  const handleViewProofVisuals = async (prospectId: string) => {
+    console.log('[ProspectDashboard] Generating proof visuals...');
+    setGeneratingProof(true);
+
+    try {
+      const response = await fetch('/api/prospect-intelligence/proof-visuals', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ prospectId }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok || !data.success) {
+        throw new Error(data.error || 'Failed to generate proof visuals');
+      }
+
+      console.log('[ProspectDashboard] ✅ Proof visuals generated');
+      console.log('Proof data:', data.data);
+      
+      // Show comparison data in toast
+      const improvement = data.data.comparison.improvements.response_time_improvement;
+      setToastMessage(isFrench 
+        ? `✅ Amélioration de ${improvement} du temps de réponse` 
+        : `✅ ${improvement} response time improvement`
+      );
+      setShowToast(true);
+      setTimeout(() => setShowToast(false), 5000);
+      
+      // In production, this could open a modal with the full visuals
+    } catch (err) {
+      console.error('[ProspectDashboard] ❌ Error:', err);
+      setError(err instanceof Error ? err.message : 'Failed to generate proof visuals');
+    } finally {
+      setGeneratingProof(false);
     }
   };
 
@@ -404,24 +524,37 @@ export default function ProspectIntelligencePage() {
         >
           <div className="flex justify-between items-center mb-4">
             <h2 className="text-xl font-semibold text-blue-400">{t.latestResults}</h2>
-            <button
-              onClick={handleRefresh}
-              disabled={refreshing}
-              className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
-                refreshing
-                  ? 'bg-gray-500/50 text-gray-400 cursor-not-allowed'
-                  : 'bg-blue-500/20 border border-blue-400/50 text-blue-400 hover:bg-blue-500/30'
-              }`}
-            >
-              {refreshing ? (
-                <span className="flex items-center gap-2">
-                  <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
-                  {t.refreshing}
-                </span>
-              ) : (
-                t.refreshButton
-              )}
-            </button>
+            <div className="flex gap-2">
+              <button
+                onClick={handleSimulateFeedback}
+                disabled={generatingProof}
+                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                  generatingProof
+                    ? 'bg-gray-500/50 text-gray-400 cursor-not-allowed'
+                    : 'bg-purple-500/20 border border-purple-400/50 text-purple-400 hover:bg-purple-500/30'
+                }`}
+              >
+                {t.simulateFeedback}
+              </button>
+              <button
+                onClick={handleRefresh}
+                disabled={refreshing}
+                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                  refreshing
+                    ? 'bg-gray-500/50 text-gray-400 cursor-not-allowed'
+                    : 'bg-blue-500/20 border border-blue-400/50 text-blue-400 hover:bg-blue-500/30'
+                }`}
+              >
+                {refreshing ? (
+                  <span className="flex items-center gap-2">
+                    <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                    {t.refreshing}
+                  </span>
+                ) : (
+                  t.refreshButton
+                )}
+              </button>
+            </div>
           </div>
           
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
@@ -515,6 +648,9 @@ export default function ProspectIntelligencePage() {
                     <th className="px-6 py-3 text-left text-xs font-medium text-white/70 uppercase tracking-wider">
                       {t.website}
                     </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-white/70 uppercase tracking-wider">
+                      {t.actions}
+                    </th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-white/10">
@@ -564,6 +700,41 @@ export default function ProspectIntelligencePage() {
                         >
                           {prospect.website.replace(/^https?:\/\//, '')}
                         </a>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="flex gap-2">
+                          <button
+                            onClick={() => handleSendOutreach(prospect.id, prospect.business_name)}
+                            disabled={sendingOutreach[prospect.id] || prospect.contacted}
+                            className={`px-3 py-1 rounded text-xs font-semibold transition-all ${
+                              prospect.contacted
+                                ? 'bg-green-500/20 text-green-400 cursor-not-allowed'
+                                : sendingOutreach[prospect.id]
+                                ? 'bg-gray-500/50 text-gray-400 cursor-not-allowed'
+                                : 'bg-purple-500/20 text-purple-400 hover:bg-purple-500/30 border border-purple-400/50'
+                            }`}
+                            title={prospect.contacted ? t.outreachSent : t.sendOutreach}
+                          >
+                            {sendingOutreach[prospect.id] ? (
+                              <span className="flex items-center gap-1">
+                                <div className="w-3 h-3 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                                {t.sending}
+                              </span>
+                            ) : prospect.contacted ? (
+                              t.outreachSent
+                            ) : (
+                              t.sendOutreach
+                            )}
+                          </button>
+                          <button
+                            onClick={() => handleViewProofVisuals(prospect.id)}
+                            disabled={generatingProof}
+                            className="px-3 py-1 rounded text-xs font-semibold bg-blue-500/20 text-blue-400 hover:bg-blue-500/30 border border-blue-400/50 transition-all"
+                            title={t.viewProof}
+                          >
+                            {t.viewProof}
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   ))}

@@ -4,11 +4,13 @@
 
 import { ProspectCandidate, FormTestResult, ProspectPipelineResult } from './types';
 import { searchProspects, searchByIndustry } from './crawler/google_scraper';
+import { generateTestProspects } from './crawler/test_data_generator';
 import { testContactForm, batchTestProspects } from './signal-analyzer/form_tester';
 import { calculateAutomationScore, sortByAutomationNeed, filterByMinScore } from './signal-analyzer/site_score';
 import { generateOutreachEmail, batchGenerateOutreach } from './outreach/generate_outreach_email';
 import { sendOutreachEmail, batchSendEmails } from './outreach/send_outreach_email';
 import { updateIndustryPerformance, generateInsightsReport } from './feedback/learn_icp_model';
+import { saveProspectsToDatabase } from './database/supabase_connector';
 
 export interface PipelineConfig {
   industries: string[];
@@ -56,18 +58,26 @@ export async function runProspectPipeline(config: PipelineConfig): Promise<Prosp
 
     let allProspects: ProspectCandidate[] = [];
 
-    for (const industry of config.industries) {
-      for (const region of config.regions) {
-        console.log(`🔍 Searching: ${industry} in ${region}...`);
-        
-        try {
-          const prospects = await searchByIndustry(industry, region);
-          allProspects = allProspects.concat(prospects);
-          console.log(`✅ Found ${prospects.length} prospects\n`);
-        } catch (error) {
-          const errorMsg = `Failed to search ${industry} in ${region}`;
-          console.error(`❌ ${errorMsg}:`, error);
-          result.errors.push(errorMsg);
+    // Use test data generator in test mode
+    if (config.testMode) {
+      console.log('🧪 TEST MODE: Using test data generator');
+      allProspects = generateTestProspects(config.maxProspectsPerRun, config.industries, config.regions);
+      console.log(`✅ Generated ${allProspects.length} test prospects\n`);
+    } else {
+      // Production mode: use real crawler
+      for (const industry of config.industries) {
+        for (const region of config.regions) {
+          console.log(`🔍 Searching: ${industry} in ${region}...`);
+          
+          try {
+            const prospects = await searchByIndustry(industry, region);
+            allProspects = allProspects.concat(prospects);
+            console.log(`✅ Found ${prospects.length} prospects\n`);
+          } catch (error) {
+            const errorMsg = `Failed to search ${industry} in ${region}`;
+            console.error(`❌ ${errorMsg}:`, error);
+            result.errors.push(errorMsg);
+          }
         }
       }
     }
@@ -86,6 +96,18 @@ export async function runProspectPipeline(config: PipelineConfig): Promise<Prosp
     if (allProspects.length === 0) {
       console.log('⚠️  No prospects found. Ending pipeline.\n');
       return result;
+    }
+
+    // ============================================
+    // Save to Database
+    // ============================================
+    console.log('💾 Saving prospects to database...');
+    try {
+      await saveProspectsToDatabase(allProspects);
+      console.log('✅ Prospects saved to database\n');
+    } catch (error) {
+      console.error('❌ Failed to save prospects:', error);
+      result.errors.push('Database save failed');
     }
 
     // ============================================
