@@ -18,14 +18,14 @@ const supabase = createClient(supabaseUrl, supabaseKey, {
 });
 
 /**
- * GET - Fetch all prospects
+ * GET - Fetch all prospects from prospect_candidates table
  */
-export async function GET(req: NextRequest) {
+export async function GET() {
   console.log('[ProspectsAPI] ============================================');
-  console.log('[ProspectsAPI] Fetching all prospects');
+  console.log('[ProspectsAPI] Fetching all prospects from prospect_candidates');
 
   try {
-    // Fetch all prospects from Supabase, ordered by creation date descending
+    // Fetch all prospects from prospect_candidates table, ordered by creation date descending
     const { data, error } = await supabase
       .from('prospect_candidates')
       .select('*')
@@ -33,27 +33,36 @@ export async function GET(req: NextRequest) {
 
     if (error) {
       console.error('[ProspectsAPI] ❌ Database error:', error.message);
-      return NextResponse.json(
-        { success: false, error: 'Database connection failed', details: error.message },
-        { status: 500 }
-      );
+      throw error;
     }
 
-    console.log('[ProspectsAPI] ✅ Fetched', data?.length || 0, 'prospects');
+    console.log('[ProspectsAPI] ✅ Fetched', data?.length || 0, 'prospects from prospect_candidates');
     console.log('[ProspectsAPI] ============================================');
 
-    return NextResponse.json({
-      success: true,
-      data: data || []
-    });
+    // Always return { data: [] } structure
+    return new Response(
+      JSON.stringify({ data: data || [] }),
+      {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' }
+      }
+    );
 
-  } catch (error) {
-    console.error('[ProspectsAPI] ❌ Error fetching prospects:', error);
+  } catch (err) {
+    console.error('[ProspectsAPI] ❌ Error fetching prospects:', err);
     console.log('[ProspectsAPI] ============================================');
     
-    return NextResponse.json(
-      { success: false, error: 'Database connection failed', details: error instanceof Error ? error.message : 'Unknown error' },
-      { status: 500 }
+    // Return safe structure with empty data array on error
+    return new Response(
+      JSON.stringify({
+        data: [],
+        error: 'Database connection failed',
+        details: err instanceof Error ? err.message : String(err)
+      }),
+      {
+        status: 500,
+        headers: { 'Content-Type': 'application/json' }
+      }
     );
   }
 }
