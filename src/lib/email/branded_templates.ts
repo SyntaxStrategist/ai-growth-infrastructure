@@ -26,7 +26,9 @@ function generateHTMLTemplate(fields: EmailMergeFields): string {
     ? `${process.env.NEXT_PUBLIC_SITE_URL}/assets/logos/logo.svg`
     : 'https://www.aveniraisolutions.ca/assets/logos/logo.svg';
   
-  const demoUrl = 'https://demo.aveniraisolutions.ca';
+  const demoUrl = process.env.NEXT_PUBLIC_SITE_URL 
+    ? `${process.env.NEXT_PUBLIC_SITE_URL}/demo`
+    : 'https://demo.aveniraisolutions.ca';
 
   return `<!DOCTYPE html>
 <html lang="en">
@@ -61,18 +63,17 @@ function generateHTMLTemplate(fields: EmailMergeFields): string {
     }
     .demo-button {
       display: inline-block;
-      margin: 24px auto;
       padding: 12px 24px;
       background-color: #2D6CDF;
       color: #ffffff;
       text-decoration: none;
       border-radius: 8px;
       font-weight: 600;
-      text-align: center;
+      margin: 20px 0;
       transition: background-color 0.3s;
     }
     .demo-button:hover {
-      background-color: #1e56c7;
+      background-color: #1e4db7;
     }
     .email-card {
       background-color: #ffffff;
@@ -191,7 +192,7 @@ function generateHTMLTemplate(fields: EmailMergeFields): string {
       </p>
 
       <p class="main-text">
-        <strong>Here's what that looks like in action:</strong>
+        Here's what that looks like in action:
       </p>
 
       <ul class="benefits-list">
@@ -200,20 +201,21 @@ function generateHTMLTemplate(fields: EmailMergeFields): string {
         <li>Full visibility into every client interaction in one place</li>
       </ul>
 
-      <div class="cta-section">
-        <p class="cta-text">
-          You can explore a live demo of the client dashboard here:
-        </p>
-        <div style="text-align: center;">
-          <a href="${demoUrl}" class="demo-button">
-            🔗 View Live Demo Dashboard
-          </a>
-        </div>
+      <p class="main-text" style="text-align: center; margin: 24px 0;">
+        You can explore a live demo of the client dashboard here:
+      </p>
+
+      <div style="text-align: center; margin: 24px 0;">
+        <a href="${demoUrl}" class="demo-button">
+          🔗 View Live Demo Dashboard
+        </a>
       </div>
 
-      <p class="main-text">
-        If you'd like, I can walk you through how it adapts to your exact process — it only takes 15 minutes.
-      </p>
+      <div class="cta-section">
+        <p class="cta-text">
+          <strong>If you'd like, I can walk you through how it adapts to your exact process</strong> — it only takes 15 minutes.
+        </p>
+      </div>
 
       <!-- Signature -->
       <div class="signature">
@@ -246,7 +248,10 @@ function generateHTMLTemplate(fields: EmailMergeFields): string {
  */
 function generateTextTemplate(fields: EmailMergeFields): string {
   const { business_name, industry, website } = fields;
-  const demoUrl = 'https://demo.aveniraisolutions.ca';
+  
+  const demoUrl = process.env.NEXT_PUBLIC_SITE_URL 
+    ? `${process.env.NEXT_PUBLIC_SITE_URL}/demo`
+    : 'https://demo.aveniraisolutions.ca';
 
   return `Hello ${business_name} team,
 

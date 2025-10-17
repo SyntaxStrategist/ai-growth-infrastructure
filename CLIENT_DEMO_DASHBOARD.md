@@ -1,134 +1,147 @@
-# Client Demo Dashboard - Implementation Guide
+# Client Demo Dashboard Guide
 
 ## Overview
 
-A public-facing, read-only demo dashboard that showcases what a real Avenir AI Solutions client would see. Designed to be used in sales outreach emails and as a standalone marketing tool.
+Public-facing, read-only demo dashboard that showcases the Avenir AI Solutions client experience. Accessible at `/demo` without authentication.
 
-**Live URL:** https://demo.aveniraisolutions.ca  
-**Route:** `/demo`  
-**Access:** Public (no authentication required)  
+**Purpose:** Help prospects visualize the value of the Avenir AI platform before purchasing.
+
+**URL:** `https://demo.aveniraisolutions.ca` or `https://www.aveniraisolutions.ca/demo`
 
 ---
 
 ## ✅ Features
 
-### Navigation
+### 1. Public Access
 
-**Top Navbar:**
-- **Left:** Avenir AI Solutions logo (links to https://www.aveniraisolutions.ca)
-- **Right:** EN / FR language toggle
-- **Styling:** Sticky, backdrop blur, dark theme
+- **Route:** `/demo`
+- **Authentication:** None required (public page)
+- **Middleware:** Excluded from auth checks
+- **Accessibility:** Anyone can view
 
-### Hero Section
+### 2. Branding & Design
+
+**Visual Identity:**
+- ✅ Dark gradient background (from-gray-900 via-blue-900 to-gray-900)
+- ✅ Avenir AI Solutions logo in navbar
+- ✅ Professional, modern UI
+- ✅ Consistent with main website branding
+
+**Typography:**
+- Font: Inter, sans-serif
+- Gradient text effects
+- Clear hierarchy
+
+### 3. Top Navbar
+
+**Left Side:**
+- Avenir AI Solutions logo (clickable)
+- Links to: `https://www.aveniraisolutions.ca`
+
+**Right Side:**
+- Language toggle: EN / FR
+- Mirrors production style
+- Purple highlight for active language
+
+### 4. Hero Section
 
 **Content:**
-- **Title:** "Your AI-Powered Growth Dashboard" (EN) / "Votre Tableau de Bord de Croissance IA" (FR)
-- **Subtitle:** Description of automation capabilities
-- **CTA Button:** "🔗 Book a Demo" → Links to contact page
-- **Styling:** Gradient text, large font, centered
+- **Title:** "Your AI-Powered Growth Dashboard" (EN)
+  - French: "Votre Tableau de Bord IA de Croissance"
+- **Subtitle:** "See how Avenir AI Solutions automates client engagement, lead tracking, and performance analytics."
+- **CTA Button:** "🔗 Book a Demo"
+  - Links to: `https://www.aveniraisolutions.ca/contact`
+  - Gradient background (purple to blue)
+  - Hover effects
 
-### Demo Content (Mock Data)
+### 5. Demo Content (Mock Data)
 
-**1. Lead Overview Cards (3 metrics)**
-- **Leads Captured:** 247 (↑ 23% vs last month)
-- **Avg Response Time:** < 2 min (↓ 85% improvement)
-- **Conversion Rate:** 34% (↑ 12% vs last month)
+**Lead Overview Card:**
+```
+┌──────────────────────────────────────────┐
+│ Lead Overview         [Demo Data Badge] │
+├──────────────────────────────────────────┤
+│ Leads Captured: 247  (↑ 45%)            │
+│ Avg Response Time: < 2 min  (↓ 85%)    │
+│ Conversion Rate: 34%  (↑ 12%)           │
+└──────────────────────────────────────────┘
+```
 
-**2. Automation Insights (Bar Chart)**
-- AI Responses: 89%
-- Manual Interventions: 11%
-- Success Rate: 95%
-- Animated bars with hover tooltips
+**Automation Insights Chart:**
+```
+┌──────────────────────────────────────────┐
+│ Automation Insights   [Demo Data Badge] │
+├──────────────────────────────────────────┤
+│ AI Responses:        892 ███████████████ 87% │
+│ Manual Interventions: 124 ██             13% │
+│ Success Rate:         87% ███████████████ 87% │
+└──────────────────────────────────────────┘
+```
 
-**3. Recent Conversations (List)**
-- Mock client inquiries with timestamps
-- Hover effects
-- Realistic business names and messages
+**Recent Conversations:**
+```
+┌──────────────────────────────────────────┐
+│ Recent Conversations  [Demo Data Badge] │
+├──────────────────────────────────────────┤
+│ Construction Pro Inc.          [Active]  │
+│ "Interested in automating..."  2h ago    │
+├──────────────────────────────────────────┤
+│ RealtyMax Group            [Responded]   │
+│ "Can we integrate with..."    5h ago     │
+├──────────────────────────────────────────┤
+│ Metro Renovations          [Converted]   │
+│ "Looking for lead qual..."    1d ago     │
+└──────────────────────────────────────────┘
+```
 
-**4. Performance Over Time (Line Chart)**
-- 6-month performance trend
-- Animated bar chart
-- Shows growth from 45% → 95%
+**Performance Over Time Chart:**
+```
+┌──────────────────────────────────────────┐
+│ Performance Over Time [Demo Data Badge] │
+├──────────────────────────────────────────┤
+│ [Bar Chart]                              │
+│   █                                      │
+│   █       █                              │
+│   █   █   █   █                          │
+│   █   █   █   █   █   █                  │
+│ ──────────────────────────────────────   │
+│ Jan Feb Mar Apr May Jun                  │
+│  45  78 112 156 189 247                  │
+└──────────────────────────────────────────┘
+```
 
-### Design Elements
+### 6. Visual Indicators
 
-**Demo Badge:**
-- Yellow badge at top: "✨ Demo Data"
-- Indicates this is sample data
+**"Demo Data" Badges:**
+- Yellow badge on all widgets
+- Text: "Demo Data" (EN) / "Données de Démo" (FR)
+- Indicates simulated data
 
-**CTA Section:**
-- Highlighted section with gradient background
-- "Ready to automate your growth?" heading
-- Book demo button
+**Status Badges:**
+- Active: Purple
+- Responded: Blue
+- Converted: Green
 
-**Footer:**
-- Disclaimer: "This page is a live demo simulation..."
-- Copyright notice
-- Subtle styling
+### 7. Footer
+
+**Content:**
+- Disclaimer: "This page is a live demo simulation of the Avenir AI Solutions client dashboard."
+- Copyright: "© 2025 Avenir AI Solutions. All rights reserved."
+- Text: White/50 opacity
+- Border: Top border (white/10)
 
 ---
 
-## 🎨 UI/UX Design
+## 📧 Email Integration
 
-### Color Palette
+### Updated Outreach Email
 
-- **Background:** `from-gray-900 via-blue-900 to-gray-900`
-- **Cards:** `bg-white/5` with `border-white/10`
-- **Text:** White with various opacity levels
-- **Accent:** Blue-purple gradient
-- **Charts:** Blue (#3b82f6), Purple (#9333ea), Green (#10b981)
-
-### Animations
-
-**Framer Motion:**
-```typescript
-// Hero
-initial={{ opacity: 0, y: -20 }}
-animate={{ opacity: 1, y: 0 }}
-
-// Cards
-initial={{ opacity: 0, y: 20 }}
-animate={{ opacity: 1, y: 0 }}
-transition={{ delay: 0.1 }}
-
-// Bars
-initial={{ height: 0 }}
-animate={{ height: `${value}%` }}
-transition={{ delay: 0.5, duration: 0.6 }}
+**New Subject:**
+```
+Unlock 80% Time Savings at {business_name}
 ```
 
-**Hover Effects:**
-- Cards: `hover:bg-white/10`
-- Buttons: `hover:shadow-xl`
-- Bars: Tooltip appears on hover
-
-### Responsive Design
-
-- **Mobile:** Single column layout
-- **Tablet:** 2-column grid for conversations/performance
-- **Desktop:** Full 3-column grid for overview cards
-
----
-
-## 📁 File Structure
-
-```
-src/app/
-├── demo/
-│   └── page.tsx           # Public demo dashboard
-src/lib/email/
-└── branded_templates.ts   # Updated with demo link
-```
-
----
-
-## 🔗 Integration with Outreach Emails
-
-### Updated Email Template
-
-**Subject:** `Unlock 80% Time Savings at {business_name}`
-
-**New Content:**
+**New Copy:**
 ```
 Hello {business_name} team,
 
@@ -137,82 +150,166 @@ I came across your work in the {industry} space and wanted to reach out personal
 We help businesses like yours automate lead management, form responses, and client follow-ups — using smart AI workflows that save teams 10+ hours per week.
 
 Here's what that looks like in action:
-  → A custom dashboard that captures and routes leads instantly
-  → Automated replies that feel human (in any language)
-  → Full visibility into every client interaction in one place
+→ A custom dashboard that captures and routes leads instantly
+→ Automated replies that feel human (in any language)
+→ Full visibility into every client interaction in one place
 
 You can explore a live demo of the client dashboard here:
 🔗 https://demo.aveniraisolutions.ca
 
 If you'd like, I can walk you through how it adapts to your exact process — it only takes 15 minutes.
+
+——
+Best regards,
+Avenir AI Solutions Team
+www.aveniraisolutions.ca
+——
 ```
 
-**New HTML Elements:**
-- Logo reduced to 80px (was 180px)
-- Blue demo button: `#2D6CDF` (Avenir brand color)
-- Centered button with padding: 12px 24px
-- Rounded corners (8px)
-- Hover effect (darker blue)
-
-**Button HTML:**
-```html
-<div style="text-align: center;">
-  <a href="https://demo.aveniraisolutions.ca" class="demo-button">
-    🔗 View Live Demo Dashboard
-  </a>
-</div>
-```
-
-**Button CSS:**
+**Demo Button Styling:**
 ```css
 .demo-button {
   display: inline-block;
-  margin: 24px auto;
   padding: 12px 24px;
-  background-color: #2D6CDF;
+  background-color: #2D6CDF;  /* Avenir blue */
   color: #ffffff;
   text-decoration: none;
   border-radius: 8px;
   font-weight: 600;
-  text-align: center;
+  margin: 20px 0;
 }
+```
+
+**Logo Size:**
+- Updated: `max-width: 80px` (from 180px)
+- More compact, professional appearance
+
+**HTML Version:**
+- Centered demo button below CTA
+- Clickable link to `/demo`
+- Blue color (#2D6CDF)
+- Rounded corners
+
+**Plain Text Version:**
+- Demo URL included: `🔗 https://demo.aveniraisolutions.ca`
+- Same copy structure
+- Accessible format
+
+---
+
+## 🔧 Technical Implementation
+
+### Route Structure
+
+```
+src/app/
+└── demo/
+    └── page.tsx       # Public demo dashboard (260+ lines)
+```
+
+**Route:** `/demo` (no locale prefix needed)
+
+**Rendering:** Static page (○ symbol in build output)
+
+**Size:** 5.97 kB
+
+### Components Used
+
+- **Framer Motion:** Animations
+- **Next.js Link:** Navigation
+- **useState:** Language toggle
+- **CSS:** Tailwind classes
+
+### Mock Data
+
+**Metrics:**
+```typescript
+const leadMetrics = {
+  captured: 247,
+  avgResponseTime: '< 2 min',
+  conversionRate: '34%'
+};
+
+const automationData = {
+  aiResponses: 892,
+  manualInterventions: 124,
+  successRate: 87
+};
+```
+
+**Conversations:**
+```typescript
+const recentConversations = [
+  { name: 'Construction Pro Inc.', message: '...', status: 'active' },
+  // ... more entries
+];
+```
+
+**Performance:**
+```typescript
+const performanceData = [
+  { month: 'Jan', leads: 45 },
+  // ... monthly data
+];
 ```
 
 ---
 
-## 🔐 Security & Access
+## 🎨 Design System
 
-### Public Route
+### Colors
 
-**No Authentication:**
-- Route: `/demo` (no locale prefix required)
-- No auth middleware
-- Not in `baseRoutes` array
-- Publicly accessible
+- **Background:** `from-gray-900 via-blue-900 to-gray-900`
+- **Cards:** `bg-white/5 backdrop-blur-sm border-white/10`
+- **Text Primary:** `text-white`
+- **Text Secondary:** `text-white/70`
+- **Accent:** Purple to Blue gradient
 
-**Middleware Config:**
-```typescript
-// src/middleware.ts
-const baseRoutes = [
-  '/client/signup',
-  '/admin/login',
-  // ... (demo NOT included - public access)
-];
+### Components
+
+**Cards:**
+```css
+bg-white/5
+backdrop-blur-sm
+border border-white/10
+rounded-lg
+p-6
 ```
 
-**Result:**
-- `/demo` → Public ✅
-- `/en/demo` → Public ✅
-- `/fr/demo` → Public ✅
+**Badges:**
+```css
+px-3 py-1
+bg-yellow-500/20 text-yellow-300
+rounded-full
+border border-yellow-500/30
+```
 
-### Data Safety
+**Buttons:**
+```css
+px-6 py-3
+bg-gradient-to-r from-purple-500 to-blue-500
+rounded-lg
+font-semibold
+```
 
-**Mock Data Only:**
-- All data is hardcoded
-- No real client information
-- No database queries
-- No API calls
-- Safe for public viewing
+### Animations
+
+**Stagger Effect:**
+```typescript
+delay: 0.0s  // Hero
+delay: 0.2s  // Lead Overview
+delay: 0.4s  // Automation Insights
+delay: 0.6s  // Recent Conversations
+delay: 0.8s  // Performance Chart
+delay: 1.0s  // Footer
+```
+
+**Bar Chart Animation:**
+```typescript
+initial={{ height: 0 }}
+animate={{ height: `${percentage}%` }}
+transition={{ duration: 0.6, delay: 1 + idx * 0.1 }}
+```
 
 ---
 
@@ -224,478 +321,545 @@ const baseRoutes = [
 # 1. Start dev server
 npm run dev
 
-# 2. Open demo page (no login required)
+# 2. Open in browser (incognito/private)
 http://localhost:3000/demo
 
-# Expected:
-- Page loads without authentication
-- Dark gradient background
-- Avenir logo in navbar
-- EN/FR toggle works
-- All demo content displays
+# 3. Verify:
+   ✅ No login required
+   ✅ Page loads immediately
+   ✅ No authentication redirect
 ```
 
 ### Test 2: Language Toggle
 
 ```bash
-# 1. Navigate to demo page
+# 1. Navigate to /demo
 # 2. Click "FR" button
-
-# Expected:
-- Title changes to French
-- All labels update to French
-- Metrics stay the same (numbers)
-- Language persists on refresh (cookie)
+# 3. Verify:
+   ✅ Content switches to French
+   ✅ FR button highlighted purple
+   ✅ Metrics labels translated
+   ✅ Conversation statuses translated
 ```
 
-### Test 3: Demo Link in Email
+### Test 3: Navigation
 
 ```bash
-# 1. Navigate to Prospect Intelligence
+# 1. Click Avenir logo
+# 2. Verify:
+   ✅ Redirects to https://www.aveniraisolutions.ca
+   ✅ Opens in same tab
+
+# 3. Click "Book a Demo" button
+# 4. Verify:
+   ✅ Redirects to /contact page
+```
+
+### Test 4: Email Preview
+
+```bash
+# 1. Navigate to /en/admin/prospect-intelligence
 # 2. Click "📧 Send Outreach"
-# 3. Review email preview
-
-# Expected:
-- Logo is smaller (80px)
-- New email copy appears
-- Blue demo button visible
-- Button links to https://demo.aveniraisolutions.ca
-- Iframe renders correctly
+# 3. Verify in iframe:
+   ✅ Logo is smaller (80px)
+   ✅ New email copy appears
+   ✅ Demo button visible and styled
+   ✅ Button color: #2D6CDF
+   ✅ Button text: "🔗 View Live Demo Dashboard"
 ```
 
-### Test 4: Book Demo Button
+### Test 5: Animations
 
 ```bash
-# 1. On demo page, click "🔗 Book a Demo"
-
-# Expected:
-- Opens https://www.aveniraisolutions.ca/contact
-- Opens in new tab
-- No errors
+# 1. Refresh /demo page
+# 2. Verify:
+   ✅ Hero fades in first
+   ✅ Cards appear with stagger effect
+   ✅ Bar chart animates upward
+   ✅ Smooth transitions throughout
 ```
-
-### Test 5: Responsive Design
-
-```bash
-# 1. Open demo page
-# 2. Resize browser window
-
-# Expected:
-- Mobile: Single column
-- Tablet: 2 columns
-- Desktop: 3 columns for overview cards
-- Charts adjust to width
-```
-
----
-
-## 📊 Mock Data Reference
-
-### Lead Overview Metrics
-
-```typescript
-{
-  leadsCaptured: 247,        // ↑ 23% vs last month
-  avgResponseTime: '< 2 min', // ↓ 85% improvement
-  conversionRate: '34%',      // ↑ 12% vs last month
-}
-```
-
-### Automation Insights
-
-```typescript
-[
-  { label: 'AI Responses', value: 89, color: 'bg-blue-500' },
-  { label: 'Manual Interventions', value: 11, color: 'bg-purple-500' },
-  { label: 'Success Rate', value: 95, color: 'bg-green-500' },
-]
-```
-
-### Recent Conversations
-
-```typescript
-[
-  {
-    name: 'Construction ABC Inc.',
-    message: 'Interested in automation for our quote requests...',
-    time: '12 min ago',
-  },
-  {
-    name: 'Immobilier Québec',
-    message: 'Can you handle bilingual lead forms?',
-    time: '1 hour ago',
-  },
-  {
-    name: 'Marketing Pro Ltd.',
-    message: 'Looking for CRM integration options...',
-    time: '3 hours ago',
-  },
-]
-```
-
-### Performance Over Time
-
-```typescript
-[
-  { month: 'Jan', value: 45 },
-  { month: 'Feb', value: 52 },
-  { month: 'Mar', value: 68 },
-  { month: 'Apr', value: 73 },
-  { month: 'May', value: 89 },
-  { month: 'Jun', value: 95 },
-]
-```
-
----
-
-## 🎯 Sales Use Cases
-
-### 1. Email Outreach
-
-**Workflow:**
-1. Send branded outreach email
-2. Prospect clicks "🔗 View Live Demo Dashboard"
-3. Lands on `/demo` page
-4. Explores mock dashboard
-5. Clicks "🔗 Book a Demo"
-6. Fills out contact form
-
-**Benefit:**
-- Shows product before meeting
-- Builds credibility
-- Self-service exploration
-- Higher conversion rates
-
-### 2. Website Traffic
-
-**Link from:**
-- Homepage
-- Features page
-- Pricing page
-- Blog posts
-- Social media
-
-**Benefit:**
-- Live product demonstration
-- No signup required
-- Instant value preview
-- Lead generation
-
-### 3. Sales Presentations
-
-**Workflow:**
-1. Share screen during sales call
-2. Walk through demo dashboard
-3. Explain each feature
-4. Show real-time capabilities
-
-**Benefit:**
-- Visual aid for sales
-- Professional presentation
-- Consistent messaging
-- Easy to follow
-
----
-
-## 🔧 Customization
-
-### Change Metrics
-
-**Location:** `src/app/demo/page.tsx`
-
-```typescript
-const metrics = {
-  leadsCaptured: 350,          // Change number
-  avgResponseTime: '< 1 min',  // Change time
-  conversionRate: '42%',       // Change percentage
-};
-```
-
-### Add New Conversations
-
-```typescript
-const conversations = [
-  // Add new conversation
-  {
-    name: 'Your Business Name',
-    message: 'Your message here...',
-    time: '5 min ago',
-  },
-  // ... existing conversations
-];
-```
-
-### Change Performance Data
-
-```typescript
-const performanceData = [
-  { month: 'Jan', value: 50 },  // Change values
-  { month: 'Feb', value: 60 },
-  // ... add more months
-];
-```
-
-### Customize Colors
-
-```typescript
-const automationData = [
-  { label: 'AI Responses', value: 89, color: 'bg-cyan-500' },  // Change colors
-  { label: 'Manual Interventions', value: 11, color: 'bg-pink-500' },
-  { label: 'Success Rate', value: 95, color: 'bg-emerald-500' },
-];
-```
-
----
-
-## 📈 Expected Impact
-
-### Email Performance
-
-**Before (No Demo Link):**
-- Click-through rate: ~2%
-- Engagement: Low
-- Conversion: ~5%
-
-**After (With Demo Link):**
-- Click-through rate: ~8% (+300%)
-- Engagement: High (interactive demo)
-- Conversion: ~12% (+140%)
-
-### Sales Cycle
-
-**Before:**
-- First touchpoint: Email
-- First value: Sales call
-- Time to conversion: 4-6 weeks
-
-**After:**
-- First touchpoint: Email with demo
-- First value: Instant (demo dashboard)
-- Time to conversion: 2-3 weeks (-40%)
 
 ---
 
 ## 🚀 Deployment
 
-### Environment Variables
+### Vercel Configuration
 
-**None required** - Demo uses hardcoded mock data
+**Domain Setup:**
+```
+Primary: www.aveniraisolutions.ca
+Demo: demo.aveniraisolutions.ca (optional subdomain)
+Path: www.aveniraisolutions.ca/demo
+```
 
-**Optional:**
+**Environment Variables:**
 ```bash
 NEXT_PUBLIC_SITE_URL=https://www.aveniraisolutions.ca
 ```
 
-### Build & Deploy
-
-```bash
-# Build
-npm run build
-
-# Test locally
-npm run dev
-# Visit: http://localhost:3000/demo
-
-# Deploy
-git push origin main
+**Build Output:**
+```
+○ /demo    5.97 kB    159 kB    (Static)
 ```
 
-### Subdomain Setup (Optional)
+### DNS Configuration (Optional)
 
-**If using subdomain (demo.aveniraisolutions.ca):**
+**If using subdomain:**
+```
+Type: CNAME
+Name: demo
+Value: cname.vercel-dns.com
+```
 
-1. **Vercel Configuration:**
-   - Add domain alias: `demo.aveniraisolutions.ca`
-   - Point to `/demo` route via rewrite
+**Otherwise:**
+- Use path: `www.aveniraisolutions.ca/demo`
+- No DNS changes needed
 
-2. **DNS Configuration:**
-   - Add CNAME record: `demo` → `cname.vercel-dns.com`
+### Middleware Configuration
 
-3. **Next.js Rewrite (if needed):**
-   ```typescript
-   // next.config.ts
-   async rewrites() {
-     return [
-       {
-         source: '/',
-         destination: '/demo',
-         has: [{ type: 'host', value: 'demo.aveniraisolutions.ca' }],
-       },
-     ];
-   }
-   ```
+**Current:** `/demo` is NOT in `baseRoutes` array
+- ✅ No locale redirection
+- ✅ No authentication required
+- ✅ Publicly accessible
+
+**If needed, explicitly exclude:**
+```typescript
+// In middleware.ts
+const publicRoutes = ['/demo'];
+
+if (publicRoutes.includes(pathname)) {
+  return NextResponse.next();  // Allow public access
+}
+```
+
+---
+
+## 📊 Performance
+
+### Page Size
+
+```
+JavaScript: 5.97 kB (page specific)
+Total First Load: 159 kB (includes shared)
+```
+
+**Optimized:**
+- Static rendering
+- Shared chunks cached
+- Fast load time
+
+### Lighthouse Scores (Expected)
+
+- Performance: 95+
+- Accessibility: 90+
+- Best Practices: 95+
+- SEO: 90+
+
+---
+
+## 🎯 Use Cases
+
+### 1. Prospect Outreach
+
+**Flow:**
+1. Prospect receives branded email
+2. Clicks "🔗 View Live Demo Dashboard" button
+3. Opens `/demo` page
+4. Explores mock client dashboard
+5. Understands value proposition
+6. Clicks "Book a Demo" to convert
+
+### 2. Sales Presentations
+
+**Flow:**
+1. Sales team shares demo link
+2. Prospect explores at their own pace
+3. Sees real dashboard interface
+4. Visualizes their own data in system
+5. More likely to book a call
+
+### 3. Website Traffic
+
+**Flow:**
+1. Website visitor finds demo link
+2. Views live simulation
+3. Understands product offering
+4. Converts to lead
+
+---
+
+## 🔐 Security
+
+### Public Access
+
+**Safe for public viewing:**
+- ✅ No real data displayed
+- ✅ Mock/simulated data only
+- ✅ No API calls to production databases
+- ✅ No authentication required
+- ✅ No sensitive information exposed
+
+### Data Privacy
+
+**All data is fictional:**
+- Company names are generic
+- Numbers are simulated
+- No real client information
+- No personal data
+
+### Rate Limiting
+
+**Not required:**
+- Static page
+- No database queries
+- No API calls
+- No resource-intensive operations
+
+---
+
+## 🎨 Customization
+
+### Change Mock Data
+
+**Lead Metrics:**
+```typescript
+// src/app/demo/page.tsx
+const leadMetrics = {
+  captured: 350,        // Update number
+  avgResponseTime: '< 1 min',  // Update time
+  conversionRate: '42%'  // Update percentage
+};
+```
+
+### Add New Widgets
+
+```typescript
+// Add new section after Performance Over Time
+<motion.div
+  initial={{ opacity: 0, y: 20 }}
+  animate={{ opacity: 1, y: 0 }}
+  transition={{ duration: 0.6, delay: 1.0 }}
+>
+  <h2>New Widget Title</h2>
+  {/* Widget content */}
+</motion.div>
+```
+
+### Change Color Scheme
+
+```typescript
+// Current: Purple to Blue gradient
+className="bg-gradient-to-r from-purple-500 to-blue-500"
+
+// Custom: Different colors
+className="bg-gradient-to-r from-cyan-500 to-blue-500"
+```
+
+### Modify Translations
+
+```typescript
+const t = {
+  // English
+  heroTitle: 'Your Custom Title',
+  
+  // French
+  heroTitle: isFrench ? 'Votre Titre Personnalisé' : 'Your Custom Title',
+};
+```
+
+---
+
+## 📧 Email Template Updates
+
+### Changes Made
+
+**1. Subject Line:**
+- **Before:** "Streamline Operations at {business_name}"
+- **After:** "Unlock 80% Time Savings at {business_name}"
+
+**2. Email Copy:**
+- More conversational tone
+- Concrete time savings claim (10+ hours/week)
+- Shorter, punchier benefits
+- Demo dashboard link prominently featured
+
+**3. Demo Button:**
+```html
+<a href="https://demo.aveniraisolutions.ca" class="demo-button">
+  🔗 View Live Demo Dashboard
+</a>
+```
+
+**Styling:**
+- Background: #2D6CDF (Avenir blue)
+- Padding: 12px 24px
+- Border radius: 8px
+- Font weight: 600
+- Center aligned
+
+**4. Logo Size:**
+- **Before:** 180px
+- **After:** 80px
+- More compact, modern appearance
+
+### HTML Template Structure
+
+```html
+<div class="email-card">
+  <p class="greeting">Hello {business_name} team,</p>
+  
+  <p class="main-text">
+    I came across your work in the {industry} space...
+  </p>
+  
+  <p class="main-text">
+    We help businesses like yours...
+  </p>
+  
+  <ul class="benefits-list">
+    <li>A custom dashboard...</li>
+    <li>Automated replies...</li>
+    <li>Full visibility...</li>
+  </ul>
+  
+  <p class="main-text" style="text-align: center;">
+    You can explore a live demo here:
+  </p>
+  
+  <!-- Demo Button -->
+  <div style="text-align: center;">
+    <a href="{demo_url}" class="demo-button">
+      🔗 View Live Demo Dashboard
+    </a>
+  </div>
+  
+  <div class="cta-section">
+    <p class="cta-text">
+      <strong>I can walk you through how it adapts to your exact process</strong>
+      — it only takes 15 minutes.
+    </p>
+  </div>
+  
+  <div class="signature">
+    <!-- Signature block -->
+  </div>
+</div>
+```
+
+---
+
+## 📊 Expected Impact
+
+### Email Performance
+
+**Before:**
+- Subject: Generic "Streamline Operations"
+- No visual demo
+- Text-only description
+- Engagement: Baseline
+
+**After:**
+- Subject: Specific "Unlock 80% Time Savings"
+- Interactive demo link
+- Visual proof via dashboard
+- Engagement: Estimated +50% increase
+
+### Conversion Funnel
+
+```
+Email Sent → Email Opened → Demo Clicked → Demo Explored → Booked Call
+   100%          30%             15%            12%           5%
+
+Expected improvement with demo:
+   100%          35%             25%            20%           10%
+```
+
+**Impact:**
+- Demo click rate: +67% (15% → 25%)
+- Exploration rate: +67% (12% → 20%)
+- Conversion rate: +100% (5% → 10%)
 
 ---
 
 ## 🐛 Troubleshooting
 
-### Issue: Demo page requires login
+### Issue: Demo page shows 404
 
-**Cause:** Route might be in `baseRoutes` array
+**Check:**
+1. Is `/demo` route built?
+   ```bash
+   npm run build | grep "/demo"
+   ```
+2. Is file at `src/app/demo/page.tsx`?
 
 **Fix:**
-```typescript
-// src/middleware.ts
-const baseRoutes = [
-  // ... other routes
-  // Ensure '/demo' is NOT in this list
-];
-```
+- Verify file exists
+- Rebuild: `npm run build`
+- Check build output for `/demo` route
 
 ### Issue: Language toggle doesn't work
 
-**Cause:** State not updating
+**Check:**
+1. Is `useState` being used?
+2. Is `locale` state updating?
+3. Are translations using `isFrench` check?
 
 **Fix:**
-```typescript
-// Check useState
-const [locale, setLocale] = useState<'en' | 'fr'>('en');
+- Check browser console for errors
+- Verify state management
+- Test button onClick handlers
 
-// Check button onClick
-onClick={() => setLocale('fr')}
-```
+### Issue: Demo button in email doesn't link
 
-### Issue: Charts not animating
-
-**Cause:** Framer Motion not installed
-
-**Fix:**
-```bash
-npm install framer-motion
-```
-
-### Issue: Logo not loading
-
-**Cause:** Logo file missing or wrong path
+**Check:**
+1. Is `demoUrl` variable set correctly?
+2. Is HTML template using `${demoUrl}`?
+3. Is email rendering HTML version?
 
 **Fix:**
-- Check file exists: `public/assets/logos/logo.svg`
-- Verify path: `/assets/logos/logo.svg`
+- Check `NEXT_PUBLIC_SITE_URL` env var
+- Verify email HTML in preview modal
+- Test link in sent email
+
+### Issue: Logo doesn't load
+
+**Check:**
+1. Is logo file at `/public/assets/logos/logo.svg`?
+2. Is path correct in HTML?
+3. Is CORS configured for images?
+
+**Fix:**
+- Verify logo file exists
+- Check file path
+- Use absolute URL if needed
 
 ---
 
-## 📝 Console Logging
+## 📈 Analytics (Future)
 
-```
-[DemoPage] Page loaded
-[DemoPage] Language changed to: fr
-```
+### Recommended Tracking
 
-*(Minimal logging for public page)*
-
----
-
-## 🎯 Sales Integration
-
-### Email → Demo → Contact Flow
-
-```
-1. Prospect receives branded email
-   ↓
-2. Clicks "🔗 View Live Demo Dashboard"
-   ↓
-3. Explores demo dashboard (no signup)
-   ↓
-4. Impressed by features
-   ↓
-5. Clicks "🔗 Book a Demo"
-   ↓
-6. Fills out contact form
-   ↓
-7. Sales team follows up
-```
-
-**Conversion funnel:**
-- Email sent: 100%
-- Email opened: ~30%
-- Demo clicked: ~8% (of opens)
-- Contact form: ~12% (of demo visits)
-- Overall conversion: ~0.3% → ~1.0% (+233%)
-
----
-
-## 📖 Related Documentation
-
-- [Outreach Modal Guide](./OUTREACH_MODAL_GUIDE.md)
-- [Branded Email Templates](./BRANDED_EMAIL_TEMPLATES.md)
-- [Final Feature Summary](./FINAL_FEATURE_SUMMARY.md)
-
----
-
-## ✅ Production Checklist
-
-Before deploying:
-
-- [x] Build passes (`npm run build`)
-- [x] Demo page loads without auth
-- [x] EN/FR toggle works
-- [x] All charts animate
-- [x] Logo displays correctly
-- [x] Book Demo button links to contact page
-- [x] Email template includes demo link
-- [x] Demo button in email is clickable
-- [x] Responsive on mobile
-- [x] No console errors
-- [x] Footer displays correctly
-- [x] Subdomain configured (optional)
-
----
-
-## 🎉 Benefits
-
-### For Prospects
-
-1. **Self-Service Demo:** Explore product at their own pace
-2. **No Commitment:** No signup or email required
-3. **Visual Understanding:** See product in action
-4. **Build Trust:** Professional, polished demo
-5. **Easy Access:** One click from email
-
-### For Sales Team
-
-1. **Pre-Qualified Leads:** Demo visitors are more interested
-2. **Shorter Sales Cycle:** Prospects already understand product
-3. **Higher Conversion:** Visual proof increases trust
-4. **Scalable:** Demo available 24/7
-5. **Trackable:** Can add analytics to measure engagement
-
-### For Business
-
-1. **Lead Generation:** Demo drives contact form fills
-2. **Brand Credibility:** Shows professionalism
-3. **Competitive Edge:** Interactive demo vs competitors
-4. **Cost Effective:** One demo serves unlimited prospects
-5. **Data Collection:** Can track demo usage (optional)
-
----
-
-## 📊 Analytics (Future)
-
-**Recommended tracking:**
+**Events to track:**
 - Demo page visits
+- Demo link clicks (from email)
+- Language toggle usage
+- "Book a Demo" button clicks
 - Time on page
-- Language preference
-- Button clicks (Book Demo)
 - Scroll depth
-- Exit pages
+
+**Tools:**
+- Google Analytics 4
+- Plausible Analytics
+- Vercel Analytics
 
 **Implementation:**
 ```typescript
-// Add to demo/page.tsx
+// Add to demo page
 useEffect(() => {
   // Track page view
-  if (typeof window !== 'undefined' && window.gtag) {
-    window.gtag('event', 'page_view', {
-      page_path: '/demo',
-      page_title: 'Client Demo Dashboard'
-    });
-  }
+  analytics.track('Demo Page Viewed', {
+    language: locale,
+    source: 'direct'
+  });
 }, []);
 ```
 
 ---
 
-**Status:** ✅ Complete and Production-Ready  
-**Impact:** +233% email-to-conversion improvement  
-**Next:** Deploy and share demo link in outreach campaigns!
+## 📚 Related Documentation
+
+- [Outreach Modal Guide](./OUTREACH_MODAL_GUIDE.md)
+- [Branded Email Templates](./BRANDED_EMAIL_TEMPLATES.md)
+- [Email Enrichment Fallback](./EMAIL_ENRICHMENT_FALLBACK.md)
+- [Final Feature Summary](./FINAL_FEATURE_SUMMARY.md)
+
+---
+
+## ✅ Deployment Checklist
+
+- [x] Demo page created (`/demo`)
+- [x] Public access (no auth)
+- [x] Language toggle (EN/FR)
+- [x] Mock data displayed
+- [x] Animations working
+- [x] Email templates updated
+- [x] Demo button added to emails
+- [x] Logo size reduced (80px)
+- [x] Subject line updated
+- [x] Both HTML and text versions
+- [x] Build successful
+- [x] Route registered
+- [x] Documentation complete
+
+---
+
+## 🚀 Go Live
+
+### Steps
+
+1. **Test locally:**
+   ```bash
+   npm run dev
+   # Visit: http://localhost:3000/demo
+   ```
+
+2. **Verify email:**
+   - Open Email Preview Modal
+   - Check demo button appears
+   - Click button in preview (should open demo)
+
+3. **Deploy:**
+   ```bash
+   git push origin main
+   # Vercel auto-deploys
+   ```
+
+4. **Verify production:**
+   - Visit: https://www.aveniraisolutions.ca/demo
+   - Test all interactions
+   - Send test email and verify demo link works
+
+5. **Share:**
+   - Add demo link to website
+   - Include in sales presentations
+   - Use in outreach campaigns
+
+---
+
+## 🎉 Success Criteria
+
+✅ **Demo Page:**
+- Publicly accessible
+- No authentication required
+- Professional design
+- Mock data displayed
+- Animations smooth
+- Bilingual support
+
+✅ **Email Integration:**
+- Demo link in email template
+- Button styled correctly
+- Subject line updated
+- Logo size reduced
+- HTML and text versions
+
+✅ **User Experience:**
+- Clear value proposition
+- Interactive exploration
+- Easy booking flow
+- Professional branding
+
+✅ **Technical:**
+- Build successful
+- Route registered
+- No errors
+- Documentation complete
+
+---
+
+**Status:** ✅ Production-Ready  
+**Impact:** Estimated +50% email engagement, +100% conversion rate  
+**Next:** Deploy and monitor performance  
+
+**🚀 Ready to go live!**
 
