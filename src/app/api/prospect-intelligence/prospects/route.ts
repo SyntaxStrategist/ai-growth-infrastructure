@@ -18,6 +18,47 @@ const supabase = createClient(supabaseUrl, supabaseKey, {
 });
 
 /**
+ * GET - Fetch all prospects
+ */
+export async function GET(req: NextRequest) {
+  console.log('[ProspectsAPI] ============================================');
+  console.log('[ProspectsAPI] Fetching all prospects');
+
+  try {
+    // Fetch all prospects from Supabase, ordered by creation date descending
+    const { data, error } = await supabase
+      .from('prospect_candidates')
+      .select('*')
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      console.error('[ProspectsAPI] ❌ Database error:', error.message);
+      return NextResponse.json(
+        { success: false, error: 'Database connection failed', details: error.message },
+        { status: 500 }
+      );
+    }
+
+    console.log('[ProspectsAPI] ✅ Fetched', data?.length || 0, 'prospects');
+    console.log('[ProspectsAPI] ============================================');
+
+    return NextResponse.json({
+      success: true,
+      data: data || []
+    });
+
+  } catch (error) {
+    console.error('[ProspectsAPI] ❌ Error fetching prospects:', error);
+    console.log('[ProspectsAPI] ============================================');
+    
+    return NextResponse.json(
+      { success: false, error: 'Database connection failed', details: error instanceof Error ? error.message : 'Unknown error' },
+      { status: 500 }
+    );
+  }
+}
+
+/**
  * PUT - Update prospect details
  */
 export async function PUT(req: NextRequest) {
