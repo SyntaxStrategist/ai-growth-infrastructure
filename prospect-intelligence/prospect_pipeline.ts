@@ -250,15 +250,28 @@ export async function runProspectPipeline(config: PipelineConfig): Promise<Prosp
           
           console.log(`   ${formScanResult.hasForm ? '✅' : '❌'} Form: ${formScanResult.formCount} | Mailto: ${formScanResult.hasMailto} | CAPTCHA: ${formScanResult.hasCaptcha}`);
           
-          // Email enrichment fallback: Extract email from mailto links
-          if (!prospect.contact_email && formScanResult.metadata.mailto_emails && formScanResult.metadata.mailto_emails.length > 0) {
-            const fallbackEmail = formScanResult.metadata.mailto_emails[0]; // Use first email found
-            prospect.contact_email = fallbackEmail;
-            console.log(`   [FormScanner] ✅ Extracted fallback email from mailto link: ${fallbackEmail}`);
-            await logIntegration('form_scanner', 'info', 'Extracted fallback email from mailto link', {
-              website: prospect.website,
-              email: fallbackEmail
-            });
+          // Email enrichment: Extract email from mailto links
+          if (formScanResult.metadata.mailto_emails && formScanResult.metadata.mailto_emails.length > 0) {
+            const extractedEmails = formScanResult.metadata.mailto_emails;
+            console.log(`   [EmailEnrichment] Found ${extractedEmails.length} mailto emails:`, extractedEmails);
+            
+            // Use first valid email if contact_email is missing
+            if (!prospect.contact_email) {
+              const fallbackEmail = extractedEmails[0];
+              prospect.contact_email = fallbackEmail;
+              console.log(`   [EmailEnrichment] ✅ Populated contact_email from mailto link: ${fallbackEmail}`);
+              console.log(`   [EmailEnrichment] ✅ Email will be saved to Supabase for ${prospect.business_name}`);
+              await logIntegration('form_scanner', 'info', 'Extracted fallback email from mailto link', {
+                business_name: prospect.business_name,
+                website: prospect.website,
+                email: fallbackEmail,
+                source: 'mailto_extraction'
+              });
+            } else {
+              console.log(`   [EmailEnrichment] ℹ️  Contact email already exists: ${prospect.contact_email} (mailto not used)`);
+            }
+          } else if (!prospect.contact_email) {
+            console.log(`   [EmailEnrichment] ⚠️  No mailto links found - contact_email remains empty`);
           }
           
         } catch (scanError) {

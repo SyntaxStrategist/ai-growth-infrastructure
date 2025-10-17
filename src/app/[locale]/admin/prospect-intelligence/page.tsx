@@ -968,9 +968,14 @@ export default function ProspectIntelligencePage() {
                                   📝 Form
                                 </span>
                               )}
-                              {prospect.metadata.form_scan.has_mailto && (
-                                <span className="px-2 py-0.5 rounded bg-blue-500/20 text-blue-400" title="Has mailto link">
+                              {prospect.contact_email && (
+                                <span className="px-2 py-0.5 rounded bg-blue-500/20 text-blue-400" title={`Email: ${prospect.contact_email}`}>
                                   ✉️ Email
+                                </span>
+                              )}
+                              {!prospect.contact_email && prospect.metadata.form_scan.has_mailto && (
+                                <span className="px-2 py-0.5 rounded bg-orange-500/20 text-orange-400" title="Mailto link found but no valid email extracted">
+                                  ⚠️ No Email
                                 </span>
                               )}
                               {prospect.metadata.form_scan.has_captcha && (

@@ -56,6 +56,23 @@ export async function saveProspectsToDatabase(prospects: ProspectCandidate[]): P
   });
 
   try {
+    // Log email enrichment stats before saving
+    const prospectsWithEmail = prospects.filter(p => p.contact_email).length;
+    const prospectsWithoutEmail = prospects.length - prospectsWithEmail;
+    
+    console.log('[SupabaseConnector] ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+    console.log('[SupabaseConnector] Email Enrichment Stats:');
+    console.log('[SupabaseConnector]   ✅ With contact_email:', prospectsWithEmail);
+    console.log('[SupabaseConnector]   ❌ Without contact_email:', prospectsWithoutEmail);
+    console.log('[SupabaseConnector]   📊 Enrichment Rate:', ((prospectsWithEmail / prospects.length) * 100).toFixed(1) + '%');
+    console.log('[SupabaseConnector] ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+    
+    // Log each prospect being saved
+    records.forEach((record, idx) => {
+      console.log(`[SupabaseConnector] [${idx + 1}/${records.length}] ${record.business_name}`);
+      console.log(`[SupabaseConnector]   └─ contact_email: ${record.contact_email || '(none)'}`);
+    });
+    
     const { data, error } = await supabase
       .from('prospect_candidates')
       .upsert(records, { onConflict: 'website', ignoreDuplicates: false });
@@ -65,7 +82,8 @@ export async function saveProspectsToDatabase(prospects: ProspectCandidate[]): P
       throw error;
     }
 
-    console.log('[SupabaseConnector] ✅ Successfully saved', prospects.length, 'prospects');
+    console.log('[SupabaseConnector] ✅ Successfully saved', prospects.length, 'prospects to Supabase');
+    console.log('[SupabaseConnector] ✅ Contact emails saved:', prospectsWithEmail + '/' + prospects.length);
   } catch (error) {
     console.error('[SupabaseConnector] ❌ Database operation failed:', error);
     throw error;
