@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { useLocale } from 'next-intl';
 import dynamic from 'next/dynamic';
 import AvenirLogo from '../../../../components/AvenirLogo';
+import UniversalLanguageToggle from '../../../../components/UniversalLanguageToggle';
 import type { LeadAction } from '../../../api/lead-actions/route';
 
 // Dynamic imports to prevent hydration mismatches
@@ -551,7 +552,10 @@ export default function ClientDashboard() {
   if (!authenticated) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-[#0f172a] via-[#1e1b4b] to-[#0f172a] text-white">
-        <header className="fixed top-0 left-0 right-0 z-50 bg-black/20 backdrop-blur-lg border-b border-white/10">
+        {/* Universal Language Toggle */}
+        <UniversalLanguageToggle />
+        
+        <header className="fixed top-0 left-0 right-0 z-40 bg-black/20 backdrop-blur-lg border-b border-white/10">
           <div className="max-w-7xl mx-auto px-6 py-4">
             <a href={`/${locale}`} className="inline-block">
               <AvenirLogo locale={locale} showText={true} />
@@ -644,6 +648,9 @@ export default function ClientDashboard() {
   // Dashboard Screen (Complete Mirror of Admin Dashboard)
   return (
     <div className="min-h-screen p-8 bg-black text-white">
+      {/* Universal Language Toggle */}
+      <UniversalLanguageToggle />
+      
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <motion.div

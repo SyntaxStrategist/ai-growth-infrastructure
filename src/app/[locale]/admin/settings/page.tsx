@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useLocale } from 'next-intl';
 import { motion } from 'framer-motion';
+import UniversalLanguageToggle from '../../../../components/UniversalLanguageToggle';
 
 export default function AdminSettings() {
   const locale = useLocale();
@@ -219,6 +220,8 @@ ${settings.businessName}${tagline}`;
   if (loading && clients.length === 0) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 flex items-center justify-center">
+        {/* Universal Language Toggle */}
+        <UniversalLanguageToggle />
         <div className="text-white text-xl">{t.loading}</div>
       </div>
     );
@@ -226,6 +229,8 @@ ${settings.businessName}${tagline}`;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 text-white p-8">
+      {/* Universal Language Toggle */}
+      <UniversalLanguageToggle />
       <div className="max-w-4xl mx-auto">
         {/* Header */}
         <div className="mb-8">

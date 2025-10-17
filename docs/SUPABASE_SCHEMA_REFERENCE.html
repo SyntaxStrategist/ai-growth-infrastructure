@@ -1,0 +1,833 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Avenir AI Solutions — Supabase Schema Reference</title>
+  <style>
+    @page {
+      size: A4;
+      margin: 2cm;
+    }
+    
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      line-height: 1.6;
+      color: #1a202c;
+      background: white;
+      font-size: 10pt;
+    }
+    
+    .container {
+      max-width: 1000px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+    
+    /* Headers */
+    h1 {
+      color: #2d3748;
+      font-size: 26pt;
+      margin-bottom: 10px;
+      border-bottom: 3px solid #5a67d8;
+      padding-bottom: 10px;
+    }
+    
+    h2 {
+      color: #4c51bf;
+      font-size: 16pt;
+      margin-top: 25px;
+      margin-bottom: 12px;
+      border-left: 4px solid #5a67d8;
+      padding-left: 12px;
+    }
+    
+    h3 {
+      color: #667eea;
+      font-size: 13pt;
+      margin-top: 18px;
+      margin-bottom: 8px;
+    }
+    
+    h4 {
+      color: #7c3aed;
+      font-size: 11pt;
+      margin-top: 12px;
+      margin-bottom: 6px;
+    }
+    
+    /* Text */
+    p {
+      margin-bottom: 8px;
+      text-align: justify;
+    }
+    
+    strong {
+      color: #2d3748;
+      font-weight: 600;
+    }
+    
+    em {
+      font-style: italic;
+      color: #718096;
+    }
+    
+    /* Lists */
+    ul, ol {
+      margin-left: 20px;
+      margin-bottom: 12px;
+    }
+    
+    li {
+      margin-bottom: 4px;
+    }
+    
+    /* Tables */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 12px 0;
+      font-size: 9pt;
+      page-break-inside: avoid;
+    }
+    
+    table thead {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+    }
+    
+    table th {
+      padding: 8px;
+      text-align: left;
+      font-weight: 600;
+      border: 1px solid #cbd5e0;
+    }
+    
+    table td {
+      padding: 6px;
+      border: 1px solid #e2e8f0;
+    }
+    
+    table tr:nth-child(even) {
+      background-color: #f7fafc;
+    }
+    
+    /* Code blocks */
+    code {
+      background: #edf2f7;
+      padding: 2px 5px;
+      border-radius: 3px;
+      font-family: 'Courier New', monospace;
+      font-size: 8.5pt;
+      color: #2d3748;
+    }
+    
+    pre {
+      background: #2d3748;
+      color: #e2e8f0;
+      padding: 12px;
+      border-radius: 5px;
+      overflow-x: auto;
+      margin: 12px 0;
+      font-size: 8.5pt;
+      line-height: 1.4;
+      page-break-inside: avoid;
+    }
+    
+    pre code {
+      background: transparent;
+      color: #e2e8f0;
+      padding: 0;
+    }
+    
+    /* Boxes */
+    .info-box {
+      background: #ebf8ff;
+      border-left: 4px solid #3182ce;
+      padding: 12px;
+      margin: 12px 0;
+      border-radius: 4px;
+      page-break-inside: avoid;
+    }
+    
+    .success-box {
+      background: #f0fff4;
+      border-left: 4px solid #38a169;
+      padding: 12px;
+      margin: 12px 0;
+      border-radius: 4px;
+    }
+    
+    .warning-box {
+      background: #fffaf0;
+      border-left: 4px solid #ed8936;
+      padding: 12px;
+      margin: 12px 0;
+      border-radius: 4px;
+    }
+    
+    /* Diagrams */
+    .diagram {
+      background: #2d3748;
+      color: #e2e8f0;
+      padding: 15px;
+      border-radius: 5px;
+      margin: 15px 0;
+      font-family: 'Courier New', monospace;
+      font-size: 8.5pt;
+      line-height: 1.5;
+      white-space: pre;
+      overflow-x: auto;
+      page-break-inside: avoid;
+    }
+    
+    /* Page breaks */
+    .page-break {
+      page-break-before: always;
+    }
+    
+    /* Header metadata */
+    .report-meta {
+      color: #718096;
+      font-size: 9pt;
+      margin-bottom: 18px;
+      padding: 10px;
+      background: #f7fafc;
+      border-radius: 4px;
+    }
+    
+    .report-meta div {
+      margin-bottom: 4px;
+    }
+    
+    /* Highlights */
+    .highlight {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      padding: 2px 8px;
+      border-radius: 3px;
+      font-weight: 600;
+    }
+    
+    .checkmark {
+      color: #48bb78;
+      font-weight: bold;
+    }
+    
+    /* Footer */
+    .report-footer {
+      margin-top: 35px;
+      padding-top: 18px;
+      border-top: 2px solid #e2e8f0;
+      color: #718096;
+      font-size: 8.5pt;
+      text-align: center;
+    }
+    
+    /* Break inside avoidance */
+    table, .info-box, .success-box, .warning-box, .diagram, pre {
+      break-inside: avoid;
+      page-break-inside: avoid;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <!-- Title Page -->
+    <div style="text-align: center; padding: 80px 0;">
+      <h1 style="font-size: 32pt; border: none; color: #5a67d8;">🗄️ Avenir AI Solutions</h1>
+      <p style="font-size: 22pt; color: #4c51bf; margin-top: 18px;">Supabase Schema Reference</p>
+      <div class="report-meta" style="margin-top: 50px; display: inline-block; text-align: left;">
+        <div><strong>Version:</strong> 2.0.0</div>
+        <div><strong>Last Updated:</strong> October 17, 2025</div>
+        <div><strong>Database:</strong> PostgreSQL 15 (Supabase)</div>
+        <div><strong>Status:</strong> <span class="highlight">Production Ready</span></div>
+      </div>
+    </div>
+    
+    <div class="page-break"></div>
+    
+    <!-- Schema Overview -->
+    <h2>📊 Schema Overview</h2>
+    
+    <h3>Database: public</h3>
+    <p><strong>Total Tables:</strong> 8</p>
+    
+    <table>
+      <thead>
+        <tr>
+          <th>Table</th>
+          <th>Purpose</th>
+          <th>Row Count (Est.)</th>
+          <th>Primary Use</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><code>clients</code></td>
+          <td>Client accounts & settings</td>
+          <td>100-1,000</td>
+          <td>Authentication, API keys</td>
+        </tr>
+        <tr>
+          <td><code>lead_memory</code></td>
+          <td>Enriched leads</td>
+          <td>10,000-100,000</td>
+          <td>Lead storage, AI data</td>
+        </tr>
+        <tr>
+          <td><code>lead_actions</code></td>
+          <td>Lead history</td>
+          <td>50,000-500,000</td>
+          <td>Activity tracking</td>
+        </tr>
+        <tr>
+          <td><code>prospect_candidates</code></td>
+          <td>Discovered prospects</td>
+          <td>1,000-10,000</td>
+          <td>Outreach targets</td>
+        </tr>
+        <tr>
+          <td><code>growth_brain</code></td>
+          <td>AI learning & analytics</td>
+          <td>1,000-10,000</td>
+          <td>Intelligence engine</td>
+        </tr>
+        <tr>
+          <td><code>prospect_outreach_log</code></td>
+          <td>Outreach tracking</td>
+          <td>5,000-50,000</td>
+          <td>Email logs</td>
+        </tr>
+      </tbody>
+    </table>
+    
+    <div class="page-break"></div>
+    
+    <!-- Table: clients -->
+    <h2>1. Table: public.clients</h2>
+    <p><em>Client accounts with personalization and SMTP settings</em></p>
+    
+    <h3>Key Columns</h3>
+    <table>
+      <thead>
+        <tr>
+          <th>Column</th>
+          <th>Type</th>
+          <th>Nullable</th>
+          <th>Description</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><code>id</code></td>
+          <td>UUID</td>
+          <td>No</td>
+          <td>Internal database ID</td>
+        </tr>
+        <tr>
+          <td><code>client_id</code></td>
+          <td>UUID</td>
+          <td>No</td>
+          <td>Unique client identifier (used in all relationships)</td>
+        </tr>
+        <tr>
+          <td><code>business_name</code></td>
+          <td>TEXT</td>
+          <td>No</td>
+          <td>Company name</td>
+        </tr>
+        <tr>
+          <td><code>email</code></td>
+          <td>TEXT</td>
+          <td>No</td>
+          <td>Login email (unique)</td>
+        </tr>
+        <tr>
+          <td><code>api_key</code></td>
+          <td>TEXT</td>
+          <td>No</td>
+          <td>Authentication token for lead API</td>
+        </tr>
+        <tr>
+          <td><code>password_hash</code></td>
+          <td>TEXT</td>
+          <td>No</td>
+          <td>bcryptjs hashed password</td>
+        </tr>
+        <tr>
+          <td><code>language</code></td>
+          <td>TEXT</td>
+          <td>No</td>
+          <td>Preferred language (en/fr)</td>
+        </tr>
+        <tr>
+          <td><code>industry_category</code></td>
+          <td>TEXT</td>
+          <td>Yes</td>
+          <td>Industry classification</td>
+        </tr>
+        <tr>
+          <td><code>email_tone</code></td>
+          <td>TEXT</td>
+          <td>No</td>
+          <td>Email tone (Friendly, Professional, Formal, Energetic)</td>
+        </tr>
+        <tr>
+          <td><code>is_test</code></td>
+          <td>BOOLEAN</td>
+          <td>No</td>
+          <td>Auto-detected test data flag</td>
+        </tr>
+        <tr>
+          <td><code>is_internal</code></td>
+          <td>BOOLEAN</td>
+          <td>No</td>
+          <td>Flag for Avenir's internal client</td>
+        </tr>
+      </tbody>
+    </table>
+    
+    <div class="page-break"></div>
+    
+    <!-- Table: lead_memory -->
+    <h2>2. Table: public.lead_memory</h2>
+    <p><em>Core lead storage with AI enrichment data</em></p>
+    
+    <h3>Key Columns</h3>
+    <table>
+      <thead>
+        <tr>
+          <th>Column</th>
+          <th>Type</th>
+          <th>Description</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><code>id</code></td>
+          <td>UUID</td>
+          <td>Lead ID (PK)</td>
+        </tr>
+        <tr>
+          <td><code>client_id</code></td>
+          <td>UUID</td>
+          <td>→ clients.client_id (FK)</td>
+        </tr>
+        <tr>
+          <td><code>name</code></td>
+          <td>TEXT</td>
+          <td>Lead name</td>
+        </tr>
+        <tr>
+          <td><code>email</code></td>
+          <td>TEXT</td>
+          <td>Lead email</td>
+        </tr>
+        <tr>
+          <td><code>intent</code></td>
+          <td>TEXT</td>
+          <td>AI-detected intent</td>
+        </tr>
+        <tr>
+          <td><code>tone</code></td>
+          <td>TEXT</td>
+          <td>Communication tone</td>
+        </tr>
+        <tr>
+          <td><code>urgency</code></td>
+          <td>TEXT</td>
+          <td>Urgency level (High/Medium/Low)</td>
+        </tr>
+        <tr>
+          <td><code>ai_summary</code></td>
+          <td>TEXT</td>
+          <td>AI-generated summary</td>
+        </tr>
+        <tr>
+          <td><code>confidence_score</code></td>
+          <td>NUMERIC(3,2)</td>
+          <td>Lead quality score (0.0-1.0)</td>
+        </tr>
+        <tr>
+          <td><code>current_tag</code></td>
+          <td>TEXT</td>
+          <td>Active, Follow-Up, Converted, etc.</td>
+        </tr>
+      </tbody>
+    </table>
+    
+    <h3>Current Tag Values</h3>
+    <ul>
+      <li><strong>Active</strong> — New or actively being pursued</li>
+      <li><strong>Follow-Up</strong> — Requires follow-up action</li>
+      <li><strong>Converted</strong> — Successfully converted to customer</li>
+      <li><strong>Archived</strong> — Archived for later review</li>
+      <li><strong>Deleted</strong> — Soft-deleted</li>
+    </ul>
+    
+    <div class="page-break"></div>
+    
+    <!-- Table: growth_brain -->
+    <h2>5. Table: public.growth_brain ⭐</h2>
+    <p><em>AI learning snapshots, growth analytics, and feedback loop</em></p>
+    
+    <div class="success-box">
+      <p><strong>🧠 Central Intelligence Hub</strong></p>
+      <p>This table powers the AI feedback loop by storing learning snapshots, pattern detection, conversion tracking, and predictive analytics. Every significant event and insight flows through growth_brain.</p>
+    </div>
+    
+    <h3>Complete Schema</h3>
+    <pre><code>CREATE TABLE public.growth_brain (
+  id                  UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  client_id           UUID REFERENCES clients(client_id) ON DELETE CASCADE,
+  event_type          TEXT NOT NULL,
+  learning_snapshot   JSONB,
+  insight_text        TEXT,
+  confidence          NUMERIC(3,2) CHECK (confidence >= 0 AND confidence <= 1),
+  created_at          TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Indexes
+CREATE INDEX idx_growth_brain_client_id ON growth_brain(client_id);
+CREATE INDEX idx_growth_brain_event_type ON growth_brain(event_type);
+CREATE INDEX idx_growth_brain_created_at ON growth_brain(created_at DESC);
+CREATE INDEX idx_growth_brain_confidence ON growth_brain(confidence DESC);
+CREATE INDEX idx_growth_brain_snapshot ON growth_brain USING GIN (learning_snapshot);</code></pre>
+    
+    <h3>Event Types</h3>
+    <table>
+      <thead>
+        <tr>
+          <th>Event Type</th>
+          <th>Description</th>
+          <th>Triggered By</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><code>conversion</code></td>
+          <td>Lead converted to customer</td>
+          <td>Tag change to "Converted"</td>
+        </tr>
+        <tr>
+          <td><code>reversion</code></td>
+          <td>Converted lead reverted</td>
+          <td>Revert modal action</td>
+        </tr>
+        <tr>
+          <td><code>pattern_detected</code></td>
+          <td>New behavioral pattern</td>
+          <td>Intelligence engine</td>
+        </tr>
+        <tr>
+          <td><code>engagement_score</code></td>
+          <td>Overall engagement level</td>
+          <td>Daily cron job</td>
+        </tr>
+        <tr>
+          <td><code>urgency_trend</code></td>
+          <td>Urgency pattern over time</td>
+          <td>Intelligence engine</td>
+        </tr>
+        <tr>
+          <td><code>tone_distribution</code></td>
+          <td>Tone analysis</td>
+          <td>Intelligence engine</td>
+        </tr>
+        <tr>
+          <td><code>conversion_prediction</code></td>
+          <td>Future conversion likelihood</td>
+          <td>Predictive model</td>
+        </tr>
+      </tbody>
+    </table>
+    
+    <div class="page-break"></div>
+    
+    <h3>Learning Snapshot Structure Examples</h3>
+    
+    <h4>Conversion Event</h4>
+    <pre><code>{
+  "lead_id": "a1b2c3d4-...",
+  "lead_name": "Sarah Chen",
+  "conversion_value": 5000,
+  "days_to_convert": 7,
+  "touch_points": 3,
+  "initial_urgency": "High",
+  "final_tag": "Converted"
+}</code></pre>
+    
+    <h4>Pattern Detection Event</h4>
+    <pre><code>{
+  "pattern_type": "urgency_increasing",
+  "affected_leads": 23,
+  "time_period": "last_7_days",
+  "confidence": 0.89,
+  "recommendation": "Increase follow-up frequency",
+  "data_points": [
+    {"date": "2025-10-10", "avg_urgency": "Medium"},
+    {"date": "2025-10-17", "avg_urgency": "High"}
+  ]
+}</code></pre>
+    
+    <h4>Engagement Score Event</h4>
+    <pre><code>{
+  "overall_score": 87,
+  "trend": "increasing",
+  "period": "last_30_days",
+  "metrics": {
+    "total_leads": 150,
+    "active_leads": 120,
+    "avg_confidence": 0.85,
+    "high_urgency_pct": 0.34
+  },
+  "top_sources": ["organic_search", "referral"],
+  "top_industries": ["Real Estate", "Legal"]
+}</code></pre>
+    
+    <h4>Conversion Prediction Event</h4>
+    <pre><code>{
+  "predicted_conversions": 12,
+  "prediction_window": "next_30_days",
+  "confidence": 0.78,
+  "high_value_leads": [
+    {"lead_id": "...", "probability": 0.92, "estimated_value": 3000}
+  ],
+  "recommended_actions": [
+    "Follow up with leads tagged 'Follow-Up'",
+    "Focus on high-confidence leads (>0.85)"
+  ]
+}</code></pre>
+    
+    <div class="page-break"></div>
+    
+    <h3>🔄 AI Feedback Loop Integration</h3>
+    
+    <div class="info-box">
+      <h4 style="margin-top: 0;">How growth_brain Powers the System</h4>
+      <p><strong>1. Record Events</strong> — Every significant action (conversion, pattern detection) is logged with context</p>
+      <p><strong>2. Analyze Patterns</strong> — Intelligence engine queries historical snapshots to identify trends</p>
+      <p><strong>3. Generate Predictions</strong> — Machine learning models use historical data to predict future outcomes</p>
+      <p><strong>4. Improve Accuracy</strong> — System continuously learns from actual outcomes vs predictions</p>
+    </div>
+    
+    <h4>Example: Conversion Tracking Flow</h4>
+    <pre><code>// When a lead is converted
+async function onLeadConverted(lead, client_id) {
+  // 1. Calculate metrics
+  const daysToConvert = calculateDays(lead.timestamp, Date.now());
+  const touchPoints = await countTouchPoints(lead.id);
+  
+  // 2. Record learning snapshot
+  await supabase.from('growth_brain').insert({
+    client_id,
+    event_type: 'conversion',
+    learning_snapshot: {
+      lead_id: lead.id,
+      initial_urgency: lead.urgency,
+      days_to_convert: daysToConvert,
+      touch_points: touchPoints
+    },
+    insight_text: `Lead "${lead.name}" converted in ${daysToConvert} days`,
+    confidence: 0.95
+  });
+}</code></pre>
+    
+    <h4>Example: Prediction Generation</h4>
+    <pre><code>// Generate predictions from historical conversions
+async function predictConversions(client_id) {
+  // 1. Fetch historical conversions
+  const { data: conversions } = await supabase
+    .from('growth_brain')
+    .select('learning_snapshot')
+    .eq('client_id', client_id)
+    .eq('event_type', 'conversion')
+    .order('created_at', { ascending: false })
+    .limit(100);
+  
+  // 2. Analyze patterns
+  const avgDaysToConvert = calculateAverage(
+    conversions.map(c => c.learning_snapshot.days_to_convert)
+  );
+  
+  // 3. Generate prediction
+  const prediction = {
+    predicted_conversions: estimateConversions(activeLeads, avgDaysToConvert),
+    confidence: 0.78,
+    based_on: conversions.length + ' historical conversions'
+  };
+  
+  // 4. Save prediction to growth_brain
+  await supabase.from('growth_brain').insert({
+    client_id,
+    event_type: 'conversion_prediction',
+    learning_snapshot: prediction,
+    insight_text: `Predicted ${prediction.predicted_conversions} conversions`,
+    confidence: prediction.confidence
+  });
+}</code></pre>
+    
+    <div class="page-break"></div>
+    
+    <!-- Relationships -->
+    <h2>🔗 Relationships & Foreign Keys</h2>
+    
+    <h3>Entity Relationship Diagram</h3>
+    <div class="diagram">┌─────────────────────────────────────────────────────────┐
+│                      clients                            │
+│                   (client_id PK)                        │
+└───────────┬─────────────────────────────────────────────┘
+            │
+            │ 1:N relationships
+            │
+    ┌───────┴────────┬──────────────────┐
+    │                │                  │
+    ▼                ▼                  ▼
+┌─────────────┐  ┌─────────────┐  ┌─────────────┐
+│lead_memory  │  │growth_brain │  │(settings in │
+│(client_id)  │  │(client_id)  │  │ clients row)│
+└──────┬──────┘  └─────────────┘  └─────────────┘
+       │
+       │ 1:N
+       ▼
+┌─────────────┐
+│lead_actions │
+│ (lead_id)   │
+│(client_id)  │
+└─────────────┘
+
+┌──────────────────┐
+│prospect_candidates│ (Independent)
+│     (id PK)       │
+└────────┬──────────┘
+         │ 1:N
+         ▼
+┌──────────────────┐
+│prospect_outreach │
+│  (prospect_id)   │
+└──────────────────┘</div>
+    
+    <h3>Foreign Key Constraints</h3>
+    <table>
+      <thead>
+        <tr>
+          <th>Table</th>
+          <th>Column</th>
+          <th>References</th>
+          <th>On Delete</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><code>lead_memory</code></td>
+          <td><code>client_id</code></td>
+          <td><code>clients(client_id)</code></td>
+          <td>CASCADE</td>
+        </tr>
+        <tr>
+          <td><code>lead_actions</code></td>
+          <td><code>lead_id</code></td>
+          <td><code>lead_memory(id)</code></td>
+          <td>CASCADE</td>
+        </tr>
+        <tr>
+          <td><code>lead_actions</code></td>
+          <td><code>client_id</code></td>
+          <td><code>clients(client_id)</code></td>
+          <td>CASCADE</td>
+        </tr>
+        <tr>
+          <td><code>growth_brain</code></td>
+          <td><code>client_id</code></td>
+          <td><code>clients(client_id)</code></td>
+          <td>CASCADE</td>
+        </tr>
+        <tr>
+          <td><code>prospect_outreach_log</code></td>
+          <td><code>prospect_id</code></td>
+          <td><code>prospect_candidates(id)</code></td>
+          <td>CASCADE</td>
+        </tr>
+      </tbody>
+    </table>
+    
+    <div class="warning-box">
+      <p><strong>⚠️ CASCADE Behavior:</strong></p>
+      <p>When a client is deleted, all related records are automatically deleted:</p>
+      <ul style="margin-top: 8px;">
+        <li>All <code>lead_memory</code> rows</li>
+        <li>All <code>lead_actions</code> rows</li>
+        <li>All <code>growth_brain</code> rows</li>
+      </ul>
+    </div>
+    
+    <div class="page-break"></div>
+    
+    <!-- Query Examples -->
+    <h2>📊 Query Examples</h2>
+    
+    <h3>Fetch Latest Insights for Client</h3>
+    <pre><code>SELECT 
+  event_type,
+  insight_text,
+  learning_snapshot->'metrics' as metrics,
+  confidence,
+  created_at
+FROM growth_brain
+WHERE client_id = '550e8400-e29b-41d4-a716-446655440000'
+ORDER BY created_at DESC
+LIMIT 10;</code></pre>
+    
+    <h3>Find All Conversion Events</h3>
+    <pre><code>SELECT 
+  client_id,
+  learning_snapshot->>'lead_name' as lead_name,
+  learning_snapshot->>'days_to_convert' as days,
+  created_at
+FROM growth_brain
+WHERE event_type = 'conversion'
+  AND (learning_snapshot->>'days_to_convert')::integer <= 7
+ORDER BY created_at DESC;</code></pre>
+    
+    <h3>Calculate Average Conversion Time</h3>
+    <pre><code>SELECT 
+  AVG((learning_snapshot->>'days_to_convert')::numeric) as avg_days,
+  COUNT(*) as total_conversions,
+  MIN((learning_snapshot->>'days_to_convert')::numeric) as fastest,
+  MAX((learning_snapshot->>'days_to_convert')::numeric) as slowest
+FROM growth_brain
+WHERE event_type = 'conversion'
+  AND client_id = '550e8400-e29b-41d4-a716-446655440000';</code></pre>
+    
+    <h3>Find High-Confidence Predictions</h3>
+    <pre><code>SELECT 
+  event_type,
+  insight_text,
+  confidence,
+  learning_snapshot->'predicted_conversions' as predictions,
+  created_at
+FROM growth_brain
+WHERE confidence >= 0.8
+  AND event_type LIKE '%prediction%'
+ORDER BY confidence DESC, created_at DESC
+LIMIT 20;</code></pre>
+    
+    <!-- Footer -->
+    <div class="report-footer">
+      <p><strong>Avenir AI Solutions</strong> — Supabase Schema Reference</p>
+      <p>Version 2.0.0 | October 17, 2025</p>
+      <p>Database: PostgreSQL 15 (Supabase)</p>
+      <p style="margin-top: 15px;">© 2025 Avenir AI Solutions. All rights reserved.</p>
+    </div>
+    
+  </div>
+</body>
+</html>
+

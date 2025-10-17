@@ -1,0 +1,45 @@
+#!/bin/bash
+
+echo "╔════════════════════════════════════════════════════════════════╗"
+echo "║  🔄 CLEARING CACHE & TESTING FRENCH TRANSLATIONS              ║"
+echo "╚════════════════════════════════════════════════════════════════╝"
+echo ""
+
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+echo "Step 1: Clearing Next.js cache..."
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+rm -rf .next
+echo "✅ .next directory removed"
+echo ""
+
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+echo "Step 2: Building fresh..."
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+npm run build
+echo ""
+
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+echo "✅ CACHE CLEARED & BUILD COMPLETE"
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+echo ""
+echo "📋 Next Steps:"
+echo ""
+echo "1. Start dev server:"
+echo "   npm run dev"
+echo ""
+echo "2. Test French page in INCOGNITO mode:"
+echo "   http://localhost:3000/fr"
+echo ""
+echo "3. Expected French content:"
+echo "   • Hero: \"Nous construisons des infrastructures de croissance IA...\""
+echo "   • Framework: \"Notre cadre d'infrastructure\""
+echo "   • Demo: \"Voyez comment fonctionne notre intelligence artificielle\""
+echo "   • Chat: \"Essayez l'assistant IA\""
+echo ""
+echo "4. If still showing English:"
+echo "   • Use incognito/private browser window"
+echo "   • Clear browser cache (Cmd+Shift+R or Ctrl+Shift+R)"
+echo "   • Check browser console for errors"
+echo ""
+echo "🎉 System is ready!"
+

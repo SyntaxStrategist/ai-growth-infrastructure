@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { useTranslations, useLocale } from 'next-intl';
 import dynamic from 'next/dynamic';
+import UniversalLanguageToggle from "../../../components/UniversalLanguageToggle";
 import { supabase } from "../../../lib/supabase";
 import type { LeadMemoryRecord } from "../../../lib/supabase";
 import type { LeadAction } from "../../api/lead-actions/route";
@@ -786,6 +787,9 @@ export default function Dashboard() {
 
   return (
     <div className="min-h-screen p-8 bg-black text-white">
+      {/* Universal Language Toggle */}
+      <UniversalLanguageToggle />
+      
       <div className="max-w-7xl mx-auto">
         <motion.div
           initial={{ opacity: 0, y: -20 }}
@@ -817,6 +821,12 @@ export default function Dashboard() {
               className="px-4 py-2 rounded-lg bg-cyan-500/20 border border-cyan-500/40 text-cyan-400 hover:bg-cyan-500/30 transition-all duration-300 text-sm font-medium"
             >
               {locale === 'fr' ? '📊 Aperçus' : '📊 Insights'}
+            </a>
+            <a
+              href={`/${locale}/admin/prospect-intelligence`}
+              className="px-4 py-2 rounded-lg bg-pink-500/20 border border-pink-500/40 text-pink-400 hover:bg-pink-500/30 transition-all duration-300 text-sm font-medium"
+            >
+              {locale === 'fr' ? '🧠 Intelligence' : '🧠 Intelligence'}
             </a>
             <a
               href={`/${locale}/admin/settings`}

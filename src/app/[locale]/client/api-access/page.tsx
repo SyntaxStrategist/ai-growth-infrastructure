@@ -5,6 +5,7 @@ import { motion } from "framer-motion";
 import { useRouter } from "next/navigation";
 import { useLocale } from 'next-intl';
 import AvenirLogo from '../../../../components/AvenirLogo';
+import UniversalLanguageToggle from '../../../../components/UniversalLanguageToggle';
 
 type ClientData = {
   clientId: string;
@@ -73,12 +74,17 @@ export default function ApiAccess() {
   if (!client) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#0f172a] to-[#1e1b4b] text-white">
+        {/* Universal Language Toggle */}
+        <UniversalLanguageToggle />
         <p>{t.notAuthenticated}</p>
       </div>
     );
   }
 
   return (
+    <>
+      {/* Universal Language Toggle */}
+      <UniversalLanguageToggle />
     <div className="min-h-screen bg-gradient-to-br from-[#0f172a] via-[#1e1b4b] to-[#0f172a] text-white">
       {/* Header with Logo */}
       <header className="sticky top-0 z-50 bg-black/20 backdrop-blur-lg border-b border-white/10">
@@ -208,6 +214,7 @@ export default function ApiAccess() {
         </motion.div>
       </div>
     </div>
+    </>
   );
 }
 

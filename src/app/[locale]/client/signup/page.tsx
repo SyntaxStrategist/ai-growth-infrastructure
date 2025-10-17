@@ -5,6 +5,7 @@ import { motion } from "framer-motion";
 import { useRouter } from "next/navigation";
 import { useLocale } from 'next-intl';
 import AvenirLogo from '../../../../components/AvenirLogo';
+import UniversalLanguageToggle from '../../../../components/UniversalLanguageToggle';
 
 export default function ClientSignup() {
   const locale = useLocale();
@@ -173,8 +174,11 @@ export default function ClientSignup() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#0f172a] via-[#1e1b4b] to-[#0f172a] text-white">
+      {/* Universal Language Toggle */}
+      <UniversalLanguageToggle />
+      
       {/* Header with Logo */}
-      <header className="fixed top-0 left-0 right-0 z-50 bg-black/20 backdrop-blur-lg border-b border-white/10">
+      <header className="fixed top-0 left-0 right-0 z-40 bg-black/20 backdrop-blur-lg border-b border-white/10">
         <div className="max-w-7xl mx-auto px-6 py-4">
           <a href={`/${locale}`} className="inline-block">
             <AvenirLogo locale={locale} showText={true} />

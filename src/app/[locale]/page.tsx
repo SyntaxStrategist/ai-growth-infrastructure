@@ -71,7 +71,7 @@ export default function Home() {
       });
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
-        throw new Error(data?.error || `Request failed: ${res.status}`);
+        throw new Error(data?.error || (locale === 'fr' ? `Échec de la requête: ${res.status}` : `Request failed: ${res.status}`));
       }
       const data = await res.json();
       const content: string = data?.message?.content || "";
@@ -373,7 +373,7 @@ export default function Home() {
           <h2 className="text-xl font-semibold">{t('chat.title')}</h2>
           <form onSubmit={handleSend} className="flex gap-2">
             <input
-              aria-label="Your message"
+              aria-label={locale === 'fr' ? 'Votre message' : 'Your message'}
               className="flex-1 rounded-md border border-black/10 dark:border-white/20 bg-transparent px-3 py-2"
               placeholder={t('chat.placeholder')}
               value={input}
@@ -431,14 +431,14 @@ export default function Home() {
                   });
                   if (!res.ok) {
                     const d = await res.json().catch(() => ({}));
-                    throw new Error(d?.error || `Failed to save lead (${res.status})`);
+                    throw new Error(d?.error || (locale === 'fr' ? `Échec de l'enregistrement (${res.status})` : `Failed to save lead (${res.status})`));
                   }
                   setLeadSubmitted(true);
                   setName("");
                   setEmail("");
                   setLeadMessage("");
                 } catch (err) {
-                  const msg = err instanceof Error ? err.message : "Failed to save lead";
+                  const msg = err instanceof Error ? err.message : (locale === 'fr' ? "Échec de l'enregistrement" : "Failed to save lead");
                   setError(msg);
                 } finally {
                   setIsSubmittingLead(false);
