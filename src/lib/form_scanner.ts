@@ -31,6 +31,7 @@ export interface FormScanResult {
     scan_duration_ms: number;
     page_title?: string;
     contact_paths_found: string[];
+    mailto_emails?: string[];  // Extracted email addresses from mailto links
     captcha_type?: string;
     error?: string;
   };
@@ -126,8 +127,14 @@ export async function scanWebsiteForForm(url: string): Promise<FormScanResult> {
       submitMethod = 'AJAX';
     }
 
-    // Detect mailto links
-    const hasMailto = /<a[^>]*href=["']mailto:/i.test(html);
+    // Detect and extract mailto links
+    const mailtoInfo = extractMailtoEmails(html);
+    const hasMailto = mailtoInfo.found;
+    const mailtoEmails = mailtoInfo.emails;
+
+    if (mailtoEmails.length > 0) {
+      console.info('[FormScanner] ✅ Extracted', mailtoEmails.length, 'mailto emails:', mailtoEmails);
+    }
 
     // Detect CAPTCHA
     const captchaInfo = detectCaptcha(html);
@@ -150,6 +157,7 @@ export async function scanWebsiteForForm(url: string): Promise<FormScanResult> {
         scan_duration_ms: scanDuration,
         page_title: pageTitle,
         contact_paths_found: contactPaths,
+        mailto_emails: mailtoEmails,  // Add extracted emails
         captcha_type: captchaInfo.type
       }
     };
@@ -261,6 +269,33 @@ function findContactPaths(html: string, baseUrl: string): string[] {
   }
 
   return found;
+}
+
+/**
+ * Extract email addresses from mailto links
+ */
+function extractMailtoEmails(html: string): { found: boolean; emails: string[] } {
+  const emails: string[] = [];
+  
+  // Match mailto: links with various formats
+  // Examples: mailto:contact@example.com, mailto:info@example.com?subject=Test
+  const mailtoRegex = /href=["']mailto:([^"'?]+)(?:\?[^"']*)?["']/gi;
+  let match;
+  
+  while ((match = mailtoRegex.exec(html)) !== null) {
+    const email = match[1].trim().toLowerCase();
+    
+    // Validate email format
+    const emailValidation = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (emailValidation.test(email) && !emails.includes(email)) {
+      emails.push(email);
+    }
+  }
+  
+  return {
+    found: emails.length > 0,
+    emails
+  };
 }
 
 /**

@@ -243,11 +243,23 @@ export async function runProspectPipeline(config: PipelineConfig): Promise<Prosp
               submit_method: formScanResult.submitMethod,
               recommended_approach: formScanResult.recommendedApproach,
               scanned_at: formScanResult.metadata.scanned_at,
-              contact_paths: formScanResult.metadata.contact_paths_found
+              contact_paths: formScanResult.metadata.contact_paths_found,
+              mailto_emails: formScanResult.metadata.mailto_emails
             }
           };
           
           console.log(`   ${formScanResult.hasForm ? '✅' : '❌'} Form: ${formScanResult.formCount} | Mailto: ${formScanResult.hasMailto} | CAPTCHA: ${formScanResult.hasCaptcha}`);
+          
+          // Email enrichment fallback: Extract email from mailto links
+          if (!prospect.contact_email && formScanResult.metadata.mailto_emails && formScanResult.metadata.mailto_emails.length > 0) {
+            const fallbackEmail = formScanResult.metadata.mailto_emails[0]; // Use first email found
+            prospect.contact_email = fallbackEmail;
+            console.log(`   [FormScanner] ✅ Extracted fallback email from mailto link: ${fallbackEmail}`);
+            await logIntegration('form_scanner', 'info', 'Extracted fallback email from mailto link', {
+              website: prospect.website,
+              email: fallbackEmail
+            });
+          }
           
         } catch (scanError) {
           console.warn(`   ⚠️  Scan failed for ${prospect.website}`);
