@@ -29,20 +29,31 @@ export async function saveProspectsToDatabase(prospects: ProspectCandidate[]): P
     return;
   }
 
-  const  records = prospects.map(p => ({
-    business_name: p.business_name,
-    website: p.website,
-    contact_email: p.contact_email || null,
-    industry: p.industry || null,
-    region: p.region || null,
-    language: p.language || 'en',
-    form_url: p.form_url || null,
-    last_tested: p.last_tested || new Date(),
-    response_score: p.response_score || 0,
-    automation_need_score: p.automation_need_score || 0,
-    contacted: p.contacted || false,
-    metadata: p.metadata || {}
-  }));
+  const  records = prospects.map(p => {
+    // Safely handle metadata - ensure it's a valid object
+    let safeMetadata = {};
+    if (p.metadata && typeof p.metadata === 'object' && !Array.isArray(p.metadata)) {
+      safeMetadata = p.metadata;
+    } else if (p.metadata) {
+      // If metadata exists but is not an object, wrap it
+      safeMetadata = { raw: p.metadata };
+    }
+
+    return {
+      business_name: p.business_name,
+      website: p.website,
+      contact_email: p.contact_email || null,
+      industry: p.industry || null,
+      region: p.region || null,
+      language: p.language || 'en',
+      form_url: p.form_url || null,
+      last_tested: p.last_tested || new Date(),
+      response_score: p.response_score || 0,
+      automation_need_score: p.automation_need_score || 0,
+      contacted: p.contacted || false,
+      metadata: safeMetadata
+    };
+  });
 
   try {
     const { data, error } = await supabase
