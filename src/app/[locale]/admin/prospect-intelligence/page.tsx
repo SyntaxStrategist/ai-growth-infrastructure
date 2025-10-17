@@ -174,7 +174,14 @@ export default function ProspectIntelligencePage() {
 
   // Load server configuration on mount
   useEffect(() => {
-    fetchServerConfig();
+    console.log('[ProspectDashboard] 🔄 useEffect triggered - loading server configuration');
+    fetchServerConfig()
+      .then((config) => {
+        console.log('[ProspectDashboard] ✅ fetchServerConfig completed successfully:', config);
+      })
+      .catch((err) => {
+        console.error('[ProspectDashboard] ❌ fetchServerConfig threw error:', err);
+      });
   }, []);
 
   // Load existing prospects on mount
@@ -183,15 +190,29 @@ export default function ProspectIntelligencePage() {
   }, []);
 
   const fetchServerConfig = async () => {
+    console.log('[ProspectDashboard] ============================================');
+    console.log('[ProspectDashboard] Fetching config from /api/prospect-intelligence/config');
+    console.log('[ProspectDashboard] useEffect triggered - component mounted');
+    
     try {
-      console.log('[ProspectDashboard] ============================================');
-      console.log('[ProspectDashboard] 🔍 Fetching server configuration...');
-      
+      // Build absolute URL for fetch
+      const base = process.env.NEXT_PUBLIC_SITE_URL || (typeof window !== 'undefined' ? window.location.origin : '');
       const endpoint = '/api/prospect-intelligence/config';
-      console.log('[ProspectDashboard] 📡 Calling endpoint:', endpoint);
-      console.log('[ProspectDashboard] 📡 Full URL:', window.location.origin + endpoint);
+      const fullUrl = `${base}${endpoint}`;
       
-      const response = await fetch(endpoint);
+      console.log('[ProspectDashboard] 📡 Base URL:', base);
+      console.log('[ProspectDashboard] 📡 Endpoint:', endpoint);
+      console.log('[ProspectDashboard] 📡 Full URL:', fullUrl);
+      console.log('[ProspectDashboard] 🚀 Starting fetch...');
+      
+      const response = await fetch(fullUrl, {
+        method: 'GET',
+        headers: {
+          'Accept': 'application/json',
+        },
+      });
+      
+      console.log('[ProspectDashboard] ✅ Fetch completed');
       console.log('[ProspectDashboard] Response status:', response.status);
       console.log('[ProspectDashboard] Response ok:', response.ok);
       console.log('[ProspectDashboard] Response headers:', {
@@ -202,7 +223,7 @@ export default function ProspectIntelligencePage() {
       // Check for non-JSON responses (error pages, HTML, etc.)
       const contentType = response.headers.get('content-type');
       if (!response.ok || !contentType?.includes('application/json')) {
-        console.error('[ProspectDashboard] ⚠️  Non-JSON response from config API');
+        console.error('[ProspectDashboard] ❌ Non-JSON response from config API');
         console.error('[ProspectDashboard] Status:', response.status);
         console.error('[ProspectDashboard] Content-Type:', contentType);
         
@@ -211,30 +232,34 @@ export default function ProspectIntelligencePage() {
         console.error('[ProspectDashboard] Response body (first 500 chars):', text.substring(0, 500));
         
         // Fallback to safe defaults
-        setServerConfig({
+        const fallbackConfig = {
           hasPdl: false,
           hasApollo: false,
           autoSubmitEnabled: false
-        });
-        console.log('[ProspectDashboard] ⚠️  Using fallback config (all false)');
+        };
+        
+        console.error('[ProspectDashboard] ⚠️  Using fallback config:', fallbackConfig);
+        setServerConfig(fallbackConfig);
         console.log('[ProspectDashboard] ============================================');
-        return;
+        return fallbackConfig;
       }
       
+      // Parse JSON response
+      console.log('[ProspectDashboard] 📖 Parsing JSON response...');
       const data = await response.json();
       console.log('[ProspectDashboard] 🧠 Server config received:', JSON.stringify(data, null, 2));
 
-      if (data.success) {
+      if (data.success && data.data) {
         console.log('[ProspectDashboard] ✅ Server config loaded successfully');
-        console.log('[ProspectDashboard] hasPdl:', data.data.hasPdl);
-        console.log('[ProspectDashboard] hasApollo:', data.data.hasApollo);
-        console.log('[ProspectDashboard] autoSubmitEnabled:', data.data.autoSubmitEnabled);
+        console.log('[ProspectDashboard] ├─ hasPdl:', data.data.hasPdl);
+        console.log('[ProspectDashboard] ├─ hasApollo:', data.data.hasApollo);
+        console.log('[ProspectDashboard] └─ autoSubmitEnabled:', data.data.autoSubmitEnabled);
         
         // Force update server config state
         const newServerConfig = {
-          hasPdl: data.data.hasPdl,
-          hasApollo: data.data.hasApollo,
-          autoSubmitEnabled: data.data.autoSubmitEnabled
+          hasPdl: data.data.hasPdl || false,
+          hasApollo: data.data.hasApollo || false,
+          autoSubmitEnabled: data.data.autoSubmitEnabled || false
         };
         
         console.log('[ProspectDashboard] 📝 Setting serverConfig state to:', newServerConfig);
@@ -251,25 +276,47 @@ export default function ProspectIntelligencePage() {
         }
         
         console.log('[ProspectDashboard] ============================================');
+        return newServerConfig;
       } else {
-        console.warn('[ProspectDashboard] ⚠️  Config response success=false');
+        console.warn('[ProspectDashboard] ⚠️  Config response missing success or data field');
         console.warn('[ProspectDashboard] Response data:', data);
+        
+        const fallbackConfig = {
+          hasPdl: false,
+          hasApollo: false,
+          autoSubmitEnabled: false
+        };
+        
+        setServerConfig(fallbackConfig);
+        console.log('[ProspectDashboard] ============================================');
+        return fallbackConfig;
       }
     } catch (err) {
-      console.error('[ProspectDashboard] ❌ Failed to fetch server config');
-      console.error('[ProspectDashboard] Error:', err);
-      console.error('[ProspectDashboard] Error type:', err instanceof Error ? err.constructor.name : typeof err);
-      console.error('[ProspectDashboard] Error message:', err instanceof Error ? err.message : String(err));
-      console.error('[ProspectDashboard] Error stack:', err instanceof Error ? err.stack : 'N/A');
+      console.error('[ProspectDashboard] ❌ EXCEPTION during fetch server config');
+      console.error('[ProspectDashboard] ❌ Error object:', err);
+      console.error('[ProspectDashboard] ❌ Error type:', err instanceof Error ? err.constructor.name : typeof err);
+      console.error('[ProspectDashboard] ❌ Error message:', err instanceof Error ? err.message : String(err));
+      
+      if (err instanceof Error) {
+        console.error('[ProspectDashboard] ❌ Error stack:', err.stack);
+        
+        // Network error details
+        if ('cause' in err) {
+          console.error('[ProspectDashboard] ❌ Error cause:', err.cause);
+        }
+      }
       
       // Fallback to safe defaults on error
-      setServerConfig({
+      const fallbackConfig = {
         hasPdl: false,
         hasApollo: false,
         autoSubmitEnabled: false
-      });
-      console.log('[ProspectDashboard] ⚠️  Using fallback config due to error');
+      };
+      
+      console.error('[ProspectDashboard] ⚠️  Using fallback config due to exception:', fallbackConfig);
+      setServerConfig(fallbackConfig);
       console.log('[ProspectDashboard] ============================================');
+      return fallbackConfig;
     }
   };
 
