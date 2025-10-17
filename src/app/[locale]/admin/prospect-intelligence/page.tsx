@@ -187,8 +187,39 @@ export default function ProspectIntelligencePage() {
       console.log('[ProspectDashboard] ============================================');
       console.log('[ProspectDashboard] 🔍 Fetching server configuration...');
       
-      const response = await fetch('/api/prospect-intelligence/config');
+      const endpoint = '/api/prospect-intelligence/config';
+      console.log('[ProspectDashboard] 📡 Calling endpoint:', endpoint);
+      console.log('[ProspectDashboard] 📡 Full URL:', window.location.origin + endpoint);
+      
+      const response = await fetch(endpoint);
       console.log('[ProspectDashboard] Response status:', response.status);
+      console.log('[ProspectDashboard] Response ok:', response.ok);
+      console.log('[ProspectDashboard] Response headers:', {
+        contentType: response.headers.get('content-type'),
+        contentLength: response.headers.get('content-length')
+      });
+
+      // Check for non-JSON responses (error pages, HTML, etc.)
+      const contentType = response.headers.get('content-type');
+      if (!response.ok || !contentType?.includes('application/json')) {
+        console.error('[ProspectDashboard] ⚠️  Non-JSON response from config API');
+        console.error('[ProspectDashboard] Status:', response.status);
+        console.error('[ProspectDashboard] Content-Type:', contentType);
+        
+        // Try to read as text for debugging
+        const text = await response.text();
+        console.error('[ProspectDashboard] Response body (first 500 chars):', text.substring(0, 500));
+        
+        // Fallback to safe defaults
+        setServerConfig({
+          hasPdl: false,
+          hasApollo: false,
+          autoSubmitEnabled: false
+        });
+        console.log('[ProspectDashboard] ⚠️  Using fallback config (all false)');
+        console.log('[ProspectDashboard] ============================================');
+        return;
+      }
       
       const data = await response.json();
       console.log('[ProspectDashboard] 🧠 Server config received:', JSON.stringify(data, null, 2));
@@ -220,10 +251,25 @@ export default function ProspectIntelligencePage() {
         }
         
         console.log('[ProspectDashboard] ============================================');
+      } else {
+        console.warn('[ProspectDashboard] ⚠️  Config response success=false');
+        console.warn('[ProspectDashboard] Response data:', data);
       }
     } catch (err) {
-      console.error('[ProspectDashboard] ❌ Failed to fetch server config:', err);
-      console.error('[ProspectDashboard] Error details:', err);
+      console.error('[ProspectDashboard] ❌ Failed to fetch server config');
+      console.error('[ProspectDashboard] Error:', err);
+      console.error('[ProspectDashboard] Error type:', err instanceof Error ? err.constructor.name : typeof err);
+      console.error('[ProspectDashboard] Error message:', err instanceof Error ? err.message : String(err));
+      console.error('[ProspectDashboard] Error stack:', err instanceof Error ? err.stack : 'N/A');
+      
+      // Fallback to safe defaults on error
+      setServerConfig({
+        hasPdl: false,
+        hasApollo: false,
+        autoSubmitEnabled: false
+      });
+      console.log('[ProspectDashboard] ⚠️  Using fallback config due to error');
+      console.log('[ProspectDashboard] ============================================');
     }
   };
 
@@ -475,6 +521,27 @@ export default function ProspectIntelligencePage() {
       <UniversalLanguageToggle />
       
       <div className="max-w-7xl mx-auto">
+        {/* PDL Integration Status Banner */}
+        {!serverConfig.hasPdl && (
+          <div className="mb-6 p-4 rounded-lg bg-yellow-500/10 border border-yellow-500/30">
+            <div className="flex items-center gap-3">
+              <span className="text-2xl">⚠️</span>
+              <div className="flex-1">
+                <p className="text-yellow-300 font-medium">
+                  {isFrench 
+                    ? 'Intégration People Data Labs non active'
+                    : 'People Data Labs integration not active'}
+                </p>
+                <p className="text-yellow-300/70 text-sm mt-1">
+                  {isFrench
+                    ? 'Vérifiez votre variable d\'environnement PEOPLE_DATA_LABS_API_KEY ou la réponse de l\'API.'
+                    : 'Check your PEOPLE_DATA_LABS_API_KEY environment variable or API response.'}
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Header */}
         <motion.div
           initial={{ opacity: 0, y: -20 }}
