@@ -61,6 +61,10 @@ export default function AdminLoginPage() {
       const data = await response.json();
 
       if (!response.ok || !data.success) {
+        // Show clearer message for configuration errors
+        if (data.configError) {
+          throw new Error(data.error || 'Admin password not configured');
+        }
         throw new Error(data.error || t.invalidCredentials);
       }
 

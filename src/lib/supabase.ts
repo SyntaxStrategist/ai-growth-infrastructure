@@ -765,8 +765,16 @@ export async function getRecentLeads(limit = 50, offset = 0, clientId?: string) 
   try {
     console.log('[Supabase] getRecentLeads called with:', { limit, offset, clientId });
     
+    // Validate clientId before using it in query
+    // Ignore invalid values like 'unknown', 'null', empty strings, etc.
+    const isValidClientId = clientId && 
+                           clientId.trim() !== '' && 
+                           clientId !== 'unknown' && 
+                           clientId !== 'null' && 
+                           clientId !== 'undefined';
+    
     // If client filter is active, fetch via lead_actions join
-    if (clientId) {
+    if (isValidClientId) {
       console.log('[Supabase] [CommandCenter] Fetching client-filtered leads via lead_actions join');
       
       // Step 1: Get lead_ids for this client

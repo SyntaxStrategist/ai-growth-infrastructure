@@ -11,12 +11,22 @@ export async function GET(req: NextRequest) {
     const clientId = url.searchParams.get('clientId');
 
     console.log(`[LeadsAPI] dashboardLocale=${locale}`);
-    if (clientId) {
+    
+    // Validate clientId - ignore invalid values
+    const isValidClientId = clientId && 
+                           clientId.trim() !== '' && 
+                           clientId !== 'unknown' && 
+                           clientId !== 'null' && 
+                           clientId !== 'undefined';
+    
+    if (isValidClientId) {
       console.log(`[LeadsAPI] [CommandCenter] Filtering by clientId=${clientId}`);
+    } else if (clientId) {
+      console.log(`[LeadsAPI] [CommandCenter] Ignoring invalid clientId=${clientId}`);
     }
 
     // Fetch recent leads from Supabase (with optional client filter)
-    const { data: leads, total } = await getRecentLeads(Math.min(limit, 100), offset, clientId || undefined);
+    const { data: leads, total } = await getRecentLeads(Math.min(limit, 100), offset, isValidClientId ? clientId : undefined);
     
     // Translate AI fields server-side based on dashboard locale
     const translatedLeads = await Promise.all(

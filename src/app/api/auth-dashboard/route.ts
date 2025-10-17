@@ -31,9 +31,10 @@ export async function POST(req: NextRequest) {
         JSON.stringify({ 
           success: false, 
           authorized: false,
-          error: "Server configuration error: ADMIN_PASSWORD not configured"
+          error: "Admin password not configured. Please contact system administrator to set ADMIN_PASSWORD environment variable.",
+          configError: true
         }),
-        { status: 500, headers: { "Content-Type": "application/json" } }
+        { status: 503, headers: { "Content-Type": "application/json" } }
       );
     }
     

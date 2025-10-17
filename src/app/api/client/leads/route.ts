@@ -14,10 +14,11 @@ export async function GET(req: NextRequest) {
     console.log('[E2E-Test] [ClientLeads] Locale:', locale);
     console.log('[E2E-Test] [ClientLeads] Status filter:', status);
 
-    if (!clientId) {
-      console.error('[E2E-Test] [ClientLeads] ❌ Missing clientId parameter');
+    // Validate clientId
+    if (!clientId || clientId.trim() === '' || clientId === 'unknown' || clientId === 'null' || clientId === 'undefined') {
+      console.error('[E2E-Test] [ClientLeads] ❌ Missing or invalid clientId parameter:', clientId);
       return NextResponse.json(
-        { success: false, error: 'clientId required' },
+        { success: false, error: 'Valid clientId required' },
         { status: 400 }
       );
     }
