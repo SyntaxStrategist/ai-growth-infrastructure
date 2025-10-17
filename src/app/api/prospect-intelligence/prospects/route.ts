@@ -20,18 +20,13 @@ const supabase = createClient(supabaseUrl, supabaseKey, {
 /**
  * GET - Fetch all prospects from prospect_candidates table
  * Always returns { data: [...] } structure for safe client parsing
- * Comprehensive error logging for Vercel debugging
+ * Dashboard-safe: Guarantees data is never undefined
  */
 export async function GET() {
-  console.log('[ProspectAPI] ============================================');
-  console.log('[ProspectAPI] GET request received');
-  console.log('[ProspectAPI] Fetching from table: prospect_candidates');
-  console.log('[ProspectAPI] Supabase URL:', supabaseUrl ? '✓ Configured' : '✗ Missing');
-  console.log('[ProspectAPI] Service key:', supabaseKey ? '✓ Configured' : '✗ Missing');
+  console.log('[ProspectAPI] GET request - Fetching from prospect_candidates');
 
   try {
     // Fetch all prospects from prospect_candidates table
-    console.log('[ProspectAPI] Executing Supabase query...');
     const { data, error } = await supabase
       .from('prospect_candidates')
       .select('*')
@@ -39,17 +34,13 @@ export async function GET() {
 
     // Handle Supabase errors
     if (error) {
-      console.error('[ProspectAPI Error] ❌ Supabase query failed');
-      console.error('[ProspectAPI Error] Error code:', error.code);
-      console.error('[ProspectAPI Error] Error message:', error.message);
-      console.error('[ProspectAPI Error] Error details:', JSON.stringify(error, null, 2));
+      console.error('[ProspectAPI] Supabase query failed:', error.message);
+      console.log('[ProspectAPI] Loaded 0 prospects (error)');
       
       return new Response(
         JSON.stringify({ 
-          data: [], 
-          error: 'Supabase query failed',
-          details: error.message,
-          code: error.code
+          data: [], // Always return empty array, never undefined
+          error: error.message
         }),
         { 
           status: 500, 
@@ -59,46 +50,35 @@ export async function GET() {
     }
 
     // Success - return prospects with safe fallback
-    const prospectCount = data?.length || 0;
-    console.log('[ProspectAPI] ✅ Query successful');
-    console.log('[ProspectAPI] ✅ Fetched', prospectCount, 'prospects from prospect_candidates');
+    const safeData = data || []; // Ensure data is never null/undefined
+    const prospectCount = safeData.length;
     
-    if (prospectCount > 0) {
-      console.log('[ProspectAPI] Sample prospect:', {
-        id: data[0]?.id,
-        business_name: data[0]?.business_name,
-        has_email: !!data[0]?.contact_email
-      });
-    } else {
-      console.log('[ProspectAPI] ⚠️  No prospects found in database');
+    console.log('[ProspectAPI] Loaded', prospectCount, 'prospects from prospect_candidates');
+    
+    if (prospectCount === 0) {
+      console.log('[ProspectAPI] No prospects found in database');
     }
-    
-    console.log('[ProspectAPI] Returning response with', prospectCount, 'prospects');
-    console.log('[ProspectAPI] ============================================');
 
     return new Response(
-      JSON.stringify({ data: data || [] }),
+      JSON.stringify({ data: safeData }),
       { 
         status: 200, 
-        headers: { 'Content-Type': 'application/json' } 
+        headers: { 
+          'Content-Type': 'application/json',
+          'Cache-Control': 'no-cache, no-store, must-revalidate'
+        } 
       }
     );
 
   } catch (err) {
     // Catch unexpected errors
-    console.error('[ProspectAPI Error] ❌ Unexpected failure in GET handler');
-    console.error('[ProspectAPI Error] Error type:', err instanceof Error ? err.constructor.name : typeof err);
-    console.error('[ProspectAPI Error] Error message:', err instanceof Error ? err.message : String(err));
-    console.error('[ProspectAPI Error] Error stack:', err instanceof Error ? err.stack : 'N/A');
-    console.error('[ProspectAPI Error] Full error object:', err);
-    console.log('[ProspectAPI] ============================================');
+    console.error('[ProspectAPI] Unexpected error:', err);
+    console.log('[ProspectAPI] Loaded 0 prospects (exception)');
     
     return new Response(
       JSON.stringify({ 
-        data: [], 
-        error: 'Unexpected server error',
-        details: err instanceof Error ? err.message : String(err),
-        type: err instanceof Error ? err.constructor.name : typeof err
+        data: [], // Always return empty array, never undefined
+        error: err instanceof Error ? err.message : 'Unknown error'
       }),
       { 
         status: 500, 

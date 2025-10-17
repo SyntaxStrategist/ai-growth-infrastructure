@@ -61,22 +61,40 @@ export async function logIntegration(
   }
 
   // 2. Supabase persistence (async, non-blocking)
+  // Safe: Will not crash if integration_logs table is missing
   if (supabase) {
-    // Fire and forget - don't await to avoid blocking
-    supabase
-      .from('integration_logs')
-      .insert([{
-        source,
-        level,
-        message,
-        meta: meta || null,
-        created_at: timestamp
-      }])
-      .then(({ error }) => {
-        if (error) {
-          console.error('[Logger] Failed to write to Supabase:', error);
+    try {
+      // Fire and forget - don't await to avoid blocking
+      void (async () => {
+        try {
+          const { error } = await supabase
+            .from('integration_logs')
+            .insert([{
+              source,
+              level,
+              message,
+              meta: meta || null,
+              created_at: timestamp
+            }]);
+
+          if (error) {
+            // Table might not exist yet - log warning but don't crash
+            if (error.code === 'PGRST116' || error.message?.includes('does not exist')) {
+              console.warn('[Logger] integration_logs table missing, skipping log write');
+            } else {
+              console.error('[Logger] Failed to write to Supabase:', error.message);
+            }
+          }
+        } catch (err) {
+          // Catch any promise rejections
+          const message = err instanceof Error ? err.message : 'Unknown error';
+          console.warn('[Logger] integration_logs write failed, skipping:', message);
         }
-      });
+      })();
+    } catch (err) {
+      // Catch synchronous errors
+      console.warn('[Logger] integration_logs table missing, skipping log write');
+    }
   }
 
   // 3. Local filesystem logging (development only)
