@@ -206,7 +206,7 @@ function generateHTMLTemplate(fields: EmailMergeFields): string {
       </p>
 
       <div style="text-align: center; margin: 24px 0;">
-        <a href="${demoUrl}" class="demo-button">
+        <a href="${demoUrl}" class="demo-button" target="_blank" rel="noopener noreferrer">
           🔗 View Live Demo Dashboard
         </a>
       </div>

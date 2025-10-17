@@ -196,12 +196,21 @@ export default function EmailPreviewModal({
             {/* Body Preview */}
             <div>
               <label className="block text-sm text-white/70 mb-2">Message Preview</label>
+              
+              {/* Security Notice for External Links */}
+              <div className="mb-3 p-3 rounded-lg bg-blue-500/10 border border-blue-500/30">
+                <p className="text-blue-300 text-xs flex items-center gap-2">
+                  <span>🔗</span>
+                  <span>The demo dashboard link opens in a new tab for security. Recipients will see the full branded email.</span>
+                </p>
+              </div>
+              
               <div className="bg-white rounded-lg border border-white/20 overflow-hidden">
                 <iframe
                   srcDoc={emailBody}
                   title="Email Preview"
                   className="w-full h-[500px] border-0"
-                  sandbox="allow-same-origin"
+                  sandbox="allow-same-origin allow-popups"
                 />
               </div>
               <p className="text-xs text-white/50 mt-2">
