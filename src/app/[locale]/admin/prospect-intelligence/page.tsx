@@ -4,6 +4,8 @@ import { useState, useEffect } from 'react';
 import { useLocale } from 'next-intl';
 import { motion } from 'framer-motion';
 import UniversalLanguageToggle from '../../../../components/UniversalLanguageToggle';
+import ProspectProofModal from '../../../../components/ProspectProofModal';
+import EmailPreviewModal from '../../../../components/EmailPreviewModal';
 
 interface ProspectCandidate {
   id: string;
@@ -60,6 +62,11 @@ export default function ProspectIntelligencePage() {
   const [showOnlyHighPriority, setShowOnlyHighPriority] = useState(false);
   const [sendingOutreach, setSendingOutreach] = useState<Record<string, boolean>>({});
   const [generatingProof, setGeneratingProof] = useState(false);
+  
+  // Modal states
+  const [proofModalOpen, setProofModalOpen] = useState(false);
+  const [emailPreviewModalOpen, setEmailPreviewModalOpen] = useState(false);
+  const [selectedProspect, setSelectedProspect] = useState<ProspectCandidate | null>(null);
   
   // Metrics state
   const [metrics, setMetrics] = useState({
@@ -411,42 +418,35 @@ export default function ProspectIntelligencePage() {
     }
   };
 
-  const handleSendOutreach = async (prospectId: string, businessName: string) => {
-    console.log('[ProspectDashboard] Sending outreach to:', businessName);
-    
-    setSendingOutreach(prev => ({ ...prev, [prospectId]: true }));
+  const handleOpenEmailPreview = (prospect: ProspectCandidate) => {
+    console.log('[ProspectDashboard] Opening email preview for:', prospect.business_name);
+    setSelectedProspect(prospect);
+    setEmailPreviewModalOpen(true);
+  };
 
-    try {
-      const response = await fetch('/api/prospect-intelligence/outreach', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          prospectId,
-          testMode: true
-        }),
-      });
-
-      const data = await response.json();
-
-      if (!response.ok || !data.success) {
-        throw new Error(data.error || 'Failed to send outreach');
-      }
-
-      console.log('[ProspectDashboard] ✅ Outreach sent');
-      setToastMessage(isFrench ? `✅ E-mail envoyé à ${businessName}` : `✅ Outreach sent to ${businessName}`);
+  const handleEmailSendSuccess = () => {
+    console.log('[ProspectDashboard] ✅ Email sent successfully');
+    if (selectedProspect) {
+      setToastMessage(isFrench ? `✅ E-mail envoyé à ${selectedProspect.business_name}` : `✅ Outreach email sent to ${selectedProspect.business_name}`);
       setShowToast(true);
       setTimeout(() => setShowToast(false), 3000);
-
-      // Reload prospects to update contacted status
-      await loadProspects();
-    } catch (err) {
-      console.error('[ProspectDashboard] ❌ Error sending outreach:', err);
-      setError(err instanceof Error ? err.message : 'Failed to send outreach');
-    } finally {
-      setSendingOutreach(prev => ({ ...prev, [prospectId]: false }));
+      
+      // Reload to update 'contacted' status
+      loadProspects();
     }
+  };
+
+  const handleEmailSendError = (error: string) => {
+    console.error('[ProspectDashboard] ❌ Email send error:', error);
+    setToastMessage(isFrench ? `❌ ${error}` : `❌ ${error}`);
+    setShowToast(true);
+    setTimeout(() => setShowToast(false), 5000);
+  };
+
+  const handleOpenProofModal = (prospect: ProspectCandidate) => {
+    console.log('[ProspectDashboard] Opening proof modal for:', prospect.business_name);
+    setSelectedProspect(prospect);
+    setProofModalOpen(true);
   };
 
   const handleSimulateFeedback = async () => {
@@ -991,31 +991,19 @@ export default function ProspectIntelligencePage() {
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="flex gap-2">
                           <button
-                            onClick={() => handleSendOutreach(prospect.id, prospect.business_name)}
-                            disabled={sendingOutreach[prospect.id] || prospect.contacted}
+                            onClick={() => handleOpenEmailPreview(prospect)}
+                            disabled={prospect.contacted}
                             className={`px-3 py-1 rounded text-xs font-semibold transition-all ${
                               prospect.contacted
                                 ? 'bg-green-500/20 text-green-400 cursor-not-allowed'
-                                : sendingOutreach[prospect.id]
-                                ? 'bg-gray-500/50 text-gray-400 cursor-not-allowed'
                                 : 'bg-purple-500/20 text-purple-400 hover:bg-purple-500/30 border border-purple-400/50'
                             }`}
                             title={prospect.contacted ? t.outreachSent : t.sendOutreach}
                           >
-                            {sendingOutreach[prospect.id] ? (
-                              <span className="flex items-center gap-1">
-                                <div className="w-3 h-3 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
-                                {t.sending}
-                              </span>
-                            ) : prospect.contacted ? (
-                              t.outreachSent
-                            ) : (
-                              t.sendOutreach
-                            )}
+                            {prospect.contacted ? t.outreachSent : t.sendOutreach}
                           </button>
                           <button
-                            onClick={() => handleViewProofVisuals(prospect.id)}
-                            disabled={generatingProof}
+                            onClick={() => handleOpenProofModal(prospect)}
                             className="px-3 py-1 rounded text-xs font-semibold bg-blue-500/20 text-blue-400 hover:bg-blue-500/30 border border-blue-400/50 transition-all"
                             title={t.viewProof}
                           >
@@ -1031,6 +1019,38 @@ export default function ProspectIntelligencePage() {
           )}
         </motion.div>
       </div>
+
+      {/* Modals */}
+      {selectedProspect && (
+        <>
+          <ProspectProofModal
+            isOpen={proofModalOpen}
+            onClose={() => {
+              setProofModalOpen(false);
+              setSelectedProspect(null);
+            }}
+            prospectId={selectedProspect.id}
+          />
+          
+          <EmailPreviewModal
+            isOpen={emailPreviewModalOpen}
+            onClose={() => {
+              setEmailPreviewModalOpen(false);
+              setSelectedProspect(null);
+            }}
+            prospect={{
+              id: selectedProspect.id,
+              business_name: selectedProspect.business_name,
+              website: selectedProspect.website,
+              contact_email: selectedProspect.contact_email,
+              industry: selectedProspect.industry || 'Unknown',
+            }}
+            testMode={config.testMode}
+            onSendSuccess={handleEmailSendSuccess}
+            onSendError={handleEmailSendError}
+          />
+        </>
+      )}
     </div>
   );
 }
