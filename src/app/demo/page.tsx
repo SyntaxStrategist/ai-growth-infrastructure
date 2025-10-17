@@ -204,10 +204,10 @@ export default function DemoClientDashboard() {
     }
   }
 
-  // Demo Dashboard UI (Exact Mirror of Real Dashboard - Visual Parity)
+  // Demo Dashboard UI (Exact Mirror of Real Dashboard - No Database Dependencies)
   return (
     <div className="min-h-screen p-8 bg-black text-white">
-      {/* Language Toggle (Custom for demo) */}
+      {/* Language Toggle (Custom for demo - fixed top-right) */}
       <div className="fixed top-4 right-4 z-50">
         <div className="flex items-center gap-2 bg-black/80 backdrop-blur-sm px-4 py-2 rounded-lg border border-white/10">
           <button
@@ -376,6 +376,133 @@ export default function DemoClientDashboard() {
             <option value="Follow-up">{isFrench ? 'Suivi' : 'Follow-up'}</option>
             <option value="Qualified">{isFrench ? 'Qualifié' : 'Qualified'}</option>
           </select>
+        </motion.div>
+
+        {/* Mock AI Insights Widget (Static Placeholder) */}
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.6, delay: 0.4 }}
+          className="mb-8"
+        >
+          <div className="rounded-xl border border-white/10 p-6 bg-gradient-to-br from-purple-500/5 to-blue-500/5">
+            <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
+              <span className="text-2xl">🤖</span>
+              {isFrench ? 'Copilote de Croissance' : 'Growth Copilot'}
+            </h2>
+            <div className="space-y-3 text-sm">
+              <div className="p-3 rounded-lg bg-white/5 border border-blue-500/30">
+                <p className="text-blue-300 font-medium mb-1">
+                  {isFrench ? '💡 Aperçu IA' : '💡 AI Insight'}
+                </p>
+                <p className="text-white/70">
+                  {isFrench 
+                    ? 'Vos leads montrent une tendance vers les demandes de prix urgentes (+45% ce mois-ci). Envisagez d\'ajuster votre temps de réponse pour capturer plus d\'opportunités.'
+                    : 'Your leads show a trend toward urgent quote requests (+45% this month). Consider adjusting your response time to capture more opportunities.'}
+                </p>
+              </div>
+              <div className="p-3 rounded-lg bg-white/5 border border-purple-500/30">
+                <p className="text-purple-300 font-medium mb-1">
+                  {isFrench ? '📈 Recommandation' : '📈 Recommendation'}
+                </p>
+                <p className="text-white/70">
+                  {isFrench
+                    ? 'Haute confiance (87%) indique une excellente qualification des leads. Continuez votre stratégie actuelle.'
+                    : 'High confidence (87%) indicates excellent lead qualification. Continue your current strategy.'}
+                </p>
+              </div>
+            </div>
+          </div>
+        </motion.div>
+
+        {/* Mock Activity Log (Static Placeholder) */}
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.6, delay: 0.45 }}
+          className="mb-8"
+        >
+          <div className="rounded-xl border border-white/10 p-6 bg-white/5">
+            <h2 className="text-xl font-bold mb-4">
+              {isFrench ? '📊 Journal d\'Activité Récente' : '📊 Recent Activity Log'}
+            </h2>
+            <div className="space-y-2 text-sm">
+              <div className="flex items-center gap-3 p-2 rounded bg-white/5">
+                <span className="text-green-400">✓</span>
+                <span className="text-white/70">{isFrench ? 'Lead tagué' : 'Lead tagged'}: Construction Pro Inc.</span>
+                <span className="text-white/50 text-xs ml-auto">2h {isFrench ? 'il y a' : 'ago'}</span>
+              </div>
+              <div className="flex items-center gap-3 p-2 rounded bg-white/5">
+                <span className="text-blue-400">→</span>
+                <span className="text-white/70">{isFrench ? 'Nouveau lead reçu' : 'New lead received'}: RealtyMax Group</span>
+                <span className="text-white/50 text-xs ml-auto">5h {isFrench ? 'il y a' : 'ago'}</span>
+              </div>
+              <div className="flex items-center gap-3 p-2 rounded bg-white/5">
+                <span className="text-yellow-400">📦</span>
+                <span className="text-white/70">{isFrench ? 'Lead archivé' : 'Lead archived'}: Old Prospect LLC</span>
+                <span className="text-white/50 text-xs ml-auto">1d {isFrench ? 'il y a' : 'ago'}</span>
+              </div>
+            </div>
+          </div>
+        </motion.div>
+
+        {/* Mock Predictive Growth Engine (Static Placeholder) */}
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.6, delay: 0.5 }}
+          className="mb-8"
+        >
+          <div className="rounded-xl border border-white/10 p-6 bg-gradient-to-br from-blue-500/5 to-cyan-500/5">
+            <h2 className="text-xl font-bold mb-4">
+              {isFrench ? '🔮 Moteur de Croissance Prédictif' : '🔮 Predictive Growth Engine'}
+            </h2>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="p-4 rounded-lg bg-white/5 border border-white/10">
+                <p className="text-sm text-white/50 mb-1">{isFrench ? 'Score d\'Engagement' : 'Engagement Score'}</p>
+                <p className="text-2xl font-bold text-blue-400">89/100</p>
+                <div className="w-full h-2 bg-white/10 rounded-full mt-2 overflow-hidden">
+                  <div className="h-full bg-gradient-to-r from-blue-500 to-cyan-500 rounded-full" style={{ width: '89%' }}></div>
+                </div>
+              </div>
+              <div className="p-4 rounded-lg bg-white/5 border border-white/10">
+                <p className="text-sm text-white/50 mb-1">{isFrench ? 'Tendance d\'Urgence' : 'Urgency Trend'}</p>
+                <p className="text-2xl font-bold text-red-400">↑ 25%</p>
+                <p className="text-xs text-white/50 mt-1">{isFrench ? 'vs mois dernier' : 'vs last month'}</p>
+              </div>
+              <div className="p-4 rounded-lg bg-white/5 border border-white/10">
+                <p className="text-sm text-white/50 mb-1">{isFrench ? 'Aperçu de Confiance' : 'Confidence Insight'}</p>
+                <p className="text-2xl font-bold text-green-400">87%</p>
+                <p className="text-xs text-white/50 mt-1">{isFrench ? 'Excellente qualité' : 'Excellent quality'}</p>
+              </div>
+            </div>
+          </div>
+        </motion.div>
+
+        {/* Mock Relationship Insights (Static Placeholder) */}
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.6, delay: 0.55 }}
+          className="mb-8"
+        >
+          <div className="rounded-xl border border-white/10 p-6 bg-gradient-to-br from-pink-500/5 to-purple-500/5">
+            <h2 className="text-xl font-bold mb-4">
+              {isFrench ? '💼 Aperçus Relationnels' : '💼 Relationship Insights'}
+            </h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="p-4 rounded-lg bg-white/5 border border-white/10">
+                <p className="text-sm text-white/50 mb-2">{isFrench ? 'Clients à Forte Valeur' : 'High-Value Clients'}</p>
+                <p className="text-3xl font-bold text-purple-400">6</p>
+                <p className="text-xs text-white/50 mt-1">{isFrench ? 'Nécessite une attention immédiate' : 'Require immediate attention'}</p>
+              </div>
+              <div className="p-4 rounded-lg bg-white/5 border border-white/10">
+                <p className="text-sm text-white/50 mb-2">{isFrench ? 'Taux de Réponse Moyen' : 'Avg Response Rate'}</p>
+                <p className="text-3xl font-bold text-pink-400">94%</p>
+                <p className="text-xs text-white/50 mt-1">{isFrench ? 'Dans les 2 heures' : 'Within 2 hours'}</p>
+              </div>
+            </div>
+          </div>
         </motion.div>
 
         {/* Leads Table */}
