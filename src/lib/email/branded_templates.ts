@@ -25,6 +25,8 @@ function generateHTMLTemplate(fields: EmailMergeFields): string {
   const logoUrl = process.env.NEXT_PUBLIC_SITE_URL 
     ? `${process.env.NEXT_PUBLIC_SITE_URL}/assets/logos/logo.svg`
     : 'https://www.aveniraisolutions.ca/assets/logos/logo.svg';
+  
+  const demoUrl = 'https://demo.aveniraisolutions.ca';
 
   return `<!DOCTYPE html>
 <html lang="en">
@@ -54,8 +56,23 @@ function generateHTMLTemplate(fields: EmailMergeFields): string {
       margin-bottom: 32px;
     }
     .logo {
-      max-width: 180px;
+      max-width: 80px;
       height: auto;
+    }
+    .demo-button {
+      display: inline-block;
+      margin: 24px auto;
+      padding: 12px 24px;
+      background-color: #2D6CDF;
+      color: #ffffff;
+      text-decoration: none;
+      border-radius: 8px;
+      font-weight: 600;
+      text-align: center;
+      transition: background-color 0.3s;
+    }
+    .demo-button:hover {
+      background-color: #1e56c7;
     }
     .email-card {
       background-color: #ffffff;
@@ -163,31 +180,39 @@ function generateHTMLTemplate(fields: EmailMergeFields): string {
 
     <!-- Main Email Card -->
     <div class="email-card">
-      <p class="greeting">Hello,</p>
+      <p class="greeting">Hello ${business_name} team,</p>
       
       <p class="main-text">
-        I noticed <span class="highlight">${business_name}</span> is in the <span class="highlight">${industry}</span> industry, and wanted to reach out about an opportunity to streamline your operations with AI-powered automation.
+        I came across your work in the <span class="highlight">${industry}</span> space and wanted to reach out personally.
       </p>
 
       <p class="main-text">
-        We specialize in helping businesses like yours:
+        We help businesses like yours automate lead management, form responses, and client follow-ups — using smart AI workflows that save teams 10+ hours per week.
+      </p>
+
+      <p class="main-text">
+        <strong>Here's what that looks like in action:</strong>
       </p>
 
       <ul class="benefits-list">
-        <li>Automate lead intake and qualification</li>
-        <li>Reduce manual data entry by up to 80%</li>
-        <li>Improve response times to customer inquiries</li>
-        <li>Free up your team to focus on high-value tasks</li>
+        <li>A custom dashboard that captures and routes leads instantly</li>
+        <li>Automated replies that feel human (in any language)</li>
+        <li>Full visibility into every client interaction in one place</li>
       </ul>
 
       <div class="cta-section">
         <p class="cta-text">
-          <strong>I'd love to schedule a brief 15-minute call</strong> to discuss how we can help ${business_name} achieve similar results.
+          You can explore a live demo of the client dashboard here:
         </p>
+        <div style="text-align: center;">
+          <a href="${demoUrl}" class="demo-button">
+            🔗 View Live Demo Dashboard
+          </a>
+        </div>
       </div>
 
       <p class="main-text">
-        Would you be available for a quick chat this week?
+        If you'd like, I can walk you through how it adapts to your exact process — it only takes 15 minutes.
       </p>
 
       <!-- Signature -->
@@ -221,20 +246,23 @@ function generateHTMLTemplate(fields: EmailMergeFields): string {
  */
 function generateTextTemplate(fields: EmailMergeFields): string {
   const { business_name, industry, website } = fields;
+  const demoUrl = 'https://demo.aveniraisolutions.ca';
 
-  return `Hello,
+  return `Hello ${business_name} team,
 
-I noticed ${business_name} is in the ${industry} industry, and wanted to reach out about an opportunity to streamline your operations with AI-powered automation.
+I came across your work in the ${industry} space and wanted to reach out personally.
 
-We specialize in helping businesses like yours:
-  ✓ Automate lead intake and qualification
-  ✓ Reduce manual data entry by up to 80%
-  ✓ Improve response times to customer inquiries
-  ✓ Free up your team to focus on high-value tasks
+We help businesses like yours automate lead management, form responses, and client follow-ups — using smart AI workflows that save teams 10+ hours per week.
 
-I'd love to schedule a brief 15-minute call to discuss how we can help ${business_name} achieve similar results.
+Here's what that looks like in action:
+  → A custom dashboard that captures and routes leads instantly
+  → Automated replies that feel human (in any language)
+  → Full visibility into every client interaction in one place
 
-Would you be available for a quick chat this week?
+You can explore a live demo of the client dashboard here:
+🔗 ${demoUrl}
+
+If you'd like, I can walk you through how it adapts to your exact process — it only takes 15 minutes.
 
 ——
 Best regards,
@@ -261,6 +289,6 @@ export function generateBrandedEmailTemplate(fields: EmailMergeFields): EmailTem
  * Get email subject line
  */
 export function getEmailSubject(businessName: string): string {
-  return `Streamline Operations at ${businessName}`;
+  return `Unlock 80% Time Savings at ${businessName}`;
 }
 
