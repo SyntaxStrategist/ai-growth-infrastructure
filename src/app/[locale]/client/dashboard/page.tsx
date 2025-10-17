@@ -150,8 +150,13 @@ export default function ClientDashboard() {
         const clientData = JSON.parse(savedClient);
         setClient(clientData);
         setAuthenticated(true);
+        // Ensure client_id is also stored separately for settings page
+        if (clientData.clientId) {
+          localStorage.setItem('clientId', clientData.clientId);
+        }
       } catch {
         localStorage.removeItem('client_session');
+        localStorage.removeItem('clientId');
       }
     }
   }, []);
@@ -196,7 +201,11 @@ export default function ClientDashboard() {
 
       console.log('[ClientDashboard] ✅ Login successful:', data.data);
       
+      // Store full session and client_id separately for settings page
       localStorage.setItem('client_session', JSON.stringify(data.data));
+      localStorage.setItem('clientId', data.data.clientId);
+      console.log('[ClientDashboard] ✅ Client ID stored in localStorage:', data.data.clientId);
+      
       setClient(data.data);
       setAuthenticated(true);
 
@@ -649,6 +658,12 @@ export default function ClientDashboard() {
             <p className="text-white/50 text-sm mt-1">{client?.businessName}</p>
           </div>
           <div className="flex items-center gap-3">
+            <a
+              href={`/${locale}/client/settings`}
+              className="px-4 py-2 rounded-lg bg-purple-500/20 border border-purple-500/40 text-purple-400 hover:bg-purple-500/30 transition-all duration-300 text-sm font-medium"
+            >
+              ⚙️ {isFrench ? 'Paramètres' : 'Settings'}
+            </a>
             <a
               href={`/${locale}/client/api-access`}
               className="px-4 py-2 rounded-lg bg-cyan-500/20 border border-cyan-500/40 text-cyan-400 hover:bg-cyan-500/30 transition-all duration-300 text-sm font-medium"

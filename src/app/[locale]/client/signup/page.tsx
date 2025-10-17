@@ -20,6 +20,12 @@ export default function ClientSignup() {
     language: locale,
     leadSourceDescription: '',
     estimatedLeadsPerWeek: '',
+    industryCategory: '',
+    primaryService: '',
+    bookingLink: '',
+    customTagline: '',
+    emailTone: 'Friendly',
+    followupSpeed: 'Instant',
   });
 
   const [loading, setLoading] = useState(false);
@@ -37,6 +43,20 @@ export default function ClientSignup() {
     language: isFrench ? 'Langue préférée' : 'Preferred Language',
     leadSource: isFrench ? 'Description de la source de leads' : 'Lead Source Description',
     estimatedLeads: isFrench ? 'Leads estimés par semaine' : 'Estimated Leads per Week',
+    industryCategory: isFrench ? 'Catégorie d\'industrie' : 'Industry Category',
+    industrPlaceholder: isFrench ? 'Ex: Immobilier, Construction, Technologie' : 'e.g., Real Estate, Construction, Technology',
+    primaryService: isFrench ? 'Service principal' : 'Primary Service',
+    servicePlaceholder: isFrench ? 'Ex: Rénovations résidentielles, Consultation IA' : 'e.g., Home Renovations, AI Consulting',
+    bookingLink: isFrench ? 'Lien de réservation' : 'Booking Link',
+    bookingPlaceholder: isFrench ? 'Ex: https://calendly.com/votre-nom' : 'e.g., https://calendly.com/yourname',
+    customTagline: isFrench ? 'Slogan de l\'entreprise' : 'Company Tagline',
+    taglinePlaceholder: isFrench ? 'Ex: L\'IA qui aide les entreprises à agir plus rapidement' : 'e.g., AI that helps businesses act faster',
+    emailTone: isFrench ? 'Ton des courriels' : 'Email Tone',
+    followupSpeed: isFrench ? 'Vitesse de suivi' : 'Follow-up Speed',
+    brandingSection: isFrench ? '✨ Personnalisation des courriels' : '✨ Email Personalization',
+    brandingSubtitle: isFrench 
+      ? 'Plus vous fournissez d\'informations, plus vos courriels générés par l\'IA seront alignés avec votre entreprise. Vous pourrez modifier ces paramètres à tout moment dans votre tableau de bord.'
+      : 'The more information you provide, the more aligned your AI-generated emails will be. You can adjust these anytime in your dashboard.',
     submit: isFrench ? 'Créer mon compte' : 'Create Account',
     loading: isFrench ? 'Création en cours...' : 'Creating account...',
     haveAccount: isFrench ? 'Vous avez déjà un compte ?' : 'Already have an account?',
@@ -45,6 +65,19 @@ export default function ClientSignup() {
     successMessage: isFrench ? 'Vérifiez votre courriel pour vos informations de connexion.' : 'Check your email for your login credentials.',
     redirecting: isFrench ? 'Redirection...' : 'Redirecting...',
   };
+  
+  const toneOptions = [
+    { value: 'Professional', label: isFrench ? 'Professionnel' : 'Professional' },
+    { value: 'Friendly', label: isFrench ? 'Amical' : 'Friendly' },
+    { value: 'Formal', label: isFrench ? 'Formel' : 'Formal' },
+    { value: 'Energetic', label: isFrench ? 'Énergique' : 'Energetic' },
+  ];
+  
+  const speedOptions = [
+    { value: 'Instant', label: isFrench ? 'Instantané' : 'Instant' },
+    { value: 'Within 1 hour', label: isFrench ? 'Dans l\'heure' : 'Within 1 hour' },
+    { value: 'Same day', label: isFrench ? 'Le jour même' : 'Same day' },
+  ];
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -53,6 +86,11 @@ export default function ClientSignup() {
     // Validation
     if (!formData.businessName || !formData.contactName || !formData.email || !formData.password) {
       setError(isFrench ? 'Veuillez remplir tous les champs requis' : 'Please fill in all required fields');
+      return;
+    }
+    
+    if (!formData.industryCategory || !formData.primaryService) {
+      setError(isFrench ? 'Veuillez remplir la catégorie d\'industrie et le service principal' : 'Please fill in industry category and primary service');
       return;
     }
 
@@ -80,6 +118,12 @@ export default function ClientSignup() {
           language: formData.language,
           leadSourceDescription: formData.leadSourceDescription || null,
           estimatedLeadsPerWeek: formData.estimatedLeadsPerWeek ? parseInt(formData.estimatedLeadsPerWeek) : null,
+          industryCategory: formData.industryCategory,
+          primaryService: formData.primaryService,
+          bookingLink: formData.bookingLink || null,
+          customTagline: formData.customTagline || null,
+          emailTone: formData.emailTone,
+          followupSpeed: formData.followupSpeed,
         }),
       });
 
@@ -242,6 +286,106 @@ export default function ClientSignup() {
                 >
                   <option value="en">English</option>
                   <option value="fr">Français</option>
+                </select>
+              </div>
+
+              {/* Email Personalization Section */}
+              <div className="pt-6 pb-2 border-t border-white/10">
+                <h3 className="text-lg font-semibold mb-1 bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
+                  {t.brandingSection}
+                </h3>
+                <p className="text-sm text-white/60 mb-4">{t.brandingSubtitle}</p>
+              </div>
+
+              {/* Industry Category */}
+              <div>
+                <label htmlFor="industry_category" className="block text-sm font-medium mb-2">{t.industryCategory} *</label>
+                <input
+                  id="industry_category"
+                  name="industry_category"
+                  type="text"
+                  value={formData.industryCategory}
+                  onChange={(e) => setFormData({ ...formData, industryCategory: e.target.value })}
+                  className="w-full px-4 py-3 rounded-md bg-white/5 border border-white/10 text-white placeholder:text-white/40 focus:border-blue-400/50 focus:outline-none transition-all"
+                  placeholder={t.industrPlaceholder}
+                  required
+                />
+              </div>
+
+              {/* Primary Service */}
+              <div>
+                <label htmlFor="primary_service" className="block text-sm font-medium mb-2">{t.primaryService} *</label>
+                <input
+                  id="primary_service"
+                  name="primary_service"
+                  type="text"
+                  value={formData.primaryService}
+                  onChange={(e) => setFormData({ ...formData, primaryService: e.target.value })}
+                  className="w-full px-4 py-3 rounded-md bg-white/5 border border-white/10 text-white placeholder:text-white/40 focus:border-blue-400/50 focus:outline-none transition-all"
+                  placeholder={t.servicePlaceholder}
+                  required
+                />
+              </div>
+
+              {/* Booking Link */}
+              <div>
+                <label htmlFor="booking_link" className="block text-sm font-medium mb-2">{t.bookingLink}</label>
+                <input
+                  id="booking_link"
+                  name="booking_link"
+                  type="url"
+                  value={formData.bookingLink}
+                  onChange={(e) => setFormData({ ...formData, bookingLink: e.target.value })}
+                  className="w-full px-4 py-3 rounded-md bg-white/5 border border-white/10 text-white placeholder:text-white/40 focus:border-blue-400/50 focus:outline-none transition-all"
+                  placeholder={t.bookingPlaceholder}
+                />
+              </div>
+
+              {/* Company Tagline */}
+              <div>
+                <label htmlFor="custom_tagline" className="block text-sm font-medium mb-2">{t.customTagline}</label>
+                <input
+                  id="custom_tagline"
+                  name="custom_tagline"
+                  type="text"
+                  value={formData.customTagline}
+                  onChange={(e) => setFormData({ ...formData, customTagline: e.target.value })}
+                  className="w-full px-4 py-3 rounded-md bg-white/5 border border-white/10 text-white placeholder:text-white/40 focus:border-blue-400/50 focus:outline-none transition-all"
+                  placeholder={t.taglinePlaceholder}
+                />
+              </div>
+
+              {/* Email Tone */}
+              <div>
+                <label htmlFor="email_tone" className="block text-sm font-medium mb-2">{t.emailTone} *</label>
+                <select
+                  id="email_tone"
+                  name="email_tone"
+                  value={formData.emailTone}
+                  onChange={(e) => setFormData({ ...formData, emailTone: e.target.value })}
+                  className="w-full px-4 py-3 rounded-md bg-white/5 border border-white/10 text-white focus:border-blue-400/50 focus:outline-none transition-all"
+                  required
+                >
+                  {toneOptions.map(option => (
+                    <option key={option.value} value={option.value}>{option.label}</option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Follow-up Speed */}
+              <div>
+                <label htmlFor="followup_speed" className="block text-sm font-medium mb-2">{t.followupSpeed} *</label>
+                <select
+                  id="followup_speed"
+                  name="followup_speed"
+                  value={formData.followupSpeed}
+                  onChange={(e) => setFormData({ ...formData, followupSpeed: e.target.value })}
+                  className="w-full px-4 py-3 rounded-md bg-white/5 border border-white/10 text-white focus:border-blue-400/50 focus:outline-none transition-all"
+                  required
+                >
+                  {speedOptions.map(option => (
+                    <option key={option.value} value={option.value}>{option.label}</option>
+                  ))}
                 </select>
               </div>
 

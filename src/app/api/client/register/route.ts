@@ -14,6 +14,12 @@ export async function POST(req: NextRequest) {
     const business_name = body.business_name || body.businessName;
     const password = body.password;
     const language = body.language;
+    const industry_category = body.industryCategory || body.industry_category;
+    const primary_service = body.primaryService || body.primary_service;
+    const booking_link = body.bookingLink || body.booking_link || null;
+    const custom_tagline = body.customTagline || body.custom_tagline || null;
+    const email_tone = body.emailTone || body.email_tone || 'Friendly';
+    const followup_speed = body.followupSpeed || body.followup_speed || 'Instant';
 
     console.log('[E2E-Test] [ClientRegistration] New registration request:', { 
       name, 
@@ -23,15 +29,37 @@ export async function POST(req: NextRequest) {
     });
 
     // Validation
-    if (!name || !email || !business_name || !password) {
+    if (!name || !email || !business_name || !password || !industry_category || !primary_service) {
       console.error('[E2E-Test] [ClientRegistration] ❌ Missing required fields:', { 
         hasName: !!name, 
         hasEmail: !!email, 
         hasBusinessName: !!business_name, 
-        hasPassword: !!password 
+        hasPassword: !!password,
+        hasIndustry: !!industry_category,
+        hasService: !!primary_service
       });
       return NextResponse.json(
-        { success: false, error: 'All required fields must be filled (name, email, business_name, password)' },
+        { success: false, error: 'All required fields must be filled (name, email, business_name, password, industry, service)' },
+        { status: 400 }
+      );
+    }
+    
+    // Validate email tone
+    const validTones = ['Professional', 'Friendly', 'Formal', 'Energetic'];
+    if (!validTones.includes(email_tone)) {
+      console.error('[E2E-Test] [ClientRegistration] ❌ Invalid email tone:', email_tone);
+      return NextResponse.json(
+        { success: false, error: 'Invalid email tone. Must be: Professional, Friendly, Formal, or Energetic' },
+        { status: 400 }
+      );
+    }
+    
+    // Validate followup speed
+    const validSpeeds = ['Instant', 'Within 1 hour', 'Same day'];
+    if (!validSpeeds.includes(followup_speed)) {
+      console.error('[E2E-Test] [ClientRegistration] ❌ Invalid followup speed:', followup_speed);
+      return NextResponse.json(
+        { success: false, error: 'Invalid follow-up speed. Must be: Instant, Within 1 hour, or Same day' },
         { status: 400 }
       );
     }
@@ -105,6 +133,13 @@ export async function POST(req: NextRequest) {
       client_id: clientId,
       is_internal: false, // Mark as external client (user signup)
       is_test: isTest, // Mark as test data if detected
+      industry_category: industry_category,
+      primary_service: primary_service,
+      booking_link: booking_link,
+      custom_tagline: custom_tagline,
+      email_tone: email_tone,
+      followup_speed: followup_speed,
+      ai_personalized_reply: true, // Enable AI replies by default
     };
 
     console.log('[E2E-Test] [ClientRegistration] Inserting into Supabase with data:', {

@@ -7,6 +7,7 @@ import { getAuthorizedGmail, buildHtmlEmail } from "../../../lib/gmail";
 import { supabase, validateApiKey, upsertLeadWithHistory } from "../../../lib/supabase";
 import { enrichLeadWithAI } from "../../../lib/ai-enrichment";
 import { isTestLead, logTestDetection } from "../../../lib/test-detection";
+import { buildPersonalizedHtmlEmail } from "../../../lib/personalized-email";
 
 type LeadPayload = {
 	name?: string;
@@ -280,6 +281,76 @@ export async function POST(req: NextRequest) {
 						console.error('[LeadActions] ❌ Insert failed:', actionError);
 					} else {
 						console.log('[LeadActions] ✅ Lead linked successfully');
+					}
+					
+					// Generate personalized email for client
+					console.log('[EmailAutomation] ============================================');
+					console.log('[EmailAutomation] Generating personalized email for client');
+					console.log('[EmailAutomation] ============================================');
+					
+					const { data: client, error: clientError } = await supabase
+						.from('clients')
+						.select('*')
+						.eq('client_id', clientId)
+						.single();
+					
+					if (clientError) {
+						console.error('[EmailAutomation] ❌ Failed to fetch client:', clientError);
+					} else if (client) {
+						console.log('[EmailAutomation] Client loaded:', {
+							business_name: client.business_name,
+							industry: client.industry_category,
+							service: client.primary_service,
+							tone: client.email_tone,
+							speed: client.followup_speed,
+							language: client.language,
+							booking_link: client.booking_link || 'none',
+							tagline: client.custom_tagline || 'none',
+							ai_replies_enabled: client.ai_personalized_reply,
+						});
+						
+						if (client.ai_personalized_reply) {
+							try {
+								const emailContent = buildPersonalizedHtmlEmail({
+									leadName: name,
+									leadEmail: email,
+									leadMessage: message,
+									aiSummary: aiSummary,
+									intent: enrichment.intent,
+									tone: enrichment.tone,
+									urgency: enrichment.urgency,
+									confidence: enrichment.confidence_score,
+									locale: locale,
+									client: client,
+								});
+								
+								console.log('[EmailAutomation] ============================================');
+								console.log('[EmailAutomation] ✅ Personalized email generated');
+								console.log('[EmailAutomation] ============================================');
+								console.log('[EmailAutomation] Sender:', client.outbound_email || `${client.business_name} <noreply@aveniraisolutions.ca>`);
+								console.log('[EmailAutomation] Recipient:', email);
+								console.log('[EmailAutomation] Language:', locale);
+								console.log('[EmailAutomation] Tone:', client.email_tone);
+								console.log('[EmailAutomation] Urgency handling:', enrichment.urgency);
+								console.log('[EmailAutomation] Industry context:', client.industry_category);
+								console.log('[EmailAutomation] Service context:', client.primary_service);
+								console.log('[EmailAutomation] Booking link:', client.booking_link || 'Not included');
+								console.log('[EmailAutomation] ============================================');
+								console.log('[EmailAutomation] 🧪 Email Preview (Development Mode):');
+								console.log('[EmailAutomation] ============================================');
+								console.log(emailContent.substring(0, 500) + '...');
+								console.log('[EmailAutomation] ============================================');
+								console.log('[EmailAutomation] 🧪 Email NOT sent (development mode)');
+								console.log('[EmailAutomation] In production, this would be sent via:');
+								console.log('[EmailAutomation]   - Client SMTP if configured');
+								console.log('[EmailAutomation]   - Or relay: mailer@aveniraisolutions.ca');
+								console.log('[EmailAutomation] ============================================');
+							} catch (emailError) {
+								console.error('[EmailAutomation] ❌ Email generation error:', emailError);
+							}
+						} else {
+							console.log('[EmailAutomation] ⚠️  AI personalized replies disabled for this client');
+						}
 					}
 				}
 				
