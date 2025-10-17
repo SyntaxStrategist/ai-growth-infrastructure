@@ -184,30 +184,46 @@ export default function ProspectIntelligencePage() {
 
   const fetchServerConfig = async () => {
     try {
-      console.log('[ProspectDashboard] Fetching server configuration...');
+      console.log('[ProspectDashboard] ============================================');
+      console.log('[ProspectDashboard] 🔍 Fetching server configuration...');
+      
       const response = await fetch('/api/prospect-intelligence/config');
+      console.log('[ProspectDashboard] Response status:', response.status);
+      
       const data = await response.json();
+      console.log('[ProspectDashboard] 🧠 Server config received:', JSON.stringify(data, null, 2));
 
       if (data.success) {
-        console.log('[ProspectDashboard] ✅ Server config loaded:', data.data);
+        console.log('[ProspectDashboard] ✅ Server config loaded successfully');
+        console.log('[ProspectDashboard] hasPdl:', data.data.hasPdl);
+        console.log('[ProspectDashboard] hasApollo:', data.data.hasApollo);
+        console.log('[ProspectDashboard] autoSubmitEnabled:', data.data.autoSubmitEnabled);
         
         // Force update server config state
-        setServerConfig({
+        const newServerConfig = {
           hasPdl: data.data.hasPdl,
           hasApollo: data.data.hasApollo,
           autoSubmitEnabled: data.data.autoSubmitEnabled
-        });
+        };
+        
+        console.log('[ProspectDashboard] 📝 Setting serverConfig state to:', newServerConfig);
+        setServerConfig(newServerConfig);
 
         // Auto-enable PDL if API key is present
         if (data.data.hasPdl) {
           console.log('[ProspectDashboard] ✅ PDL API key detected - auto-enabling PDL toggle');
+          console.log('[ProspectDashboard] 🎯 PDL toggle should now be visible');
           setConfig(prev => ({ ...prev, usePdl: true }));
         } else {
-          console.log('[ProspectDashboard] ℹ️  PDL API key not configured - toggle will be hidden');
+          console.log('[ProspectDashboard] ℹ️  PDL API key not configured');
+          console.log('[ProspectDashboard] ⚠️  PDL toggle will remain hidden');
         }
+        
+        console.log('[ProspectDashboard] ============================================');
       }
     } catch (err) {
       console.error('[ProspectDashboard] ❌ Failed to fetch server config:', err);
+      console.error('[ProspectDashboard] Error details:', err);
     }
   };
 
@@ -448,6 +464,11 @@ export default function ProspectIntelligencePage() {
     ? prospects.filter(p => isHighPriority(p.automation_need_score))
     : prospects;
 
+  // Debug: Log render state
+  console.log('[ProspectDashboard] 🎨 Rendering component...');
+  console.log('[ProspectDashboard] Rendering PDL toggle:', serverConfig.hasPdl);
+  console.log('[ProspectDashboard] Current serverConfig:', serverConfig);
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 via-blue-900 to-gray-900 text-white p-4 sm:p-8">
       {/* Universal Language Toggle */}
@@ -535,22 +556,33 @@ export default function ProspectIntelligencePage() {
             </div>
 
             {/* PDL Toggle - Only show if API key is configured server-side */}
-            {serverConfig.hasPdl && (
-              <div className="flex items-end" key="pdl-toggle">
-                <label className="flex items-center cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={config.usePdl}
-                    onChange={(e) => setConfig({ ...config, usePdl: e.target.checked })}
-                    className="mr-2"
-                    disabled={config.testMode}
-                  />
-                  <span className="text-sm text-white/70">
-                    {isFrench ? 'Utiliser People Data Labs ✨' : 'Use People Data Labs ✨'}
-                  </span>
-                </label>
-              </div>
-            )}
+            {(() => {
+              console.log('[ProspectDashboard] 🔍 Evaluating PDL toggle render condition...');
+              console.log('[ProspectDashboard] serverConfig.hasPdl =', serverConfig.hasPdl);
+              
+              if (serverConfig.hasPdl) {
+                console.log('[ProspectDashboard] ✅ Rendering PDL toggle');
+                return (
+                  <div className="flex items-end" key="pdl-toggle">
+                    <label className="flex items-center cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={config.usePdl}
+                        onChange={(e) => setConfig({ ...config, usePdl: e.target.checked })}
+                        className="mr-2"
+                        disabled={config.testMode}
+                      />
+                      <span className="text-sm text-white/70">
+                        {isFrench ? 'Utiliser People Data Labs (PDL)' : 'Use People Data Labs (PDL)'}
+                      </span>
+                    </label>
+                  </div>
+                );
+              } else {
+                console.log('[ProspectDashboard] ⚠️  PDL toggle NOT rendered (serverConfig.hasPdl is false)');
+                return null;
+              }
+            })()}
 
             <div className="flex items-end">
               <label className="flex items-center cursor-pointer">
