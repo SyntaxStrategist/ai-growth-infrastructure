@@ -46,13 +46,14 @@ export async function POST(req: NextRequest) {
         client_id,
         processed: result.processed,
         errors: result.errors,
+        hasData: !!result.data,
         trigger: triggerSource,
       });
 
       return NextResponse.json({
         success: true,
         data: result,
-        message: `Simulation completed for client ${client_id}`,
+        message: `Simulation completed for client ${client_id} - processed: ${result.processed}, errors: ${result.errors}`,
         trigger: triggerSource,
       });
     } else {

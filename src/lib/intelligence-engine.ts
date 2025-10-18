@@ -579,7 +579,7 @@ export async function getGrowthInsightsHistory(clientId: string | null = null, l
 /**
  * Run simulation analysis for a specific client (for demo purposes)
  */
-export async function runSimulationAnalysis(clientId: string): Promise<{ processed: number; errors: number }> {
+export async function runSimulationAnalysis(clientId: string): Promise<{ processed: number; errors: number; data?: any }> {
   console.log('[Engine] ============================================');
   console.log('[Engine] Starting simulation analysis for client:', clientId);
   console.log('[Engine] ============================================');
@@ -628,13 +628,22 @@ export async function runSimulationAnalysis(clientId: string): Promise<{ process
     
     // Always insert/update analytics record (even if no leads found)
     console.log('[Engine] Upserting analytics record for client:', clientId);
-    await upsertGrowthInsights(clientInsights, supabaseAdmin);
-    processed++;
     
-    console.log('[Engine] ✅ Simulation analysis complete and stored');
-    console.log('[IntelligenceEngine] ✅ Inserted analytics for', clientId);
-    
-    return { processed, errors };
+    try {
+      const insertedRecord = await upsertGrowthInsights(clientInsights, supabaseAdmin);
+      processed++;
+      
+      console.log('[Engine] ✅ Growth insights upserted successfully for', clientId);
+      console.log('[Engine] ✅ Simulation analysis complete and stored');
+      console.log('[IntelligenceEngine] ✅ Inserted analytics for', clientId);
+      
+      return { processed, errors, data: insertedRecord };
+    } catch (upsertError) {
+      console.error('[Engine] ❌ Failed to upsert growth insights:', upsertError instanceof Error ? upsertError.message : upsertError);
+      console.error('[Engine] Upsert error details:', upsertError);
+      errors++;
+      return { processed, errors };
+    }
   } catch (err) {
     console.error('[Engine] ❌ Simulation analysis failed:', err instanceof Error ? err.message : err);
     console.error('[Engine] Error stack:', err);
