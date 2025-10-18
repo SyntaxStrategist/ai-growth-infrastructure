@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { usePathname } from 'next/navigation';
+import { useTranslations } from 'next-intl';
 
 interface ProofData {
   success: boolean;
@@ -42,6 +43,7 @@ export default function ProspectProofModal({ isOpen, onClose, prospectId }: Pros
   const pathname = usePathname?.() || '';
   const locale = pathname.startsWith('/fr') ? 'fr' : 'en';
   const isFrench = locale === 'fr';
+  const t = useTranslations('proof');
   
   const [proofData, setProofData] = useState<ProofData | null>(null);
   const [loading, setLoading] = useState(false);
@@ -67,8 +69,8 @@ export default function ProspectProofModal({ isOpen, onClose, prospectId }: Pros
     setError(null);
 
     try {
-      console.log('[ProofModal] Fetching proof from API...');
-      const response = await fetch(`/api/prospect-intelligence/proof?id=${prospectId}`);
+      console.log('[ProofModal] Fetching proof from API... Locale:', locale);
+      const response = await fetch(`/api/prospect-intelligence/proof?id=${prospectId}&locale=${locale}`);
       const data = await response.json();
 
       if (!response.ok || !data.success) {
@@ -76,6 +78,9 @@ export default function ProspectProofModal({ isOpen, onClose, prospectId }: Pros
       }
 
       console.log('[ProofModal] ✅ Proof data loaded:', data.prospect.business_name);
+      if (locale === 'fr' && data.raw_metadata?.fit_reasoning) {
+        console.log('[ProofModal] 📝 Fit reasoning language:', data.raw_metadata.fit_reasoning.includes('entreprise') ? 'French' : 'English');
+      }
       setProofData(data);
     } catch (err) {
       console.error('[ProofModal] ❌ Error fetching proof:', err);
@@ -100,7 +105,7 @@ export default function ProspectProofModal({ isOpen, onClose, prospectId }: Pros
           {/* Header */}
           <div className="sticky top-0 bg-gray-900/95 backdrop-blur-sm border-b border-white/10 p-6 flex items-center justify-between">
             <h2 className="text-2xl font-bold text-white flex items-center gap-2">
-              📊 Prospect Proof
+              📊 {t('prospectProof')}
             </h2>
             <button
               onClick={onClose}
@@ -132,29 +137,29 @@ export default function ProspectProofModal({ isOpen, onClose, prospectId }: Pros
                 {/* Simulation Banner */}
                 {proofData.simulated && (
                   <div className="bg-yellow-500/10 border border-yellow-500/30 rounded-lg p-4">
-                    <p className="text-yellow-300 font-medium">⚠️ Simulation Mode – No live data</p>
+                    <p className="text-yellow-300 font-medium">⚠️ {t('simulationMode')}</p>
                   </div>
                 )}
 
                 {/* Business Info */}
                 <div className="bg-white/5 rounded-lg p-6 space-y-4">
                   <div>
-                    <h3 className="text-lg font-semibold text-white mb-4">Business Information</h3>
+                    <h3 className="text-lg font-semibold text-white mb-4">{t('businessInformation')}</h3>
                   </div>
                   
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <p className="text-sm text-white/50">Business Name</p>
+                      <p className="text-sm text-white/50">{t('businessName')}</p>
                       <p className="text-white font-medium">{proofData.prospect.business_name}</p>
                     </div>
                     
                     <div>
-                      <p className="text-sm text-white/50">Industry</p>
+                      <p className="text-sm text-white/50">{t('industry')}</p>
                       <p className="text-white font-medium">{proofData.prospect.industry}</p>
                     </div>
                     
                     <div>
-                      <p className="text-sm text-white/50">Website</p>
+                      <p className="text-sm text-white/50">{t('website')}</p>
                       <a
                         href={proofData.prospect.website}
                         target="_blank"
@@ -166,17 +171,17 @@ export default function ProspectProofModal({ isOpen, onClose, prospectId }: Pros
                     </div>
                     
                     <div>
-                      <p className="text-sm text-white/50">Region</p>
+                      <p className="text-sm text-white/50">{t('region')}</p>
                       <p className="text-white font-medium">{proofData.prospect.region}</p>
                     </div>
                     
                     <div>
-                      <p className="text-sm text-white/50">Automation Score</p>
+                      <p className="text-sm text-white/50">{t('automationScore')}</p>
                       <p className="text-white font-medium">{proofData.prospect.automation_need_score}/100</p>
                     </div>
                     
                     <div>
-                      <p className="text-sm text-white/50">Response Time</p>
+                      <p className="text-sm text-white/50">{t('responseTime')}</p>
                       <p className="text-white font-medium">{proofData.proof.response_time}</p>
                     </div>
                   </div>
@@ -184,24 +189,24 @@ export default function ProspectProofModal({ isOpen, onClose, prospectId }: Pros
 
                 {/* Form Detection */}
                 <div className="bg-white/5 rounded-lg p-6">
-                  <h3 className="text-lg font-semibold text-white mb-4">Form Detection</h3>
+                  <h3 className="text-lg font-semibold text-white mb-4">{t('formDetection')}</h3>
                   
                   <div className="flex flex-wrap gap-2 mb-4">
                     {proofData.proof.has_form && (
                       <span className="px-3 py-1 rounded-full bg-green-500/20 text-green-400 text-sm flex items-center gap-1">
-                        📝 Has Form ({proofData.proof.form_count})
+                        📝 {t('hasForm')} ({proofData.proof.form_count})
                       </span>
                     )}
                     
                     {proofData.proof.has_mailto && (
                       <span className="px-3 py-1 rounded-full bg-blue-500/20 text-blue-400 text-sm flex items-center gap-1">
-                        ✉️ Has Mailto
+                        ✉️ {t('hasMailto')}
                       </span>
                     )}
                     
                     {proofData.proof.has_captcha && (
                       <span className="px-3 py-1 rounded-full bg-orange-500/20 text-orange-400 text-sm flex items-center gap-1">
-                        🛡️ Has CAPTCHA
+                        🛡️ {t('hasCaptcha')}
                       </span>
                     )}
                     
@@ -214,13 +219,13 @@ export default function ProspectProofModal({ isOpen, onClose, prospectId }: Pros
                   
                   {proofData.proof.submit_method && (
                     <p className="text-sm text-white/70">
-                      Submit Method: <span className="text-white font-medium">{proofData.proof.submit_method}</span>
+                      {t('submitMethod')}: <span className="text-white font-medium">{proofData.proof.submit_method}</span>
                     </p>
                   )}
                   
                   {proofData.proof.scanned_at && (
                     <p className="text-sm text-white/50 mt-2">
-                      Scanned: {new Date(proofData.proof.scanned_at).toLocaleString()}
+                      {t('scanned')}: {new Date(proofData.proof.scanned_at).toLocaleString()}
                     </p>
                   )}
                 </div>
@@ -228,18 +233,18 @@ export default function ProspectProofModal({ isOpen, onClose, prospectId }: Pros
                 {/* Screenshot */}
                 {proofData.proof.screenshot_url ? (
                   <div className="bg-white/5 rounded-lg p-6">
-                    <h3 className="text-lg font-semibold text-white mb-4">Screenshot</h3>
+                    <h3 className="text-lg font-semibold text-white mb-4">{t('screenshot')}</h3>
                     <img
                       src={proofData.proof.screenshot_url}
-                      alt="Website screenshot"
+                      alt={t('screenshot')}
                       className="w-full rounded-lg border border-white/10"
                     />
                   </div>
                 ) : (
                   <div className="bg-white/5 rounded-lg p-6">
-                    <h3 className="text-lg font-semibold text-white mb-4">Screenshot</h3>
+                    <h3 className="text-lg font-semibold text-white mb-4">{t('screenshot')}</h3>
                     <div className="bg-white/5 rounded-lg p-12 text-center">
-                      <p className="text-white/50">📷 No screenshot available</p>
+                      <p className="text-white/50">📷 {t('noScreenshot')}</p>
                     </div>
                   </div>
                 )}
@@ -247,7 +252,7 @@ export default function ProspectProofModal({ isOpen, onClose, prospectId }: Pros
                 {/* Contact Paths */}
                 {proofData.proof.contact_paths.length > 0 && (
                   <div className="bg-white/5 rounded-lg p-6">
-                    <h3 className="text-lg font-semibold text-white mb-4">Contact Paths Found</h3>
+                    <h3 className="text-lg font-semibold text-white mb-4">{t('contactPaths')}</h3>
                     <ul className="space-y-2">
                       {proofData.proof.contact_paths.map((path, idx) => (
                         <li key={idx}>
@@ -265,6 +270,54 @@ export default function ProspectProofModal({ isOpen, onClose, prospectId }: Pros
                   </div>
                 )}
 
+                {/* Business Fit Analysis (Semantic Matching) */}
+                {(() => {
+                  const fitScore = proofData.raw_metadata?.business_fit_score;
+                  const fitReasoning = proofData.raw_metadata?.fit_reasoning;
+                  
+                  // Debug log
+                  console.log('🎯 Business Fit Score rendered for:', proofData.prospect.business_name, fitScore || 'N/A');
+                  
+                  return (
+                    <div className="bg-white/5 rounded-lg p-6 border-l-4 border-purple-400">
+                      <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+                        🎯 {t('businessFitAnalysis')}
+                      </h3>
+                      
+                      <div className="space-y-3">
+                        {/* Score */}
+                        <div className="flex items-baseline gap-3">
+                          <span className="text-sm text-white/70">
+                            🎯 {t('businessFitScore')}:
+                          </span>
+                          <span className="text-2xl font-bold text-purple-300">
+                            {fitScore !== undefined ? `${fitScore} / 100` : '—'}
+                          </span>
+                        </div>
+                        
+                        {/* AI Reasoning */}
+                        <div>
+                          <p className="text-sm text-white/70 mb-2">
+                            🤖 {t('aiReasoning')}:
+                          </p>
+                          <div className="bg-black/20 rounded-lg p-3 border border-purple-400/20">
+                            <p className="text-white text-sm leading-relaxed">
+                              {fitReasoning || '—'}
+                            </p>
+                          </div>
+                        </div>
+                        
+                        {/* Footer note */}
+                        {fitScore !== undefined && (
+                          <p className="text-xs text-purple-300/50 italic mt-2">
+                            💡 {t('fitScoreNote')}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })()}
+
                 {/* Scoring Breakdown */}
                 <div className="bg-white/5 rounded-lg p-6">
                   <button
@@ -272,7 +325,7 @@ export default function ProspectProofModal({ isOpen, onClose, prospectId }: Pros
                     className="flex items-center justify-between w-full text-left mb-4"
                   >
                     <h3 className="text-lg font-semibold text-white flex items-center gap-2">
-                      📊 {isFrench ? 'Détail du Score' : 'Scoring Breakdown'}
+                      📊 {t('scoringBreakdown')}
                     </h3>
                     <span className="text-white/50">{showScoreBreakdown ? '▼' : '▶'}</span>
                   </button>
@@ -459,7 +512,7 @@ export default function ProspectProofModal({ isOpen, onClose, prospectId }: Pros
                     className="flex items-center justify-between w-full text-left"
                   >
                     <h3 className="text-lg font-semibold text-white">
-                      {isFrench ? 'Métadonnées Brutes (Débogage)' : 'Raw Metadata (Debug)'}
+                      {t('rawMetadata')}
                     </h3>
                     <span className="text-white/50">{showMetadata ? '▼' : '▶'}</span>
                   </button>
@@ -480,7 +533,7 @@ export default function ProspectProofModal({ isOpen, onClose, prospectId }: Pros
               onClick={onClose}
               className="px-6 py-2 bg-white/10 hover:bg-white/20 text-white rounded-lg transition-colors"
             >
-              {isFrench ? 'Fermer' : 'Close'}
+              {t('close')}
             </button>
           </div>
         </motion.div>

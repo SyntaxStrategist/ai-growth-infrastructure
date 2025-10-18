@@ -5,9 +5,14 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
+import OpenAI from 'openai';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
+
+const openai = new OpenAI({
+  apiKey: process.env.OPENAI_API_KEY,
+});
 
 /**
  * Get proof data for a prospect
@@ -17,6 +22,7 @@ export async function GET(req: NextRequest) {
   try {
     const { searchParams } = new URL(req.url);
     const id = searchParams.get('id');
+    const locale = searchParams.get('locale') || 'en';
 
     if (!id) {
       return NextResponse.json(
@@ -25,7 +31,7 @@ export async function GET(req: NextRequest) {
       );
     }
 
-    console.log('[ProofAPI] Fetching proof for prospect:', id);
+    console.log('[ProofAPI] Fetching proof for prospect:', id, '| Locale:', locale);
 
     const supabase = createClient(supabaseUrl, supabaseKey, {
       auth: { persistSession: false }
@@ -62,6 +68,56 @@ export async function GET(req: NextRequest) {
     
     // Check if this is simulated test data
     const isSimulated = metadata.source === 'test' || metadata.simulated === true;
+    
+    // Auto-translate fit_reasoning if French locale and reasoning is in English
+    let fitReasoning = metadata.fit_reasoning;
+    
+    if (locale === 'fr' && fitReasoning && typeof fitReasoning === 'string') {
+      // Check if reasoning appears to be in English (simple heuristic)
+      const isEnglish = fitReasoning.includes('Strong match') || 
+                        fitReasoning.includes('Good fit') || 
+                        fitReasoning.includes('company') ||
+                        !fitReasoning.includes('entreprise');
+      
+      if (isEnglish && process.env.OPENAI_API_KEY) {
+        try {
+          console.log('[ProofAPI] 🔄 Translating fit reasoning to French...');
+          
+          const translation = await openai.chat.completions.create({
+            model: 'gpt-4o-mini',
+            messages: [
+              { 
+                role: 'system', 
+                content: 'You are a professional translator. Translate to natural French, keeping business tone and technical accuracy. Return ONLY the translation, no explanations.' 
+              },
+              { 
+                role: 'user', 
+                content: fitReasoning 
+              }
+            ],
+            temperature: 0.3,
+            max_tokens: 250,
+          });
+          
+          const translatedReasoning = translation.choices[0].message.content?.trim();
+          
+          if (translatedReasoning) {
+            fitReasoning = translatedReasoning;
+            console.log('[ProofAPI] ✅ Fit reasoning translated to French');
+          }
+          
+        } catch (error) {
+          console.warn('[ProofAPI] ⚠️  Translation failed, using original:', error);
+          // Keep original reasoning if translation fails
+        }
+      }
+    }
+    
+    // Update metadata with translated reasoning
+    const updatedMetadata = {
+      ...metadata,
+      fit_reasoning: fitReasoning,
+    };
 
     // Build response
     const proofData = {
@@ -98,8 +154,8 @@ export async function GET(req: NextRequest) {
         // Scan timestamp
         scanned_at: formScan.scanned_at || metadata.enriched_at || null,
       },
-      // Full metadata for debug
-      raw_metadata: metadata,
+      // Full metadata for debug (with translated reasoning if applicable)
+      raw_metadata: updatedMetadata,
     };
 
     console.log('[ProofAPI] Returning proof data with simulated flag:', isSimulated);

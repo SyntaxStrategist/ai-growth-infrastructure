@@ -15,6 +15,7 @@ import { generateOutreachEmail, batchGenerateOutreach } from './outreach/generat
 import { sendOutreachEmail, batchSendEmails } from './outreach/send_outreach_email';
 import { updateIndustryPerformance, generateInsightsReport } from './feedback/learn_icp_model';
 import { saveProspectsToDatabase } from './database/supabase_connector';
+import { calculateBusinessFitScore, isProfileEmbedded } from '../src/lib/semantic_matcher';
 
 export interface PipelineConfig {
   industries: string[];
@@ -303,13 +304,13 @@ export async function runProspectPipeline(config: PipelineConfig): Promise<Prosp
     }
 
     // ============================================
-    // Save to Database
+    // Save to Database (Initial Save - will update after scoring)
     // ============================================
-    console.log('💾 Saving prospects to database...');
+    console.log('💾 Saving initial prospects to database...');
     try {
       await saveProspectsToDatabase(allProspects);
-      console.log('✅ Prospects saved to database\n');
-      await logIntegration('database', 'info', 'Prospects saved', { count: allProspects.length });
+      console.log('✅ Initial prospects saved to database\n');
+      await logIntegration('database', 'info', 'Initial prospects saved', { count: allProspects.length });
     } catch (error) {
       console.error('❌ Failed to save prospects:', error);
       await logIntegration('database', 'error', 'Save failed', {
@@ -379,6 +380,106 @@ export async function runProspectPipeline(config: PipelineConfig): Promise<Prosp
     if (sortedProspects.length === 0) {
       console.log('⚠️  No high-priority prospects found. Ending pipeline.\n');
       return result;
+    }
+
+    // ============================================
+    // STAGE 3.5: BUSINESS FIT SCORING (SEMANTIC MATCHING)
+    // ============================================
+    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+    console.log('3.5️⃣  STAGE 3.5: BUSINESS FIT SCORING (SEMANTIC)');
+    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+    console.log('');
+    
+    // Check if Avenir profile is embedded
+    const profileEmbedded = await isProfileEmbedded();
+    
+    if (profileEmbedded) {
+      console.log('✅ Avenir profile embedded - calculating Business Fit Scores...');
+      console.log('');
+      
+      let fitScoresCalculated = 0;
+      
+      for (const prospect of sortedProspects) {
+        try {
+          console.log(`🧠 Calculating Business Fit for: ${prospect.business_name}`);
+          
+          // Determine locale for reasoning
+          const locale = prospect.language || (prospect.region?.includes('QC') || prospect.region === 'FR' ? 'fr' : 'en');
+          
+          const fitResult = await calculateBusinessFitScore(prospect, locale);
+          
+          // Store fit score and reasoning in metadata
+          if (!prospect.metadata) {
+            prospect.metadata = {};
+          }
+          
+          prospect.metadata.business_fit_score = fitResult.score;
+          prospect.metadata.fit_reasoning = fitResult.reasoning;
+          prospect.metadata.fit_top_matches = fitResult.topMatches;
+          prospect.metadata.fit_confidence = fitResult.confidence;
+          
+          console.log(`🎯 Fit Score: ${fitResult.score} Reasoning: ${fitResult.reasoning.substring(0, 60)}...`);
+          console.log('');
+          
+          fitScoresCalculated++;
+          
+          // Rate limit: 500ms between calls to avoid OpenAI rate limits
+          await new Promise(resolve => setTimeout(resolve, 500));
+          
+        } catch (error) {
+          console.warn(`⚠️  Failed to calculate fit for ${prospect.business_name}:`, error instanceof Error ? error.message : error);
+          
+          // Fallback: Set null values
+          if (!prospect.metadata) {
+            prospect.metadata = {};
+          }
+          prospect.metadata.business_fit_score = null;
+          prospect.metadata.fit_reasoning = '—';
+          
+          console.warn('⚠️  Business Fit calculation skipped due to error.');
+          console.log('');
+          // Continue with other prospects
+        }
+      }
+      
+      console.log(`✅ Business Fit Scores calculated for ${fitScoresCalculated}/${sortedProspects.length} prospects`);
+      console.log('');
+      
+      // ============================================
+      // SAVE UPDATED PROSPECTS WITH FIT SCORES
+      // ============================================
+      console.log('💾 Saving prospects with Business Fit Scores to database...');
+      try {
+        await saveProspectsToDatabase(sortedProspects);
+        console.log('✅ Prospects with fit scores saved to database\n');
+        await logIntegration('database', 'info', 'Prospects with fit scores saved', { 
+          count: sortedProspects.length,
+          with_fit_scores: fitScoresCalculated
+        });
+      } catch (error) {
+        console.error('❌ Failed to save prospects with fit scores:', error);
+        await logIntegration('database', 'error', 'Fit score save failed', {
+          error: error instanceof Error ? error.message : 'Unknown'
+        });
+        result.errors.push('Database save (fit scores) failed');
+      }
+      
+    } else {
+      console.log('⚠️  Avenir profile not embedded - skipping Business Fit Scoring');
+      console.log('   Run: npm run setup-embeddings');
+      console.log('');
+      
+      // Add fallback values for all prospects
+      for (const prospect of sortedProspects) {
+        if (!prospect.metadata) {
+          prospect.metadata = {};
+        }
+        prospect.metadata.business_fit_score = null;
+        prospect.metadata.fit_reasoning = '—';
+      }
+      
+      console.warn('⚠️  Business Fit calculation skipped due to missing embeddings.');
+      console.log('');
     }
 
     // ============================================

@@ -147,5 +147,34 @@
       "language": "Langue",
       "noResults": "Aucun lead ne correspond aux filtres actuels"
     }
+  },
+  "proof": {
+    "prospectProof": "Preuve du Prospect",
+    "simulationMode": "Mode Simulation – Aucune donnée en direct",
+    "businessInformation": "Informations sur l'entreprise",
+    "businessName": "Nom de l'entreprise",
+    "industry": "Secteur d'activité",
+    "website": "Site Web",
+    "region": "Région",
+    "automationScore": "Score d'automatisation",
+    "responseTime": "Délai de réponse",
+    "formDetection": "Détection de formulaire",
+    "hasForm": "A un formulaire",
+    "hasMailto": "A un mailto",
+    "hasCaptcha": "A un CAPTCHA",
+    "submitMethod": "Méthode de soumission",
+    "scanned": "Scanné",
+    "screenshot": "Capture d'écran",
+    "noScreenshot": "Aucune capture d'écran disponible",
+    "contactPaths": "Chemins de contact trouvés",
+    "businessFitAnalysis": "Analyse d'adéquation Business",
+    "businessFitScore": "Score d'adéquation Business",
+    "aiReasoning": "Raisonnement IA",
+    "fitScoreNote": "Score calculé par correspondance sémantique avec le profil d'Avenir AI Solutions",
+    "scoringBreakdown": "Détail du Score",
+    "rawMetadata": "Métadonnées brutes (débogage)",
+    "close": "Fermer",
+    "error": "Erreur",
+    "loading": "Chargement..."
   }
 }

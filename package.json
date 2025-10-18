@@ -10,7 +10,12 @@
     "postinstall": "prisma generate",
     "test:e2e": "playwright test",
     "test:e2e:ui": "playwright test --ui",
-    "test:e2e:report": "playwright show-report"
+    "test:e2e:report": "playwright show-report",
+    "embed-profile": "node scripts/embed-avenir-profile.js",
+    "reset-embeddings": "node scripts/reset-and-embed-profile.js",
+    "setup-embeddings": "node scripts/setup-and-embed-profile.js",
+    "show-sql": "bash scripts/create-embeddings-table-sql.sh",
+    "apply-embeddings-migration": "node scripts/apply-embeddings-migration.js"
   },
   "dependencies": {
     "@prisma/client": "^6.17.1",

@@ -147,5 +147,34 @@
       "language": "Language",
       "noResults": "No leads match the current filters"
     }
+  },
+  "proof": {
+    "prospectProof": "Prospect Proof",
+    "simulationMode": "Simulation Mode – No live data",
+    "businessInformation": "Business Information",
+    "businessName": "Business Name",
+    "industry": "Industry",
+    "website": "Website",
+    "region": "Region",
+    "automationScore": "Automation Score",
+    "responseTime": "Response Time",
+    "formDetection": "Form Detection",
+    "hasForm": "Has Form",
+    "hasMailto": "Has Mailto",
+    "hasCaptcha": "Has CAPTCHA",
+    "submitMethod": "Submit Method",
+    "scanned": "Scanned",
+    "screenshot": "Screenshot",
+    "noScreenshot": "No screenshot available",
+    "contactPaths": "Contact Paths Found",
+    "businessFitAnalysis": "Business Fit Analysis",
+    "businessFitScore": "Business Fit Score",
+    "aiReasoning": "AI Reasoning",
+    "fitScoreNote": "Score calculated by semantic matching against Avenir AI Solutions profile",
+    "scoringBreakdown": "Scoring Breakdown",
+    "rawMetadata": "Raw Metadata (Debug)",
+    "close": "Close",
+    "error": "Error",
+    "loading": "Loading..."
   }
 }
