@@ -17,7 +17,8 @@
     "show-sql": "bash scripts/create-embeddings-table-sql.sh",
     "apply-embeddings-migration": "node scripts/apply-embeddings-migration.js",
     "seed-test-client": "node scripts/seed-test-client-dashboard.js",
-    "seed-prod-demo": "node scripts/seed-production-demo-client.js"
+    "seed-prod-demo": "node scripts/seed-production-demo-client.js",
+    "seed-demo-full": "node scripts/seed-demo-full.js"
   },
   "dependencies": {
     "@prisma/client": "^6.17.1",
