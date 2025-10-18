@@ -582,12 +582,13 @@ export default function ProspectIntelligencePage() {
     filteredProspects = filteredProspects.filter(p => isHighPriority(p.automation_need_score));
   }
 
+  // Debug: Log filter results
+  console.log("✅ Filter applied: hideTestProspects =", hideTestProspects, "Visible prospects:", filteredProspects.length);
+
   // Debug: Log render state
   console.log('[ProspectDashboard] 🎨 Rendering component...');
   console.log('[ProspectDashboard] Rendering PDL toggle:', serverConfig.hasPdl);
   console.log('[ProspectDashboard] Current serverConfig:', serverConfig);
-  console.log("✅ UI loaded: Prospect Intelligence Page, hideTestProspects=", hideTestProspects);
-  console.log("🔍 hideTestProspects =", hideTestProspects, "Filtered count:", filteredProspects.length);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 via-blue-900 to-gray-900 text-white p-4 sm:p-8">
