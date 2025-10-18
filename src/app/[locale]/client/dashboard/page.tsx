@@ -88,7 +88,7 @@ export default function ClientDashboard() {
     highUrgency: 0,
   });
   const [currentPage, setCurrentPage] = useState(1);
-  const [leadsPerPage] = useState(10);
+  const [leadsPerPage] = useState(5);
 
   const t = {
     loginTitle: isFrench ? 'Connexion Client' : 'Client Login',
