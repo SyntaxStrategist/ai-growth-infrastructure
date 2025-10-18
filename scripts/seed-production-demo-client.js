@@ -9,6 +9,7 @@
 const { createClient } = require('@supabase/supabase-js');
 const bcrypt = require('bcryptjs');
 const path = require('path');
+const { v4: uuidv4 } = require('uuid');
 
 // Load environment variables
 require('dotenv').config({ path: path.join(__dirname, '..', '.env.local') });
@@ -30,7 +31,7 @@ const supabase = createClient(supabaseUrl, supabaseKey, {
 // ============================================
 
 const DEMO_CLIENT = {
-  client_id: 'demo-client-avenir-001',
+  client_id: uuidv4(), // Generate valid UUID for client_id
   business_name: 'Demo Client – Dashboard',
   contact_name: 'Demo Account',
   email: 'demo.client@aveniraisolutions.ca',
@@ -151,6 +152,7 @@ async function main() {
     .from('clients')
     .select('id, client_id, email, business_name')
     .eq('email', DEMO_CLIENT.email)
+    .eq('is_test', true)
     .single();
   
   let clientDbId;
@@ -202,7 +204,7 @@ async function main() {
     
     console.log('   ✅ Production demo client created');
     console.log('   ID:', clientDbId);
-    console.log('   Client ID:', clientId);
+    console.log('   Client ID (UUID):', clientId);
     console.log('   Email:', DEMO_CLIENT.email);
     console.log('   Password:', DEMO_CLIENT.password);
     console.log('   Is Test:', DEMO_CLIENT.is_test);
@@ -293,8 +295,8 @@ async function main() {
   console.log('  • Business: Demo Client – Dashboard');
   console.log('  • Email:', DEMO_CLIENT.email);
   console.log('  • Password:', DEMO_CLIENT.password);
-  console.log('  • Client ID:', clientId);
-  console.log('  • UUID:', clientDbId);
+  console.log('  • Client ID (UUID):', clientId);
+  console.log('  • Database UUID:', clientDbId);
   console.log('  • Is Test: true ✅');
   console.log('  • Environment: PRODUCTION');
   console.log('');
