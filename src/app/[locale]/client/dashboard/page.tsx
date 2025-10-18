@@ -87,6 +87,8 @@ export default function ClientDashboard() {
     topIntent: '',
     highUrgency: 0,
   });
+  const [currentPage, setCurrentPage] = useState(1);
+  const [leadsPerPage] = useState(25);
 
   const t = {
     loginTitle: isFrench ? 'Connexion Client' : 'Client Login',
@@ -141,6 +143,15 @@ export default function ClientDashboard() {
       cancel: isFrench ? 'Annuler' : 'Cancel',
       confirm: isFrench ? 'Confirmer' : 'Confirm',
       selectTag: isFrench ? 'Sélectionner une étiquette' : 'Select a tag',
+    },
+    pagination: {
+      previous: isFrench ? 'Précédent' : 'Previous',
+      next: isFrench ? 'Suivant' : 'Next',
+      page: isFrench ? 'Page' : 'Page',
+      of: isFrench ? 'sur' : 'of',
+      showing: isFrench ? 'Affichage' : 'Showing',
+      to: isFrench ? 'à' : 'to',
+      results: isFrench ? 'résultats' : 'results',
     },
   };
 
@@ -204,6 +215,11 @@ export default function ClientDashboard() {
       fetchRecentActions();
     }
   }, [authenticated, client, activeTab]);
+
+  // Reset to first page when filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [filter, tagFilter, activeTab]);
 
   async function handleLogin(e: React.FormEvent) {
     e.preventDefault();
@@ -600,6 +616,29 @@ export default function ClientDashboard() {
     return true;
   });
 
+  // Pagination logic
+  const totalPages = Math.ceil(filteredLeads.length / leadsPerPage);
+  const startIndex = (currentPage - 1) * leadsPerPage;
+  const endIndex = startIndex + leadsPerPage;
+  const currentLeads = filteredLeads.slice(startIndex, endIndex);
+
+  // Pagination handlers
+  const goToPage = (page: number) => {
+    setCurrentPage(Math.max(1, Math.min(page, totalPages)));
+  };
+
+  const goToPreviousPage = () => {
+    if (currentPage > 1) {
+      setCurrentPage(currentPage - 1);
+    }
+  };
+
+  const goToNextPage = () => {
+    if (currentPage < totalPages) {
+      setCurrentPage(currentPage + 1);
+    }
+  };
+
   const tagOptions = isFrench 
     ? ['Contacté', 'Haute Valeur', 'Non Qualifié', 'Suivi', 'Converti']
     : ['Contacted', 'High Value', 'Not Qualified', 'Follow-Up', 'Converted'];
@@ -904,7 +943,7 @@ export default function ClientDashboard() {
           transition={{ duration: 0.6, delay: 0.6 }}
           className="space-y-3"
         >
-          {filteredLeads.map((lead, idx) => (
+          {currentLeads.map((lead, idx) => (
             <motion.div
               key={lead.id}
               initial={{ opacity: 0, x: -20 }}
@@ -1074,6 +1113,80 @@ export default function ClientDashboard() {
             <div className="text-center py-12 text-white/50">
               {t.noLeads}
             </div>
+          )}
+
+          {/* Pagination Controls */}
+          {filteredLeads.length > 0 && totalPages > 1 && (
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.4, delay: 0.2 }}
+              className="flex flex-col sm:flex-row items-center justify-between gap-4 mt-8 pt-6 border-t border-white/10"
+            >
+              {/* Results Info */}
+              <div className="text-sm text-white/60">
+                {t.pagination.showing} {startIndex + 1} {t.pagination.to} {Math.min(endIndex, filteredLeads.length)} {t.pagination.of} {filteredLeads.length} {t.pagination.results}
+              </div>
+
+              {/* Pagination Buttons */}
+              <div className="flex items-center gap-2">
+                {/* Previous Button */}
+                <button
+                  onClick={goToPreviousPage}
+                  disabled={currentPage === 1}
+                  className={`px-3 py-2 rounded-lg text-sm font-medium transition-all ${
+                    currentPage === 1
+                      ? 'bg-white/5 border border-white/10 text-white/30 cursor-not-allowed'
+                      : 'bg-white/10 border border-white/20 text-white/80 hover:bg-white/20 hover:border-white/30 hover:text-white'
+                  }`}
+                >
+                  {t.pagination.previous}
+                </button>
+
+                {/* Page Numbers */}
+                <div className="flex items-center gap-1">
+                  {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                    let pageNum;
+                    if (totalPages <= 5) {
+                      pageNum = i + 1;
+                    } else if (currentPage <= 3) {
+                      pageNum = i + 1;
+                    } else if (currentPage >= totalPages - 2) {
+                      pageNum = totalPages - 4 + i;
+                    } else {
+                      pageNum = currentPage - 2 + i;
+                    }
+
+                    return (
+                      <button
+                        key={pageNum}
+                        onClick={() => goToPage(pageNum)}
+                        className={`w-8 h-8 rounded-lg text-sm font-medium transition-all ${
+                          currentPage === pageNum
+                            ? 'bg-blue-500 border border-blue-400 text-white shadow-[0_0_10px_rgba(59,130,246,0.3)]'
+                            : 'bg-white/10 border border-white/20 text-white/80 hover:bg-white/20 hover:border-white/30 hover:text-white'
+                        }`}
+                      >
+                        {pageNum}
+                      </button>
+                    );
+                  })}
+                </div>
+
+                {/* Next Button */}
+                <button
+                  onClick={goToNextPage}
+                  disabled={currentPage === totalPages}
+                  className={`px-3 py-2 rounded-lg text-sm font-medium transition-all ${
+                    currentPage === totalPages
+                      ? 'bg-white/5 border border-white/10 text-white/30 cursor-not-allowed'
+                      : 'bg-white/10 border border-white/20 text-white/80 hover:bg-white/20 hover:border-white/30 hover:text-white'
+                  }`}
+                >
+                  {t.pagination.next}
+                </button>
+              </div>
+            </motion.div>
           )}
         </motion.div>
 
