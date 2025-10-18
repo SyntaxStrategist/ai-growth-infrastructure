@@ -165,6 +165,8 @@ export async function GET(req: NextRequest) {
     const clientId = searchParams.get('clientId');
     const locale = searchParams.get('locale') || 'en';
     const status = searchParams.get('status') || 'active';
+    const page = parseInt(searchParams.get('page') || '1');
+    const limit = parseInt(searchParams.get('limit') || '5');
 
     console.log('[E2E-Test] [ClientLeads] ============================================');
     console.log('[E2E-Test] [ClientLeads] Request received');
@@ -333,19 +335,44 @@ export async function GET(req: NextRequest) {
     console.log('[E2E-Test] [ClientLeads] ✅ Filtered to', leads.length, status, 'leads');
     console.log('[E2E-Test] [ClientLeads] ✅ Client-scoped data loaded successfully');
     
-    if (leads.length > 0) {
+    // Calculate pagination
+    const totalLeads = leads.length;
+    const totalPages = Math.ceil(totalLeads / limit);
+    const startIndex = (page - 1) * limit;
+    const endIndex = startIndex + limit;
+    const paginatedLeads = leads.slice(startIndex, endIndex);
+    
+    console.log('[E2E-Test] [ClientLeads] 📄 Pagination:', {
+      page,
+      limit,
+      totalLeads,
+      totalPages,
+      startIndex,
+      endIndex,
+      returnedLeads: paginatedLeads.length
+    });
+    
+    if (paginatedLeads.length > 0) {
       console.log('[E2E-Test] [ClientLeads] Sample lead:', {
-        id: leads[0].id,
-        name: leads[0].name,
-        email: leads[0].email,
-        intent: leads[0].intent,
-        client_id: leads[0].client_id,
+        id: paginatedLeads[0].id,
+        name: paginatedLeads[0].name,
+        email: paginatedLeads[0].email,
+        intent: paginatedLeads[0].intent,
+        client_id: paginatedLeads[0].client_id,
       });
     }
 
     return NextResponse.json({
       success: true,
-      data: leads,
+      data: paginatedLeads,
+      pagination: {
+        page,
+        limit,
+        totalLeads,
+        totalPages,
+        hasNextPage: page < totalPages,
+        hasPrevPage: page > 1
+      }
     });
 
   } catch (error) {
