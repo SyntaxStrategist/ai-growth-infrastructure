@@ -19,56 +19,39 @@ const supabase = createClient(supabaseUrl, supabaseKey, {
 
 /**
  * GET - Fetch all prospects from prospect_candidates table
- * Always returns { data: [...], count: N } structure for dashboard
+ * Supabase: https://uvkxmugmrvwwbqqxrzob.supabase.co
+ * Table: prospect_candidates (id, business_name, website, contact_email, industry, 
+ *        region, language, form_url, last_tested, response_score, automation_need_score, 
+ *        contacted, created_at, metadata)
+ * Always returns valid JSON: { data: [...], count: N }
  */
 export async function GET() {
-  console.log('[ProspectAPI] GET request - Fetching from prospect_candidates');
-
   try {
-    // Fetch all prospects from prospect_candidates table
+    console.log('[ProspectAPI] Fetching prospects...');
     const { data, error } = await supabase
       .from('prospect_candidates')
       .select('*')
       .order('created_at', { ascending: false });
 
-    // Handle Supabase errors
     if (error) {
       console.error('[ProspectAPI Error]', error.message);
-      return new Response(
-        JSON.stringify({ data: [], count: 0, error: error.message }),
-        { 
-          status: 500, 
-          headers: { 'Content-Type': 'application/json' } 
-        }
-      );
+      return new Response(JSON.stringify({ error: error.message, data: [] }), {
+        status: 500,
+        headers: { 'Content-Type': 'application/json' }
+      });
     }
 
-    // Success - return prospects with count
-    const safeData = data || [];
-    const count = safeData.length;
-    
-    console.log('[ProspectAPI] ✅ Returning', count, 'prospects');
-
-    return new Response(
-      JSON.stringify({ data: safeData, count }),
-      { 
-        status: 200, 
-        headers: { 'Content-Type': 'application/json' } 
-      }
-    );
-
+    console.log('[ProspectAPI] ✅ Returning', data?.length || 0, 'prospects');
+    return new Response(JSON.stringify({ data, count: data?.length || 0 }), {
+      status: 200,
+      headers: { 'Content-Type': 'application/json' }
+    });
   } catch (err) {
-    // Catch unexpected errors
-    const errorMessage = err instanceof Error ? err.message : 'Unknown error';
-    console.error('[ProspectAPI Error]', errorMessage);
-    
-    return new Response(
-      JSON.stringify({ data: [], count: 0, error: errorMessage }),
-      { 
-        status: 500, 
-        headers: { 'Content-Type': 'application/json' } 
-      }
-    );
+    console.error('[ProspectAPI Crash]', err);
+    return new Response(JSON.stringify({ error: String(err), data: [] }), {
+      status: 500,
+      headers: { 'Content-Type': 'application/json' }
+    });
   }
 }
 
