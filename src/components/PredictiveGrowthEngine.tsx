@@ -15,6 +15,27 @@ export default function PredictiveGrowthEngine({ locale, clientId = null }: Pred
 
   const isFrench = locale === 'fr';
 
+  // Function to interpret tone sentiment score and return descriptive label
+  const getToneLabel = (score: number): string => {
+    if (score >= 80) {
+      return isFrench ? 'Enthousiaste' : 'Enthusiastic';
+    } else if (score >= 70) {
+      return isFrench ? 'Amical' : 'Friendly';
+    } else if (score >= 60) {
+      return isFrench ? 'Positif' : 'Positive';
+    } else if (score >= 50) {
+      return isFrench ? 'Neutre' : 'Neutral';
+    } else if (score >= 40) {
+      return isFrench ? 'Professionnel' : 'Professional';
+    } else if (score >= 30) {
+      return isFrench ? 'Formel' : 'Formal';
+    } else if (score >= 20) {
+      return isFrench ? 'Réservé' : 'Reserved';
+    } else {
+      return isFrench ? 'Décontracté' : 'Casual';
+    }
+  };
+
   const t = {
     title: isFrench ? 'Moteur de Croissance Prédictif' : 'Predictive Growth Engine',
     subtitle: isFrench 
@@ -264,12 +285,12 @@ export default function PredictiveGrowthEngine({ locale, clientId = null }: Pred
               </p>
               {insights.tone_sentiment_score !== null && (
                 <div className="mt-3">
-                  <div className={`inline-block px-3 py-1 rounded-full text-xs font-mono ${
+                  <div className={`inline-block px-3 py-1 rounded-full text-xs font-medium ${
                     insights.tone_sentiment_score > 60 ? 'bg-green-500/20 text-green-400 border border-green-400/30' :
                     insights.tone_sentiment_score < 40 ? 'bg-yellow-500/20 text-yellow-400 border border-yellow-400/30' :
                     'bg-blue-500/20 text-blue-400 border border-blue-400/30'
                   }`}>
-                    {insights.tone_sentiment_score.toFixed(0)}/100
+                    {getToneLabel(insights.tone_sentiment_score)} ({insights.tone_sentiment_score.toFixed(0)}/100)
                   </div>
                 </div>
               )}
