@@ -442,7 +442,7 @@ export async function upsertGrowthInsights(
     console.log('[Engine] urgency_trend_percentage type:', typeof insights.urgency_trend_percentage, '| value:', insights.urgency_trend_percentage);
     console.log('[Engine] tone_sentiment_score type:', typeof insights.tone_sentiment_score, '| value:', insights.tone_sentiment_score);
     
-    // Ensure numeric fields are within expected ranges
+    // Ensure numeric fields are within expected ranges and match NUMERIC(5,2) constraints
     const validatedInsights = {
       ...insights,
       engagement_score: Math.max(60, Math.min(95, insights.engagement_score || 75)),
@@ -450,6 +450,7 @@ export async function upsertGrowthInsights(
       tone_sentiment_score: Math.max(0.3, Math.min(0.7, insights.tone_sentiment_score || 0.5)),
       urgency_trend_percentage: Math.max(-5, Math.min(8, insights.urgency_trend_percentage || 0)),
       total_leads: Math.max(0, insights.total_leads || 0),
+      analyzed_at: new Date().toISOString(), // Explicitly set analyzed_at
     };
     
     console.log('[Engine] Validated insights:', {
@@ -460,7 +461,14 @@ export async function upsertGrowthInsights(
       total_leads: validatedInsights.total_leads,
     });
     
+    // Log all fields being inserted with their types
+    console.log('[Engine] All fields being inserted:');
+    Object.entries(validatedInsights).forEach(([key, value]) => {
+      console.log(`[Engine]   ${key}: ${typeof value} = ${value}`);
+    });
+    
     console.log('[Engine] Executing UPSERT into growth_brain...');
+    console.log('[Engine] UPSERT payload:', JSON.stringify(validatedInsights, null, 2));
     
     const upsertStart = Date.now();
     const { data, error } = await db
@@ -617,7 +625,24 @@ export async function runSimulationAnalysis(clientId: string): Promise<{ process
     console.log('[Engine] -------- Client Simulation Analysis --------');
     console.log('[Engine] Analyzing client_id:', clientId);
     
-    const clientInsights = await analyzeClientLeads(clientId, weekAgo, now, supabaseAdmin);
+    // First, resolve the client_id to the actual UUID if needed
+    console.log('[Engine] Resolving client_id to UUID...');
+    const { data: clientData, error: clientError } = await supabaseAdmin
+      .from('clients')
+      .select('id, client_id')
+      .eq('client_id', clientId)
+      .single();
+    
+    if (clientError || !clientData) {
+      console.error('[Engine] ❌ Failed to find client with client_id:', clientId);
+      console.error('[Engine] Client error:', clientError);
+      throw new Error(`Client not found: ${clientId}`);
+    }
+    
+    const clientUuid = clientData.id;
+    console.log('[Engine] ✅ Found client UUID:', clientUuid, 'for client_id:', clientId);
+    
+    const clientInsights = await analyzeClientLeads(clientUuid, weekAgo, now, supabaseAdmin);
     
     console.log('[Engine] Client insights generated:', {
       client_id: clientInsights.client_id,
