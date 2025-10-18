@@ -51,15 +51,34 @@ export async function GET(req: NextRequest) {
     console.log('[LeadsInsightsAPI] Executing Supabase query...');
     const queryStart = Date.now();
     
-    // If clientId provided, need to join with lead_actions
+    // If clientId provided, need to resolve to internal UUID first
     let query;
     if (clientId) {
-      console.log('[LeadsInsightsAPI] Filtering by client_id:', clientId);
-      // Join with lead_actions to get client-specific leads
+      console.log('[LeadsInsightsAPI] Resolving client_id:', clientId);
+      
+      // First, resolve the public client_id to internal UUID
+      const { data: clientData, error: clientError } = await supabase
+        .from('clients')
+        .select('id')
+        .eq('client_id', clientId)
+        .single();
+      
+      if (clientError || !clientData) {
+        console.error('[LeadsInsightsAPI] ❌ Client not found:', clientId);
+        return NextResponse.json(
+          { success: false, error: 'Client not found' },
+          { status: 404 }
+        );
+      }
+      
+      const clientUuid = clientData.id;
+      console.log('[LeadsInsightsAPI] Resolved client_id:', clientId, '→ internal UUID:', clientUuid);
+      
+      // Join with lead_actions to get client-specific leads using the internal UUID
       const { data: leadActionsData, error: leadActionsError } = await supabase
         .from('lead_actions')
         .select('lead_id')
-        .eq('client_id', clientId);
+        .eq('client_id', clientUuid);
       
       if (leadActionsError) {
         console.error('[LeadsInsightsAPI] Error fetching lead_actions:', leadActionsError);
