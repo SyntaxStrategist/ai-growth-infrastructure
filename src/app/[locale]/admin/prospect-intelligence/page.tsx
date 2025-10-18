@@ -335,28 +335,43 @@ export default function ProspectIntelligencePage() {
       console.log('[ProspectDashboard] Loading prospects from Supabase...');
       
       const response = await fetch('/api/prospect-intelligence/prospects');
-      const data = await response.json();
+      const json = await response.json();
 
-      if (!response.ok || !data.success) {
-        throw new Error(data.error || 'Failed to load prospects');
+      // Handle error response
+      if (!response.ok || json.error) {
+        throw new Error(json.error || 'Failed to load prospects');
       }
 
-      console.log('[ProspectDashboard] ✅ Prospects loaded');
-      console.log('[ProspectDashboard] Total:', data.data.prospects.length);
+      // Parse response: { data: [...], count: number }
+      const prospects = json.data || json || [];
+      
+      // Defensive check: ensure prospects is an array
+      if (!Array.isArray(prospects)) {
+        console.warn('[ProspectDashboard] ⚠️ Received non-array data, defaulting to empty array');
+        setProspects([]);
+        setLoading(false);
+        return;
+      }
 
-      setProspects(data.data.prospects || []);
-      setMetrics(data.data.metrics || {
-        totalCrawled: 0,
-        totalTested: 0,
-        totalScored: 0,
-        totalContacted: 0,
-        highPriorityCount: 0
+      console.log('[ProspectDashboard]', prospects.length, 'prospects loaded');
+
+      setProspects(prospects);
+      
+      // Calculate metrics from prospects
+      const highPriorityCount = prospects.filter(p => (p.automation_need_score || 0) >= 70).length;
+      setMetrics({
+        totalCrawled: prospects.length,
+        totalTested: prospects.length,
+        totalScored: prospects.length,
+        totalContacted: prospects.filter(p => p.contacted).length,
+        highPriorityCount
       });
 
       setLoading(false);
     } catch (err) {
       console.error('[ProspectDashboard] ❌ Error loading prospects:', err);
       setError(err instanceof Error ? err.message : 'Failed to load prospects');
+      setProspects([]); // Safe fallback to empty array
       setLoading(false);
     }
   };
