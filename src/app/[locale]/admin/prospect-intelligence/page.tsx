@@ -900,15 +900,21 @@ export default function ProspectIntelligencePage() {
                   <span className="text-sm text-white/70">{t.showOnlyHighPriority}</span>
                 </label>
 
-                <label className="flex items-center gap-2 cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={showTestProspects}
-                    onChange={(e) => setShowTestProspects(e.target.checked)}
-                    className="w-4 h-4 rounded border-white/20 bg-white/10 checked:bg-blue-500 focus:ring-2 focus:ring-blue-500"
-                  />
-                  <span className="text-sm text-white/70">{t.showTestProspects}</span>
-                </label>
+                {/* Show Test Prospects Toggle - Always Visible (Not Conditional) */}
+                {(() => {
+                  console.log("🧪 Rendering Test Mode toggle");
+                  return (
+                    <label className="flex items-center gap-2 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={showTestProspects}
+                        onChange={(e) => setShowTestProspects(e.target.checked)}
+                        className="w-4 h-4 rounded border-white/20 bg-white/10 checked:bg-blue-500 focus:ring-2 focus:ring-blue-500"
+                      />
+                      <span className="text-sm text-white/70">{t.showTestProspects}</span>
+                    </label>
+                  );
+                })()}
               </div>
             </div>
           </div>
