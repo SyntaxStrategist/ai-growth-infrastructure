@@ -450,7 +450,7 @@ export async function upsertGrowthInsights(
       tone_sentiment_score: Math.max(0.3, Math.min(0.7, insights.tone_sentiment_score || 0.5)),
       urgency_trend_percentage: Math.max(-5, Math.min(8, insights.urgency_trend_percentage || 0)),
       total_leads: Math.max(0, insights.total_leads || 0),
-      analyzed_at: new Date().toISOString(), // Explicitly set analyzed_at
+      // analyzed_at is handled by database DEFAULT NOW() - don't include in payload
     };
     
     console.log('[Engine] Validated insights:', {
