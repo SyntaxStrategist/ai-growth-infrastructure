@@ -324,7 +324,30 @@ export default function EmailPreviewModal({
                   srcDoc={emailBody}
                   title="Email Preview"
                   className="w-full h-[500px] border-0"
-                  sandbox="allow-same-origin allow-popups"
+                  sandbox="allow-scripts allow-same-origin allow-popups allow-top-navigation allow-popups-to-escape-sandbox"
+                  onLoad={(e) => {
+                    // Add click handler for demo links
+                    try {
+                      const iframe = e.currentTarget;
+                      const iframeDoc = iframe.contentDocument || iframe.contentWindow?.document;
+                      if (iframeDoc) {
+                        const demoLinks = iframeDoc.querySelectorAll('a[href*="demo"]');
+                        demoLinks.forEach((link) => {
+                          const href = link.getAttribute('href');
+                          console.log('[EmailPreviewModal] Opening demo link:', href);
+                          link.addEventListener('click', (event) => {
+                            event.preventDefault();
+                            console.log('[EmailPreviewModal] Demo link clicked:', href);
+                            if (href) {
+                              window.open(href, '_blank', 'noopener,noreferrer');
+                            }
+                          });
+                        });
+                      }
+                    } catch (err) {
+                      console.warn('[EmailPreviewModal] Could not attach demo link handlers:', err);
+                    }
+                  }}
                 />
               </div>
               <p className="text-xs text-white/50 mt-2">
