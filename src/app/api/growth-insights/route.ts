@@ -45,9 +45,51 @@ export async function GET(req: NextRequest) {
     });
 
     const url = new URL(req.url);
-    const clientId = url.searchParams.get('client_id');
+    const publicClientId = url.searchParams.get('client_id');
 
-    console.log('[GrowthInsightsAPI] Fetching latest insights, client_id:', clientId || 'global');
+    console.log('[GrowthInsightsAPI] Fetching latest insights, public client_id:', publicClientId || 'global');
+
+    let internalClientId = null;
+
+    if (publicClientId) {
+      console.log('[GrowthInsightsAPI] Resolving public client_id to internal UUID...');
+      
+      // Look up the internal UUID for the public client_id
+      const { data: client, error: clientError } = await supabase
+        .from('clients')
+        .select('id')
+        .eq('client_id', publicClientId)
+        .single();
+
+      if (clientError) {
+        console.error('[GrowthInsightsAPI] ❌ Failed to resolve client_id:', clientError);
+        console.error('[GrowthInsightsAPI] Client error details:', JSON.stringify(clientError, null, 2));
+        
+        return NextResponse.json({
+          success: false,
+          error: 'Client not found',
+          errorCode: clientError.code,
+          errorDetails: clientError.details,
+          publicClientId: publicClientId,
+        }, { status: 404 });
+      }
+
+      if (!client) {
+        console.error('[GrowthInsightsAPI] ❌ No client found for public client_id:', publicClientId);
+        
+        return NextResponse.json({
+          success: false,
+          error: 'Client not found',
+          publicClientId: publicClientId,
+        }, { status: 404 });
+      }
+
+      internalClientId = client.id;
+      console.log('[GrowthInsightsAPI] ✅ Resolved client_id:', {
+        public: publicClientId,
+        internal: internalClientId,
+      });
+    }
 
     let query = supabase
       .from('growth_brain')
@@ -55,9 +97,9 @@ export async function GET(req: NextRequest) {
       .order('created_at', { ascending: false })
       .limit(1);
 
-    if (clientId) {
-      console.log('[GrowthInsightsAPI] Filtering for specific client:', clientId);
-      query = query.eq('client_id', clientId);
+    if (internalClientId) {
+      console.log('[GrowthInsightsAPI] Filtering for specific client (internal UUID):', internalClientId);
+      query = query.eq('client_id', internalClientId);
     } else {
       // For global insights, look for records where client_id IS NULL
       console.log('[GrowthInsightsAPI] Filtering for global insights (client_id IS NULL)');
@@ -95,7 +137,8 @@ export async function GET(req: NextRequest) {
     if (!data || data.length === 0) {
       console.log('[GrowthInsightsAPI] No insights found - growth_brain table is empty or no matching records');
       console.log('[GrowthInsightsAPI] Query filters:', {
-        client_id: clientId || 'IS NULL',
+        public_client_id: publicClientId || 'N/A',
+        internal_client_id: internalClientId || 'IS NULL',
         order: 'created_at DESC',
         limit: 1,
       });
@@ -111,7 +154,8 @@ export async function GET(req: NextRequest) {
     
     console.log('[GrowthInsightsAPI] ✅ Found insight record');
     console.log('[GrowthInsightsAPI] Record ID:', insight.id);
-    console.log('[GrowthInsightsAPI] Client ID:', insight.client_id || 'global');
+    console.log('[GrowthInsightsAPI] Public Client ID:', publicClientId || 'N/A');
+    console.log('[GrowthInsightsAPI] Internal Client ID:', insight.client_id || 'global');
     console.log('[GrowthInsightsAPI] Total leads:', insight.total_leads);
     console.log('[GrowthInsightsAPI] Engagement score:', insight.engagement_score);
     console.log('[GrowthInsightsAPI] Created at:', insight.created_at);
