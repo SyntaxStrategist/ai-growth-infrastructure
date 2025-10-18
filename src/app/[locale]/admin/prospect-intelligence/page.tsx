@@ -669,9 +669,11 @@ export default function ProspectIntelligencePage() {
               <label className="block text-sm text-white/70 mb-2">{t.minScore}</label>
               <input
                 type="number"
+                inputMode="numeric"
+                pattern="[0-9]*"
                 value={config.minScore}
                 onChange={(e) => setConfig({ ...config, minScore: parseInt(e.target.value) || 70 })}
-                className="w-full px-3 py-2 rounded-lg bg-white/10 border border-white/20 text-white focus:border-purple-400 focus:outline-none"
+                className="w-full px-3 py-2 rounded-lg bg-white/10 border border-white/20 text-white focus:border-purple-400 focus:outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
               />
             </div>
 
@@ -679,9 +681,11 @@ export default function ProspectIntelligencePage() {
               <label className="block text-sm text-white/70 mb-2">{t.maxResults}</label>
               <input
                 type="number"
+                inputMode="numeric"
+                pattern="[0-9]*"
                 value={config.maxResults}
                 onChange={(e) => setConfig({ ...config, maxResults: parseInt(e.target.value) || 10 })}
-                className="w-full px-3 py-2 rounded-lg bg-white/10 border border-white/20 text-white focus:border-purple-400 focus:outline-none"
+                className="w-full px-3 py-2 rounded-lg bg-white/10 border border-white/20 text-white focus:border-purple-400 focus:outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
               />
             </div>
 
