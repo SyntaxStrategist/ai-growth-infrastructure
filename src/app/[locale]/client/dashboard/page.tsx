@@ -69,7 +69,7 @@ export default function ClientDashboard() {
   const [loading, setLoading] = useState(false);
   const [leads, setLeads] = useState<Lead[]>([]);
   const [recentActions, setRecentActions] = useState<LeadAction[]>([]);
-  const [filter, setFilter] = useState({ urgency: 'all', language: 'all', minConfidence: 0, intent: 'all' });
+  const [filter, setFilter] = useState({ urgency: 'all', language: 'all', minConfidence: 0 });
   const [tagFilter, setTagFilter] = useState<string>('all');
   const [activeTab, setActiveTab] = useState<'active' | 'archived' | 'deleted' | 'converted'>('active');
   const [toast, setToast] = useState<{ message: string; show: boolean }>({ message: '', show: false });
@@ -89,8 +89,6 @@ export default function ClientDashboard() {
   });
   const [currentPage, setCurrentPage] = useState(1);
   const [leadsPerPage] = useState(5);
-  const [hoveredStat, setHoveredStat] = useState<string | null>(null);
-  const [clickedStat, setClickedStat] = useState<string | null>(null);
 
   const t = {
     loginTitle: isFrench ? 'Connexion Client' : 'Client Login',
@@ -128,7 +126,6 @@ export default function ClientDashboard() {
       medium: isFrench ? 'Moyenne' : 'Medium',
       low: isFrench ? 'Faible' : 'Low',
       language: isFrench ? 'Langue' : 'Language',
-      intent: isFrench ? 'Intention' : 'Intent',
       minConfidence: isFrench ? 'Confiance Min' : 'Min Confidence',
     },
     tabs: {
@@ -155,12 +152,6 @@ export default function ClientDashboard() {
       showing: isFrench ? 'Affichage' : 'Showing',
       to: isFrench ? 'à' : 'to',
       results: isFrench ? 'résultats' : 'results',
-    },
-    tooltips: {
-      totalLeads: isFrench ? 'Voir tous les leads actifs' : 'View all active leads',
-      avgConfidence: isFrench ? 'Filtrer les leads avec cette confiance' : 'Filter leads with this confidence',
-      topIntent: isFrench ? 'Voir tous les leads avec cette intention' : 'View all leads with this intent',
-      highUrgency: isFrench ? 'Voir tous les leads urgents' : 'View all urgent leads',
     },
   };
 
@@ -621,7 +612,6 @@ export default function ClientDashboard() {
     if (filter.urgency !== 'all' && lead.urgency !== filter.urgency) return false;
     if (filter.language !== 'all' && lead.language !== filter.language) return false;
     if ((lead.confidence_score || 0) < filter.minConfidence) return false;
-    if (filter.intent !== 'all' && lead.intent !== filter.intent) return false;
     if (tagFilter !== 'all' && lead.current_tag !== tagFilter) return false;
     return true;
   });
@@ -649,57 +639,6 @@ export default function ClientDashboard() {
     }
   };
 
-  // Interactive stats configuration
-  const interactiveStats = [
-    {
-      key: 'total',
-      value: stats.total,
-      label: t.totalLeads,
-      onClick: () => {
-        setClickedStat('total');
-        setActiveTab('active');
-        setCurrentPage(1);
-        setTimeout(() => setClickedStat(null), 300);
-      },
-      tooltip: t.tooltips.totalLeads,
-    },
-    {
-      key: 'avgConfidence',
-      value: `${(stats.avgConfidence * 100).toFixed(0)}%`,
-      label: t.avgConfidence,
-      onClick: () => {
-        setClickedStat('avgConfidence');
-        setFilter(prev => ({ ...prev, minConfidence: stats.avgConfidence }));
-        setCurrentPage(1);
-        setTimeout(() => setClickedStat(null), 300);
-      },
-      tooltip: t.tooltips.avgConfidence,
-    },
-    {
-      key: 'topIntent',
-      value: stats.topIntent,
-      label: t.topIntent,
-      onClick: () => {
-        setClickedStat('topIntent');
-        setFilter(prev => ({ ...prev, intent: stats.topIntent }));
-        setCurrentPage(1);
-        setTimeout(() => setClickedStat(null), 300);
-      },
-      tooltip: t.tooltips.topIntent,
-    },
-    {
-      key: 'highUrgency',
-      value: stats.highUrgency,
-      label: t.highUrgency,
-      onClick: () => {
-        setClickedStat('highUrgency');
-        setFilter(prev => ({ ...prev, urgency: 'High' }));
-        setCurrentPage(1);
-        setTimeout(() => setClickedStat(null), 300);
-      },
-      tooltip: t.tooltips.highUrgency,
-    },
-  ];
 
   const tagOptions = isFrench 
     ? ['Contacté', 'Haute Valeur', 'Non Qualifié', 'Suivi', 'Converti']
@@ -858,75 +797,52 @@ export default function ClientDashboard() {
           </div>
         </motion.div>
 
-        {/* Interactive Stats Summary */}
+        {/* Stats Summary */}
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 0.6, delay: 0.2 }}
           className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8"
         >
-          {interactiveStats.map((stat, index) => (
-            <motion.div
-              key={stat.key}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.4, delay: 0.2 + index * 0.1 }}
-              className={`relative group cursor-pointer rounded-lg border p-4 bg-gradient-to-br from-blue-500/10 to-purple-500/10 transition-all duration-300 ${
-                hoveredStat === stat.key
-                  ? 'border-blue-400/50 scale-[1.02] shadow-[0_0_20px_rgba(59,130,246,0.3)]'
-                  : 'border-white/10 hover:border-blue-400/30'
-              } ${
-                clickedStat === stat.key
-                  ? 'scale-[0.98] shadow-[0_0_30px_rgba(59,130,246,0.5)]'
-                  : ''
-              }`}
-              onClick={stat.onClick}
-              onMouseEnter={() => setHoveredStat(stat.key)}
-              onMouseLeave={() => setHoveredStat(null)}
-            >
-              {/* Ripple effect for click feedback */}
-              {clickedStat === stat.key && (
-                <motion.div
-                  initial={{ scale: 0, opacity: 0.5 }}
-                  animate={{ scale: 1, opacity: 0 }}
-                  transition={{ duration: 0.3 }}
-                  className="absolute inset-0 bg-blue-400/20 rounded-lg"
-                />
-              )}
-              
-              {/* Hover glow effect */}
-              {hoveredStat === stat.key && (
-                <motion.div
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  transition={{ duration: 0.2 }}
-                  className="absolute inset-0 bg-gradient-to-br from-blue-500/5 to-purple-500/5 rounded-lg"
-                />
-              )}
-              
-              <div className="relative z-10">
-                <div className="text-sm text-white/60 mb-1">{stat.label}</div>
-                <div className={`text-3xl font-bold transition-colors duration-200 ${
-                  stat.key === 'highUrgency' ? 'text-red-400' : 'text-white'
-                }`}>
-                  {stat.value}
-                </div>
-                
-                {/* Tooltip */}
-                {hoveredStat === stat.key && (
-                  <motion.div
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.2 }}
-                    className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-1 bg-gray-900/95 text-white text-xs rounded-lg whitespace-nowrap z-20 border border-white/20"
-                  >
-                    {stat.tooltip}
-                    <div className="absolute top-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-gray-900/95"></div>
-                  </motion.div>
-                )}
-              </div>
-            </motion.div>
-          ))}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4, delay: 0.2 }}
+            className="group rounded-lg border border-white/10 p-4 bg-gradient-to-br from-blue-500/10 to-purple-500/10 hover:border-blue-400/30 hover:shadow-[0_0_20px_rgba(59,130,246,0.2)] transition-all duration-300"
+          >
+            <div className="text-sm text-white/60 mb-1">{t.totalLeads}</div>
+            <div className="text-3xl font-bold">{stats.total}</div>
+          </motion.div>
+          
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4, delay: 0.3 }}
+            className="group rounded-lg border border-white/10 p-4 bg-gradient-to-br from-blue-500/10 to-purple-500/10 hover:border-blue-400/30 hover:shadow-[0_0_20px_rgba(59,130,246,0.2)] transition-all duration-300"
+          >
+            <div className="text-sm text-white/60 mb-1">{t.avgConfidence}</div>
+            <div className="text-3xl font-bold">{(stats.avgConfidence * 100).toFixed(0)}%</div>
+          </motion.div>
+          
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4, delay: 0.4 }}
+            className="group rounded-lg border border-white/10 p-4 bg-gradient-to-br from-blue-500/10 to-purple-500/10 hover:border-blue-400/30 hover:shadow-[0_0_20px_rgba(59,130,246,0.2)] transition-all duration-300"
+          >
+            <div className="text-sm text-white/60 mb-1">{t.topIntent}</div>
+            <div className="text-xl font-semibold truncate">{stats.topIntent}</div>
+          </motion.div>
+          
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4, delay: 0.5 }}
+            className="group rounded-lg border border-white/10 p-4 bg-gradient-to-br from-blue-500/10 to-purple-500/10 hover:border-blue-400/30 hover:shadow-[0_0_20px_rgba(59,130,246,0.2)] transition-all duration-300"
+          >
+            <div className="text-sm text-white/60 mb-1">{t.highUrgency}</div>
+            <div className="text-3xl font-bold text-red-400">{stats.highUrgency}</div>
+          </motion.div>
         </motion.div>
 
         {/* View Tabs */}
@@ -979,19 +895,6 @@ export default function ClientDashboard() {
             <option value="all">{t.filters.all} {t.filters.language}</option>
             <option value="en">English</option>
             <option value="fr">Français</option>
-          </select>
-
-          <select
-            value={filter.intent}
-            onChange={(e) => setFilter({ ...filter, intent: e.target.value })}
-            className="px-3 py-2 rounded-md bg-white/5 border border-white/10 text-sm hover:border-blue-400/40 transition-all"
-          >
-            <option value="all">{t.filters.all} {t.filters.intent}</option>
-            <option value="B2B partnership">{isFrench ? 'Partenariat B2B' : 'B2B Partnership'}</option>
-            <option value="Consultation">{isFrench ? 'Consultation' : 'Consultation'}</option>
-            <option value="Automation">{isFrench ? 'Automatisation' : 'Automation'}</option>
-            <option value="Integration">{isFrench ? 'Intégration' : 'Integration'}</option>
-            <option value="Support">{isFrench ? 'Support' : 'Support'}</option>
           </select>
 
           <select
