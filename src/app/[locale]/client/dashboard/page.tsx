@@ -217,7 +217,6 @@ export default function ClientDashboard() {
       console.log('[DashboardSync]   ✅ ActivityLog (with clientId)');
       console.log('[DashboardSync] ============================================');
       
-      fetchLeads();
       fetchRecentActions();
     }
   }, [authenticated, client, activeTab]);
@@ -230,6 +229,8 @@ export default function ClientDashboard() {
   // Fetch leads when page changes (server-side pagination)
   useEffect(() => {
     if (authenticated && client) {
+      // Clear leads before fetching new ones to prevent appending
+      setLeads([]);
       fetchLeads();
     }
   }, [currentPage, authenticated, client, activeTab]);
@@ -319,6 +320,8 @@ export default function ClientDashboard() {
 
     try {
       setLoading(true);
+      // Clear leads array before fetching to ensure replacement, not appending
+      setLeads([]);
       console.log('[ClientDashboard] ============================================');
       console.log('[ClientDashboard] Fetching leads');
       console.log('[ClientDashboard] Client ID:', client.clientId);
@@ -344,8 +347,8 @@ export default function ClientDashboard() {
       if (data.success) {
         const leadsData = data.data || [];
         
-        // Replace leads instead of appending (server-side pagination)
-        setLeads(leadsData);
+        // Replace leads completely (server-side pagination)
+        setLeads([...leadsData]); // Create new array to ensure replacement
         
         // Update pagination state
         if (data.pagination) {
