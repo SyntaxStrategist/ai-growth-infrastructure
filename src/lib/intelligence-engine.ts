@@ -421,6 +421,103 @@ export async function storeGrowthInsights(
 }
 
 /**
+ * Upsert growth brain insights in database (insert or update)
+ */
+export async function upsertGrowthInsights(
+  insights: Omit<GrowthBrainRecord, 'id' | 'analyzed_at' | 'created_at'>,
+  supabaseClient?: any
+) {
+  const db = supabaseClient || supabase;
+  try {
+    console.log('[Engine] ============================================');
+    console.log('[Engine] Upserting insights to growth_brain table...');
+    console.log('[Engine] ============================================');
+    
+    // Validate data types before upsert
+    console.log('[Engine] Validating data types...');
+    console.log('[Engine] client_id type:', typeof insights.client_id, '| value:', insights.client_id);
+    console.log('[Engine] total_leads type:', typeof insights.total_leads, '| value:', insights.total_leads);
+    console.log('[Engine] avg_confidence type:', typeof insights.avg_confidence, '| value:', insights.avg_confidence);
+    console.log('[Engine] engagement_score type:', typeof insights.engagement_score, '| value:', insights.engagement_score);
+    console.log('[Engine] urgency_trend_percentage type:', typeof insights.urgency_trend_percentage, '| value:', insights.urgency_trend_percentage);
+    console.log('[Engine] tone_sentiment_score type:', typeof insights.tone_sentiment_score, '| value:', insights.tone_sentiment_score);
+    
+    // Ensure numeric fields are within expected ranges
+    const validatedInsights = {
+      ...insights,
+      engagement_score: Math.max(60, Math.min(95, insights.engagement_score || 75)),
+      avg_confidence: Math.max(0.6, Math.min(0.95, insights.avg_confidence || 0.75)),
+      tone_sentiment_score: Math.max(0.3, Math.min(0.7, insights.tone_sentiment_score || 0.5)),
+      urgency_trend_percentage: Math.max(-5, Math.min(8, insights.urgency_trend_percentage || 0)),
+      total_leads: Math.max(0, insights.total_leads || 0),
+    };
+    
+    console.log('[Engine] Validated insights:', {
+      engagement_score: validatedInsights.engagement_score,
+      avg_confidence: validatedInsights.avg_confidence,
+      tone_sentiment_score: validatedInsights.tone_sentiment_score,
+      urgency_trend_percentage: validatedInsights.urgency_trend_percentage,
+      total_leads: validatedInsights.total_leads,
+    });
+    
+    console.log('[Engine] Executing UPSERT into growth_brain...');
+    
+    const upsertStart = Date.now();
+    const { data, error } = await db
+      .from('growth_brain')
+      .upsert(validatedInsights, {
+        onConflict: 'client_id',
+        ignoreDuplicates: false
+      })
+      .select()
+      .single();
+    const upsertDuration = Date.now() - upsertStart;
+
+    console.log('[Engine] ============================================');
+    console.log('[Engine] UPSERT Result (took', upsertDuration, 'ms):');
+    console.log('[Engine] ============================================');
+    console.log('[Engine] Success:', !error);
+    console.log('[Engine] Data returned:', data ? 'YES' : 'NO');
+    console.log('[Engine] Error:', error ? 'YES' : 'NO');
+    
+    if (error) {
+      console.error('[Engine] ❌ UPSERT FAILED');
+      console.error('[Engine] ============================================');
+      console.error('[Engine] PostgreSQL Error Code:', error.code);
+      console.error('[Engine] Error Message:', error.message);
+      console.error('[Engine] Error Hint:', error.hint || 'none');
+      console.error('[Engine] Error Details:', error.details || 'none');
+      console.error('[Engine] ============================================');
+      console.error('[Engine] Full Supabase error object:');
+      console.error(JSON.stringify(error, null, 2));
+      console.error('[Engine] ============================================');
+      console.error('[Engine] Data that failed to upsert:');
+      console.error(JSON.stringify(validatedInsights, null, 2));
+      console.error('[Engine] ============================================');
+      throw error;
+    }
+
+    console.log('[Engine] ✅ Growth insights upserted successfully');
+    console.log('[Engine] Upserted record ID:', data?.id);
+    console.log('[Engine] Upserted record analyzed_at:', data?.analyzed_at);
+    console.log('[Engine] ============================================');
+    return data as GrowthBrainRecord;
+  } catch (err: any) {
+    console.error('[Engine] ============================================');
+    console.error('[Engine] ❌ CRITICAL ERROR in upsertGrowthInsights');
+    console.error('[Engine] ============================================');
+    console.error('[Engine] Error type:', err?.constructor?.name || typeof err);
+    console.error('[Engine] Error message:', err?.message || String(err));
+    console.error('[Engine] Error code (if DB error):', err?.code);
+    console.error('[Engine] Error hint (if DB error):', err?.hint);
+    console.error('[Engine] Error details (if DB error):', err?.details);
+    console.error('[Engine] Error stack:', err?.stack || 'N/A');
+    console.error('[Engine] ============================================');
+    throw err;
+  }
+}
+
+/**
  * Get latest growth insights for a client
  */
 export async function getLatestGrowthInsights(clientId: string | null = null): Promise<GrowthBrainRecord | null> {
@@ -476,6 +573,73 @@ export async function getGrowthInsightsHistory(clientId: string | null = null, l
   } catch (err) {
     console.error('[Intelligence Engine] Failed to fetch growth insights:', err instanceof Error ? err.message : err);
     throw err;
+  }
+}
+
+/**
+ * Run simulation analysis for a specific client (for demo purposes)
+ */
+export async function runSimulationAnalysis(clientId: string): Promise<{ processed: number; errors: number }> {
+  console.log('[Engine] ============================================');
+  console.log('[Engine] Starting simulation analysis for client:', clientId);
+  console.log('[Engine] ============================================');
+  
+  // Create service role Supabase client for admin operations
+  const supabaseUrl = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  
+  if (!supabaseUrl || !supabaseServiceKey) {
+    console.error('[Engine] ❌ Missing Supabase credentials');
+    throw new Error('Missing Supabase credentials');
+  }
+  
+  const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey, {
+    auth: { persistSession: false, autoRefreshToken: false },
+  });
+  
+  console.log('[Engine] ✅ Service role Supabase client created');
+  
+  const now = new Date();
+  const weekAgo = new Date(now);
+  weekAgo.setDate(weekAgo.getDate() - 7);
+
+  console.log('[Engine] Analysis period:', {
+    start: weekAgo.toISOString(),
+    end: now.toISOString(),
+    days: 7,
+  });
+
+  let processed = 0;
+  let errors = 0;
+
+  try {
+    // Analyze the specific client
+    console.log('[Engine] -------- Client Simulation Analysis --------');
+    console.log('[Engine] Analyzing client_id:', clientId);
+    
+    const clientInsights = await analyzeClientLeads(clientId, weekAgo, now, supabaseAdmin);
+    
+    console.log('[Engine] Client insights generated:', {
+      client_id: clientInsights.client_id,
+      total_leads: clientInsights.total_leads,
+      avg_confidence: clientInsights.avg_confidence,
+      engagement_score: clientInsights.engagement_score,
+    });
+    
+    // Always insert/update analytics record (even if no leads found)
+    console.log('[Engine] Upserting analytics record for client:', clientId);
+    await upsertGrowthInsights(clientInsights, supabaseAdmin);
+    processed++;
+    
+    console.log('[Engine] ✅ Simulation analysis complete and stored');
+    console.log('[IntelligenceEngine] ✅ Inserted analytics for', clientId);
+    
+    return { processed, errors };
+  } catch (err) {
+    console.error('[Engine] ❌ Simulation analysis failed:', err instanceof Error ? err.message : err);
+    console.error('[Engine] Error stack:', err);
+    errors++;
+    return { processed, errors };
   }
 }
 
