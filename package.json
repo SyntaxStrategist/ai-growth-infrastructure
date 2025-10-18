@@ -15,7 +15,8 @@
     "reset-embeddings": "node scripts/reset-and-embed-profile.js",
     "setup-embeddings": "node scripts/setup-and-embed-profile.js",
     "show-sql": "bash scripts/create-embeddings-table-sql.sh",
-    "apply-embeddings-migration": "node scripts/apply-embeddings-migration.js"
+    "apply-embeddings-migration": "node scripts/apply-embeddings-migration.js",
+    "seed-test-client": "node scripts/seed-test-client-dashboard.js"
   },
   "dependencies": {
     "@prisma/client": "^6.17.1",
