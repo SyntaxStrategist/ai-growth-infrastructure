@@ -30,6 +30,14 @@ export async function POST(req: NextRequest) {
     const body = await req.json();
     const { prospect_id, to, subject, htmlBody, textBody } = body;
 
+    // Detect locale from referer header or request URL
+    const referer = req.headers.get('referer') || '';
+    const isFrench = referer.includes('/fr') || req.url.includes('/fr');
+    const locale = isFrench ? 'fr' : 'en';
+    
+    console.log('[OutreachAPI] 🌍 Detected locale:', locale);
+    console.log('[OutreachAPI] 🌍 Referer:', referer);
+
     // Check for Test Mode
     const testMode = process.env.TEST_MODE === 'true' || process.env.NODE_ENV === 'development';
 
@@ -72,14 +80,15 @@ export async function POST(req: NextRequest) {
     let finalTextBody = textBody;
 
     if (!htmlBody && prospect) {
-      console.log('[OutreachAPI] Generating branded email template...');
+      console.log('[OutreachAPI] Generating branded email template for locale:', locale);
       const template = generateBrandedEmailTemplate({
         business_name: prospect.business_name,
         industry: prospect.industry || 'your industry',
         website: prospect.website || ''
-      });
+      }, locale);
       finalHtmlBody = template.html;
       finalTextBody = template.text;
+      console.log('[OutreachAPI] ✅ Template generated in', locale === 'fr' ? 'French' : 'English');
     }
 
     if (testMode) {

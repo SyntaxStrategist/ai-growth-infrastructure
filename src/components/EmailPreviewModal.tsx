@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { usePathname } from 'next/navigation';
 import { getTranslation } from '../translations/prospect-intelligence';
 
 interface Prospect {
@@ -17,7 +18,6 @@ interface EmailPreviewModalProps {
   onClose: () => void;
   prospect: Prospect;
   testMode: boolean;
-  locale?: string;
   onSendSuccess: () => void;
   onSendError: (error: string) => void;
 }
@@ -27,10 +27,16 @@ export default function EmailPreviewModal({
   onClose,
   prospect,
   testMode,
-  locale = 'en',
   onSendSuccess,
   onSendError
 }: EmailPreviewModalProps) {
+  // Detect locale directly from URL path
+  const pathname = usePathname?.() || '';
+  const locale = pathname.startsWith('/fr') ? 'fr' : 'en';
+  
+  // Debug logging
+  console.log('🌍 Email Preview Locale:', locale);
+  console.log('🌍 Current Pathname:', pathname);
   const [sending, setSending] = useState(false);
   const [emailSubject, setEmailSubject] = useState('');
   const [emailBody, setEmailBody] = useState('');
