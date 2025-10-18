@@ -297,11 +297,16 @@ async function main() {
   
   // Step 3: Trigger real intelligence engine
   console.log('🧠 Step 3: Triggering real intelligence engine...');
-  console.log('   Calling /api/intelligence-engine with simulate=true');
+  console.log('   Calling production intelligence engine with simulate=true');
   console.log('');
   
+  const intelligenceEngineUrl = 'https://www.aveniraisolutions.ca/api/intelligence-engine';
+  
   try {
-    const intelligenceResponse = await fetch(`${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/api/intelligence-engine`, {
+    console.log('   📡 Fetching:', intelligenceEngineUrl);
+    console.log('   📤 Payload:', { client_id: clientId, simulate: true });
+    
+    const intelligenceResponse = await fetch(intelligenceEngineUrl, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -318,41 +323,59 @@ async function main() {
     
     const intelligenceData = await intelligenceResponse.json();
     console.log('   ✅ Intelligence engine completed for', clientId);
-    console.log('   Response:', intelligenceData);
+    console.log('   📥 Response:', intelligenceData);
     console.log('');
     
   } catch (error) {
-    console.error('   ❌ Intelligence engine failed:', error.message);
+    console.error('   ❌ Intelligence engine fetch failed:', error.message);
+    console.error('   🔍 Error details:', error);
     console.log('   Continuing with verification...');
     console.log('');
   }
   
   // Step 4: Verify analytics were created
   console.log('📊 Step 4: Verifying analytics creation...');
+  console.log('   Querying growth_brain table for client_id:', clientId);
+  console.log('');
   
   try {
     const { data: analyticsData, error: analyticsError } = await supabase
       .from('growth_brain')
-      .select('engagement_score, avg_confidence, tone_sentiment_score, total_leads, prediction_summary')
+      .select('engagement_score, avg_confidence, tone_sentiment_score, total_leads, prediction_summary, created_at')
       .eq('client_id', newClient.id)
       .single();
     
     if (analyticsError) {
       console.error('   ❌ Failed to fetch analytics:', analyticsError.message);
+      console.error('   🔍 Error details:', analyticsError);
     } else if (analyticsData) {
-      console.log('   ✅ Analytics record found:');
+      console.log('   ✅ Analytics record found in growth_brain:');
       console.log(`   • Engagement Score: ${analyticsData.engagement_score}`);
       console.log(`   • Avg Confidence: ${analyticsData.avg_confidence}%`);
       console.log(`   • Tone Sentiment: ${analyticsData.tone_sentiment_score}`);
       console.log(`   • Total Leads: ${analyticsData.total_leads}`);
       console.log(`   • Prediction: ${analyticsData.prediction_summary}`);
+      console.log(`   • Created At: ${analyticsData.created_at}`);
+      console.log('');
+      
+      // Validate that numeric fields exist and are valid
+      const hasValidEngagement = typeof analyticsData.engagement_score === 'number' && analyticsData.engagement_score > 0;
+      const hasValidConfidence = typeof analyticsData.avg_confidence === 'number' && analyticsData.avg_confidence > 0;
+      const hasValidLeads = typeof analyticsData.total_leads === 'number' && analyticsData.total_leads > 0;
+      
+      console.log('   🔍 Data Validation:');
+      console.log(`   • Engagement Score Valid: ${hasValidEngagement ? '✅' : '❌'} (${analyticsData.engagement_score})`);
+      console.log(`   • Avg Confidence Valid: ${hasValidConfidence ? '✅' : '❌'} (${analyticsData.avg_confidence})`);
+      console.log(`   • Total Leads Valid: ${hasValidLeads ? '✅' : '❌'} (${analyticsData.total_leads})`);
       console.log('');
     } else {
       console.log('   ⚠️  No analytics record found yet');
+      console.log('   🔍 This may indicate the intelligence engine is still processing...');
       console.log('');
     }
   } catch (error) {
     console.error('   ❌ Error verifying analytics:', error.message);
+    console.error('   🔍 Error details:', error);
     console.log('');
   }
   
