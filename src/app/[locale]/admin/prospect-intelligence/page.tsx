@@ -1101,4 +1101,3 @@ export default function ProspectIntelligencePage() {
     </div>
   );
 }
-
