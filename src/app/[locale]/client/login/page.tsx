@@ -94,16 +94,30 @@ export default function ClientLoginPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-blue-900 to-gray-900 text-white flex items-center justify-center p-4">
-      {/* Universal Language Toggle */}
-      <UniversalLanguageToggle />
-      
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6 }}
-        className="w-full max-w-md"
-      >
+    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-blue-900 to-gray-900 text-white">
+      {/* Header with Logo and Language Toggle */}
+      <header className="w-full px-6 py-4 border-b border-white/10">
+        <div className="w-full flex items-center justify-between">
+          {/* Logo - Left Side (24px from edge) */}
+          <a href={`/${locale}`} className="inline-block">
+            <AvenirLogo locale={locale} showText={true} />
+          </a>
+          
+          {/* Language Toggle - Right Side (50px up via transform, 24px from edge) */}
+          <div className="relative z-50 -translate-y-[50px]">
+            <UniversalLanguageToggle />
+          </div>
+        </div>
+      </header>
+
+      {/* Main Content */}
+      <div className="flex items-center justify-center p-4 pt-24">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6 }}
+          className="w-full max-w-md"
+        >
         {/* Back to Home Link */}
         <a
           href={`/${locale}`}
@@ -241,7 +255,8 @@ export default function ClientLoginPage() {
             </>
           )}
         </div>
-      </motion.div>
+        </motion.div>
+      </div>
     </div>
   );
 }

@@ -552,14 +552,18 @@ export default function ClientDashboard() {
   if (!authenticated) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-[#0f172a] via-[#1e1b4b] to-[#0f172a] text-white">
-        {/* Universal Language Toggle */}
-        <UniversalLanguageToggle />
-        
-        <header className="fixed top-0 left-0 right-0 z-40 bg-black/20 backdrop-blur-lg border-b border-white/10">
-          <div className="max-w-7xl mx-auto px-6 py-4">
+        {/* Header with Logo and Language Toggle */}
+        <header className="w-full px-6 py-4 border-b border-white/10">
+          <div className="w-full flex items-center justify-between">
+            {/* Logo - Left Side (24px from edge) */}
             <a href={`/${locale}`} className="inline-block">
               <AvenirLogo locale={locale} showText={true} />
             </a>
+            
+            {/* Language Toggle - Right Side (50px up via transform, 24px from edge) */}
+            <div className="relative z-50 -translate-y-[50px]">
+              <UniversalLanguageToggle />
+            </div>
           </div>
         </header>
 
