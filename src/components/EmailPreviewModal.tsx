@@ -65,20 +65,25 @@ export default function EmailPreviewModal({
         setEmailError('');
       }
     };
-  }, [isOpen, prospect]);
+  }, [isOpen, prospect, locale]);
 
   const generateEmailContent = () => {
     // Import at runtime to avoid SSR issues
     const { generateBrandedEmailTemplate, getEmailSubject } = require('../lib/email/branded_templates');
     
-    // Generate branded email template
+    console.log('[EmailPreview] Generating email content for locale:', locale);
+    
+    // Generate branded email template with locale
     const template = generateBrandedEmailTemplate({
       business_name: prospect.business_name,
       industry: prospect.industry,
       website: prospect.website
-    });
+    }, locale);
     
-    const subject = getEmailSubject(prospect.business_name);
+    const subject = getEmailSubject(prospect.business_name, locale);
+
+    console.log('[EmailPreview] Email subject:', subject);
+    console.log('[EmailPreview] Email language:', locale === 'fr' ? 'French' : 'English');
 
     setEmailSubject(subject);
     // Use HTML template for display, will send both HTML and text
@@ -199,7 +204,7 @@ export default function EmailPreviewModal({
           {/* Header */}
           <div className="sticky top-0 bg-gray-900/95 backdrop-blur-sm border-b border-white/10 p-6 flex items-center justify-between">
             <h2 className="text-2xl font-bold text-white flex items-center gap-2">
-              📧 Preview Email
+              📧 {t('emailPreview')}
             </h2>
             <button
               onClick={onClose}
