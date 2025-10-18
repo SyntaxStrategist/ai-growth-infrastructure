@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { usePathname } from 'next/navigation';
 
 interface ProofData {
   success: boolean;
@@ -38,10 +39,15 @@ interface ProspectProofModalProps {
 }
 
 export default function ProspectProofModal({ isOpen, onClose, prospectId }: ProspectProofModalProps) {
+  const pathname = usePathname?.() || '';
+  const locale = pathname.startsWith('/fr') ? 'fr' : 'en';
+  const isFrench = locale === 'fr';
+  
   const [proofData, setProofData] = useState<ProofData | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [showMetadata, setShowMetadata] = useState(false);
+  const [showScoreBreakdown, setShowScoreBreakdown] = useState(true);
 
   useEffect(() => {
     if (isOpen && prospectId) {
@@ -259,13 +265,202 @@ export default function ProspectProofModal({ isOpen, onClose, prospectId }: Pros
                   </div>
                 )}
 
+                {/* Scoring Breakdown */}
+                <div className="bg-white/5 rounded-lg p-6">
+                  <button
+                    onClick={() => setShowScoreBreakdown(!showScoreBreakdown)}
+                    className="flex items-center justify-between w-full text-left mb-4"
+                  >
+                    <h3 className="text-lg font-semibold text-white flex items-center gap-2">
+                      📊 {isFrench ? 'Détail du Score' : 'Scoring Breakdown'}
+                    </h3>
+                    <span className="text-white/50">{showScoreBreakdown ? '▼' : '▶'}</span>
+                  </button>
+                  
+                  {showScoreBreakdown && (() => {
+                    console.log('🧠 Proof breakdown rendered for:', proofData.prospect.business_name);
+                    
+                    const metadata = proofData.raw_metadata || {};
+                    const scoringFactors = [];
+                    
+                    // Extract scoring factors from metadata
+                    if (proofData.prospect.region) {
+                      const isCA = proofData.prospect.region.includes('CA') || proofData.prospect.region.includes('QC');
+                      scoringFactors.push({
+                        factor: isFrench ? 'Correspondance Région' : 'Region Match',
+                        value: proofData.prospect.region,
+                        influence: isCA ? (isFrench ? '✅ Canada' : '✅ +10') : (isFrench ? '➖ International' : '➖ 0'),
+                        points: isCA ? '+10' : '0'
+                      });
+                    }
+                    
+                    if (metadata.employee_count !== undefined) {
+                      const empCount = metadata.employee_count;
+                      const isSmall = empCount < 50;
+                      scoringFactors.push({
+                        factor: isFrench ? 'Nombre d\'Employés' : 'Employee Count',
+                        value: empCount.toString(),
+                        influence: isSmall 
+                          ? (isFrench ? 'Petite entreprise = Besoin élevé d\'automatisation' : 'Small = High automation need')
+                          : (isFrench ? 'Grande entreprise' : 'Large company'),
+                        points: isSmall ? '+15' : '+5'
+                      });
+                    }
+                    
+                    if (metadata.founded_year) {
+                      const year = metadata.founded_year;
+                      const isNew = year >= 2015;
+                      scoringFactors.push({
+                        factor: isFrench ? 'Année de Fondation' : 'Founded Year',
+                        value: year.toString(),
+                        influence: isNew ? (isFrench ? 'Entreprise récente' : 'New company') : (isFrench ? 'Entreprise établie' : 'Established'),
+                        points: isNew ? '+10' : '+5'
+                      });
+                    }
+                    
+                    if (proofData.proof.has_form !== undefined) {
+                      scoringFactors.push({
+                        factor: isFrench ? 'Formulaire Web' : 'Website Form',
+                        value: proofData.proof.has_form ? (isFrench ? 'Détecté' : 'Detected') : (isFrench ? 'Aucun' : 'None'),
+                        influence: proofData.proof.has_form 
+                          ? (isFrench ? 'Contact automatisable' : 'Automatable contact') 
+                          : (isFrench ? 'Plus difficile à contacter' : 'Harder to contact'),
+                        points: proofData.proof.has_form ? '+10' : '-10'
+                      });
+                    }
+                    
+                    if (proofData.proof.has_captcha !== undefined) {
+                      scoringFactors.push({
+                        factor: 'CAPTCHA',
+                        value: proofData.proof.has_captcha ? (isFrench ? 'Détecté' : 'Detected') : (isFrench ? 'Aucun' : 'None'),
+                        influence: proofData.proof.has_captcha 
+                          ? (isFrench ? 'Partiellement automatisable' : 'Semi-automatable')
+                          : (isFrench ? 'Entièrement automatisable' : 'Fully automatable'),
+                        points: proofData.proof.has_captcha ? '+5' : '+10'
+                      });
+                    }
+                    
+                    if (metadata.linkedin_url) {
+                      scoringFactors.push({
+                        factor: 'LinkedIn',
+                        value: isFrench ? 'Vérifié' : 'Verified',
+                        influence: isFrench ? 'Présence active' : 'Active presence',
+                        points: '+5'
+                      });
+                    }
+                    
+                    if (metadata.source) {
+                      const source = metadata.source;
+                      scoringFactors.push({
+                        factor: isFrench ? 'Source de Données' : 'Data Source',
+                        value: source.toUpperCase(),
+                        influence: source === 'pdl' || source === 'apollo' 
+                          ? (isFrench ? 'Enrichissement fiable' : 'Trusted enrichment')
+                          : (isFrench ? 'Source manuelle' : 'Manual source'),
+                        points: (source === 'pdl' || source === 'apollo') ? '+10' : '+5'
+                      });
+                    }
+                    
+                    return (
+                      <div className="mt-4">
+                        <div className="overflow-x-auto">
+                          <table className="w-full text-sm">
+                            <thead>
+                              <tr className="border-b border-white/10">
+                                <th className="text-left py-2 px-3 text-white/70 font-medium">
+                                  {isFrench ? 'Facteur' : 'Factor'}
+                                </th>
+                                <th className="text-left py-2 px-3 text-white/70 font-medium">
+                                  {isFrench ? 'Valeur' : 'Value'}
+                                </th>
+                                <th className="text-left py-2 px-3 text-white/70 font-medium">
+                                  {isFrench ? 'Influence' : 'Influence'}
+                                </th>
+                                <th className="text-right py-2 px-3 text-white/70 font-medium">
+                                  {isFrench ? 'Points' : 'Points'}
+                                </th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {scoringFactors.map((factor, idx) => (
+                                <tr key={idx} className="border-b border-white/5">
+                                  <td className="py-3 px-3 text-white/90">{factor.factor}</td>
+                                  <td className="py-3 px-3 text-blue-400 font-mono text-xs">{factor.value}</td>
+                                  <td className="py-3 px-3 text-white/70 text-xs">{factor.influence}</td>
+                                  <td className="py-3 px-3 text-right font-mono text-sm">
+                                    <span className={factor.points.startsWith('+') ? 'text-green-400' : factor.points.startsWith('-') ? 'text-red-400' : 'text-white/50'}>
+                                      {factor.points}
+                                    </span>
+                                  </td>
+                                </tr>
+                              ))}
+                              
+                              {/* Summary Rows */}
+                              <tr className="border-t-2 border-white/20">
+                                <td className="py-3 px-3 text-white font-semibold">
+                                  {isFrench ? 'Score d\'Automatisation' : 'Automation Need Score'}
+                                </td>
+                                <td className="py-3 px-3"></td>
+                                <td className="py-3 px-3 text-white/50 text-xs">
+                                  {isFrench ? 'Calculé par l\'IA' : 'AI Calculated'}
+                                </td>
+                                <td className="py-3 px-3 text-right font-mono text-lg font-bold text-purple-400">
+                                  {proofData.prospect.automation_need_score}/100
+                                </td>
+                              </tr>
+                              
+                              {metadata.response_score !== undefined && (
+                                <tr className="border-b border-white/5">
+                                  <td className="py-3 px-3 text-white font-semibold">
+                                    {isFrench ? 'Score de Réponse' : 'Response Score'}
+                                  </td>
+                                  <td className="py-3 px-3"></td>
+                                  <td className="py-3 px-3 text-white/50 text-xs">
+                                    {isFrench ? 'Vitesse estimée' : 'Est. response speed'}
+                                  </td>
+                                  <td className="py-3 px-3 text-right font-mono text-lg font-bold text-blue-400">
+                                    {metadata.response_score}/100
+                                  </td>
+                                </tr>
+                              )}
+                              
+                              {metadata.response_score !== undefined && (
+                                <tr className="border-t-2 border-purple-500/30 bg-purple-500/10">
+                                  <td className="py-4 px-3 text-white font-bold">
+                                    {isFrench ? 'Score Total Pondéré' : 'Final Weighted Score'}
+                                  </td>
+                                  <td className="py-4 px-3"></td>
+                                  <td className="py-4 px-3 text-white/50 text-xs">
+                                    (0.7 × {proofData.prospect.automation_need_score} + 0.3 × {metadata.response_score})
+                                  </td>
+                                  <td className="py-4 px-3 text-right font-mono text-2xl font-bold text-purple-300">
+                                    {Math.round(0.7 * proofData.prospect.automation_need_score + 0.3 * metadata.response_score)}/100
+                                  </td>
+                                </tr>
+                              )}
+                            </tbody>
+                          </table>
+                        </div>
+                        
+                        <p className="text-xs text-white/40 mt-4 italic">
+                          {isFrench 
+                            ? '💡 Les scores sont calculés automatiquement par l\'IA en fonction de multiples facteurs.'
+                            : '💡 Scores are automatically calculated by AI based on multiple factors.'}
+                        </p>
+                      </div>
+                    );
+                  })()}
+                </div>
+
                 {/* Metadata Debug */}
                 <div className="bg-white/5 rounded-lg p-6">
                   <button
                     onClick={() => setShowMetadata(!showMetadata)}
                     className="flex items-center justify-between w-full text-left"
                   >
-                    <h3 className="text-lg font-semibold text-white">Raw Metadata (Debug)</h3>
+                    <h3 className="text-lg font-semibold text-white">
+                      {isFrench ? 'Métadonnées Brutes (Débogage)' : 'Raw Metadata (Debug)'}
+                    </h3>
                     <span className="text-white/50">{showMetadata ? '▼' : '▶'}</span>
                   </button>
                   
@@ -285,7 +480,7 @@ export default function ProspectProofModal({ isOpen, onClose, prospectId }: Pros
               onClick={onClose}
               className="px-6 py-2 bg-white/10 hover:bg-white/20 text-white rounded-lg transition-colors"
             >
-              Close
+              {isFrench ? 'Fermer' : 'Close'}
             </button>
           </div>
         </motion.div>
