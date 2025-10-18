@@ -586,6 +586,7 @@ export default function ProspectIntelligencePage() {
   console.log('[ProspectDashboard] 🎨 Rendering component...');
   console.log('[ProspectDashboard] Rendering PDL toggle:', serverConfig.hasPdl);
   console.log('[ProspectDashboard] Current serverConfig:', serverConfig);
+  console.log("✅ UI loaded: Prospect Intelligence Page, showTestProspects=", showTestProspects);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 via-blue-900 to-gray-900 text-white p-4 sm:p-8">
