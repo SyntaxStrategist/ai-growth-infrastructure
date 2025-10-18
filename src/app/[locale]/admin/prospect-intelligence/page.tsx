@@ -83,8 +83,8 @@ export default function ProspectIntelligencePage() {
   const [config, setConfig] = useState({
     industries: ['Construction', 'Real Estate', 'Marketing'],
     regions: ['CA'],
-    minScore: 70,
-    maxResults: 10,
+    minScore: '' as string | number,
+    maxResults: '' as string | number,
     testMode: true,
     usePdl: false, // Will be set from server config
     scanForms: true // Enable form scanning by default
@@ -407,12 +407,21 @@ export default function ProspectIntelligencePage() {
     setError(null);
 
     try {
+      // Safely parse string values to numbers with fallbacks
+      const scanConfig = {
+        ...config,
+        minScore: parseInt(String(config.minScore || '70'), 10) || 70,
+        maxResults: parseInt(String(config.maxResults || '10'), 10) || 10,
+      };
+
+      console.log('[ProspectDashboard] Parsed config for API:', scanConfig);
+
       const response = await fetch('/api/prospect-intelligence/scan', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(config),
+        body: JSON.stringify(scanConfig),
       });
 
       const data = await response.json();
@@ -671,9 +680,10 @@ export default function ProspectIntelligencePage() {
                 type="number"
                 inputMode="numeric"
                 pattern="[0-9]*"
+                placeholder="70"
                 value={config.minScore}
-                onChange={(e) => setConfig({ ...config, minScore: parseInt(e.target.value) || 70 })}
-                className="w-full px-3 py-2 rounded-lg bg-white/10 border border-white/20 text-white focus:border-purple-400 focus:outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                onChange={(e) => setConfig({ ...config, minScore: e.target.value })}
+                className="w-full px-3 py-2 rounded-lg bg-white/10 border border-white/20 text-white placeholder:text-white/30 focus:border-purple-400 focus:outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
               />
             </div>
 
@@ -683,9 +693,10 @@ export default function ProspectIntelligencePage() {
                 type="number"
                 inputMode="numeric"
                 pattern="[0-9]*"
+                placeholder="10"
                 value={config.maxResults}
-                onChange={(e) => setConfig({ ...config, maxResults: parseInt(e.target.value) || 10 })}
-                className="w-full px-3 py-2 rounded-lg bg-white/10 border border-white/20 text-white focus:border-purple-400 focus:outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                onChange={(e) => setConfig({ ...config, maxResults: e.target.value })}
+                className="w-full px-3 py-2 rounded-lg bg-white/10 border border-white/20 text-white placeholder:text-white/30 focus:border-purple-400 focus:outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
               />
             </div>
 
