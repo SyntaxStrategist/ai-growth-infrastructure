@@ -23,19 +23,23 @@ function logApolloRequest(message: string, data?: any) {
   
   console.log('[ApolloAPI]', message, data || '');
   
+  // Skip local file logging on Vercel or production
+  if (process.env.VERCEL) return;
+  if (process.env.NODE_ENV === 'production') return;
+  
   try {
     const logDir = path.join(process.cwd(), 'logs');
     const logFile = path.join(logDir, 'apollo_integration.log');
     
-    // Create logs directory if it doesn't exist
+    // Create logs directory if it doesn't exist (local dev only)
     if (!fs.existsSync(logDir)) {
       fs.mkdirSync(logDir, { recursive: true });
     }
     
-    // Append to log file
+    // Append to log file (local dev only)
     fs.appendFileSync(logFile, logMessage);
   } catch (error) {
-    console.error('[ApolloAPI] Failed to write to log file:', error);
+    // Silently fail - filesystem might not be available
   }
 }
 
