@@ -403,7 +403,7 @@ function generateHTMLTemplateFR(fields: EmailMergeFields): string {
 
     <!-- Main Email Card -->
     <div class="email-card">
-      <p class="greeting">Bonjour l'équipe ${business_name},</p>
+      <p class="greeting">Bonjour ${business_name},</p>
       
       <p class="main-text">
         J'ai découvert votre travail dans le domaine de <span class="highlight">${industry}</span> et je voulais vous contacter personnellement.
@@ -510,7 +510,7 @@ function generateTextTemplateFR(fields: EmailMergeFields): string {
   // Always use absolute production URL for demo (never relative)
   const demoUrl = 'https://www.aveniraisolutions.ca/demo';
 
-  return `Bonjour l'équipe ${business_name},
+  return `Bonjour ${business_name},
 
 J'ai découvert votre travail dans le domaine de ${industry} et je voulais vous contacter personnellement.
 

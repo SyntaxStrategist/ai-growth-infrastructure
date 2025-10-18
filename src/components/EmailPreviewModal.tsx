@@ -96,7 +96,7 @@ export default function EmailPreviewModal({
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     
     if (!emailRegex.test(emailToSave)) {
-      setEmailError('Please enter a valid email address');
+      setEmailError(t('invalidEmailFormat'));
       return;
     }
 
@@ -135,7 +135,7 @@ export default function EmailPreviewModal({
 
   const handleSend = async () => {
     if (testMode) {
-      onSendError('Cannot send emails in Test Mode. Please disable Test Mode first.');
+      onSendError(t('testModeSendDisabled'));
       return;
     }
 
@@ -222,9 +222,9 @@ export default function EmailPreviewModal({
             {/* Test Mode Warning */}
             {testMode && (
               <div className="bg-yellow-500/10 border border-yellow-500/30 rounded-lg p-4">
-                <p className="text-yellow-300 font-medium">⚠️ Test Mode is ON</p>
+                <p className="text-yellow-300 font-medium">{t('testModeWarning')}</p>
                 <p className="text-yellow-300/70 text-sm mt-1">
-                  Email sending is disabled. Turn off Test Mode to send real emails.
+                  {t('testModeSendDisabled')}
                 </p>
               </div>
             )}
@@ -251,14 +251,14 @@ export default function EmailPreviewModal({
                       }}
                       className="text-xs text-blue-400 hover:text-blue-300 ml-2"
                     >
-                      Edit
+                      {t('editEmail')}
                     </button>
                   </div>
                 </>
               ) : (
                 <>
                   <p className="text-yellow-300 font-medium mb-2">
-                    {prospect.contact_email ? '✏️ Editing Email' : '➕ Add Contact Email'}
+                    {prospect.contact_email ? t('editingEmail') : t('addEmail')}
                   </p>
                   <div className="flex gap-2">
                     <input
@@ -275,7 +275,7 @@ export default function EmailPreviewModal({
                       onClick={handleSaveEmail}
                       className="px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded text-sm font-medium transition-colors"
                     >
-                      Save
+                      {t('save')}
                     </button>
                     {prospect.contact_email && (
                       <button
@@ -286,7 +286,7 @@ export default function EmailPreviewModal({
                         }}
                         className="px-4 py-2 bg-white/10 hover:bg-white/20 text-white rounded text-sm transition-colors"
                       >
-                        Cancel
+                        {t('cancel')}
                       </button>
                     )}
                   </div>
@@ -380,23 +380,23 @@ export default function EmailPreviewModal({
               className="px-6 py-2 bg-white/10 hover:bg-white/20 text-white rounded-lg transition-colors"
               disabled={sending}
             >
-              Cancel
+              {t('cancel')}
             </button>
             <button
               onClick={handleSend}
               disabled={sending || testMode || !prospect.contact_email}
               className="px-6 py-2 bg-gradient-to-r from-purple-500 to-blue-500 hover:from-purple-600 hover:to-blue-600 text-white rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
-              title={!prospect.contact_email ? 'No contact email available' : (testMode ? 'Test Mode is ON' : 'Send email')}
+              title={!prospect.contact_email ? t('noContactEmailAvailable') : (testMode ? t('testModeWarning') : t('sendEmail'))}
             >
               {sending ? (
                 <>
                   <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                  Sending...
+                  {t('sending')}
                 </>
               ) : (
                 <>
-                  ✉️ Send Now
-                  {!prospect.contact_email && <span className="text-xs">(No Email)</span>}
+                  ✉️ {t('sendNow')}
+                  {!prospect.contact_email && <span className="text-xs">({t('noEmail')})</span>}
                 </>
               )}
             </button>
