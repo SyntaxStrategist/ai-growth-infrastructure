@@ -51,6 +51,7 @@ export const translations = {
     personalizationBusinessName: '• Business name:',
     personalizationIndustry: '• Industry:',
     personalizationWebsite: '• Website:',
+    editMessageNote: '✏️ You can customize this message before sending.',
     // Proof Modal
     proofTitle: 'Prospect Proof',
     formDetection: 'Form Detection',
@@ -120,6 +121,7 @@ export const translations = {
     personalizationBusinessName: '• Nom de l\'entreprise :',
     personalizationIndustry: '• Secteur d\'activité :',
     personalizationWebsite: '• Site web :',
+    editMessageNote: '✏️ Vous pouvez personnaliser ce message avant l\'envoi.',
     // Proof Modal
     proofTitle: 'Preuve du Prospect',
     formDetection: 'Détection de Formulaire',

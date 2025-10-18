@@ -39,7 +39,9 @@ export default function EmailPreviewModal({
   console.log('🌍 Current Pathname:', pathname);
   const [sending, setSending] = useState(false);
   const [emailSubject, setEmailSubject] = useState('');
-  const [emailBody, setEmailBody] = useState('');
+  const [emailBody, setEmailBody] = useState(''); // HTML version
+  const [emailTextBody, setEmailTextBody] = useState(''); // Plain text version for editing
+  const [editedEmailText, setEditedEmailText] = useState(''); // User-edited version
   const [editingEmail, setEditingEmail] = useState(false);
   const [manualEmail, setManualEmail] = useState('');
   const [emailError, setEmailError] = useState('');
@@ -92,8 +94,9 @@ export default function EmailPreviewModal({
     console.log('[EmailPreview] Email language:', locale === 'fr' ? 'French' : 'English');
 
     setEmailSubject(subject);
-    // Use HTML template for display, will send both HTML and text
-    setEmailBody(template.html);
+    setEmailBody(template.html); // HTML version for sending
+    setEmailTextBody(template.text); // Plain text version for editing
+    setEditedEmailText(template.text); // Initialize edited version with text template
   };
 
   const handleSaveEmail = async () => {
@@ -162,6 +165,10 @@ export default function EmailPreviewModal({
     setSending(true);
     console.log('[EmailPreview] Sending email to:', emailToUse);
 
+    // Use edited text if available, otherwise use original
+    const finalTextBody = editedEmailText || emailTextBody;
+    console.log('[EmailPreview] Using edited text:', editedEmailText !== emailTextBody);
+
     try {
       const response = await fetch('/api/prospect-intelligence/outreach', {
         method: 'POST',
@@ -172,8 +179,8 @@ export default function EmailPreviewModal({
           prospect_id: prospect.id,
           to: emailToUse,
           subject: emailSubject,
-          htmlBody: emailBody,
-          textBody: emailBody, // Will be converted server-side
+          htmlBody: emailBody, // Send HTML for rich email clients
+          textBody: finalTextBody, // Send edited or original text version
         }),
       });
 
@@ -318,51 +325,20 @@ export default function EmailPreviewModal({
               />
             </div>
 
-            {/* Body Preview */}
+            {/* Body Preview - Editable */}
             <div>
-              <label className="block text-sm text-white/70 mb-2">Message Preview</label>
+              <label className="block text-sm text-white/70 mb-2">{t('messagePreview')}</label>
               
-              {/* Security Notice for External Links */}
-              <div className="mb-3 p-3 rounded-lg bg-blue-500/10 border border-blue-500/30">
-                <p className="text-blue-300 text-xs flex items-center gap-2">
-                  <span>🔗</span>
-                  <span>The demo dashboard link opens in a new tab for security. Recipients will see the full branded email.</span>
-                </p>
-              </div>
+              <textarea
+                value={editedEmailText}
+                onChange={(e) => setEditedEmailText(e.target.value)}
+                className="w-full h-[400px] px-4 py-3 rounded-lg bg-white/5 border-2 border-white/20 text-white focus:border-purple-400 focus:outline-none font-mono text-sm leading-relaxed resize-none shadow-lg"
+                disabled={sending}
+                placeholder={t('messagePreview')}
+              />
               
-              <div className="bg-white rounded-lg border border-white/20 overflow-hidden">
-                <iframe
-                  srcDoc={emailBody}
-                  title="Email Preview"
-                  className="w-full h-[500px] border-0"
-                  sandbox="allow-scripts allow-same-origin allow-popups allow-top-navigation allow-popups-to-escape-sandbox"
-                  onLoad={(e) => {
-                    // Add click handler for demo links
-                    try {
-                      const iframe = e.currentTarget;
-                      const iframeDoc = iframe.contentDocument || iframe.contentWindow?.document;
-                      if (iframeDoc) {
-                        const demoLinks = iframeDoc.querySelectorAll('a[href*="demo"]');
-                        demoLinks.forEach((link) => {
-                          const href = link.getAttribute('href');
-                          console.log('[EmailPreviewModal] Opening demo link:', href);
-                          link.addEventListener('click', (event) => {
-                            event.preventDefault();
-                            console.log('[EmailPreviewModal] Demo link clicked:', href);
-                            if (href) {
-                              window.open(href, '_blank', 'noopener,noreferrer');
-                            }
-                          });
-                        });
-                      }
-                    } catch (err) {
-                      console.warn('[EmailPreviewModal] Could not attach demo link handlers:', err);
-                    }
-                  }}
-                />
-              </div>
-              <p className="text-xs text-white/50 mt-2">
-                {t('previewInfo')}
+              <p className="text-xs text-emerald-400/80 mt-2 flex items-center gap-1">
+                {t('editMessageNote')}
               </p>
             </div>
 
