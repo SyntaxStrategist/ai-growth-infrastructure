@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Avenir AI Solutions - Infrastructure Intelligente de Croissance</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+        
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        
+        .gradient-text {
+            background: linear-gradient(135deg, #1f2937 0%, #374151 50%, #1f2937 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .brand-gradient {
+            background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
+        }
+        
+        .card-gradient {
+            background: linear-gradient(135deg, rgba(59, 130, 246, 0.05) 0%, rgba(139, 92, 246, 0.05) 100%);
+        }
+        
+        .backdrop-blur {
+            backdrop-filter: blur(8px);
+        }
+        
+        .flow-arrow {
+            position: relative;
+        }
+        
+        .flow-arrow::after {
+            content: '→';
+            position: absolute;
+            right: -20px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 24px;
+            color: #3b82f6;
+            font-weight: bold;
+        }
+        
+        .flow-arrow:last-child::after {
+            display: none;
+        }
+        
+        @media print {
+            .page-break {
+                page-break-before: always;
+            }
+        }
+    </style>
+</head>
+<body class="bg-white text-gray-900">
+    <!-- Main One-Page Layout -->
+    <div class="min-h-screen p-8 bg-gradient-to-br from-blue-50/30 to-purple-50/30">
+        <div class="max-w-6xl mx-auto">
+            
+            <!-- Header Section -->
+            <div class="text-center mb-12">
+                <div class="flex items-center justify-center gap-4 mb-6">
+                    <div class="w-16 h-16 brand-gradient rounded-2xl flex items-center justify-center">
+                        <svg class="w-8 h-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                        </svg>
+                    </div>
+                    <div class="text-left">
+                        <h1 class="text-3xl font-bold gradient-text">Avenir AI Solutions</h1>
+                        <p class="text-lg text-gray-600 font-medium">L'Infrastructure IA Complète de Croissance</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Problem & Solution Section -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-12">
+                <!-- Problem -->
+                <div class="p-8 rounded-2xl border border-red-200/50 bg-red-50/30 backdrop-blur">
+                    <div class="flex items-center gap-3 mb-4">
+                        <div class="w-10 h-10 bg-red-100 rounded-xl flex items-center justify-center">
+                            <svg class="w-5 h-5 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                            </svg>
+                        </div>
+                        <h2 class="text-xl font-bold text-gray-900">Le Problème</h2>
+                    </div>
+                    <p class="text-gray-700 leading-relaxed">
+                        Le suivi manuel des prospects et l'analyse sont inefficaces, chronophages et sujets aux erreurs humaines. 
+                        Les entreprises perdent des opportunités à cause de réponses tardives, de suivis incohérents et du manque 
+                        d'insights actionnables provenant des interactions clients.
+                    </p>
+                </div>
+
+                <!-- Solution -->
+                <div class="p-8 rounded-2xl border border-green-200/50 bg-green-50/30 backdrop-blur">
+                    <div class="flex items-center gap-3 mb-4">
+                        <div class="w-10 h-10 bg-green-100 rounded-xl flex items-center justify-center">
+                            <svg class="w-5 h-5 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                        </div>
+                        <h2 class="text-xl font-bold text-gray-900">La Solution</h2>
+                    </div>
+                    <p class="text-gray-700 leading-relaxed">
+                        Avenir AI automatise la qualification des prospects, prédit les résultats de croissance et fournit une 
+                        intelligence en temps réel. Nos systèmes IA analysent l'intention, l'urgence et les opportunités en temps réel — 
+                        convertissant les conversations en conversions et les données en croissance.
+                    </p>
+                </div>
+            </div>
+
+            <!-- Core Features Section -->
+            <div class="mb-12">
+                <h2 class="text-2xl font-bold text-center gradient-text mb-8">Fonctionnalités Principales</h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <!-- Growth Intelligence Engine -->
+                    <div class="p-6 rounded-2xl border border-gray-200/50 card-gradient backdrop-blur">
+                        <div class="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center mb-4">
+                            <svg class="w-6 h-6 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                            </svg>
+                        </div>
+                        <h3 class="font-bold text-gray-900 mb-2">Moteur d'Intelligence de Croissance</h3>
+                        <p class="text-sm text-gray-600">Détectez, qualifiez et scorez automatiquement chaque prospect avec une analyse alimentée par l'IA.</p>
+                    </div>
+
+                    <!-- Predictive Growth Engine -->
+                    <div class="p-6 rounded-2xl border border-gray-200/50 card-gradient backdrop-blur">
+                        <div class="w-12 h-12 bg-purple-100 rounded-xl flex items-center justify-center mb-4">
+                            <svg class="w-6 h-6 text-purple-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+                            </svg>
+                        </div>
+                        <h3 class="font-bold text-gray-900 mb-2">Moteur de Croissance Prédictive</h3>
+                        <p class="text-sm text-gray-600">Transformez les prospects en clients avec une approche personnalisée et contextuelle.</p>
+                    </div>
+
+                    <!-- Relationship Insights -->
+                    <div class="p-6 rounded-2xl border border-gray-200/50 card-gradient backdrop-blur">
+                        <div class="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center mb-4">
+                            <svg class="w-6 h-6 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                            </svg>
+                        </div>
+                        <h3 class="font-bold text-gray-900 mb-2">Insights Relationnels</h3>
+                        <p class="text-sm text-gray-600">Prédisez et prévenez l'attrition avec des insights intelligents sur les relations.</p>
+                    </div>
+
+                    <!-- Growth Copilot -->
+                    <div class="p-6 rounded-2xl border border-gray-200/50 card-gradient backdrop-blur">
+                        <div class="w-12 h-12 bg-orange-100 rounded-xl flex items-center justify-center mb-4">
+                            <svg class="w-6 h-6 text-orange-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+                            </svg>
+                        </div>
+                        <h3 class="font-bold text-gray-900 mb-2">Copilote de Croissance</h3>
+                        <p class="text-sm text-gray-600">Rationalisez les flux de travail et automatisez la prise de décision dans votre stack de croissance.</p>
+                    </div>
+
+                    <!-- Client Dashboard -->
+                    <div class="p-6 rounded-2xl border border-gray-200/50 card-gradient backdrop-blur">
+                        <div class="w-12 h-12 bg-indigo-100 rounded-xl flex items-center justify-center mb-4">
+                            <svg class="w-6 h-6 text-indigo-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
+                            </svg>
+                        </div>
+                        <h3 class="font-bold text-gray-900 mb-2">Tableau de Bord Client</h3>
+                        <p class="text-sm text-gray-600">Analytiques et insights en temps réel avec support bilingue pour les équipes mondiales.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Key Benefits Section -->
+            <div class="mb-12">
+                <h2 class="text-2xl font-bold text-center gradient-text mb-8">Avantages Clés</h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <div class="text-center p-6 rounded-xl border border-gray-200/50 bg-white/50 backdrop-blur">
+                        <div class="w-16 h-16 mx-auto mb-4 bg-blue-100 rounded-full flex items-center justify-center">
+                            <svg class="w-8 h-8 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                        </div>
+                        <h3 class="font-bold text-gray-900 mb-2">Gagnez du Temps</h3>
+                        <p class="text-sm text-gray-600">Réduisez le traitement manuel des prospects de 80% avec l'analyse IA automatisée</p>
+                    </div>
+                    <div class="text-center p-6 rounded-xl border border-gray-200/50 bg-white/50 backdrop-blur">
+                        <div class="w-16 h-16 mx-auto mb-4 bg-green-100 rounded-full flex items-center justify-center">
+                            <svg class="w-8 h-8 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+                            </svg>
+                        </div>
+                        <h3 class="font-bold text-gray-900 mb-2">Améliorez les Conversions</h3>
+                        <p class="text-sm text-gray-600">Augmentez les taux de conversion de 40% avec le scoring intelligent des prospects</p>
+                    </div>
+                    <div class="text-center p-6 rounded-xl border border-gray-200/50 bg-white/50 backdrop-blur">
+                        <div class="w-16 h-16 mx-auto mb-4 bg-purple-100 rounded-full flex items-center justify-center">
+                            <svg class="w-8 h-8 text-purple-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                            </svg>
+                        </div>
+                        <h3 class="font-bold text-gray-900 mb-2">Clarté des Données</h3>
+                        <p class="text-sm text-gray-600">Obtenez des insights actionnables de chaque interaction client</p>
+                    </div>
+                    <div class="text-center p-6 rounded-xl border border-gray-200/50 bg-white/50 backdrop-blur">
+                        <div class="w-16 h-16 mx-auto mb-4 bg-orange-100 rounded-full flex items-center justify-center">
+                            <svg class="w-8 h-8 text-orange-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5h12M9 3v2m1.048 9.5A18.022 18.022 0 016.412 9m6.088 9h7M11 21l5-10 5 10M12.751 5C11.783 10.77 8.07 15.61 3 18.129" />
+                            </svg>
+                        </div>
+                        <h3 class="font-bold text-gray-900 mb-2">Intelligence Bilingue</h3>
+                        <p class="text-sm text-gray-600">Support natif anglais et français pour les entreprises canadiennes</p>
+                    </div>
+                    <div class="text-center p-6 rounded-xl border border-gray-200/50 bg-white/50 backdrop-blur">
+                        <div class="w-16 h-16 mx-auto mb-4 bg-indigo-100 rounded-full flex items-center justify-center">
+                            <svg class="w-8 h-8 text-indigo-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M9 19l3 3m0 0l3-3m-3 3V10" />
+                            </svg>
+                        </div>
+                        <h3 class="font-bold text-gray-900 mb-2">Évolutivité</h3>
+                        <p class="text-sm text-gray-600">Grandit avec votre entreprise de startup à entreprise</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Visual Flow Diagram -->
+            <div class="mb-12">
+                <h2 class="text-2xl font-bold text-center gradient-text mb-8">Comment Ça Marche</h2>
+                <div class="flex items-center justify-center gap-8 flex-wrap">
+                    <div class="flow-arrow text-center p-6 rounded-2xl border border-gray-200/50 bg-white/50 backdrop-blur">
+                        <div class="w-16 h-16 mx-auto mb-3 bg-blue-100 rounded-full flex items-center justify-center">
+                            <svg class="w-8 h-8 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                            </svg>
+                        </div>
+                        <h3 class="font-bold text-gray-900 mb-1">Prospect</h3>
+                        <p class="text-sm text-gray-600">Demande client</p>
+                    </div>
+                    <div class="flow-arrow text-center p-6 rounded-2xl border border-gray-200/50 bg-white/50 backdrop-blur">
+                        <div class="w-16 h-16 mx-auto mb-3 bg-purple-100 rounded-full flex items-center justify-center">
+                            <svg class="w-8 h-8 text-purple-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+                            </svg>
+                        </div>
+                        <h3 class="font-bold text-gray-900 mb-1">Moteur IA</h3>
+                        <p class="text-sm text-gray-600">Analyse intelligente</p>
+                    </div>
+                    <div class="flow-arrow text-center p-6 rounded-2xl border border-gray-200/50 bg-white/50 backdrop-blur">
+                        <div class="w-16 h-16 mx-auto mb-3 bg-green-100 rounded-full flex items-center justify-center">
+                            <svg class="w-8 h-8 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
+                            </svg>
+                        </div>
+                        <h3 class="font-bold text-gray-900 mb-1">Tableau de Bord</h3>
+                        <p class="text-sm text-gray-600">Insights en temps réel</p>
+                    </div>
+                    <div class="text-center p-6 rounded-2xl border border-gray-200/50 bg-white/50 backdrop-blur">
+                        <div class="w-16 h-16 mx-auto mb-3 bg-orange-100 rounded-full flex items-center justify-center">
+                            <svg class="w-8 h-8 text-orange-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+                            </svg>
+                        </div>
+                        <h3 class="font-bold text-gray-900 mb-1">Croissance</h3>
+                        <p class="text-sm text-gray-600">Résultats mesurables</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- CTA Footer -->
+            <div class="text-center p-8 rounded-2xl border border-gray-200/50 bg-gradient-to-r from-blue-50/50 to-purple-50/50 backdrop-blur">
+                <h2 class="text-2xl font-bold gradient-text mb-4">Découvrez l'avenir de l'intelligence de croissance.</h2>
+                <p class="text-gray-600 mb-6">Transformez votre entreprise avec une infrastructure de croissance alimentée par l'IA.</p>
+                <div class="flex flex-col sm:flex-row items-center justify-center gap-4 text-sm text-gray-500">
+                    <span>📧 info@aveniraisolutions.ca</span>
+                    <span>🌐 aveniraisolutions.ca</span>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</body>
+</html>
