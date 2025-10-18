@@ -286,6 +286,85 @@ async function main() {
     });
   }
   
+  // Step 4: Create mock analytics record in growth_brain table
+  console.log('📈 Step 4: Creating mock analytics record...');
+  console.log('   Target: growth_brain table with realistic demo data');
+  console.log('');
+  
+  // Generate realistic mock analytics data
+  const now = new Date();
+  const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+  
+  const mockAnalytics = {
+    client_id: clientDbId, // Use the demo client's UUID
+    engagement_score: Math.floor(Math.random() * 26) + 70, // 70-95
+    avg_confidence: Math.floor(Math.random() * 16) + 75, // 75-90
+    tone_sentiment_score: Math.floor(Math.random() * 41) + 20, // 20-60
+    total_leads: insertedLeads.length, // Match actual demo leads count
+    urgency_trend_percentage: (Math.random() * 10 - 5).toFixed(1), // -5 to +5
+    language_ratio: {
+      en: Math.floor(Math.random() * 31) + 50, // 50-80
+      fr: 0 // Will be calculated
+    },
+    prediction_summary: "Leads show steady engagement with moderate urgency. B2B partnerships trending upward.",
+    analysis_period: { range: "7d" },
+    analysis_period_start: sevenDaysAgo.toISOString(),
+    analysis_period_end: now.toISOString(),
+    tone_distribution: {
+      positive: 0.6,
+      neutral: 0.3,
+      negative: 0.1
+    },
+    urgency_trend: {
+      high: 0.4,
+      medium: 0.5,
+      low: 0.1
+    },
+    intent_summary: {
+      "B2B partnership": 3,
+      "Consultation": 2
+    },
+    confidence_trend: {
+      week_1: 82,
+      week_2: 85
+    },
+    predictive_insights: {
+      next_action: "Follow-up with warm leads",
+      forecast: "Stable growth expected"
+    },
+    is_test: true // Mark as test data
+  };
+  
+  // Calculate French ratio to complete language_ratio
+  mockAnalytics.language_ratio.fr = 100 - mockAnalytics.language_ratio.en;
+  
+  console.log('   📊 Mock Analytics Data:');
+  console.log(`   • Engagement Score: ${mockAnalytics.engagement_score}`);
+  console.log(`   • Avg Confidence: ${mockAnalytics.avg_confidence}%`);
+  console.log(`   • Tone Sentiment: ${mockAnalytics.tone_sentiment_score}`);
+  console.log(`   • Total Leads: ${mockAnalytics.total_leads}`);
+  console.log(`   • Urgency Trend: ${mockAnalytics.urgency_trend_percentage}%`);
+  console.log(`   • Language Ratio: EN ${mockAnalytics.language_ratio.en}% / FR ${mockAnalytics.language_ratio.fr}%`);
+  console.log('');
+  
+  // Insert analytics record
+  const { data: analyticsData, error: analyticsError } = await supabase
+    .from('growth_brain')
+    .insert([mockAnalytics])
+    .select()
+    .single();
+  
+  if (analyticsError) {
+    console.error('   ❌ Failed to create analytics record:', analyticsError.message);
+    console.error('   Error details:', analyticsError);
+  } else {
+    console.log('   ✅ Mock analytics record created');
+    console.log('   ID:', analyticsData.id);
+    console.log('   Client ID:', analyticsData.client_id);
+    console.log('   Is Test:', analyticsData.is_test);
+    console.log('');
+  }
+  
   // Final summary
   console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
   console.log('✅ PRODUCTION DEMO SEEDING COMPLETE');
@@ -304,6 +383,14 @@ async function main() {
   console.log('  • English leads:', insertedLeads.filter(l => l.language === 'en').length);
   console.log('  • French leads:', insertedLeads.filter(l => l.language === 'fr').length);
   console.log('  • All marked as is_test: true ✅');
+  console.log('');
+  console.log('📈 Analytics Record Created:');
+  console.log('  • Table: growth_brain');
+  console.log('  • Client ID:', clientDbId);
+  console.log('  • Engagement Score:', mockAnalytics.engagement_score);
+  console.log('  • Avg Confidence:', mockAnalytics.avg_confidence + '%');
+  console.log('  • Total Leads:', mockAnalytics.total_leads);
+  console.log('  • Is Test: true ✅');
   console.log('');
   console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
   console.log('📋 Demo Leads Summary');
@@ -384,6 +471,7 @@ async function main() {
   console.log('');
   console.log('The demo account is now live in production with:');
   console.log('  • 5 realistic bilingual leads');
+  console.log('  • 1 mock analytics record in growth_brain');
   console.log('  • Proper stats and analytics');
   console.log('  • Full translation working');
   console.log('  • Professional demo data');
