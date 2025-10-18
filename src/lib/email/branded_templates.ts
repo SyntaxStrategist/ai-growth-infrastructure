@@ -26,9 +26,8 @@ function generateHTMLTemplate(fields: EmailMergeFields): string {
     ? `${process.env.NEXT_PUBLIC_SITE_URL}/assets/logos/logo.svg`
     : 'https://www.aveniraisolutions.ca/assets/logos/logo.svg';
   
-  const demoUrl = process.env.NEXT_PUBLIC_SITE_URL 
-    ? `${process.env.NEXT_PUBLIC_SITE_URL}/demo`
-    : 'https://demo.aveniraisolutions.ca';
+  // Always use absolute production URL for demo (never relative)
+  const demoUrl = 'https://www.aveniraisolutions.ca/demo';
 
   return `<!DOCTYPE html>
 <html lang="en">
@@ -249,9 +248,8 @@ function generateHTMLTemplate(fields: EmailMergeFields): string {
 function generateTextTemplate(fields: EmailMergeFields): string {
   const { business_name, industry, website } = fields;
   
-  const demoUrl = process.env.NEXT_PUBLIC_SITE_URL 
-    ? `${process.env.NEXT_PUBLIC_SITE_URL}/demo`
-    : 'https://demo.aveniraisolutions.ca';
+  // Always use absolute production URL for demo (never relative)
+  const demoUrl = 'https://www.aveniraisolutions.ca/demo';
 
   return `Hello ${business_name} team,
 
