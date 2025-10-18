@@ -362,19 +362,19 @@ export default function EmailPreviewModal({
                 />
               </div>
               <p className="text-xs text-white/50 mt-2">
-                ℹ️ Preview shows the branded HTML email template that will be sent
+                {t('previewInfo')}
               </p>
             </div>
 
             {/* Variable Info */}
             <div className="bg-blue-500/10 border border-blue-500/30 rounded-lg p-4">
               <p className="text-blue-300 text-sm">
-                <strong>💡 Tip:</strong> The email has been personalized with:
+                {t('variableInfo')}
               </p>
               <ul className="text-blue-300/70 text-sm mt-2 space-y-1">
-                <li>• Business name: <span className="text-blue-300">{prospect.business_name}</span></li>
-                <li>• Industry: <span className="text-blue-300">{prospect.industry}</span></li>
-                <li>• Website: <span className="text-blue-300">{prospect.website}</span></li>
+                <li>{t('personalizationBusinessName')} <span className="text-blue-300">{prospect.business_name}</span></li>
+                <li>{t('personalizationIndustry')} <span className="text-blue-300">{prospect.industry}</span></li>
+                <li>{t('personalizationWebsite')} <span className="text-blue-300">{prospect.website}</span></li>
               </ul>
             </div>
           </div>

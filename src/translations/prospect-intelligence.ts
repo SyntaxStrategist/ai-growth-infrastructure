@@ -48,6 +48,9 @@ export const translations = {
     demoLinkNotice: '🔗 The demo dashboard link opens in a new tab for security. Recipients will see the full branded email.',
     previewInfo: 'ℹ️ Preview shows the branded HTML email template that will be sent',
     variableInfo: '💡 Tip: The email has been personalized with:',
+    personalizationBusinessName: '• Business name:',
+    personalizationIndustry: '• Industry:',
+    personalizationWebsite: '• Website:',
     // Proof Modal
     proofTitle: 'Prospect Proof',
     formDetection: 'Form Detection',
@@ -114,6 +117,9 @@ export const translations = {
     demoLinkNotice: '🔗 Le lien du tableau de bord de démonstration s\'ouvre dans un nouvel onglet pour des raisons de sécurité. Les destinataires verront l\'e-mail de marque complet.',
     previewInfo: 'ℹ️ L\'aperçu affiche le modèle d\'e-mail HTML de marque qui sera envoyé',
     variableInfo: '💡 Conseil : L\'e-mail a été personnalisé avec :',
+    personalizationBusinessName: '• Nom de l\'entreprise :',
+    personalizationIndustry: '• Secteur d\'activité :',
+    personalizationWebsite: '• Site web :',
     // Proof Modal
     proofTitle: 'Preuve du Prospect',
     formDetection: 'Détection de Formulaire',
