@@ -62,6 +62,7 @@ export default function ProspectIntelligencePage() {
   const [toastMessage, setToastMessage] = useState('');
   const [showOnlyHighPriority, setShowOnlyHighPriority] = useState(false);
   const [hideTestProspects, setHideTestProspects] = useState(false); // Toggle to hide test data
+  const [currentPage, setCurrentPage] = useState(1); // Pagination state
   const [sendingOutreach, setSendingOutreach] = useState<Record<string, boolean>>({});
   const [generatingProof, setGeneratingProof] = useState(false);
   
@@ -591,8 +592,22 @@ export default function ProspectIntelligencePage() {
     filteredProspects = filteredProspects.filter(p => isHighPriority(p.automation_need_score));
   }
 
+  // Pagination
+  const ITEMS_PER_PAGE = 25;
+  const totalPages = Math.ceil(filteredProspects.length / ITEMS_PER_PAGE);
+  const paginatedProspects = filteredProspects.slice(
+    (currentPage - 1) * ITEMS_PER_PAGE,
+    currentPage * ITEMS_PER_PAGE
+  );
+
+  // Reset to page 1 when filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [hideTestProspects, showOnlyHighPriority, prospects.length]);
+
   // Debug: Log filter results
   console.log("✅ Filter applied: hideTestProspects =", hideTestProspects, "Visible prospects:", filteredProspects.length);
+  console.log("📄 Pagination: Page", currentPage, "of", totalPages, "| Showing", paginatedProspects.length, "prospects");
 
   // Debug: Log render state
   console.log('[ProspectDashboard] 🎨 Rendering component...');
@@ -974,7 +989,7 @@ export default function ProspectIntelligencePage() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-white/10">
-                  {filteredProspects.map((prospect) => (
+                  {paginatedProspects.map((prospect) => (
                     <tr key={prospect.id} className="hover:bg-white/5 transition-colors">
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="flex items-center gap-2">
@@ -1086,6 +1101,31 @@ export default function ProspectIntelligencePage() {
                   ))}
                 </tbody>
               </table>
+
+              {/* Pagination Controls */}
+              {filteredProspects.length > ITEMS_PER_PAGE && (
+                <div className="flex justify-center items-center gap-4 py-4 border-t border-white/10">
+                  <button
+                    disabled={currentPage === 1}
+                    onClick={() => setCurrentPage(currentPage - 1)}
+                    className="px-4 py-2 rounded-lg text-sm text-white/80 hover:text-white hover:bg-white/10 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                  >
+                    ◀️ {isFrench ? 'Précédent' : 'Previous'}
+                  </button>
+                  
+                  <span className="text-sm text-white/70">
+                    {isFrench ? 'Page' : 'Page'} {currentPage} {isFrench ? 'de' : 'of'} {totalPages}
+                  </span>
+                  
+                  <button
+                    disabled={currentPage === totalPages}
+                    onClick={() => setCurrentPage(currentPage + 1)}
+                    className="px-4 py-2 rounded-lg text-sm text-white/80 hover:text-white hover:bg-white/10 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                  >
+                    {isFrench ? 'Suivant' : 'Next'} ▶️
+                  </button>
+                </div>
+              )}
             </div>
           )}
         </motion.div>
