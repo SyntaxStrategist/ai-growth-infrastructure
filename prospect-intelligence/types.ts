@@ -15,6 +15,7 @@ export interface ProspectCandidate {
   response_score?: number;
   automation_need_score?: number;
   contacted?: boolean;
+  is_test?: boolean; // True if from Test Mode, false for production prospects
   created_at?: Date;
   updated_at?: Date;
   metadata?: Record<string, any>;

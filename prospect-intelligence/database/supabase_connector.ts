@@ -51,6 +51,7 @@ export async function saveProspectsToDatabase(prospects: ProspectCandidate[]): P
       response_score: p.response_score || 0,
       automation_need_score: p.automation_need_score || 0,
       contacted: p.contacted || false,
+      is_test: p.is_test || false, // Tag test vs production prospects
       metadata: safeMetadata
     };
   });

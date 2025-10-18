@@ -18,6 +18,7 @@ interface ProspectCandidate {
   response_score?: number;
   automation_need_score?: number;
   contacted?: boolean;
+  is_test?: boolean; // True if from Test Mode
   created_at: string;
   last_tested?: string;
   metadata?: {
@@ -60,6 +61,7 @@ export default function ProspectIntelligencePage() {
   const [showToast, setShowToast] = useState(false);
   const [toastMessage, setToastMessage] = useState('');
   const [showOnlyHighPriority, setShowOnlyHighPriority] = useState(false);
+  const [showTestProspects, setShowTestProspects] = useState(false); // Toggle for test data
   const [sendingOutreach, setSendingOutreach] = useState<Record<string, boolean>>({});
   const [generatingProof, setGeneratingProof] = useState(false);
   
@@ -149,6 +151,8 @@ export default function ProspectIntelligencePage() {
     generating: isFrench ? 'Génération...' : 'Generating...',
     simulateFeedback: isFrench ? '🎲 Simuler feedback' : '🎲 Simulate Feedback',
     actions: isFrench ? 'Actions' : 'Actions',
+    showTestProspects: isFrench ? 'Afficher les prospects de test' : 'Show Test Prospects',
+    testDataLabel: isFrench ? '🧪 Données de test' : '🧪 Test Data',
   };
 
   // Industry translations (EN → FR)
@@ -568,9 +572,15 @@ export default function ProspectIntelligencePage() {
   };
 
   // Filter prospects based on toggle
-  const filteredProspects = showOnlyHighPriority
-    ? prospects.filter(p => isHighPriority(p.automation_need_score))
-    : prospects;
+  // Filter by test status first, then by priority
+  let filteredProspects = showTestProspects 
+    ? prospects // Show all (including test)
+    : prospects.filter(p => !p.is_test); // Hide test prospects by default
+
+  // Then apply high-priority filter
+  if (showOnlyHighPriority) {
+    filteredProspects = filteredProspects.filter(p => isHighPriority(p.automation_need_score));
+  }
 
   // Debug: Log render state
   console.log('[ProspectDashboard] 🎨 Rendering component...');
@@ -878,15 +888,27 @@ export default function ProspectIntelligencePage() {
                 {t.prospectCandidates} ({filteredProspects.length})
               </h2>
               
-              <label className="flex items-center gap-2 cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={showOnlyHighPriority}
-                  onChange={(e) => setShowOnlyHighPriority(e.target.checked)}
-                  className="w-4 h-4 rounded border-white/20 bg-white/10 checked:bg-orange-500 focus:ring-2 focus:ring-orange-500"
-                />
-                <span className="text-sm text-white/70">{t.showOnlyHighPriority}</span>
-              </label>
+              <div className="flex items-center gap-4">
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={showOnlyHighPriority}
+                    onChange={(e) => setShowOnlyHighPriority(e.target.checked)}
+                    className="w-4 h-4 rounded border-white/20 bg-white/10 checked:bg-orange-500 focus:ring-2 focus:ring-orange-500"
+                  />
+                  <span className="text-sm text-white/70">{t.showOnlyHighPriority}</span>
+                </label>
+
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={showTestProspects}
+                    onChange={(e) => setShowTestProspects(e.target.checked)}
+                    className="w-4 h-4 rounded border-white/20 bg-white/10 checked:bg-blue-500 focus:ring-2 focus:ring-blue-500"
+                  />
+                  <span className="text-sm text-white/70">{t.showTestProspects}</span>
+                </label>
+              </div>
             </div>
           </div>
 
@@ -933,6 +955,11 @@ export default function ProspectIntelligencePage() {
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="flex items-center gap-2">
                           <div className="text-sm font-medium text-white">{prospect.business_name}</div>
+                          {prospect.is_test && (
+                            <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-white/10 text-white/50 border border-white/20">
+                              {t.testDataLabel}
+                            </span>
+                          )}
                           {isHighPriority(prospect.automation_need_score) && (
                             <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold bg-orange-500/20 text-orange-400 border border-orange-500/40">
                               {t.highPriorityBadge}

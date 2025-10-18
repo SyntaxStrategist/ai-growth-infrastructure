@@ -68,7 +68,9 @@ export async function runProspectPipeline(config: PipelineConfig): Promise<Prosp
     if (config.testMode) {
       console.log('🧪 TEST MODE: Using test data generator');
       allProspects = generateTestProspects(config.maxProspectsPerRun, config.industries, config.regions);
-      console.log(`✅ Generated ${allProspects.length} test prospects\n`);
+      // Tag all test prospects
+      allProspects.forEach(p => p.is_test = true);
+      console.log(`✅ Generated ${allProspects.length} test prospects (tagged as test data)\n`);
     } else {
       // Production mode: Try Apollo API first, fallback to Google scraper
       console.log('🌐 PRODUCTION MODE: Using real data sources');
@@ -178,8 +180,11 @@ export async function runProspectPipeline(config: PipelineConfig): Promise<Prosp
                 console.log(`✅ Google: ${prospects.length} prospects`);
               }
               
+              // Tag production prospects (not test data)
+              prospects.forEach(p => p.is_test = false);
+              
               allProspects = allProspects.concat(prospects);
-              console.log(`✅ ${dataSource.toUpperCase()}: Total ${prospects.length} for ${industry}\n`);
+              console.log(`✅ ${dataSource.toUpperCase()}: Total ${prospects.length} for ${industry} (production data)\n`);
               
             } catch (error) {
               const errorMsg = `All sources failed: ${industry} in ${region}`;
