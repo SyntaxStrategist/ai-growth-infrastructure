@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { usePathname } from 'next/navigation';
 import { getTranslation } from '../translations/prospect-intelligence';
@@ -39,9 +39,10 @@ export default function EmailPreviewModal({
   console.log('🌍 Current Pathname:', pathname);
   const [sending, setSending] = useState(false);
   const [emailSubject, setEmailSubject] = useState('');
-  const [emailBody, setEmailBody] = useState(''); // HTML version
-  const [emailTextBody, setEmailTextBody] = useState(''); // Plain text version for editing
-  const [editedEmailText, setEditedEmailText] = useState(''); // User-edited version
+  const [emailBody, setEmailBody] = useState(''); // Original HTML version
+  const [emailTextBody, setEmailTextBody] = useState(''); // Plain text version
+  const [editedTextBody, setEditedTextBody] = useState(''); // User-edited text version
+  const [isEditMode, setIsEditMode] = useState(false); // Toggle between Preview and Edit
   const [editingEmail, setEditingEmail] = useState(false);
   const [manualEmail, setManualEmail] = useState('');
   const [emailError, setEmailError] = useState('');
@@ -94,9 +95,10 @@ export default function EmailPreviewModal({
     console.log('[EmailPreview] Email language:', locale === 'fr' ? 'French' : 'English');
 
     setEmailSubject(subject);
-    setEmailBody(template.html); // HTML version for sending
+    setEmailBody(template.html); // HTML version for preview
     setEmailTextBody(template.text); // Plain text version for editing
-    setEditedEmailText(template.text); // Initialize edited version with text template
+    setEditedTextBody(template.text); // Initialize edited version
+    setIsEditMode(false); // Start in preview mode
   };
 
   const handleSaveEmail = async () => {
@@ -165,9 +167,10 @@ export default function EmailPreviewModal({
     setSending(true);
     console.log('[EmailPreview] Sending email to:', emailToUse);
 
-    // Use edited text if available, otherwise use original
-    const finalTextBody = editedEmailText || emailTextBody;
-    console.log('[EmailPreview] Using edited text:', editedEmailText !== emailTextBody);
+    // Use edited text if user modified it, otherwise use original
+    const finalTextBody = editedTextBody || emailTextBody;
+    const isEdited = editedTextBody !== emailTextBody;
+    console.log('[EmailPreview] Using edited text:', isEdited);
 
     try {
       const response = await fetch('/api/prospect-intelligence/outreach', {
@@ -179,8 +182,8 @@ export default function EmailPreviewModal({
           prospect_id: prospect.id,
           to: emailToUse,
           subject: emailSubject,
-          htmlBody: emailBody, // Send HTML for rich email clients
-          textBody: finalTextBody, // Send edited or original text version
+          htmlBody: emailBody, // Send original HTML (preserves styling)
+          textBody: finalTextBody, // Send edited or original text
         }),
       });
 
@@ -325,20 +328,63 @@ export default function EmailPreviewModal({
               />
             </div>
 
-            {/* Body Preview - Editable */}
+            {/* Body Preview - Dual Mode (Preview/Edit) */}
             <div>
-              <label className="block text-sm text-white/70 mb-2">{t('messagePreview')}</label>
+              <div className="flex items-center justify-between mb-2">
+                <label className="block text-sm text-white/70">{t('messagePreview')}</label>
+                <button
+                  onClick={() => setIsEditMode(!isEditMode)}
+                  className="text-xs px-3 py-1 rounded bg-white/10 hover:bg-white/20 text-white/70 hover:text-white transition-colors"
+                >
+                  {isEditMode ? `👁️ ${t('previewMode')}` : `✏️ ${t('editMode')}`}
+                </button>
+              </div>
               
-              <textarea
-                value={editedEmailText}
-                onChange={(e) => setEditedEmailText(e.target.value)}
-                className="w-full h-[400px] px-4 py-3 rounded-lg bg-white/5 border-2 border-white/20 text-white focus:border-purple-400 focus:outline-none font-mono text-sm leading-relaxed resize-none shadow-lg"
-                disabled={sending}
-                placeholder={t('messagePreview')}
-              />
+              {!isEditMode ? (
+                // Preview Mode: Full HTML with all styling
+                <div className="rounded-lg border-2 border-white/20 shadow-lg bg-white overflow-hidden">
+                  <iframe
+                    srcDoc={emailBody}
+                    title="Email Preview"
+                    className="w-full h-[500px] border-0"
+                    sandbox="allow-scripts allow-same-origin allow-popups allow-top-navigation allow-popups-to-escape-sandbox"
+                    onLoad={(e) => {
+                      // Add click handler for demo links
+                      try {
+                        const iframe = e.currentTarget;
+                        const iframeDoc = iframe.contentDocument || iframe.contentWindow?.document;
+                        if (iframeDoc) {
+                          const demoLinks = iframeDoc.querySelectorAll('a[href*="demo"]');
+                          demoLinks.forEach((link) => {
+                            const href = link.getAttribute('href');
+                            link.addEventListener('click', (event) => {
+                              event.preventDefault();
+                              console.log('[EmailPreview] Demo link clicked:', href);
+                              if (href) {
+                                window.open(href, '_blank', 'noopener,noreferrer');
+                              }
+                            });
+                          });
+                        }
+                      } catch (err) {
+                        console.warn('[EmailPreview] Could not attach demo link handlers:', err);
+                      }
+                    }}
+                  />
+                </div>
+              ) : (
+                // Edit Mode: Plain text editable textarea
+                <textarea
+                  value={editedTextBody}
+                  onChange={(e) => setEditedTextBody(e.target.value)}
+                  className="w-full h-[500px] px-4 py-3 rounded-lg bg-white/5 border-2 border-purple-400/30 text-white focus:border-purple-400 focus:outline-none font-mono text-sm leading-relaxed resize-none shadow-lg"
+                  disabled={sending}
+                  placeholder={t('messagePreview')}
+                />
+              )}
               
               <p className="text-xs text-emerald-400/80 mt-2 flex items-center gap-1">
-                {t('editMessageNote')}
+                {isEditMode ? t('editMessageNote') : t('previewInfo')}
               </p>
             </div>
 
