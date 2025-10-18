@@ -30,8 +30,11 @@ const supabase = createClient(supabaseUrl, supabaseKey, {
 // Production Demo Data
 // ============================================
 
+// Fixed demo client ID for consistent seeding
+const demoClientId = '67b4bf03-74e9-4277-8806-45052547aa7c';
+
 const DEMO_CLIENT = {
-  client_id: uuidv4(), // Generate valid UUID for client_id
+  client_id: demoClientId, // Use fixed demo client ID
   business_name: 'Demo Client – Dashboard',
   contact_name: 'Demo Account',
   email: 'demo.client@aveniraisolutions.ca',
@@ -145,13 +148,15 @@ async function main() {
   console.log('');
   console.log('⚠️  PRODUCTION MODE - All data will be marked as is_test: true');
   console.log('');
+  console.log('[Seed] Using fixed demo client ID:', demoClientId);
+  console.log('');
   
   // Step 1: Check if demo client already exists
   console.log('🔍 Step 1: Checking for existing demo client...');
   const { data: existingClient, error: checkError } = await supabase
     .from('clients')
     .select('id, client_id, email, business_name')
-    .eq('email', DEMO_CLIENT.email)
+    .eq('client_id', demoClientId)
     .eq('is_test', true)
     .single();
   
@@ -204,7 +209,7 @@ async function main() {
     
     console.log('   ✅ Production demo client created');
     console.log('   ID:', clientDbId);
-    console.log('   Client ID (UUID):', clientId);
+    console.log('   Client ID (Fixed):', clientId);
     console.log('   Email:', DEMO_CLIENT.email);
     console.log('   Password:', DEMO_CLIENT.password);
     console.log('   Is Test:', DEMO_CLIENT.is_test);
@@ -374,7 +379,7 @@ async function main() {
   console.log('  • Business: Demo Client – Dashboard');
   console.log('  • Email:', DEMO_CLIENT.email);
   console.log('  • Password:', DEMO_CLIENT.password);
-  console.log('  • Client ID (UUID):', clientId);
+  console.log('  • Client ID (Fixed):', clientId);
   console.log('  • Database UUID:', clientDbId);
   console.log('  • Is Test: true ✅');
   console.log('  • Environment: PRODUCTION');
