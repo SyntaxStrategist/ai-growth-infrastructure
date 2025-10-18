@@ -30,6 +30,19 @@ export default function PredictiveGrowthEngine({ locale, clientId = null }: Pred
       ? 'Aucune donnée d\'analyse disponible. Les insights seront générés après la première analyse hebdomadaire.'
       : 'No analysis data available. Insights will be generated after the first weekly analysis.',
     lastAnalyzed: isFrench ? 'Dernière analyse' : 'Last Analyzed',
+    // Helper explanations for each metric
+    urgencyTrendHelp: isFrench 
+      ? 'Évolution du niveau d\'urgence des leads sur la période analysée'
+      : 'How lead urgency levels are changing over the analyzed period',
+    confidenceInsightHelp: isFrench 
+      ? 'Analyse de la fiabilité et de la qualité des leads détectés'
+      : 'Analysis of lead reliability and quality based on AI confidence scores',
+    toneInsightHelp: isFrench 
+      ? 'Sentiment et tonalité générale des messages des prospects'
+      : 'Overall sentiment and tone analysis of prospect messages',
+    languageRatioHelp: isFrench 
+      ? 'Répartition des leads par langue pour optimiser les communications'
+      : 'Lead distribution by language to optimize communication strategies',
   };
 
   useEffect(() => {
@@ -184,7 +197,8 @@ export default function PredictiveGrowthEngine({ locale, clientId = null }: Pred
               <span className="text-lg">📈</span>
             </div>
             <div className="flex-1">
-              <h4 className="text-sm font-semibold text-white/90 mb-2">{t.urgencyTrend}</h4>
+              <h4 className="text-sm font-semibold text-white/90 mb-1">{t.urgencyTrend}</h4>
+              <p className="text-xs text-white/50 mb-2">{t.urgencyTrendHelp}</p>
               <p className="text-sm text-white/70 leading-relaxed">
                 {insightData?.urgency_trend || 'N/A'}
               </p>
@@ -215,7 +229,8 @@ export default function PredictiveGrowthEngine({ locale, clientId = null }: Pred
               <span className="text-lg">🎯</span>
             </div>
             <div className="flex-1">
-              <h4 className="text-sm font-semibold text-white/90 mb-2">{t.confidenceInsight}</h4>
+              <h4 className="text-sm font-semibold text-white/90 mb-1">{t.confidenceInsight}</h4>
+              <p className="text-xs text-white/50 mb-2">{t.confidenceInsightHelp}</p>
               <p className="text-sm text-white/70 leading-relaxed">
                 {insightData?.confidence_insight || 'N/A'}
               </p>
@@ -242,7 +257,8 @@ export default function PredictiveGrowthEngine({ locale, clientId = null }: Pred
               <span className="text-lg">💬</span>
             </div>
             <div className="flex-1">
-              <h4 className="text-sm font-semibold text-white/90 mb-2">{t.toneInsight}</h4>
+              <h4 className="text-sm font-semibold text-white/90 mb-1">{t.toneInsight}</h4>
+              <p className="text-xs text-white/50 mb-2">{t.toneInsightHelp}</p>
               <p className="text-sm text-white/70 leading-relaxed">
                 {insightData?.tone_insight || 'N/A'}
               </p>
@@ -273,9 +289,10 @@ export default function PredictiveGrowthEngine({ locale, clientId = null }: Pred
               <span className="text-lg">🌐</span>
             </div>
             <div className="flex-1">
-              <h4 className="text-sm font-semibold text-white/90 mb-2">
+              <h4 className="text-sm font-semibold text-white/90 mb-1">
                 {isFrench ? 'Répartition Linguistique' : 'Language Ratio'}
               </h4>
+              <p className="text-xs text-white/50 mb-2">{t.languageRatioHelp}</p>
               <div className="space-y-2">
                 <div className="flex items-center justify-between text-xs">
                   <span className="text-white/60">EN</span>
