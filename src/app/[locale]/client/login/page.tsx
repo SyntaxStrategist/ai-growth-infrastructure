@@ -6,6 +6,7 @@ import { useLocale } from 'next-intl';
 import { motion } from 'framer-motion';
 import AvenirLogo from '../../../../components/AvenirLogo';
 import UniversalLanguageToggle from '../../../../components/UniversalLanguageToggle';
+import { isLegacyClientId, DEMO_CLIENT_EMAIL } from '../../../../lib/uuid-utils';
 
 export default function ClientLoginPage() {
   const locale = useLocale();
@@ -67,6 +68,12 @@ export default function ClientLoginPage() {
       }
 
       console.log('[ClientLogin] ✅ Login successful:', data.data);
+      
+      // Validate client_id format
+      if (data.data.clientId && isLegacyClientId(data.data.clientId)) {
+        console.log('[Fix] Invalid client_id detected in login response — this should not happen with new UUID system');
+        console.log('[Fix] Legacy client_id:', data.data.clientId);
+      }
       
       // Store client session
       localStorage.setItem('client_session', JSON.stringify(data.data));

@@ -8,6 +8,7 @@ import dynamic from 'next/dynamic';
 import AvenirLogo from '../../../../components/AvenirLogo';
 import UniversalLanguageToggle from '../../../../components/UniversalLanguageToggle';
 import type { LeadAction } from '../../../api/lead-actions/route';
+import { isLegacyClientId, DEMO_CLIENT_EMAIL } from '../../../../lib/uuid-utils';
 
 // Dynamic imports to prevent hydration mismatches
 const PredictiveGrowthEngine = dynamic(() => import('../../../../components/PredictiveGrowthEngine'), { 
@@ -143,12 +144,34 @@ export default function ClientDashboard() {
     },
   };
 
-  // Check for saved session
+  // Check for saved session and handle legacy client IDs
   useEffect(() => {
     const savedClient = localStorage.getItem('client_session');
     if (savedClient) {
       try {
         const clientData = JSON.parse(savedClient);
+        
+        // Check if client_id is in legacy string format
+        if (clientData.clientId && isLegacyClientId(clientData.clientId)) {
+          console.log('[Fix] Invalid client_id detected — refreshing session');
+          console.log('[Fix] Legacy client_id:', clientData.clientId);
+          
+          // Clear localStorage
+          localStorage.removeItem('client_session');
+          localStorage.removeItem('clientId');
+          
+          // If it's the demo client, automatically re-login
+          if (clientData.email === DEMO_CLIENT_EMAIL) {
+            console.log('[Fix] Auto-refreshing demo client session...');
+            handleAutoRefreshDemoClient(clientData.email, clientData.language);
+            return;
+          }
+          
+          // For other clients, just clear and let them re-login manually
+          console.log('[Fix] Session cleared — please log in again');
+          return;
+        }
+        
         setClient(clientData);
         setAuthenticated(true);
         // Ensure client_id is also stored separately for settings page
@@ -215,6 +238,50 @@ export default function ClientDashboard() {
       setLoginError(isFrench ? 'Identifiants invalides' : 'Invalid credentials');
     } finally {
       setLoading(false);
+    }
+  }
+
+  async function handleAutoRefreshDemoClient(email: string, language?: string) {
+    try {
+      console.log('[Fix] Attempting auto-refresh for demo client...');
+      
+      const res = await fetch('/api/client/auth', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          email, 
+          password: 'DemoAvenir2025!' // Demo client password
+        }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok || !data.success) {
+        throw new Error(data.error || 'Auto-refresh failed');
+      }
+
+      console.log('[Fix] ✅ Demo client auto-refresh successful:', data.data);
+      
+      // Store updated session with new UUID-based client_id
+      localStorage.setItem('client_session', JSON.stringify(data.data));
+      localStorage.setItem('clientId', data.data.clientId);
+      console.log('[Fix] ✅ Updated client_id stored:', data.data.clientId);
+      
+      // Preserve language preference
+      if (language) {
+        localStorage.setItem('avenir_language', language);
+        document.cookie = `avenir_language=${language}; path=/; max-age=31536000; SameSite=Lax`;
+        console.log('[Fix] ✅ Language preference preserved:', language);
+      }
+      
+      setClient(data.data);
+      setAuthenticated(true);
+
+    } catch (err) {
+      console.error('[Fix] ❌ Auto-refresh failed:', err);
+      // If auto-refresh fails, just clear the session
+      localStorage.removeItem('client_session');
+      localStorage.removeItem('clientId');
     }
   }
 
