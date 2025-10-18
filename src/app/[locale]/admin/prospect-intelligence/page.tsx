@@ -61,7 +61,7 @@ export default function ProspectIntelligencePage() {
   const [showToast, setShowToast] = useState(false);
   const [toastMessage, setToastMessage] = useState('');
   const [showOnlyHighPriority, setShowOnlyHighPriority] = useState(false);
-  const [showTestProspects, setShowTestProspects] = useState(false); // Toggle for test data
+  const [hideTestProspects, setHideTestProspects] = useState(false); // Toggle to hide test data
   const [sendingOutreach, setSendingOutreach] = useState<Record<string, boolean>>({});
   const [generatingProof, setGeneratingProof] = useState(false);
   
@@ -151,7 +151,7 @@ export default function ProspectIntelligencePage() {
     generating: isFrench ? 'Génération...' : 'Generating...',
     simulateFeedback: isFrench ? '🎲 Simuler feedback' : '🎲 Simulate Feedback',
     actions: isFrench ? 'Actions' : 'Actions',
-    showTestProspects: isFrench ? 'Afficher les prospects de test' : 'Show Test Prospects',
+    hideTestProspects: isFrench ? 'Masquer les prospects de test' : 'Hide Test Prospects',
     testDataLabel: isFrench ? '🧪 Données de test' : '🧪 Test Data',
   };
 
@@ -573,9 +573,9 @@ export default function ProspectIntelligencePage() {
 
   // Filter prospects based on toggle
   // Filter by test status first, then by priority
-  let filteredProspects = showTestProspects 
-    ? prospects // Show all (including test)
-    : prospects.filter(p => !p.is_test); // Hide test prospects by default
+  let filteredProspects = hideTestProspects 
+    ? prospects.filter(p => !p.is_test) // Hide test prospects when enabled
+    : prospects; // Show all by default
 
   // Then apply high-priority filter
   if (showOnlyHighPriority) {
@@ -586,7 +586,8 @@ export default function ProspectIntelligencePage() {
   console.log('[ProspectDashboard] 🎨 Rendering component...');
   console.log('[ProspectDashboard] Rendering PDL toggle:', serverConfig.hasPdl);
   console.log('[ProspectDashboard] Current serverConfig:', serverConfig);
-  console.log("✅ UI loaded: Prospect Intelligence Page, showTestProspects=", showTestProspects);
+  console.log("✅ UI loaded: Prospect Intelligence Page, hideTestProspects=", hideTestProspects);
+  console.log("🔍 hideTestProspects =", hideTestProspects, "Filtered count:", filteredProspects.length);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 via-blue-900 to-gray-900 text-white p-4 sm:p-8">
@@ -900,18 +901,18 @@ export default function ProspectIntelligencePage() {
                   <span className="text-sm text-white/70">{t.showOnlyHighPriority}</span>
                 </label>
 
-                {/* Show Test Prospects Toggle - Always Visible (Not Conditional) */}
+                {/* Hide Test Prospects Toggle - Always Visible (Not Conditional) */}
                 {(() => {
                   console.log("🧪 Rendering Test Mode toggle");
                   return (
                     <label className="flex items-center gap-2 cursor-pointer">
                       <input
                         type="checkbox"
-                        checked={showTestProspects}
-                        onChange={(e) => setShowTestProspects(e.target.checked)}
+                        checked={hideTestProspects}
+                        onChange={(e) => setHideTestProspects(e.target.checked)}
                         className="w-4 h-4 rounded border-white/20 bg-white/10 checked:bg-blue-500 focus:ring-2 focus:ring-blue-500"
                       />
-                      <span className="text-sm text-white/70">{t.showTestProspects}</span>
+                      <span className="text-sm text-white/70">{t.hideTestProspects}</span>
                     </label>
                   );
                 })()}
