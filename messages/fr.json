@@ -1,37 +1,37 @@
 {
   "hero": {
     "badge": "Avenir AI Solutions",
-    "title": "Nous construisons des infrastructures de croissance IA qui étudient, qualifient et agissent — pas seulement qui discutent.",
-    "subtitle": "De la première prise de contact jusqu'à la fidélisation, nos systèmes analysent l'intention, le ton et l'urgence en temps réel — transformant chaque échange en intelligence et chaque interaction en croissance.",
-    "button": "Parler à l'assistant IA"
+    "title": "L'infrastructure IA complète pour les entreprises modernes.",
+    "subtitle": "Transformez chaque interaction en intelligence actionnable. Nos systèmes IA analysent l'intention, l'urgence et les opportunités en temps réel — convertissant les conversations en conversions et les données en croissance.",
+    "button": "Voir Comment Ça Marche"
   },
   "framework": {
-    "title": "Notre cadre d'infrastructure",
+    "title": "Quatre Piliers de l'Intelligence de Croissance",
     "cards": {
       "acquisition": {
-        "title": "1️⃣ Intelligence d'acquisition",
-        "description": "Détectez et qualifiez chaque visiteur automatiquement."
+        "title": "Intelligence d'Acquisition",
+        "description": "Détectez, qualifiez et scorez automatiquement chaque prospect avec une analyse alimentée par l'IA."
       },
       "conversion": {
-        "title": "2️⃣ Intelligence de conversion",
-        "description": "Transformez les leads en clients avec des suivis adaptatifs."
+        "title": "Intelligence de Conversion",
+        "description": "Transformez les leads en clients avec une approche personnalisée et contextuelle."
       },
       "retention": {
-        "title": "3️⃣ Intelligence de rétention",
-        "description": "Renforcez la loyauté avec un engagement piloté par l'IA."
+        "title": "Intelligence de Rétention",
+        "description": "Prédisez et prévenez l'attrition avec des insights intelligents sur les relations."
       },
       "operational": {
-        "title": "4️⃣ Intelligence opérationnelle",
-        "description": "Automatisez les flux de travail backend pour que les équipes restent concentrées sur la croissance."
+        "title": "Intelligence Opérationnelle",
+        "description": "Rationalisez les flux de travail et automatisez la prise de décision dans votre stack de croissance."
       }
     }
   },
   "positioning": {
-    "tagline": "Nous ne créons pas de chatbots — nous construisons des infrastructures qui apprennent de chaque interaction."
+    "tagline": "Au-delà des chatbots. Nous construisons des systèmes intelligents qui comprennent, prédisent et agissent."
   },
   "demo": {
-    "title": "Voyez comment fonctionne notre intelligence artificielle",
-    "subtitle": "Données de démonstration uniquement",
+    "title": "Intelligence en Action",
+    "subtitle": "Analyse IA en direct d'interactions réelles",
     "fields": {
       "name": "Nom",
       "message": "Message",
@@ -72,22 +72,22 @@
     ]
   },
   "chat": {
-    "title": "Essayez l'assistant IA",
-    "placeholder": "Tapez un message...",
-    "send": "Envoyer",
-    "sending": "Envoi en cours...",
-    "error": "Quelque chose s'est mal passé"
+    "title": "Découvrez l'Intelligence IA",
+    "placeholder": "Parlez-nous de vos défis de croissance...",
+    "send": "Analyser",
+    "sending": "Analyse en cours...",
+    "error": "L'analyse a échoué. Veuillez réessayer."
   },
   "lead": {
-    "prompt": "Intéressé par un plan IA personnalisé ou un appel stratégique gratuit ? Partagez vos détails :",
-    "namePlaceholder": "Votre nom",
-    "emailPlaceholder": "Adresse e-mail",
-    "messagePlaceholder": "Votre message ou objectifs (optionnel mais recommandé)",
-    "submit": "Soumettre",
-    "success": "✅ Merci ! Un membre de l'équipe d'Avenir AI Solutions vous contactera sous peu.",
+    "prompt": "Prêt à transformer votre stratégie de croissance ? Discutons de vos besoins spécifiques :",
+    "namePlaceholder": "Nom complet",
+    "emailPlaceholder": "E-mail professionnel",
+    "messagePlaceholder": "Parlez-nous de vos défis et objectifs de croissance",
+    "submit": "Commencer",
+    "success": "✅ Merci ! Nos stratèges de croissance vous contacteront dans les 24 heures.",
     "validation": {
-      "required": "Veuillez entrer votre nom, e-mail et un court message.",
-      "email": "Veuillez entrer une adresse e-mail valide."
+      "required": "Veuillez fournir votre nom, e-mail et objectifs de croissance.",
+      "email": "Veuillez entrer une adresse e-mail professionnelle valide."
     }
   },
   "email": {

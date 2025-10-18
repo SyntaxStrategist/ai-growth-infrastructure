@@ -1,37 +1,37 @@
 {
   "hero": {
     "badge": "Avenir AI Solutions",
-    "title": "We build AI growth infrastructures that study, qualify, and act — not just chat.",
-    "subtitle": "From lead to loyalty, our systems analyze intent, tone, and urgency in real time — turning every conversation into intelligence and every interaction into growth.",
-    "button": "Talk to the AI Assistant"
+    "title": "The complete AI growth infrastructure for modern businesses.",
+    "subtitle": "Transform every interaction into actionable intelligence. Our AI systems analyze intent, urgency, and opportunity in real-time — turning conversations into conversions and data into growth.",
+    "button": "See How It Works"
   },
   "framework": {
-    "title": "Our Infrastructure Framework",
+    "title": "Four Pillars of Growth Intelligence",
     "cards": {
       "acquisition": {
-        "title": "1️⃣ Acquisition Intelligence",
-        "description": "Detect and qualify every visitor automatically."
+        "title": "Acquisition Intelligence",
+        "description": "Automatically detect, qualify, and score every prospect with AI-powered analysis."
       },
       "conversion": {
-        "title": "2️⃣ Conversion Intelligence", 
-        "description": "Turn leads into clients with adaptive follow-ups."
+        "title": "Conversion Intelligence", 
+        "description": "Transform leads into customers with personalized, context-aware outreach."
       },
       "retention": {
-        "title": "3️⃣ Retention Intelligence",
-        "description": "Strengthen loyalty with AI-driven engagement."
+        "title": "Retention Intelligence",
+        "description": "Predict and prevent churn with intelligent relationship insights."
       },
       "operational": {
-        "title": "4️⃣ Operational Intelligence",
-        "description": "Automate back-end workflows so teams stay focused on growth."
+        "title": "Operational Intelligence",
+        "description": "Streamline workflows and automate decision-making across your entire growth stack."
       }
     }
   },
   "positioning": {
-    "tagline": "We don't build chatbots — we build infrastructures that learn from every interaction."
+    "tagline": "Beyond chatbots. We build intelligent systems that understand, predict, and act."
   },
   "demo": {
-    "title": "See How Our AI Intelligence Works",
-    "subtitle": "Demo data only",
+    "title": "Intelligence in Action",
+    "subtitle": "Live AI analysis of real interactions",
     "fields": {
       "name": "Name",
       "message": "Message",
@@ -72,22 +72,22 @@
     ]
   },
   "chat": {
-    "title": "Try the AI Assistant",
-    "placeholder": "Type a message...",
-    "send": "Send",
-    "sending": "Sending...",
-    "error": "Something went wrong"
+    "title": "Experience AI Intelligence",
+    "placeholder": "Ask about your growth challenges...",
+    "send": "Analyze",
+    "sending": "Analyzing...",
+    "error": "Analysis failed. Please try again."
   },
   "lead": {
-    "prompt": "Interested in a custom AI plan or a free strategy call? Share your details:",
-    "namePlaceholder": "Your name",
-    "emailPlaceholder": "Email address",
-    "messagePlaceholder": "Your message or goals (optional but recommended)",
-    "submit": "Submit",
-    "success": "✅ Thanks! A team member from Avenir AI Solutions will reach out shortly.",
+    "prompt": "Ready to transform your growth strategy? Let's discuss your specific needs:",
+    "namePlaceholder": "Full name",
+    "emailPlaceholder": "Business email",
+    "messagePlaceholder": "Tell us about your growth challenges and goals",
+    "submit": "Get Started",
+    "success": "✅ Thank you! Our growth strategists will contact you within 24 hours.",
     "validation": {
-      "required": "Please enter your name, email, and a short message.",
-      "email": "Please enter a valid email address."
+      "required": "Please provide your name, email, and growth goals.",
+      "email": "Please enter a valid business email address."
     }
   },
   "email": {
