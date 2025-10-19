@@ -83,6 +83,7 @@ export default function ClientDashboard() {
     topIntent: '',
     highUrgency: 0,
   });
+  const [isIntentTruncated, setIsIntentTruncated] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [leadsPerPage] = useState(5);
   const [pagination, setPagination] = useState({
@@ -91,6 +92,24 @@ export default function ClientDashboard() {
     hasNextPage: false,
     hasPrevPage: false
   });
+
+  // Check if intent text is truncated
+  useEffect(() => {
+    const checkTruncation = () => {
+      const intentElement = document.querySelector('[data-intent-text]') as HTMLDivElement;
+      if (intentElement) {
+        const truncated = intentElement.scrollWidth > intentElement.clientWidth;
+        setIsIntentTruncated(truncated);
+      }
+    };
+
+    // Check on mount and when stats change
+    checkTruncation();
+    
+    // Also check on window resize
+    window.addEventListener('resize', checkTruncation);
+    return () => window.removeEventListener('resize', checkTruncation);
+  }, [stats.topIntent]);
 
   const t = {
     loginTitle: isFrench ? 'Connexion Client' : 'Client Login',
@@ -851,11 +870,18 @@ export default function ClientDashboard() {
             className="group rounded-lg border border-white/10 p-4 bg-gradient-to-br from-blue-500/10 to-purple-500/10 hover:border-blue-400/30 hover:shadow-[0_0_20px_rgba(59,130,246,0.2)] transition-all duration-300"
           >
             <div className="text-sm text-white/60 mb-1">{t.topIntent}</div>
-            <div 
-              className="text-xl font-semibold whitespace-nowrap overflow-hidden text-ellipsis max-w-full" 
-              title={stats.topIntent}
-            >
-              {stats.topIntent}
+            <div className="relative">
+              <div 
+                className="text-lg font-semibold whitespace-nowrap overflow-hidden text-ellipsis max-w-full group"
+                data-intent-text
+              >
+                {stats.topIntent}
+              </div>
+              {isIntentTruncated && (
+                <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 bg-gray-900 text-white text-sm px-3 py-1 rounded-md shadow-lg whitespace-normal max-w-[250px] opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none z-10">
+                  {stats.topIntent}
+                </div>
+              )}
             </div>
           </motion.div>
           
