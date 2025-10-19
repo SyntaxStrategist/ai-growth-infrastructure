@@ -9,6 +9,7 @@ import AvenirLogo from '../../../../components/AvenirLogo';
 import UniversalLanguageToggle from '../../../../components/UniversalLanguageToggle';
 import type { LeadAction } from '../../../api/lead-actions/route';
 import { isLegacyClientId, DEMO_CLIENT_EMAIL } from '../../../../lib/uuid-utils';
+import { restoreSession, saveSession, clearSession, type ClientData } from '../../../../utils/session';
 
 // Dynamic imports to prevent hydration mismatches
 const PredictiveGrowthEngine = dynamic(() => import('../../../../components/PredictiveGrowthEngine'), { 
@@ -27,15 +28,7 @@ const RelationshipInsights = dynamic(() => import('../../../../components/Relati
   loading: () => <div className="h-48 animate-pulse bg-white/5 rounded-xl border border-white/10"></div>
 });
 
-type ClientData = {
-  id: string;
-  clientId: string;
-  businessName: string;
-  contactName: string;
-  email: string;
-  language: string;
-  apiKey: string;
-};
+// ClientData type is now imported from session utility
 
 type Lead = {
   id: string;
@@ -161,45 +154,45 @@ export default function ClientDashboard() {
     },
   };
 
-  // Check for saved session and handle legacy client IDs
+  // Restore session using the session utility
   useEffect(() => {
-    const savedClient = localStorage.getItem('client_session');
-    if (savedClient) {
-      try {
-        const clientData = JSON.parse(savedClient);
+    console.log('[AuthFix] ============================================');
+    console.log('[AuthFix] Client Dashboard: Restoring session...');
+    
+    const sessionState = restoreSession();
+    
+    if (sessionState.isAuthenticated && sessionState.client) {
+      const clientData = sessionState.client;
+      
+      // Check if client_id is in legacy string format
+      if (clientData.clientId && isLegacyClientId(clientData.clientId)) {
+        console.log('[AuthFix] Invalid client_id detected — refreshing session');
+        console.log('[AuthFix] Legacy client_id:', clientData.clientId);
         
-        // Check if client_id is in legacy string format
-        if (clientData.clientId && isLegacyClientId(clientData.clientId)) {
-          console.log('[Fix] Invalid client_id detected — refreshing session');
-          console.log('[Fix] Legacy client_id:', clientData.clientId);
-          
-          // Clear localStorage
-          localStorage.removeItem('client_session');
-          localStorage.removeItem('clientId');
-          
-          // If it's the demo client, automatically re-login
-          if (clientData.email === DEMO_CLIENT_EMAIL) {
-            console.log('[Fix] Auto-refreshing demo client session...');
-            handleAutoRefreshDemoClient(clientData.email, clientData.language);
-            return;
-          }
-          
-          // For other clients, just clear and let them re-login manually
-          console.log('[Fix] Session cleared — please log in again');
+        // Clear session using utility
+        clearSession();
+        
+        // If it's the demo client, automatically re-login
+        if (clientData.email === DEMO_CLIENT_EMAIL) {
+          console.log('[AuthFix] Auto-refreshing demo client session...');
+          handleAutoRefreshDemoClient(clientData.email, clientData.language);
           return;
         }
         
-        setClient(clientData);
-        setAuthenticated(true);
-        // Ensure client_id is also stored separately for settings page
-        if (clientData.clientId) {
-          localStorage.setItem('clientId', clientData.clientId);
-        }
-      } catch {
-        localStorage.removeItem('client_session');
-        localStorage.removeItem('clientId');
+        // For other clients, just clear and let them re-login manually
+        console.log('[AuthFix] Session cleared — please log in again');
+        return;
       }
+      
+      // Session is valid, restore it
+      setClient(clientData);
+      setAuthenticated(true);
+      console.log('[AuthFix] Session restored successfully in dashboard');
+    } else {
+      console.log('[AuthFix] No valid session found');
     }
+    
+    console.log('[AuthFix] ============================================');
   }, []);
 
   // Fetch client leads when authenticated or tab changes
@@ -641,10 +634,22 @@ export default function ClientDashboard() {
   }
 
   function handleLogout() {
-    localStorage.removeItem('client_session');
+    console.log('[AuthFix] ============================================');
+    console.log('[AuthFix] Logging out user...');
+    
+    // Clear all session data using utility
+    clearSession();
+    
+    // Reset component state
     setAuthenticated(false);
     setClient(null);
     setLeads([]);
+    
+    console.log('[AuthFix] Logout completed, redirecting to login...');
+    console.log('[AuthFix] ============================================');
+    
+    // Redirect to login page
+    router.push(`/${locale}/client/login`);
   }
 
   // Server-side pagination - leads are already paginated from API
