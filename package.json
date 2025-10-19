@@ -20,7 +20,9 @@
     "seed-prod-demo": "node scripts/seed-production-demo-client.js",
     "seed-demo-full": "node scripts/seed-demo-full.js",
     "fix-growth-brain": "node scripts/apply-growth-brain-fix.js",
-    "seed:dictionary": "node scripts/seed-translation-dictionary.js"
+    "seed:dictionary": "node scripts/seed-translation-dictionary.js",
+    "seed:large-dictionary": "node scripts/seed-large-dictionary.js",
+    "test:fuzzy-matching": "node scripts/test-fuzzy-matching.js"
   },
   "dependencies": {
     "@prisma/client": "^6.17.1",

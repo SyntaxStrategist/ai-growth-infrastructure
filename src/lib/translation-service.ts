@@ -56,8 +56,8 @@ const CONFIG = {
 } as const;
 
 /**
- * Layer 1: Dictionary Lookup
- * Searches the curated bilingual dictionary for instant translations
+ * Layer 1: Dictionary Lookup with Fuzzy Matching
+ * Searches the curated bilingual dictionary using exact and fuzzy matching
  */
 async function lookupInDictionary(
   text: string, 
@@ -76,67 +76,156 @@ async function lookupInDictionary(
     const sourceLang = isEnglishToFrench ? 'en' : 'fr';
     const targetLang = isEnglishToFrench ? 'fr' : 'en';
     
-    // Query dictionary
-    const { data, error } = await supabase
-      .from('translation_dictionary')
-      .select('english_text, french_text, priority, category, context')
-      .eq('is_active', true)
-      .or(
-        isEnglishToFrench 
-          ? `english_text.ilike.%${normalizedText}%`
-          : `french_text.ilike.%${normalizedText}%`
-      )
-      .order('priority', { ascending: false })
-      .limit(5);
-
-    if (error) {
-      console.error('❌ [TranslationService] Dictionary lookup error:', error);
-      return null;
-    }
-
-    if (!data || data.length === 0) {
-      console.log(`📚 [TranslationService] No dictionary match found for "${text}"`);
-      return null;
-    }
-
-    // Find best match (exact or closest)
-    let bestMatch = null;
-    let bestScore = 0;
-
-    for (const entry of data) {
-      const sourceText = isEnglishToFrench ? entry.english_text : entry.french_text;
-      const targetText = isEnglishToFrench ? entry.french_text : entry.english_text;
-      
-      // Calculate similarity score
-      const similarity = calculateSimilarity(normalizedText, sourceText.toLowerCase());
-      const priorityBonus = entry.priority / 10; // Priority 1-10 becomes 0.1-1.0
-      const score = similarity + priorityBonus;
-      
-      if (score > bestScore) {
-        bestScore = score;
-        bestMatch = { text: targetText, entry };
-      }
-    }
-
-    // Only return if we have a good match (similarity > 0.7)
-    if (bestMatch && bestScore > 0.7) {
+    // Step 1: Try exact match first
+    const exactMatch = await tryExactMatch(normalizedText, isEnglishToFrench);
+    if (exactMatch) {
       const processingTime = Date.now() - startTime;
-      console.log(`✅ [TranslationService] Dictionary hit: "${text}" → "${bestMatch.text}" (score: ${bestScore.toFixed(2)})`);
+      console.log(`✅ [TranslationService] Dictionary exact match: "${text}" → "${exactMatch.translated}"`);
       
       return {
-        translated: bestMatch.text,
+        translated: exactMatch.translated,
         source: 'dictionary',
-        confidence: Math.min(bestScore, 1.0),
+        confidence: 1.0,
+        cached: true,
+        processingTime
+      };
+    }
+    
+    // Step 2: Try fuzzy match using PostgreSQL pg_trgm
+    const fuzzyMatch = await tryFuzzyMatch(normalizedText, isEnglishToFrench);
+    if (fuzzyMatch) {
+      const processingTime = Date.now() - startTime;
+      console.log(`🎯 [Dictionary-Fuzzy] Similarity ${fuzzyMatch.similarity.toFixed(2)} → using "${fuzzyMatch.translated}"`);
+      
+      return {
+        translated: fuzzyMatch.translated,
+        source: 'dictionary',
+        confidence: fuzzyMatch.similarity,
         cached: true,
         processingTime
       };
     }
 
-    console.log(`📚 [TranslationService] Dictionary match too weak (score: ${bestScore.toFixed(2)})`);
+    console.log(`📚 [TranslationService] No dictionary match found for "${text}"`);
     return null;
 
   } catch (error) {
     console.error('❌ [TranslationService] Dictionary lookup failed:', error);
+    return null;
+  }
+}
+
+/**
+ * Try exact match in dictionary
+ */
+async function tryExactMatch(
+  normalizedText: string, 
+  isEnglishToFrench: boolean
+): Promise<{ translated: string } | null> {
+  try {
+    const { data, error } = await supabase
+      .from('translation_dictionary')
+      .select('english_text, french_text, priority')
+      .eq('is_active', true)
+      .eq(isEnglishToFrench ? 'english_text' : 'french_text', normalizedText)
+      .order('priority', { ascending: false })
+      .limit(1)
+      .single();
+
+    if (error || !data) {
+      return null;
+    }
+
+    const translated = isEnglishToFrench ? data.french_text : data.english_text;
+    return { translated };
+
+  } catch (error) {
+    console.error('❌ [TranslationService] Exact match failed:', error);
+    return null;
+  }
+}
+
+/**
+ * Try fuzzy match using PostgreSQL pg_trgm similarity
+ */
+async function tryFuzzyMatch(
+  normalizedText: string, 
+  isEnglishToFrench: boolean
+): Promise<{ translated: string; similarity: number } | null> {
+  try {
+    const sourceColumn = isEnglishToFrench ? 'english_text' : 'french_text';
+    const targetColumn = isEnglishToFrench ? 'french_text' : 'english_text';
+    
+    // Use PostgreSQL similarity function with pg_trgm
+    const { data, error } = await supabase
+      .rpc('fuzzy_dictionary_lookup', {
+        search_text: normalizedText,
+        source_column: sourceColumn,
+        target_column: targetColumn,
+        similarity_threshold: 0.7
+      });
+
+    if (error) {
+      console.error('❌ [TranslationService] Fuzzy match RPC failed:', error);
+      
+      // Fallback to manual fuzzy matching if RPC doesn't exist
+      return await manualFuzzyMatch(normalizedText, isEnglishToFrench);
+    }
+
+    if (!data || data.length === 0) {
+      return null;
+    }
+
+    const bestMatch = data[0];
+    return {
+      translated: bestMatch.translated_text,
+      similarity: bestMatch.similarity
+    };
+
+  } catch (error) {
+    console.error('❌ [TranslationService] Fuzzy match failed:', error);
+    return null;
+  }
+}
+
+/**
+ * Manual fuzzy matching fallback (if RPC function doesn't exist)
+ */
+async function manualFuzzyMatch(
+  normalizedText: string, 
+  isEnglishToFrench: boolean
+): Promise<{ translated: string; similarity: number } | null> {
+  try {
+    const { data, error } = await supabase
+      .from('translation_dictionary')
+      .select('english_text, french_text, priority')
+      .eq('is_active', true)
+      .limit(100); // Get a reasonable sample for manual matching
+
+    if (error || !data) {
+      return null;
+    }
+
+    let bestMatch = null;
+    let bestSimilarity = 0;
+
+    for (const entry of data) {
+      const sourceText = isEnglishToFrench ? entry.english_text : entry.french_text;
+      const targetText = isEnglishToFrench ? entry.french_text : entry.english_text;
+      
+      // Calculate similarity using trigram-like approach
+      const similarity = calculateTrigramSimilarity(normalizedText, sourceText.toLowerCase());
+      
+      if (similarity > bestSimilarity && similarity > 0.7) {
+        bestSimilarity = similarity;
+        bestMatch = { translated: targetText, similarity };
+      }
+    }
+
+    return bestMatch;
+
+  } catch (error) {
+    console.error('❌ [TranslationService] Manual fuzzy match failed:', error);
     return null;
   }
 }
@@ -338,6 +427,38 @@ function calculateSimilarity(text1: string, text2: string): number {
 }
 
 /**
+ * Calculate trigram-based similarity (fallback for manual fuzzy matching)
+ */
+function calculateTrigramSimilarity(text1: string, text2: string): number {
+  if (!text1 || !text2) return 0;
+  
+  const trigrams1 = generateTrigrams(text1);
+  const trigrams2 = generateTrigrams(text2);
+  
+  const set1 = new Set(trigrams1);
+  const set2 = new Set(trigrams2);
+  
+  const intersection = new Set([...set1].filter(x => set2.has(x)));
+  const union = new Set([...set1, ...set2]);
+  
+  return union.size > 0 ? intersection.size / union.size : 0;
+}
+
+/**
+ * Generate trigrams from text
+ */
+function generateTrigrams(text: string): string[] {
+  const trigrams: string[] = [];
+  const padded = `  ${text}  `; // Pad with spaces
+  
+  for (let i = 0; i < padded.length - 2; i++) {
+    trigrams.push(padded.substring(i, i + 3));
+  }
+  
+  return trigrams;
+}
+
+/**
  * Main translation function - 3-layer pipeline
  */
 export async function translateText(
@@ -486,3 +607,4 @@ export async function clearExpiredCache(): Promise<number> {
     return 0;
   }
 }
+
