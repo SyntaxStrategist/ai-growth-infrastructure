@@ -42,6 +42,9 @@ export default function ClientLoginPage() {
     e.preventDefault();
     setError('');
 
+    console.log('[AuthFix] ============================================');
+    console.log('[AuthFix] Login button clicked');
+
     // Validation
     if (!email || !password) {
       setError(t.requiredFields);
@@ -51,8 +54,7 @@ export default function ClientLoginPage() {
     setLoading(true);
 
     try {
-      console.log('[AuthFix] ============================================');
-      console.log('[AuthFix] Login submitted');
+      console.log('[AuthFix] POST /api/client/auth started');
       console.log('[AuthFix] Email:', email);
       console.log('[AuthFix] Locale:', locale);
 
@@ -93,6 +95,7 @@ export default function ClientLoginPage() {
       router.push(dashboardPath);
 
     } catch (err) {
+      console.log('[AuthFix] Login failed');
       console.error('[AuthFix] ❌ Login error:', err);
       setError(err instanceof Error ? err.message : t.invalidCredentials);
     } finally {
