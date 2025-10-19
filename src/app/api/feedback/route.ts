@@ -245,7 +245,7 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({
         success: true,
         action,
-        data: result.data || result.analysis || result.stats,
+        data: ('data' in result ? result.data : ('analysis' in result ? result.analysis : ('stats' in result ? result.stats : null))),
         metadata: {
           client_id: clientId,
           days_back: daysBack,
