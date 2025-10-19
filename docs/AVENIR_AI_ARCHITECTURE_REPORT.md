@@ -1594,7 +1594,7 @@ Vercel Build Trigger
 │  Build Process                          │
 │  1. npm install                         │
 │  2. prisma generate                     │
-│  3. next build --turbopack              │
+│  3. next build                          │
 │  4. Optimize assets                     │
 │  5. Generate static pages (SSG)         │
 └─────────────┬───────────────────────────┘
