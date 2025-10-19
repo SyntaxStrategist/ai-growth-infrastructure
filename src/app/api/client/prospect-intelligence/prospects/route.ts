@@ -43,6 +43,9 @@ export async function GET(req: NextRequest) {
     }
 
     // Build query based on client's ICP data
+    console.log('[ClientProspectAPI] Building prospect query...');
+    console.log('[ClientProspectAPI] Client ICP data:', JSON.stringify(client.icp_data, null, 2));
+    
     let query = supabase
       .from('prospect_candidates')
       .select('*')
@@ -50,16 +53,24 @@ export async function GET(req: NextRequest) {
 
     // Filter by industry if specified in ICP data
     if (client.industry_category) {
+      console.log('[ClientProspectAPI] Filtering by industry:', client.industry_category);
       query = query.ilike('industry', `%${client.industry_category}%`);
     }
 
     // Filter by minimum score based on ICP data
-    const minScore = calculateMinScoreFromICP(client.icp_data);
-    query = query.gte('automation_need_score', minScore);
+    try {
+      const minScore = calculateMinScoreFromICP(client.icp_data);
+      console.log('[ClientProspectAPI] Minimum score calculated:', minScore);
+      query = query.gte('automation_need_score', minScore);
+    } catch (scoreError) {
+      console.error('[ClientProspectAPI] Error calculating min score:', scoreError);
+      // Continue without score filter if calculation fails
+    }
 
     // Limit results for performance
     query = query.limit(50);
 
+    console.log('[ClientProspectAPI] Executing prospect query...');
     const { data, error } = await query;
 
     if (error) {
@@ -90,38 +101,86 @@ export async function GET(req: NextRequest) {
 }
 
 /**
+ * Extract industries from client ICP data
+ */
+function extractIndustriesFromICP(icpData: any, clientInfo: any): string[] {
+  const industries: string[] = [];
+  
+  // Use client's industry category as primary
+  if (clientInfo.industry_category) {
+    industries.push(clientInfo.industry_category);
+  }
+  
+  // Extract from target client type
+  if (icpData.target_client_type) {
+    const targetType = icpData.target_client_type.toLowerCase();
+    
+    // Map common target types to industries
+    if (targetType.includes('e-commerce') || targetType.includes('ecommerce')) {
+      industries.push('E-commerce');
+    }
+    if (targetType.includes('real estate')) {
+      industries.push('Real Estate');
+    }
+    if (targetType.includes('saas') || targetType.includes('software')) {
+      industries.push('Software');
+    }
+    if (targetType.includes('marketing') || targetType.includes('agency')) {
+      industries.push('Marketing');
+    }
+    if (targetType.includes('consulting')) {
+      industries.push('Consulting');
+    }
+  }
+  
+  // Remove duplicates and return
+  return [...new Set(industries)];
+}
+
+/**
  * Calculate minimum score based on ICP data
  */
 function calculateMinScoreFromICP(icpData: any): number {
-  let baseScore = 70; // Default minimum score
-  
-  // Adjust based on business goal
-  if (icpData.main_business_goal) {
-    switch (icpData.main_business_goal) {
-      case 'Generate more qualified leads':
-        baseScore = 75; // Higher quality leads needed
-        break;
-      case 'Improve follow-ups and conversions':
-        baseScore = 70; // Standard score
-        break;
-      case 'Nurture existing clients':
-        baseScore = 65; // Lower threshold for nurturing
-        break;
-      case 'Save time with automation':
-        baseScore = 80; // High automation readiness needed
-        break;
+  try {
+    let baseScore = 70; // Default minimum score
+    
+    // Safety check for icpData
+    if (!icpData || typeof icpData !== 'object') {
+      console.log('[ClientProspectAPI] Invalid ICP data, using default score');
+      return baseScore;
     }
-  }
-  
-  // Adjust based on deal size (higher deal size = higher score threshold)
-  if (icpData.average_deal_size) {
-    const dealSize = icpData.average_deal_size.toLowerCase();
-    if (dealSize.includes('$10,000') || dealSize.includes('$10000')) {
-      baseScore += 10; // Higher value deals
-    } else if (dealSize.includes('$5,000') || dealSize.includes('$5000')) {
-      baseScore += 5; // Medium value deals
+    
+    // Adjust based on business goal
+    if (icpData.main_business_goal && typeof icpData.main_business_goal === 'string') {
+      switch (icpData.main_business_goal) {
+        case 'Generate more qualified leads':
+          baseScore = 75; // Higher quality leads needed
+          break;
+        case 'Improve follow-ups and conversions':
+          baseScore = 70; // Standard score
+          break;
+        case 'Nurture existing clients':
+          baseScore = 65; // Lower threshold for nurturing
+          break;
+        case 'Save time with automation':
+          baseScore = 80; // High automation readiness needed
+          break;
+      }
     }
+    
+    // Adjust based on deal size (higher deal size = higher score threshold)
+    if (icpData.average_deal_size && typeof icpData.average_deal_size === 'string') {
+      const dealSize = icpData.average_deal_size.toLowerCase();
+      if (dealSize.includes('$10,000') || dealSize.includes('$10000')) {
+        baseScore += 10; // Higher value deals
+      } else if (dealSize.includes('$5,000') || dealSize.includes('$5000')) {
+        baseScore += 5; // Medium value deals
+      }
+    }
+    
+    return Math.min(baseScore, 90); // Cap at 90
+  } catch (error) {
+    console.error('[ClientProspectAPI] Error in calculateMinScoreFromICP:', error);
+    return 70; // Return default score on error
   }
-  
-  return Math.min(baseScore, 90); // Cap at 90
 }
