@@ -27,6 +27,11 @@ export default function ClientSettings() {
     language: 'en',
     aiPersonalizedReply: true,
     businessName: '',
+    // ICP fields
+    targetClientType: '',
+    averageDealSize: '',
+    mainBusinessGoal: '',
+    biggestChallenge: '',
   });
 
   const t = {
@@ -52,6 +57,17 @@ export default function ClientSettings() {
     backToDashboard: isFrench ? '← Retour au tableau de bord' : '← Back to Dashboard',
     loading: isFrench ? 'Chargement...' : 'Loading...',
     noClientId: isFrench ? 'Aucun ID client trouvé. Veuillez vous reconnecter.' : 'No client ID found. Please log in again.',
+    // ICP translations
+    icpSection: isFrench ? 'Profil Client Idéal (ICP)' : 'Ideal Client Profile (ICP)',
+    targetClientType: isFrench ? 'Type de client cible' : 'Target Client Type',
+    targetClientTypePlaceholder: isFrench ? 'Ex: Petites boutiques en ligne, agents immobiliers' : 'E.g., Small e-commerce stores, real estate agents',
+    averageDealSize: isFrench ? 'Taille moyenne des contrats' : 'Average Deal Size',
+    averageDealSizePlaceholder: isFrench ? 'Ex: 2 000 $ - 5 000 $ (optionnel)' : 'E.g., $2,000 - $5,000 (optional)',
+    mainBusinessGoal: isFrench ? 'Objectif commercial principal' : 'Main Business Goal',
+    biggestChallenge: isFrench ? 'Défi principal actuel' : 'Biggest Challenge Right Now',
+    biggestChallengePlaceholder: isFrench ? 'Ex: Convertir les visiteurs en prospects' : 'E.g., Converting website visitors into leads',
+    icpHelperText: isFrench ? 'Vous pouvez modifier ces informations à tout moment. Avenir AI utilise ces données pour personnaliser vos résultats de prospection.' : 'You can edit these anytime. Avenir AI uses this information to personalize your prospect intelligence results.',
+    icpSuccessToast: isFrench ? '✅ Profil client idéal mis à jour avec succès' : '✅ ICP data updated successfully',
   };
 
   const toneOptions = [
@@ -65,6 +81,13 @@ export default function ClientSettings() {
     { value: 'Instant', label: isFrench ? 'Instantané' : 'Instant' },
     { value: 'Within 1 hour', label: isFrench ? 'Dans l\'heure' : 'Within 1 hour' },
     { value: 'Same day', label: isFrench ? 'Le jour même' : 'Same day' },
+  ];
+
+  const businessGoalOptions = [
+    { value: 'Generate more qualified leads', label: isFrench ? 'Générer plus de prospects qualifiés' : 'Generate more qualified leads' },
+    { value: 'Improve follow-ups and conversions', label: isFrench ? 'Améliorer les suivis et conversions' : 'Improve follow-ups and conversions' },
+    { value: 'Nurture existing clients', label: isFrench ? 'Fidéliser les clients existants' : 'Nurture existing clients' },
+    { value: 'Save time with automation', label: isFrench ? 'Gagner du temps avec l\'automatisation' : 'Save time with automation' },
   ];
 
   // Load current settings
@@ -84,6 +107,9 @@ export default function ClientSettings() {
         const data = await res.json();
 
         if (data.success && data.data) {
+          // Extract ICP data from icp_data JSONB column
+          const icpData = data.data.icp_data || {};
+          
           setSettings({
             industryCategory: data.data.industry_category || '',
             primaryService: data.data.primary_service || '',
@@ -94,6 +120,11 @@ export default function ClientSettings() {
             language: data.data.language || 'en',
             aiPersonalizedReply: data.data.ai_personalized_reply ?? true,
             businessName: data.data.business_name || '',
+            // ICP fields
+            targetClientType: icpData.target_client_type || '',
+            averageDealSize: icpData.average_deal_size || '',
+            mainBusinessGoal: icpData.main_business_goal || '',
+            biggestChallenge: icpData.biggest_challenge || '',
           });
           console.log('[ClientSettings] ✅ Settings loaded:', data.data);
         }
@@ -133,6 +164,11 @@ export default function ClientSettings() {
         followupSpeed: settings.followupSpeed,
         language: settings.language,
         aiPersonalizedReply: settings.aiPersonalizedReply,
+        // ICP fields
+        targetClientType: settings.targetClientType,
+        averageDealSize: settings.averageDealSize,
+        mainBusinessGoal: settings.mainBusinessGoal,
+        biggestChallenge: settings.biggestChallenge,
       };
 
       console.log('[ClientSettings] ============================================');
@@ -157,7 +193,10 @@ export default function ClientSettings() {
       if (data.success) {
         console.log('[ClientSettings] ✅ Preferences saved successfully');
         console.log('[ClientSettings] Client ID:', clientId);
-        setToastMessage(t.successToast);
+        // Use ICP-specific success message if any ICP fields were updated
+        const hasIcpChanges = settings.targetClientType || settings.averageDealSize || 
+                             settings.mainBusinessGoal || settings.biggestChallenge;
+        setToastMessage(hasIcpChanges ? t.icpSuccessToast : t.successToast);
         setShowToast(true);
         setHasUnsavedChanges(false);
         setTimeout(() => setShowToast(false), 3000);
@@ -307,6 +346,71 @@ ${settings.businessName}${tagline}`;
                 placeholder="https://calendly.com/yourname"
               />
             </div>
+          </div>
+        </div>
+
+        {/* Ideal Client Profile (ICP) Section */}
+        <div className="bg-white/5 backdrop-blur-sm rounded-xl p-6 mb-6 border border-white/10">
+          <h2 className="text-xl font-semibold mb-4 text-green-400">{t.icpSection}</h2>
+          
+          <div className="space-y-4">
+            {/* Target Client Type */}
+            <div>
+              <label className="block text-sm font-medium mb-2">{t.targetClientType}</label>
+              <input
+                type="text"
+                value={settings.targetClientType}
+                onChange={(e) => handleFieldChange('targetClientType', e.target.value)}
+                className="w-full px-4 py-3 rounded-md bg-white/5 border border-white/10 text-white placeholder:text-white/40 focus:border-green-400/50 focus:outline-none transition-all"
+                placeholder={t.targetClientTypePlaceholder}
+              />
+            </div>
+
+            {/* Average Deal Size */}
+            <div>
+              <label className="block text-sm font-medium mb-2">{t.averageDealSize}</label>
+              <input
+                type="text"
+                value={settings.averageDealSize}
+                onChange={(e) => handleFieldChange('averageDealSize', e.target.value)}
+                className="w-full px-4 py-3 rounded-md bg-white/5 border border-white/10 text-white placeholder:text-white/40 focus:border-green-400/50 focus:outline-none transition-all"
+                placeholder={t.averageDealSizePlaceholder}
+              />
+            </div>
+
+            {/* Main Business Goal */}
+            <div>
+              <label className="block text-sm font-medium mb-2">{t.mainBusinessGoal}</label>
+              <select
+                value={settings.mainBusinessGoal}
+                onChange={(e) => handleFieldChange('mainBusinessGoal', e.target.value)}
+                className="w-full px-4 py-3 rounded-md bg-white/5 border border-white/10 text-white focus:border-green-400/50 focus:outline-none transition-all"
+              >
+                <option value="">{isFrench ? 'Sélectionnez un objectif...' : 'Select a goal...'}</option>
+                {businessGoalOptions.map((option) => (
+                  <option key={option.value} value={option.value} className="bg-gray-800">
+                    {option.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {/* Biggest Challenge */}
+            <div>
+              <label className="block text-sm font-medium mb-2">{t.biggestChallenge}</label>
+              <input
+                type="text"
+                value={settings.biggestChallenge}
+                onChange={(e) => handleFieldChange('biggestChallenge', e.target.value)}
+                className="w-full px-4 py-3 rounded-md bg-white/5 border border-white/10 text-white placeholder:text-white/40 focus:border-green-400/50 focus:outline-none transition-all"
+                placeholder={t.biggestChallengePlaceholder}
+              />
+            </div>
+          </div>
+
+          {/* Helper Text */}
+          <div className="mt-4 p-3 bg-green-500/10 border border-green-500/20 rounded-lg">
+            <p className="text-sm text-green-300">{t.icpHelperText}</p>
           </div>
         </div>
 

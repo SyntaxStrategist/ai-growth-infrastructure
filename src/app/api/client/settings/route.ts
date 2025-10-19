@@ -16,7 +16,7 @@ export async function GET(req: NextRequest) {
     
     const { data, error } = await supabase
       .from('clients')
-      .select('industry_category, primary_service, booking_link, custom_tagline, email_tone, followup_speed, ai_personalized_reply, language, business_name')
+      .select('industry_category, primary_service, booking_link, custom_tagline, email_tone, followup_speed, ai_personalized_reply, language, business_name, icp_data')
       .eq('client_id', clientId)
       .single();
     
@@ -53,6 +53,11 @@ export async function PUT(req: NextRequest) {
       followupSpeed,
       language,
       aiPersonalizedReply,
+      // ICP fields
+      targetClientType,
+      averageDealSize,
+      mainBusinessGoal,
+      biggestChallenge,
     } = body;
     
     if (!clientId) {
@@ -88,6 +93,15 @@ export async function PUT(req: NextRequest) {
       );
     }
     
+    // Validate business goal
+    const validGoals = ['Generate more qualified leads', 'Improve follow-ups and conversions', 'Nurture existing clients', 'Save time with automation'];
+    if (mainBusinessGoal && !validGoals.includes(mainBusinessGoal)) {
+      return NextResponse.json(
+        { success: false, error: 'Invalid business goal' },
+        { status: 400 }
+      );
+    }
+    
     // Build update object
     const updateData: any = {};
     
@@ -99,6 +113,34 @@ export async function PUT(req: NextRequest) {
     if (followupSpeed !== undefined) updateData.followup_speed = followupSpeed;
     if (language !== undefined) updateData.language = language;
     if (aiPersonalizedReply !== undefined) updateData.ai_personalized_reply = aiPersonalizedReply;
+    
+    // Handle ICP data - build icp_data object if any ICP fields are provided
+    const hasIcpData = targetClientType !== undefined || averageDealSize !== undefined || 
+                       mainBusinessGoal !== undefined || biggestChallenge !== undefined;
+    
+    if (hasIcpData) {
+      // Get existing icp_data first
+      const { data: existingClient } = await supabase
+        .from('clients')
+        .select('icp_data')
+        .eq('client_id', clientId)
+        .single();
+      
+      const existingIcpData = existingClient?.icp_data || {};
+      
+      // Build new icp_data object
+      const newIcpData = {
+        ...existingIcpData,
+        target_client_type: targetClientType !== undefined ? targetClientType : existingIcpData.target_client_type,
+        average_deal_size: averageDealSize !== undefined ? averageDealSize : existingIcpData.average_deal_size,
+        main_business_goal: mainBusinessGoal !== undefined ? mainBusinessGoal : existingIcpData.main_business_goal,
+        biggest_challenge: biggestChallenge !== undefined ? biggestChallenge : existingIcpData.biggest_challenge,
+        icp_version: "1.0",
+        updated_at: new Date().toISOString()
+      };
+      
+      updateData.icp_data = newIcpData;
+    }
     
     const { data, error } = await supabase
       .from('clients')

@@ -84,6 +84,7 @@ export default function ClientSignup() {
     biggestChallenge: isFrench ? 'Plus Grand Défi Actuel' : 'Biggest Challenge Right Now',
     biggestChallengePlaceholder: isFrench ? 'ex: Convertir les visiteurs du site en leads' : 'e.g., Converting website visitors into leads',
     biggestChallengeHelper: isFrench ? 'Quel est votre principal point de douleur ?' : 'What\'s your main pain point?',
+    icpSettingsNote: isFrench ? 'Vous pouvez toujours ajouter ou modifier ces informations plus tard dans vos paramètres de compte.' : 'You can always add or edit this information later in your account settings.',
   };
   
   const toneOptions = [
@@ -546,6 +547,13 @@ export default function ClientSignup() {
                     </div>
                   </motion.div>
                 )}
+              </div>
+
+              {/* ICP Settings Helper Note */}
+              <div className="mt-3 p-3 bg-blue-500/10 border border-blue-500/20 rounded-lg">
+                <p className="text-sm text-blue-300 text-center">
+                  {t.icpSettingsNote}
+                </p>
               </div>
 
               {/* Error Message */}
