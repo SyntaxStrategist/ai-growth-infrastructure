@@ -598,6 +598,7 @@ if (require.main === module) {
 module.exports = {
   generateTatoebaPairs,
   generateCuratedPairs,
+  samplePairs,
   insertPairs,
   verifySeededData
 };
