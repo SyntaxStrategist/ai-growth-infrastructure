@@ -61,6 +61,15 @@ interface ActivateVariantRequest {
   version: string;
 }
 
+interface CreateVariantRequest {
+  prompt_name: string;
+  variant_version: number;
+  prompt_text: string;
+  language?: string;
+  score?: number;
+  usage_count?: number;
+}
+
 // POST /api/prompt-optimization - Execute prompt with optimization
 export async function POST(req: NextRequest) {
   try {
@@ -77,10 +86,26 @@ export async function POST(req: NextRequest) {
 
     const { action, data } = body;
 
-    if (!action || !data) {
-      console.error('[PromptOptimizationAPI] Missing required fields: action, data');
+    // Support both flat format (direct fields) and nested format (data object)
+    let requestData;
+    if (data) {
+      // Nested format: { action: "...", data: {...} }
+      requestData = data;
+    } else if (action && (body.prompt_name || body.test_name || body.input_data)) {
+      // Flat format: { action: "...", prompt_name: "...", ... }
+      requestData = body;
+    } else {
+      console.error('[PromptOptimizationAPI] Missing required fields: action and either data object or direct fields');
       return NextResponse.json(
-        { success: false, error: 'Missing required fields: action, data' },
+        { success: false, error: 'Missing required fields: action and either data object or direct fields' },
+        { status: 400 }
+      );
+    }
+
+    if (!action) {
+      console.error('[PromptOptimizationAPI] Missing required field: action');
+      return NextResponse.json(
+        { success: false, error: 'Missing required field: action' },
         { status: 400 }
       );
     }
@@ -89,15 +114,19 @@ export async function POST(req: NextRequest) {
 
     switch (action) {
       case 'execute':
-        result = await handleExecutePrompt(data as ExecutePromptRequest);
+        result = await handleExecutePrompt(requestData as ExecutePromptRequest);
         break;
       
       case 'ab_test':
-        result = await handleCreateABTest(data as CreateABTestRequest);
+        result = await handleCreateABTest(requestData as CreateABTestRequest);
         break;
       
       case 'evolve':
-        result = await handleEvolvePrompt(data as EvolvePromptRequest);
+        result = await handleEvolvePrompt(requestData as EvolvePromptRequest);
+        break;
+      
+      case 'create_variant':
+        result = await handleCreateVariant(requestData as CreateVariantRequest);
         break;
       
       case 'initialize':
@@ -343,6 +372,43 @@ async function handleActivateVariant(data: ActivateVariantRequest) {
   const { prompt_name, variant_id, version } = data;
   
   return await activatePromptVariant(prompt_name, variant_id, version);
+}
+
+async function handleCreateVariant(data: CreateVariantRequest) {
+  const { prompt_name, variant_version, prompt_text, language = 'en', score = 0, usage_count = 0 } = data;
+  
+  try {
+    // Create the variant in the database
+    const { createClient } = await import('@supabase/supabase-js');
+    const supabase = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!
+    );
+
+    const { data: variant, error } = await supabase
+      .from('prompt_registry')
+      .insert({
+        prompt_name,
+        variant_version,
+        prompt_text,
+        language,
+        score,
+        usage_count
+      })
+      .select()
+      .single();
+
+    if (error) {
+      console.error('[PromptOptimizationAPI] Error creating variant:', error);
+      return { success: false, error: error.message };
+    }
+
+    console.log('[PromptOptimizationAPI] ✅ Variant created successfully:', variant.id);
+    return { success: true, data: variant };
+  } catch (error) {
+    console.error('[PromptOptimizationAPI] Error in handleCreateVariant:', error);
+    return { success: false, error: error instanceof Error ? error.message : 'Unknown error' };
+  }
 }
 
 async function handleInitializeRegistry() {
