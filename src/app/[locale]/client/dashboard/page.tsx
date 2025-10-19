@@ -439,9 +439,33 @@ export default function ClientDashboard() {
       }
     });
     
-    const topIntent = Object.keys(intentCounts).sort((a, b) => 
+    const rawTopIntent = Object.keys(intentCounts).sort((a, b) => 
       intentCounts[b] - intentCounts[a]
     )[0] || (isFrench ? 'Aucun' : 'None');
+
+    // Translate the top intent if it exists and is not already in the target language
+    let topIntent = rawTopIntent;
+    if (rawTopIntent && rawTopIntent !== 'Aucun' && rawTopIntent !== 'None') {
+      try {
+        const response = await fetch('/api/translate-intent', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ intent: rawTopIntent, locale: locale })
+        });
+        
+        if (response.ok) {
+          const data = await response.json();
+          if (data.success) {
+            topIntent = data.translated;
+            console.log(`[IntentTranslation] Dashboard: "${rawTopIntent}" → "${topIntent}"`);
+          }
+        }
+      } catch (error) {
+        console.error('[IntentTranslation] Dashboard translation failed:', error);
+        // Fallback to original intent
+        topIntent = rawTopIntent;
+      }
+    }
 
     const calculatedStats = { total, avgConfidence, topIntent, highUrgency };
     
