@@ -588,8 +588,8 @@ async function translateIntent(rawTopIntent: string, locale: string): Promise<st
 
   async function handleArchiveLead(leadId: string) {
     try {
-      const originalLeads = [...leads];
-      setLeads(leads.filter(l => l.id !== leadId));
+      const originalLeads = [...allLeads];
+      setAllLeads(allLeads.filter(l => l.id !== leadId));
 
       const res = await fetch('/api/lead-actions', {
         method: 'POST',
@@ -603,11 +603,12 @@ async function translateIntent(rawTopIntent: string, locale: string): Promise<st
         showToast(isFrench ? 'Lead archivé' : 'Lead archived');
         fetchRecentActions();
       } else {
-        setLeads(originalLeads);
+        setAllLeads(originalLeads);
         showToast(isFrench ? 'Erreur lors de l\'archivage' : 'Archive failed');
       }
     } catch (err) {
       console.error('[ClientDashboard] Archive error:', err);
+      setAllLeads(originalLeads);
       showToast(isFrench ? 'Erreur lors de l\'archivage' : 'Archive failed');
     }
   }
@@ -664,8 +665,8 @@ async function translateIntent(rawTopIntent: string, locale: string): Promise<st
 
   async function handlePermanentDelete(leadId: string) {
     try {
-      const originalLeads = [...leads];
-      setLeads(leads.filter(l => l.id !== leadId));
+      const originalLeads = [...allLeads];
+      setAllLeads(allLeads.filter(l => l.id !== leadId));
       setConfirmPermanentDelete(null);
 
       const res = await fetch('/api/lead-actions', {
@@ -678,12 +679,14 @@ async function translateIntent(rawTopIntent: string, locale: string): Promise<st
 
       if (json.success) {
         showToast(isFrench ? 'Lead supprimé définitivement' : 'Lead permanently deleted');
+        fetchRecentActions();
       } else {
-        setLeads(originalLeads);
+        setAllLeads(originalLeads);
         showToast(isFrench ? 'Erreur lors de la suppression définitive' : 'Permanent delete failed');
       }
     } catch (err) {
       console.error('[ClientDashboard] Permanent delete error:', err);
+      setAllLeads(originalLeads);
       showToast(isFrench ? 'Erreur lors de la suppression définitive' : 'Permanent delete failed');
     }
   }
@@ -1264,19 +1267,18 @@ async function translateIntent(rawTopIntent: string, locale: string): Promise<st
                         {t.actions.reactivate}
                       </span>
                     </div>
-                    {activeTab === 'deleted' && (
-                      <div className="relative group">
-                        <button
-                          onClick={() => setConfirmPermanentDelete(lead.id)}
-                          className="p-2 rounded-lg bg-red-500/20 border border-red-500/40 text-red-400 hover:bg-red-500/30 hover:shadow-[0_0_15px_rgba(239,68,68,0.5)] hover:border-red-500/60 transition-all duration-100 text-xs"
-                        >
-                          ⚠️
-                        </button>
-                        <span className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 bg-red-600 text-white text-[0.9rem] rounded opacity-0 group-hover:opacity-100 transition-opacity duration-150 delay-150 whitespace-nowrap pointer-events-none z-10">
-                          {t.actions.permanentDelete}
-                        </span>
-                      </div>
-                    )}
+                    {/* Permanent Delete Button - Show for both archived and deleted leads */}
+                    <div className="relative group">
+                      <button
+                        onClick={() => setConfirmPermanentDelete(lead.id)}
+                        className="p-2 rounded-lg bg-red-500/20 border border-red-500/40 text-red-400 hover:bg-red-500/30 hover:shadow-[0_0_15px_rgba(239,68,68,0.5)] hover:border-red-500/60 transition-all duration-100 text-xs"
+                      >
+                        🗑️
+                      </button>
+                      <span className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 bg-red-600 text-white text-[0.9rem] rounded opacity-0 group-hover:opacity-100 transition-opacity duration-150 delay-150 whitespace-nowrap pointer-events-none z-10">
+                        {t.actions.permanentDelete}
+                      </span>
+                    </div>
                   </>
                 ) : null}
               </div>
