@@ -105,7 +105,11 @@ export default function ClientProspectIntelligencePage() {
     try {
       console.log('[ClientProspectIntelligence] Fetching config for client:', session.client.clientId);
       
-      const response = await fetch('/api/client/prospect-intelligence/config');
+      const response = await fetch('/api/client/prospect-intelligence/config', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ clientId: session.client.clientId })
+      });
       const json = await response.json();
 
       if (json.success) {
@@ -128,7 +132,11 @@ export default function ClientProspectIntelligencePage() {
 
       console.log('[ClientProspectIntelligence] Loading prospects for client:', session.client.clientId);
       
-      const response = await fetch('/api/client/prospect-intelligence/prospects');
+      const response = await fetch('/api/client/prospect-intelligence/prospects', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ clientId: session.client.clientId })
+      });
       const json = await response.json();
 
       if (json.success) {

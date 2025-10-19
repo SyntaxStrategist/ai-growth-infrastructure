@@ -21,6 +21,15 @@ const supabase = createClient(supabaseUrl, supabaseKey, {
  * Get authenticated client ID from request
  */
 async function getAuthenticatedClientId(req: NextRequest): Promise<string> {
+  // Development bypass for testing (only in development environment)
+  if (process.env.NODE_ENV === 'development') {
+    const devClientId = req.nextUrl.searchParams.get('devClientId');
+    if (devClientId) {
+      console.log('[ClientProspectAPI] 🛠️ Development bypass used for client:', devClientId);
+      return devClientId;
+    }
+  }
+  
   // Try to get client ID from API key header
   const apiKey = req.headers.get('x-api-key');
   if (apiKey) {
