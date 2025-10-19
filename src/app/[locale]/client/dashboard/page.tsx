@@ -851,7 +851,12 @@ export default function ClientDashboard() {
             className="group rounded-lg border border-white/10 p-4 bg-gradient-to-br from-blue-500/10 to-purple-500/10 hover:border-blue-400/30 hover:shadow-[0_0_20px_rgba(59,130,246,0.2)] transition-all duration-300"
           >
             <div className="text-sm text-white/60 mb-1">{t.topIntent}</div>
-            <div className="text-xl font-semibold truncate">{stats.topIntent}</div>
+            <div 
+              className="text-xl font-semibold whitespace-nowrap overflow-hidden text-ellipsis max-w-full" 
+              title={stats.topIntent}
+            >
+              {stats.topIntent}
+            </div>
           </motion.div>
           
           <motion.div
