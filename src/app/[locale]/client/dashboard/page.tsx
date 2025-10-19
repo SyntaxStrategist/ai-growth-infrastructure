@@ -96,6 +96,7 @@ export default function ClientDashboard() {
   const [originalIntentCache, setOriginalIntentCache] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [leadsPerPage] = useState(5);
+  const [allLeads, setAllLeads] = useState<Lead[]>([]); // Store all leads for client-side pagination
   const [pagination, setPagination] = useState({
     totalLeads: 0,
     totalPages: 0,
@@ -289,24 +290,23 @@ async function translateIntent(rawTopIntent: string, locale: string): Promise<st
     }
   }, [authenticated, client, activeTab]);
 
-  // Memoized fetchLeads function for better performance
+  // Memoized fetchLeads function for client-side pagination
   const fetchLeads = useCallback(async () => {
     if (!client) return;
 
     try {
       setLoading(true);
-      // Clear leads array before fetching to ensure replacement, not appending
-      setLeads([]);
+      // Clear all leads array before fetching
+      setAllLeads([]);
       console.log('[ClientDashboard] ============================================');
-      console.log('[ClientDashboard] Fetching leads');
+      console.log('[ClientDashboard] Fetching all leads for client-side pagination');
       console.log('[ClientDashboard] Client ID:', client.clientId);
       console.log('[ClientDashboard] Business:', client.businessName);
       console.log('[ClientDashboard] Tab:', activeTab);
       console.log('[ClientDashboard] Locale:', locale);
-      console.log('[ClientDashboard] Page:', currentPage);
-      console.log('[ClientDashboard] Limit:', leadsPerPage);
       
-      const endpoint = `/api/client/leads?clientId=${client.clientId}&locale=${locale}&status=${activeTab}&page=${currentPage}&limit=${leadsPerPage}`;
+      // Fetch all leads (limit to 1000 to avoid performance issues)
+      const endpoint = `/api/client/leads?clientId=${client.clientId}&locale=${locale}&status=${activeTab}&page=1&limit=1000`;
       console.log('[ClientDashboard] Endpoint:', endpoint);
       
       const res = await fetch(endpoint);
@@ -315,25 +315,26 @@ async function translateIntent(rawTopIntent: string, locale: string): Promise<st
       console.log('[ClientDashboard] API Response:', {
         success: data.success,
         leadCount: data.data?.length || 0,
-        pagination: data.pagination,
         status: res.status,
       });
 
       if (data.success) {
-        const leadsData = data.data || [];
+        let leadsData = data.data || [];
         
-        // Replace leads completely (server-side pagination)
-        setLeads([...leadsData]); // Create new array to ensure replacement
-        
-        // Update pagination state
-        if (data.pagination) {
-          setPagination(data.pagination);
+        // For converted tab, filter only converted leads
+        if (activeTab === 'converted') {
+          leadsData = leadsData.filter((lead: Lead) => 
+            lead.current_tag === 'Converted' || lead.current_tag === 'Converti'
+          );
         }
         
-        // For stats calculation, we need all leads, so fetch them separately
-        await fetchAllLeadsForStats();
+        // Store all leads for client-side pagination
+        setAllLeads([...leadsData]);
         
-        console.log('[ClientDashboard] ✅ Loaded', leadsData.length, activeTab, 'leads for page', currentPage);
+        // Calculate stats from all leads
+        calculateStats(leadsData);
+        
+        console.log('[ClientDashboard] ✅ Loaded', leadsData.length, activeTab, 'leads for client-side pagination');
         console.log('[ClientDashboard] ============================================');
       } else {
         console.error('[ClientDashboard] ❌ API returned error:', data.error);
@@ -349,7 +350,7 @@ async function translateIntent(rawTopIntent: string, locale: string): Promise<st
     } finally {
       setLoading(false);
     }
-  }, [client, activeTab, locale, currentPage, leadsPerPage]);
+  }, [client, activeTab, locale]);
 
   // Memoized stats calculation for better performance
   const calculateStats = useCallback((leadsData: Lead[]) => {
@@ -396,46 +397,21 @@ async function translateIntent(rawTopIntent: string, locale: string): Promise<st
     setStats(calculatedStats);
   }, [isFrench]);
 
-  // Memoized function to fetch all leads for stats calculation
-  const fetchAllLeadsForStats = useCallback(async () => {
-    if (!client) return;
-
-    try {
-      const endpoint = `/api/client/leads?clientId=${client.clientId}&locale=${locale}&status=${activeTab}&page=1&limit=1000`;
-      const res = await fetch(endpoint);
-      const data = await res.json();
-
-      if (data.success) {
-        let allLeads = data.data || [];
-        
-        // For converted tab, filter only converted leads
-        if (activeTab === 'converted') {
-          allLeads = allLeads.filter((lead: Lead) => 
-            lead.current_tag === 'Converted' || lead.current_tag === 'Converti'
-          );
-        }
-        
-        calculateStats(allLeads);
-        console.log('[ClientDashboard] ✅ Calculated stats from', allLeads.length, 'total leads');
-      }
-    } catch (err) {
-      console.error('[ClientDashboard] ❌ Failed to fetch all leads for stats:', err);
-    }
-  }, [client, locale, activeTab, calculateStats]);
 
   // Reset to first page when filters change
   useEffect(() => {
     setCurrentPage(1);
   }, [filter, tagFilter, activeTab]);
 
-  // Fetch leads when page changes (server-side pagination)
+  // Fetch leads when tab or locale changes (client-side pagination)
   useEffect(() => {
     if (authenticated && client) {
       // Clear leads before fetching new ones to prevent appending
-      setLeads([]);
+      setAllLeads([]);
+      setCurrentPage(1); // Reset to first page when changing tabs
       fetchLeads();
     }
-  }, [currentPage, authenticated, client, activeTab, fetchLeads]);
+  }, [authenticated, client, activeTab, fetchLeads]);
 
   async function handleLogin(e: React.FormEvent) {
     e.preventDefault();
@@ -729,8 +705,21 @@ async function translateIntent(rawTopIntent: string, locale: string): Promise<st
     router.push(`/${locale}/client/login`);
   }
 
-  // Server-side pagination - leads are already paginated from API
-  const currentLeads = useMemo(() => leads, [leads]);
+  // Client-side pagination logic
+  const totalPages = Math.ceil(allLeads.length / leadsPerPage);
+  const startIndex = (currentPage - 1) * leadsPerPage;
+  const endIndex = startIndex + leadsPerPage;
+  const currentLeads = useMemo(() => allLeads.slice(startIndex, endIndex), [allLeads, startIndex, endIndex]);
+  
+  // Update pagination state for client-side pagination
+  useEffect(() => {
+    setPagination({
+      totalLeads: allLeads.length,
+      totalPages: totalPages,
+      hasNextPage: currentPage < totalPages,
+      hasPrevPage: currentPage > 1
+    });
+  }, [allLeads.length, totalPages, currentPage]);
 
   // Memoized pagination handlers for better performance
   const goToPage = useCallback((page: number) => {
@@ -1111,13 +1100,23 @@ async function translateIntent(rawTopIntent: string, locale: string): Promise<st
           <RelationshipInsights locale={locale} clientId={client?.clientId || null} />
         </motion.div>
 
-        {/* Leads Table */}
+        {/* Leads Section */}
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 0.6, delay: 0.6 }}
-          className="space-y-3"
+          className="space-y-4"
         >
+          {/* LEADS Title */}
+          <div className="flex items-center gap-3">
+            <h2 className="text-2xl font-bold text-white">
+              {isFrench ? 'PROSPECTS' : 'LEADS'}
+            </h2>
+            <div className="flex-1 h-px bg-gradient-to-r from-white/20 to-transparent"></div>
+          </div>
+          
+          {/* Leads List */}
+          <div className="space-y-3">
           {currentLeads.map((lead, idx) => (
             <motion.div
               key={lead.id}
@@ -1284,14 +1283,15 @@ async function translateIntent(rawTopIntent: string, locale: string): Promise<st
             </motion.div>
           ))}
 
-                    {currentLeads.length === 0 && (
-                      <div className="text-center py-12 text-white/50">
-                        {t.noLeads}
-                      </div>
-                    )}
+            {currentLeads.length === 0 && (
+              <div className="text-center py-12 text-white/50">
+                {t.noLeads}
+              </div>
+            )}
+          </div>
 
-                    {/* Pagination Controls */}
-                    {currentLeads.length > 0 && pagination.totalPages > 1 && (
+          {/* Pagination Controls */}
+          {currentLeads.length > 0 && pagination.totalPages > 1 && (
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
