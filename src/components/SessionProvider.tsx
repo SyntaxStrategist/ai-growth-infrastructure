@@ -50,10 +50,10 @@ export function SessionProvider({ children }: SessionProviderProps) {
     console.log('[AuthFix] ============================================');
   };
 
-  // Restore session on mount
+  // Restore session on mount (session already restored by EarlySessionProvider)
   useEffect(() => {
     console.log('[AuthFix] ============================================');
-    console.log('[AuthFix] SessionProvider: Initializing...');
+    console.log('[AuthFix] SessionProvider: Initializing (session already restored by EarlySessionProvider)...');
     
     refreshSession();
     
