@@ -1,0 +1,467 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Avenir AI - Aperçu de l'email d'introduction par défaut (Français)</title>
+    <style>
+        /* Reset and base styles */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background-color: #f5f5f5;
+            padding: 20px;
+        }
+        
+        .preview-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+        
+        .preview-header {
+            background: linear-gradient(135deg, #0A2540 0%, #00B8D9 100%);
+            color: white;
+            padding: 20px;
+            text-align: center;
+        }
+        
+        .preview-title {
+            font-size: 24px;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+        
+        .preview-subtitle {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+        
+        .preview-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0;
+        }
+        
+        .email-preview {
+            border-right: 1px solid #e0e0e0;
+        }
+        
+        .email-preview:last-child {
+            border-right: none;
+        }
+        
+        .preview-label {
+            background: #f8f9fa;
+            padding: 12px 20px;
+            font-weight: 600;
+            font-size: 14px;
+            color: #666;
+            border-bottom: 1px solid #e0e0e0;
+        }
+        
+        .email-container {
+            padding: 20px;
+            background: white;
+            min-height: 600px;
+        }
+        
+        /* Gmail-like email styles */
+        .email-wrapper {
+            max-width: 600px;
+            margin: 0 auto;
+            background: white;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        
+        .email-header {
+            background: #f8f9fa;
+            padding: 16px 20px;
+            border-bottom: 1px solid #e0e0e0;
+            font-size: 14px;
+        }
+        
+        .email-from {
+            font-weight: 600;
+            color: #0A2540;
+        }
+        
+        .email-to {
+            color: #666;
+            margin-top: 4px;
+        }
+        
+        .email-subject {
+            font-weight: 600;
+            color: #333;
+            margin-top: 8px;
+        }
+        
+        .email-body {
+            padding: 24px 20px;
+            font-size: 15px;
+            line-height: 1.6;
+        }
+        
+        .email-logo {
+            text-align: center;
+            margin-bottom: 24px;
+        }
+        
+        .logo-image {
+            max-width: 120px;
+            height: auto;
+            margin-bottom: 12px;
+        }
+        
+        .logo-text {
+            font-size: 28px;
+            font-weight: 700;
+            background: linear-gradient(135deg, #0A2540 0%, #00B8D9 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 8px;
+        }
+        
+        .logo-tagline {
+            font-size: 14px;
+            color: #666;
+            font-style: italic;
+        }
+        
+        .email-content h2 {
+            color: #0A2540;
+            font-size: 20px;
+            margin-bottom: 16px;
+            font-weight: 600;
+        }
+        
+        .email-content p {
+            margin-bottom: 16px;
+            color: #333;
+        }
+        
+        .email-content ul {
+            margin: 16px 0;
+            padding-left: 20px;
+        }
+        
+        .email-content li {
+            margin-bottom: 8px;
+            color: #333;
+        }
+        
+        .cta-button {
+            display: inline-block;
+            background: linear-gradient(135deg, #0A2540 0%, #00B8D9 100%);
+            color: white;
+            padding: 12px 24px;
+            text-decoration: none;
+            border-radius: 6px;
+            font-weight: 600;
+            margin: 20px 0;
+            transition: transform 0.2s ease;
+        }
+        
+        .cta-button:hover {
+            transform: translateY(-1px);
+        }
+        
+        .secondary-cta {
+            text-align: center;
+            margin-top: 16px;
+        }
+        
+        .secondary-cta-text {
+            font-size: 14px;
+            color: #666666;
+            margin-bottom: 8px;
+        }
+        
+        .secondary-cta-link {
+            color: #00B8D9;
+            text-decoration: none;
+            font-weight: 500;
+            font-size: 14px;
+        }
+        
+        .secondary-cta-link:hover {
+            text-decoration: underline;
+        }
+        
+        .email-signature {
+            margin-top: 32px;
+            padding-top: 20px;
+            border-top: 1px solid #e0e0e0;
+        }
+        
+        .signature-name {
+            font-weight: 600;
+            color: #0A2540;
+            font-size: 16px;
+        }
+        
+        .signature-title {
+            color: #00B8D9;
+            font-size: 14px;
+            margin: 4px 0;
+        }
+        
+        .signature-company {
+            color: #666;
+            font-size: 14px;
+            margin-bottom: 8px;
+        }
+        
+        .signature-contact {
+            font-size: 14px;
+            color: #666;
+        }
+        
+        .signature-contact a {
+            color: #00B8D9;
+            text-decoration: none;
+        }
+        
+        .email-footer {
+            background: #f8f9fa;
+            padding: 16px 20px;
+            text-align: center;
+            font-size: 12px;
+            color: #666;
+            border-top: 1px solid #e0e0e0;
+        }
+        
+        /* Mobile responsive */
+        @media (max-width: 768px) {
+            .preview-content {
+                grid-template-columns: 1fr;
+            }
+            
+            .email-preview {
+                border-right: none;
+                border-bottom: 1px solid #e0e0e0;
+            }
+            
+            .email-preview:last-child {
+                border-bottom: none;
+            }
+            
+            .email-container {
+                padding: 15px;
+            }
+            
+            .email-body {
+                padding: 20px 15px;
+            }
+            
+            .logo-image {
+                max-width: 90px !important;
+            }
+            
+            .secondary-cta-text,
+            .secondary-cta-link {
+                font-size: 13px !important;
+            }
+        }
+        
+        /* Gmail-specific styles */
+        .gmail-preview .email-wrapper {
+            border: none;
+            border-radius: 0;
+        }
+        
+        .gmail-preview .email-header {
+            background: #f1f3f4;
+            border-bottom: 1px solid #dadce0;
+        }
+        
+        .gmail-preview .email-footer {
+            background: #f1f3f4;
+            border-top: 1px solid #dadce0;
+        }
+    </style>
+</head>
+<body>
+    <div class="preview-container">
+        <div class="preview-header">
+            <div class="preview-title">Avenir AI - Aperçu de l'email d'introduction par défaut (Français)</div>
+            <div class="preview-subtitle">Mis à jour avec le logo et le bouton CTA "Voir la démo"</div>
+        </div>
+        
+        <div class="preview-content">
+            <!-- Desktop Gmail Preview -->
+            <div class="email-preview">
+                <div class="preview-label">📧 Vue Gmail Bureau</div>
+                <div class="email-container">
+                    <div class="email-wrapper gmail-preview">
+                        <div class="email-header">
+                            <div class="email-from">Avenir AI Solutions &lt;contact@aveniraisolutions.ca&gt;</div>
+                            <div class="email-to">à: jean.martin@techcorp.com</div>
+                            <div class="email-subject">TechCorp - Opportunité d'automatisation IA</div>
+                        </div>
+                        
+                        <div class="email-body">
+                            <div class="email-logo">
+                                <img src="https://aveniraisolutions.ca/assets/logos/logo.svg" alt="Avenir AI Solutions" class="logo-image">
+                                <div class="logo-text">Avenir AI</div>
+                                <div class="logo-tagline">Infrastructure de croissance intelligente</div>
+                            </div>
+                            
+                            <div class="email-content">
+                                <h2>Bonjour Jean,</h2>
+                                
+                                <p>J'ai remarqué que <strong>TechCorp</strong> évolue dans le secteur <strong>technologie</strong> et fait probablement face à <strong>défis de génération de leads, recherche manuelle de prospects, faibles taux de conversion</strong>.</p>
+                                
+                                <p>Nous avons aidé des entreprises similaires dans votre secteur à atteindre :</p>
+                                <ul>
+                                    <li><strong>3x plus de taux de conversion de leads</strong> grâce au scoring de prospects alimenté par l'IA</li>
+                                    <li><strong>Découverte automatisée de prospects</strong> qui trouve vos clients idéaux 24h/24</li>
+                                    <li><strong>Approche intelligente</strong> qui obtient 3x plus de taux de réponse</li>
+                                    <li><strong>Analyse de leads en temps réel</strong> avec scoring d'intention, d'urgence et de confiance</li>
+                                </ul>
+                                
+                                <p>Nos systèmes IA analysent chaque interaction en temps réel, transformant les conversations en conversions et les données en croissance.</p>
+                                
+                                <p>Seriez-vous intéressé par un appel de 15 minutes pour discuter de comment l'automatisation IA pourrait aider <strong>TechCorp</strong> à générer plus de leads qualifiés et à faire évoluer votre croissance ?</p>
+                                
+                                <div style="text-align: center;">
+                                    <a href="https://www.aveniraisolutions.ca/demo" class="cta-button">Voir la démo</a>
+                                    <div class="secondary-cta">
+                                        <div class="secondary-cta-text">Ou</div>
+                                        <a href="https://calendar.app.google/g4vdGJ6VdaZPj8nc7" class="secondary-cta-link">planifiez un échange rapide de 10 minutes avec moi</a>
+                                    </div>
+                                </div>
+                                
+                                <p>J'aimerais vous montrer comment nous avons aidé des entreprises comme la vôtre à transformer leur processus de génération de leads.</p>
+                                
+                                <div class="email-signature">
+                                    <div class="signature-name">Michael Oni</div>
+                                    <div class="signature-title">Fondateur et PDG</div>
+                                    <div class="signature-company">Avenir AI Solutions</div>
+                                    <div class="signature-contact">
+                                        📧 <a href="mailto:contact@aveniraisolutions.ca">contact@aveniraisolutions.ca</a><br>
+                                        🌐 <a href="https://aveniraisolutions.ca">aveniraisolutions.ca</a><br>
+                                        📱 +1 (555) 123-4567
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="email-footer">
+                            <p>Cet e-mail a été envoyé par Avenir AI Solutions. Si vous ne souhaitez plus recevoir ces e-mails, vous pouvez <a href="#" style="color: #00B8D9;">vous désabonner ici</a>.</p>
+                            <p style="margin-top: 8px; font-size: 11px; color: #999;">
+                                Avenir AI Solutions | 123 Business Ave, Suite 100, Toronto, ON M5H 2N2
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Mobile Gmail Preview -->
+            <div class="email-preview">
+                <div class="preview-label">📱 Vue Gmail Mobile</div>
+                <div class="email-container">
+                    <div class="email-wrapper gmail-preview" style="max-width: 100%;">
+                        <div class="email-header" style="padding: 12px 15px;">
+                            <div class="email-from" style="font-size: 13px;">Avenir AI Solutions</div>
+                            <div class="email-to" style="font-size: 12px;">à: jean.martin@techcorp.com</div>
+                            <div class="email-subject" style="font-size: 14px;">TechCorp - Opportunité d'automatisation IA</div>
+                        </div>
+                        
+                        <div class="email-body" style="padding: 16px 15px;">
+                            <div class="email-logo" style="margin-bottom: 20px;">
+                                <img src="https://aveniraisolutions.ca/assets/logos/logo.svg" alt="Avenir AI Solutions" class="logo-image" style="max-width: 90px;">
+                                <div class="logo-text" style="font-size: 24px;">Avenir AI</div>
+                                <div class="logo-tagline" style="font-size: 12px;">Infrastructure de croissance intelligente</div>
+                            </div>
+                            
+                            <div class="email-content">
+                                <h2 style="font-size: 18px;">Bonjour Jean,</h2>
+                                
+                                <p style="font-size: 14px;">J'ai remarqué que <strong>TechCorp</strong> évolue dans le secteur <strong>technologie</strong> et fait probablement face à <strong>défis de génération de leads, recherche manuelle de prospects, faibles taux de conversion</strong>.</p>
+                                
+                                <p style="font-size: 14px;">Nous avons aidé des entreprises similaires dans votre secteur à atteindre :</p>
+                                <ul style="font-size: 14px;">
+                                    <li><strong>3x plus de taux de conversion de leads</strong></li>
+                                    <li><strong>Découverte automatisée de prospects</strong></li>
+                                    <li><strong>Approche intelligente</strong></li>
+                                    <li><strong>Analyse de leads en temps réel</strong></li>
+                                </ul>
+                                
+                                <p style="font-size: 14px;">Nos systèmes IA analysent chaque interaction en temps réel, transformant les conversations en conversions.</p>
+                                
+                                <p style="font-size: 14px;">Seriez-vous intéressé par un appel de 15 minutes pour discuter de comment l'automatisation IA pourrait aider <strong>TechCorp</strong> à générer plus de leads qualifiés ?</p>
+                                
+                                <div style="text-align: center; margin: 20px 0;">
+                                    <a href="https://www.aveniraisolutions.ca/demo" class="cta-button" style="display: inline-block; padding: 10px 20px; font-size: 14px;">Voir la démo</a>
+                                    <div class="secondary-cta">
+                                        <div class="secondary-cta-text">Ou</div>
+                                        <a href="https://calendar.app.google/g4vdGJ6VdaZPj8nc7" class="secondary-cta-link">planifiez un échange rapide de 10 minutes avec moi</a>
+                                    </div>
+                                </div>
+                                
+                                <p style="font-size: 14px;">J'aimerais vous montrer comment nous avons aidé des entreprises comme la vôtre à transformer leur processus de génération de leads.</p>
+                                
+                                <div class="email-signature" style="margin-top: 24px;">
+                                    <div class="signature-name" style="font-size: 15px;">Michael Oni</div>
+                                    <div class="signature-title" style="font-size: 13px;">Fondateur et PDG</div>
+                                    <div class="signature-company" style="font-size: 13px;">Avenir AI Solutions</div>
+                                    <div class="signature-contact" style="font-size: 13px;">
+                                        📧 <a href="mailto:contact@aveniraisolutions.ca">contact@aveniraisolutions.ca</a><br>
+                                        🌐 <a href="https://aveniraisolutions.ca">aveniraisolutions.ca</a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="email-footer" style="padding: 12px 15px;">
+                            <p style="font-size: 11px;">Cet e-mail a été envoyé par Avenir AI Solutions. <a href="#" style="color: #00B8D9;">Se désabonner</a>.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // Add some interactive elements for demonstration
+        document.addEventListener('DOMContentLoaded', function() {
+            // Add hover effects to CTA buttons
+            const ctaButtons = document.querySelectorAll('.cta-button');
+            ctaButtons.forEach(button => {
+                button.addEventListener('mouseenter', function() {
+                    this.style.transform = 'translateY(-2px)';
+                    this.style.boxShadow = '0 4px 12px rgba(10, 37, 64, 0.3)';
+                });
+                
+                button.addEventListener('mouseleave', function() {
+                    this.style.transform = 'translateY(0)';
+                    this.style.boxShadow = 'none';
+                });
+            });
+            
+            // Add click prevention for demo
+            ctaButtons.forEach(button => {
+                button.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    alert('Ceci est un aperçu - l\'email n\'a pas été envoyé !');
+                });
+            });
+        });
+    </script>
+</body>
+</html>
