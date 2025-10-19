@@ -364,17 +364,43 @@ export async function GET(req: NextRequest) {
 
     const queryStart = Date.now();
     
-    // Build query with optional client filtering
-    let query = supabase
-      .from('lead_actions')
-      .select('*')
-      .order('timestamp', { ascending: false })
-      .limit(limit);
-    
-    // Filter by clientId if provided (client dashboard mode)
+    // If clientId provided, need to resolve to internal UUID first
+    let query;
     if (clientId) {
-      console.log('[LeadActions] Filtering by client_id:', clientId);
-      query = query.eq('client_id', clientId);
+      console.log('[LeadActions] Resolving public client_id:', clientId);
+      
+      // First, resolve the public client_id to internal UUID
+      const { data: clientData, error: clientError } = await supabase
+        .from('clients')
+        .select('id')
+        .eq('client_id', clientId)
+        .single();
+      
+      if (clientError || !clientData) {
+        console.error('[LeadActions] ❌ Client not found:', clientId);
+        return NextResponse.json(
+          { success: false, error: 'Client not found' },
+          { status: 404 }
+        );
+      }
+      
+      const clientUuid = clientData.id;
+      console.log('[LeadActions] Resolved → internal UUID:', clientUuid);
+      
+      // Build query with internal UUID filtering
+      query = supabase
+        .from('lead_actions')
+        .select('*')
+        .eq('client_id', clientUuid)
+        .order('timestamp', { ascending: false })
+        .limit(limit);
+    } else {
+      // Admin mode - get all actions
+      query = supabase
+        .from('lead_actions')
+        .select('*')
+        .order('timestamp', { ascending: false })
+        .limit(limit);
     }
     
     const { data, error } = await query;
@@ -386,6 +412,10 @@ export async function GET(req: NextRequest) {
       rowCount: data?.length || 0,
       hasError: !!error,
     });
+    
+    if (clientId) {
+      console.log('[LeadActions] ✅ Query executed successfully with resolved client UUID');
+    }
 
     if (error) {
       console.error('[LeadActions] ============================================');
