@@ -648,6 +648,7 @@ module.exports = {
   generateCuratedPairs,
   samplePairs,
   insertPairs,
-  verifySeededData
+  verifySeededData,
+  extractTarBz2
 };
 
