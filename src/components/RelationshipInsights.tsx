@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { motion } from "framer-motion";
 
 type HistoryEntry = {
@@ -250,8 +250,43 @@ export default function RelationshipInsights({ locale, clientId = null }: Relati
       })));
       console.log('[RelationshipInsights] ============================================');
 
-      setLeads((data || []) as LeadWithHistory[]);
-      setTotalLeads((data || []).length);
+      // Process leads with translation logging
+      const processedLeads = (data || []).map((lead: any) => {
+        console.log(`[RelationshipInsights] Processing lead: ${lead.name} (${lead.email})`);
+        
+        // Log relationship insight translation
+        if (lead.relationship_insight) {
+          const isInsightFrench = isFrenchText(lead.relationship_insight);
+          console.log(`[RelationshipInsights] Lead insight appears to be: ${isInsightFrench ? 'French' : 'English'}`);
+        }
+        
+        // Log tone history translation
+        if (lead.tone_history && lead.tone_history.length > 0) {
+          lead.tone_history.forEach((entry: any, index: number) => {
+            if (typeof entry.value === 'string') {
+              const isToneFrench = isFrenchText(entry.value);
+              console.log(`[RelationshipInsights] Tone history entry ${index} appears to be: ${isToneFrench ? 'French' : 'English'}`);
+            }
+          });
+        }
+        
+        // Log urgency history translation
+        if (lead.urgency_history && lead.urgency_history.length > 0) {
+          lead.urgency_history.forEach((entry: any, index: number) => {
+            if (typeof entry.value === 'string') {
+              const isUrgencyFrench = isFrenchText(entry.value);
+              console.log(`[RelationshipInsights] Urgency history entry ${index} appears to be: ${isUrgencyFrench ? 'French' : 'English'}`);
+            }
+          });
+        }
+        
+        return lead;
+      });
+
+      setLeads(processedLeads as LeadWithHistory[]);
+      setTotalLeads(processedLeads.length);
+      
+      console.log(`[RelationshipInsights] ✅ Locale-based translations applied successfully for ${processedLeads.length} leads`);
     } catch (err) {
       console.error('[RelationshipInsights] ============================================');
       console.error('[RelationshipInsights] ❌ CRITICAL ERROR');
@@ -276,36 +311,104 @@ export default function RelationshipInsights({ locale, clientId = null }: Relati
     });
   }
 
-  // Translation functions
-  const translateTone = (value: string): string => {
-    if (isFrench) {
-      // If we're on French dashboard, translate English tones to French
-      return toneTranslations[value as keyof typeof toneTranslations] || value;
+  // Memoized translation functions to prevent double translation
+  const translationFunctions = useMemo(() => {
+    // Helper function to detect if text is in French
+    const isFrenchText = (text: string): boolean => {
+      const frenchIndicators = ['é', 'è', 'ê', 'ë', 'à', 'â', 'ä', 'ç', 'ù', 'û', 'ü', 'ô', 'ö', 'î', 'ï'];
+      const frenchWords = ['démonstration', 'réussie', 'passage', 'phase', 'technique', 'probabilité', 'conversion', 'élevée', 'converti', 'excellente', 'progression', 'relationnelle', 'prêt', 'processus', 'intégration', 'fort', 'intérêt', 'initial', 'suivi', 'bientôt', 'discussion', 'potentiel', 'pilote', 'marketing', 'surveiller', 'près', 'recommandations', 'efficaces', 'personnalisée', 'montrant', 'engagement', 'planifier', 'prospect', 'haute', 'valeur', 'prioriser', 'prospection', 'évaluation', 'cours', 'fournir', 'support', 'proposition', 'préparer', 'documents'];
+      
+      const lowerText = text.toLowerCase();
+      const hasFrenchChars = frenchIndicators.some(char => lowerText.includes(char));
+      const hasFrenchWords = frenchWords.some(word => lowerText.includes(word));
+      
+      return hasFrenchChars || hasFrenchWords;
+    };
+
+    // Enhanced translation functions with runtime logging
+    const translateTone = (value: string): string => {
+    const originalValue = value;
+    const isValueFrench = isFrenchText(value);
+    
+    console.log(`[RelationshipInsights] Locale detected: ${locale}`);
+    console.log(`[RelationshipInsights] Tone value: "${value}"`);
+    console.log(`[RelationshipInsights] Value appears to be: ${isValueFrench ? 'French' : 'English'}`);
+    
+    let translatedValue = value;
+    
+    if (isFrench && !isValueFrench) {
+      // We're on French dashboard, but value is in English - translate to French
+      translatedValue = toneTranslations[value as keyof typeof toneTranslations] || value;
+      console.log(`[RelationshipInsights] Translating from EN → FR for tone: "${value}" → "${translatedValue}"`);
+    } else if (!isFrench && isValueFrench) {
+      // We're on English dashboard, but value is in French - translate to English
+      translatedValue = toneTranslations[value as keyof typeof toneTranslations] || value;
+      console.log(`[RelationshipInsights] Translating from FR → EN for tone: "${value}" → "${translatedValue}"`);
     } else {
-      // If we're on English dashboard, translate French tones to English
-      return toneTranslations[value as keyof typeof toneTranslations] || value;
+      console.log(`[RelationshipInsights] No translation needed for tone: "${value}" (already in correct language)`);
     }
+    
+    return translatedValue;
   };
 
   const translateUrgency = (value: string): string => {
-    if (isFrench) {
-      // If we're on French dashboard, translate English urgency to French
-      return urgencyTranslations[value as keyof typeof urgencyTranslations] || value;
+    const originalValue = value;
+    const isValueFrench = isFrenchText(value);
+    
+    console.log(`[RelationshipInsights] Urgency value: "${value}"`);
+    console.log(`[RelationshipInsights] Value appears to be: ${isValueFrench ? 'French' : 'English'}`);
+    
+    let translatedValue = value;
+    
+    if (isFrench && !isValueFrench) {
+      // We're on French dashboard, but value is in English - translate to French
+      translatedValue = urgencyTranslations[value as keyof typeof urgencyTranslations] || value;
+      console.log(`[RelationshipInsights] Translating from EN → FR for urgency: "${value}" → "${translatedValue}"`);
+    } else if (!isFrench && isValueFrench) {
+      // We're on English dashboard, but value is in French - translate to English
+      translatedValue = urgencyTranslations[value as keyof typeof urgencyTranslations] || value;
+      console.log(`[RelationshipInsights] Translating from FR → EN for urgency: "${value}" → "${translatedValue}"`);
     } else {
-      // If we're on English dashboard, translate French urgency to English
-      return urgencyTranslations[value as keyof typeof urgencyTranslations] || value;
+      console.log(`[RelationshipInsights] No translation needed for urgency: "${value}" (already in correct language)`);
     }
+    
+    return translatedValue;
   };
 
   const translateInsight = (value: string): string => {
-    if (isFrench) {
-      // If we're on French dashboard, translate English insights to French
-      return insightTranslations[value as keyof typeof insightTranslations] || value;
+    const originalValue = value;
+    const isValueFrench = isFrenchText(value);
+    
+    console.log(`[RelationshipInsights] Insight value: "${value.substring(0, 50)}..."`);
+    console.log(`[RelationshipInsights] Value appears to be: ${isValueFrench ? 'French' : 'English'}`);
+    
+    let translatedValue = value;
+    
+    if (isFrench && !isValueFrench) {
+      // We're on French dashboard, but value is in English - translate to French
+      translatedValue = insightTranslations[value as keyof typeof insightTranslations] || value;
+      console.log(`[RelationshipInsights] Translating from EN → FR for insight: "${value.substring(0, 30)}..." → "${translatedValue.substring(0, 30)}..."`);
+    } else if (!isFrench && isValueFrench) {
+      // We're on English dashboard, but value is in French - translate to English
+      translatedValue = insightTranslations[value as keyof typeof insightTranslations] || value;
+      console.log(`[RelationshipInsights] Translating from FR → EN for insight: "${value.substring(0, 30)}..." → "${translatedValue.substring(0, 30)}..."`);
     } else {
-      // If we're on English dashboard, translate French insights to English
-      return insightTranslations[value as keyof typeof insightTranslations] || value;
+      console.log(`[RelationshipInsights] No translation needed for insight: "${value.substring(0, 30)}..." (already in correct language)`);
     }
+    
+    return translatedValue;
   };
+
+    return {
+      translateTone,
+      translateUrgency,
+      translateInsight,
+      isFrenchText
+    };
+  }, [isFrench, locale, toneTranslations, urgencyTranslations, insightTranslations]);
+
+  // Destructure the memoized functions
+  const { translateTone, translateUrgency, translateInsight, isFrenchText } = translationFunctions;
 
   function formatHistoryValue(value: string | number, type: 'tone' | 'urgency' | 'confidence' = 'confidence'): string {
     if (typeof value === 'number') {
