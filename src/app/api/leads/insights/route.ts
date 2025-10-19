@@ -447,7 +447,12 @@ export async function GET(req: NextRequest) {
     const translatedData = await translateRelationshipData(data, locale);
     console.log('[LeadsInsightsAPI] ✅ Translation applied successfully');
 
-    return NextResponse.json({ success: true, data: translatedData });
+    return NextResponse.json({ success: true, data: translatedData }, {
+      headers: {
+        'Cache-Control': 'public, max-age=300, s-maxage=300', // Cache for 5 minutes
+        'Content-Type': 'application/json'
+      }
+    });
     
   } catch (error: any) {
     console.error('[LeadsInsightsAPI] ============================================');

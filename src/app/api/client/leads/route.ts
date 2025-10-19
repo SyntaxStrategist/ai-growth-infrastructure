@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabase } from '../../../../lib/supabase';
+import { getClientDataAndLeads, getClientDataAndAllLeads } from '../../../../lib/query-batching';
 import OpenAI from 'openai';
 
 const openai = new OpenAI({
@@ -183,14 +184,10 @@ export async function GET(req: NextRequest) {
       );
     }
 
-    // First, get the client's UUID from the TEXT client_id
-    const { data: clientData, error: clientError } = await supabase
-      .from('clients')
-      .select('id, client_id')
-      .eq('client_id', clientId)
-      .single();
+    // Use batched query to get client data and leads
+    const { client, leads: leadsQuery } = await getClientDataAndLeads(clientId, status, page, limit);
     
-    if (clientError || !clientData) {
+    if (client.error || !client.data) {
       console.error('[E2E-Test] [ClientLeads] ❌ Client not found:', clientId);
       return NextResponse.json(
         { success: false, error: 'Client not found' },
@@ -198,47 +195,13 @@ export async function GET(req: NextRequest) {
       );
     }
     
-    const clientUuid = clientData.id;
+    const clientUuid = client.data.id;
     console.log('[E2E-Test] [ClientLeads] Client UUID:', clientUuid);
     
-    // Fetch leads by joining lead_actions with lead_memory
-    // lead_actions.client_id identifies which client owns the lead (stores UUID)
-    // lead_actions.lead_id links to lead_memory.id
-    console.log('[E2E-Test] [ClientLeads] Building query to join lead_actions with lead_memory');
-    console.log('[E2E-Test] [ClientLeads] Query: SELECT lead_memory.*, lead_actions.client_id, lead_actions.tag');
-    console.log('[E2E-Test] [ClientLeads] JOIN: lead_actions.lead_id = lead_memory.id');
-    console.log('[E2E-Test] [ClientLeads] WHERE: lead_actions.client_id = ' + clientUuid);
-    console.log('[E2E-Test] [ClientLeads] Filter: status = ' + status);
-
-    const { data: leadActions, error: actionsError } = await supabase
-      .from('lead_actions')
-      .select(`
-        client_id,
-        tag,
-        lead_id,
-        lead_memory:lead_id (
-          id,
-          name,
-          email,
-          message,
-          ai_summary,
-          language,
-          timestamp,
-          intent,
-          tone,
-          urgency,
-          confidence_score,
-          archived,
-          deleted,
-          current_tag,
-          relationship_insight,
-          last_updated
-        )
-      `)
-      .eq('client_id', clientUuid)
-      .order('created_at', { ascending: false });
-
-    console.log('[E2E-Test] [ClientLeads] Query executed');
+    // Use batched query results
+    const { data: leadActions, error: actionsError } = leadsQuery;
+    
+    console.log('[E2E-Test] [ClientLeads] Batched query executed');
     console.log('[E2E-Test] [ClientLeads] Supabase response:', {
       hasData: !!leadActions,
       rowCount: leadActions?.length || 0,
@@ -372,6 +335,11 @@ export async function GET(req: NextRequest) {
         totalPages,
         hasNextPage: page < totalPages,
         hasPrevPage: page > 1
+      }
+    }, {
+      headers: {
+        'Cache-Control': 'public, max-age=60, s-maxage=60', // Cache for 1 minute
+        'Content-Type': 'application/json'
       }
     });
 

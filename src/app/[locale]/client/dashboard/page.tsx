@@ -1,12 +1,18 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo, useCallback, memo } from "react";
 import { motion } from "framer-motion";
 import { useRouter } from "next/navigation";
 import { useLocale } from 'next-intl';
 import dynamic from 'next/dynamic';
-import AvenirLogo from '../../../../components/AvenirLogo';
-import UniversalLanguageToggle from '../../../../components/UniversalLanguageToggle';
+// Dynamic imports for better bundle splitting
+const AvenirLogo = dynamic(() => import('../../../../components/AvenirLogo'), {
+  ssr: true, // Keep SSR for logo as it's above the fold
+});
+const UniversalLanguageToggle = dynamic(() => import('../../../../components/UniversalLanguageToggle'), {
+  ssr: true, // Keep SSR for language toggle as it's above the fold
+});
+import { SkeletonLoader, LeadCardSkeleton, StatsCardSkeleton, TableSkeleton } from '../../../../components/SkeletonLoader';
 import type { LeadAction } from '../../../api/lead-actions/route';
 import { isLegacyClientId, DEMO_CLIENT_EMAIL } from '../../../../lib/uuid-utils';
 import { useSession } from '../../../../components/SessionProvider';
@@ -15,18 +21,19 @@ import { saveSession, clearSession, type ClientData } from '../../../../utils/se
 // Dynamic imports to prevent hydration mismatches
 const PredictiveGrowthEngine = dynamic(() => import('../../../../components/PredictiveGrowthEngine'), { 
   ssr: false,
-  loading: () => <div className="h-32 animate-pulse bg-white/5 rounded-xl border border-white/10"></div>
+  loading: () => <SkeletonLoader variant="card" height="8rem" />
 });
 const GrowthCopilot = dynamic(() => import('../../../../components/GrowthCopilot'), { 
-  ssr: false 
+  ssr: false,
+  loading: () => <SkeletonLoader variant="card" height="6rem" />
 });
 const ActivityLog = dynamic(() => import('../../../../components/ActivityLog'), { 
   ssr: false,
-  loading: () => <div className="h-24 animate-pulse bg-white/5 rounded-xl border border-white/10"></div>
+  loading: () => <SkeletonLoader variant="card" height="6rem" />
 });
 const RelationshipInsights = dynamic(() => import('../../../../components/RelationshipInsights'), { 
   ssr: false,
-  loading: () => <div className="h-48 animate-pulse bg-white/5 rounded-xl border border-white/10"></div>
+  loading: () => <SkeletonLoader variant="card" height="12rem" />
 });
 
 // ClientData type is now imported from session utility
@@ -95,23 +102,24 @@ export default function ClientDashboard() {
     hasPrevPage: false
   });
 
+  // Memoized truncation check function for better performance
+  const checkTruncation = useCallback(() => {
+    const intentElement = document.querySelector('[data-intent-text]') as HTMLDivElement;
+    if (intentElement) {
+      const truncated = intentElement.scrollWidth > intentElement.clientWidth;
+      setIsIntentTruncated(truncated);
+    }
+  }, []);
+
   // Check if intent text is truncated
   useEffect(() => {
-    const checkTruncation = () => {
-      const intentElement = document.querySelector('[data-intent-text]') as HTMLDivElement;
-      if (intentElement) {
-        const truncated = intentElement.scrollWidth > intentElement.clientWidth;
-        setIsIntentTruncated(truncated);
-      }
-    };
-
     // Check on mount and when stats change
     checkTruncation();
     
     // Also check on window resize
     window.addEventListener('resize', checkTruncation);
     return () => window.removeEventListener('resize', checkTruncation);
-  }, [stats.topIntent]);
+  }, [stats.topIntent, checkTruncation]);
 
   // Translate topIntent when stats change (with cache to prevent re-render loop)
   useEffect(() => {
@@ -273,6 +281,140 @@ export default function ClientDashboard() {
     }
   }, [authenticated, client, activeTab]);
 
+  // Memoized fetchLeads function for better performance
+  const fetchLeads = useCallback(async () => {
+    if (!client) return;
+
+    try {
+      setLoading(true);
+      // Clear leads array before fetching to ensure replacement, not appending
+      setLeads([]);
+      console.log('[ClientDashboard] ============================================');
+      console.log('[ClientDashboard] Fetching leads');
+      console.log('[ClientDashboard] Client ID:', client.clientId);
+      console.log('[ClientDashboard] Business:', client.businessName);
+      console.log('[ClientDashboard] Tab:', activeTab);
+      console.log('[ClientDashboard] Locale:', locale);
+      console.log('[ClientDashboard] Page:', currentPage);
+      console.log('[ClientDashboard] Limit:', leadsPerPage);
+      
+      const endpoint = `/api/client/leads?clientId=${client.clientId}&locale=${locale}&status=${activeTab}&page=${currentPage}&limit=${leadsPerPage}`;
+      console.log('[ClientDashboard] Endpoint:', endpoint);
+      
+      const res = await fetch(endpoint);
+      const data = await res.json();
+
+      console.log('[ClientDashboard] API Response:', {
+        success: data.success,
+        leadCount: data.data?.length || 0,
+        pagination: data.pagination,
+        status: res.status,
+      });
+
+      if (data.success) {
+        const leadsData = data.data || [];
+        
+        // Replace leads completely (server-side pagination)
+        setLeads([...leadsData]); // Create new array to ensure replacement
+        
+        // Update pagination state
+        if (data.pagination) {
+          setPagination(data.pagination);
+        }
+        
+        // For stats calculation, we need all leads, so fetch them separately
+        await fetchAllLeadsForStats();
+        
+        console.log('[ClientDashboard] ✅ Loaded', leadsData.length, activeTab, 'leads for page', currentPage);
+        console.log('[ClientDashboard] ============================================');
+      } else {
+        console.error('[ClientDashboard] ❌ API returned error:', data.error);
+        console.log('[ClientDashboard] ============================================');
+      }
+    } catch (err) {
+      console.error('[ClientDashboard] ❌ Failed to fetch leads:', err);
+      console.error('[ClientDashboard] ❌ Error details:', {
+        message: err instanceof Error ? err.message : String(err),
+        stack: err instanceof Error ? err.stack : 'No stack trace',
+      });
+      console.log('[ClientDashboard] ============================================');
+    } finally {
+      setLoading(false);
+    }
+  }, [client, activeTab, locale, currentPage, leadsPerPage]);
+
+  // Memoized stats calculation for better performance
+  const calculateStats = useCallback((leadsData: Lead[]) => {
+    console.log('[ClientDashboard] ============================================');
+    console.log('[ClientDashboard] Calculating statistics');
+    console.log('[ClientDashboard] Total leads:', leadsData.length);
+    
+    const total = leadsData.length;
+    const avgConfidence = total > 0
+      ? leadsData.reduce((sum, l) => sum + (l.confidence_score || 0), 0) / total
+      : 0;
+    
+    const highUrgency = leadsData.filter(l => 
+      l.urgency === 'High' || l.urgency === 'Élevée'
+    ).length;
+
+    const intentCounts: Record<string, number> = {};
+    leadsData.forEach(l => {
+      if (l.intent) {
+        intentCounts[l.intent] = (intentCounts[l.intent] || 0) + 1;
+      }
+    });
+    
+    const rawTopIntent = Object.keys(intentCounts).sort((a, b) => 
+      intentCounts[b] - intentCounts[a]
+    )[0] || (isFrench ? 'Aucun' : 'None');
+
+    const calculatedStats = { 
+      total, 
+      avgConfidence, 
+      topIntent: rawTopIntent, 
+      rawTopIntent: rawTopIntent, // store original English intent here
+      highUrgency 
+    };
+    
+    console.log('[ClientDashboard] Stats calculated:', {
+      total: calculatedStats.total,
+      avgConfidence: (calculatedStats.avgConfidence * 100).toFixed(1) + '%',
+      topIntent: calculatedStats.topIntent,
+      highUrgency: calculatedStats.highUrgency,
+    });
+    console.log('[ClientDashboard] ============================================');
+    
+    setStats(calculatedStats);
+  }, [isFrench]);
+
+  // Memoized function to fetch all leads for stats calculation
+  const fetchAllLeadsForStats = useCallback(async () => {
+    if (!client) return;
+
+    try {
+      const endpoint = `/api/client/leads?clientId=${client.clientId}&locale=${locale}&status=${activeTab}&page=1&limit=1000`;
+      const res = await fetch(endpoint);
+      const data = await res.json();
+
+      if (data.success) {
+        let allLeads = data.data || [];
+        
+        // For converted tab, filter only converted leads
+        if (activeTab === 'converted') {
+          allLeads = allLeads.filter((lead: Lead) => 
+            lead.current_tag === 'Converted' || lead.current_tag === 'Converti'
+          );
+        }
+        
+        calculateStats(allLeads);
+        console.log('[ClientDashboard] ✅ Calculated stats from', allLeads.length, 'total leads');
+      }
+    } catch (err) {
+      console.error('[ClientDashboard] ❌ Failed to fetch all leads for stats:', err);
+    }
+  }, [client, locale, activeTab, calculateStats]);
+
   // Reset to first page when filters change
   useEffect(() => {
     setCurrentPage(1);
@@ -285,7 +427,7 @@ export default function ClientDashboard() {
       setLeads([]);
       fetchLeads();
     }
-  }, [currentPage, authenticated, client, activeTab]);
+  }, [currentPage, authenticated, client, activeTab, fetchLeads]);
 
   async function handleLogin(e: React.FormEvent) {
     e.preventDefault();
@@ -367,94 +509,6 @@ export default function ClientDashboard() {
     }
   }
 
-  async function fetchLeads() {
-    if (!client) return;
-
-    try {
-      setLoading(true);
-      // Clear leads array before fetching to ensure replacement, not appending
-      setLeads([]);
-      console.log('[ClientDashboard] ============================================');
-      console.log('[ClientDashboard] Fetching leads');
-      console.log('[ClientDashboard] Client ID:', client.clientId);
-      console.log('[ClientDashboard] Business:', client.businessName);
-      console.log('[ClientDashboard] Tab:', activeTab);
-      console.log('[ClientDashboard] Locale:', locale);
-      console.log('[ClientDashboard] Page:', currentPage);
-      console.log('[ClientDashboard] Limit:', leadsPerPage);
-      
-      const endpoint = `/api/client/leads?clientId=${client.clientId}&locale=${locale}&status=${activeTab}&page=${currentPage}&limit=${leadsPerPage}`;
-      console.log('[ClientDashboard] Endpoint:', endpoint);
-      
-      const res = await fetch(endpoint);
-      const data = await res.json();
-
-      console.log('[ClientDashboard] API Response:', {
-        success: data.success,
-        leadCount: data.data?.length || 0,
-        pagination: data.pagination,
-        status: res.status,
-      });
-
-      if (data.success) {
-        const leadsData = data.data || [];
-        
-        // Replace leads completely (server-side pagination)
-        setLeads([...leadsData]); // Create new array to ensure replacement
-        
-        // Update pagination state
-        if (data.pagination) {
-          setPagination(data.pagination);
-        }
-        
-        // For stats calculation, we need all leads, so fetch them separately
-        await fetchAllLeadsForStats();
-        
-        console.log('[ClientDashboard] ✅ Loaded', leadsData.length, activeTab, 'leads for page', currentPage);
-        console.log('[ClientDashboard] ============================================');
-      } else {
-        console.error('[ClientDashboard] ❌ API returned error:', data.error);
-        console.log('[ClientDashboard] ============================================');
-      }
-    } catch (err) {
-      console.error('[ClientDashboard] ❌ Failed to fetch leads:', err);
-      console.error('[ClientDashboard] ❌ Error details:', {
-        message: err instanceof Error ? err.message : String(err),
-        stack: err instanceof Error ? err.stack : 'No stack trace',
-      });
-      console.log('[ClientDashboard] ============================================');
-    } finally {
-      setLoading(false);
-    }
-  }
-
-  // Separate function to fetch all leads for stats calculation
-  async function fetchAllLeadsForStats() {
-    if (!client) return;
-
-    try {
-      const endpoint = `/api/client/leads?clientId=${client.clientId}&locale=${locale}&status=${activeTab}&page=1&limit=1000`;
-      const res = await fetch(endpoint);
-      const data = await res.json();
-
-      if (data.success) {
-        let allLeads = data.data || [];
-        
-        // For converted tab, filter only converted leads
-        if (activeTab === 'converted') {
-          allLeads = allLeads.filter((lead: Lead) => 
-            lead.current_tag === 'Converted' || lead.current_tag === 'Converti'
-          );
-        }
-        
-        calculateStats(allLeads);
-        console.log('[ClientDashboard] ✅ Calculated stats from', allLeads.length, 'total leads');
-      }
-    } catch (err) {
-      console.error('[ClientDashboard] ❌ Failed to fetch all leads for stats:', err);
-    }
-  }
-
   async function fetchRecentActions() {
     if (!client) return;
 
@@ -467,50 +521,6 @@ export default function ClientDashboard() {
     } catch (err) {
       console.error('[ClientDashboard] Failed to fetch actions:', err);
     }
-  }
-
-  function calculateStats(leadsData: Lead[]) {
-    console.log('[ClientDashboard] ============================================');
-    console.log('[ClientDashboard] Calculating statistics');
-    console.log('[ClientDashboard] Total leads:', leadsData.length);
-    
-    const total = leadsData.length;
-    const avgConfidence = total > 0
-      ? leadsData.reduce((sum, l) => sum + (l.confidence_score || 0), 0) / total
-      : 0;
-    
-    const highUrgency = leadsData.filter(l => 
-      l.urgency === 'High' || l.urgency === 'Élevée'
-    ).length;
-
-    const intentCounts: Record<string, number> = {};
-    leadsData.forEach(l => {
-      if (l.intent) {
-        intentCounts[l.intent] = (intentCounts[l.intent] || 0) + 1;
-      }
-    });
-    
-    const rawTopIntent = Object.keys(intentCounts).sort((a, b) => 
-      intentCounts[b] - intentCounts[a]
-    )[0] || (isFrench ? 'Aucun' : 'None');
-
-    const calculatedStats = { 
-      total, 
-      avgConfidence, 
-      topIntent: rawTopIntent, 
-      rawTopIntent: rawTopIntent, // store original English intent here
-      highUrgency 
-    };
-    
-    console.log('[ClientDashboard] Stats calculated:', {
-      total: calculatedStats.total,
-      avgConfidence: (calculatedStats.avgConfidence * 100).toFixed(1) + '%',
-      topIntent: calculatedStats.topIntent,
-      highUrgency: calculatedStats.highUrgency,
-    });
-    console.log('[ClientDashboard] ============================================');
-    
-    setStats(calculatedStats);
   }
 
   function showToast(message: string) {
@@ -716,31 +726,36 @@ export default function ClientDashboard() {
   }
 
   // Server-side pagination - leads are already paginated from API
-  const currentLeads = leads;
+  const currentLeads = useMemo(() => leads, [leads]);
 
-  // Pagination handlers
-  const goToPage = (page: number) => {
+  // Memoized pagination handlers for better performance
+  const goToPage = useCallback((page: number) => {
     setCurrentPage(Math.max(1, Math.min(page, pagination.totalPages)));
-  };
+  }, [pagination.totalPages]);
 
-  const goToPreviousPage = () => {
+  const goToPreviousPage = useCallback(() => {
     if (pagination.hasPrevPage) {
       setCurrentPage(currentPage - 1);
     }
-  };
+  }, [pagination.hasPrevPage, currentPage]);
 
-  const goToNextPage = () => {
+  const goToNextPage = useCallback(() => {
     if (pagination.hasNextPage) {
       setCurrentPage(currentPage + 1);
     }
-  };
+  }, [pagination.hasNextPage, currentPage]);
 
 
-  const tagOptions = isFrench 
-    ? ['Contacté', 'Haute Valeur', 'Non Qualifié', 'Suivi', 'Converti']
-    : ['Contacted', 'High Value', 'Not Qualified', 'Follow-Up', 'Converted'];
+  // Memoized tag options for better performance
+  const tagOptions = useMemo(() => 
+    isFrench 
+      ? ['Contacté', 'Haute Valeur', 'Non Qualifié', 'Suivi', 'Converti']
+      : ['Contacted', 'High Value', 'Not Qualified', 'Follow-Up', 'Converted'],
+    [isFrench]
+  );
 
-  const getTagBadgeColor = (tag: string | null | undefined) => {
+  // Memoized tag badge color function for better performance
+  const getTagBadgeColor = useCallback((tag: string | null | undefined) => {
     if (!tag) return '';
     const tagLower = tag.toLowerCase();
     if (tagLower.includes('contact')) return 'bg-blue-500/20 border-blue-500/40 text-blue-300';
@@ -749,7 +764,7 @@ export default function ClientDashboard() {
     if (tagLower.includes('follow') || tagLower.includes('suivi')) return 'bg-purple-500/20 border-purple-500/40 text-purple-300';
     if (tagLower.includes('convert') || tagLower.includes('converti')) return 'bg-green-500/20 border-green-500/40 text-green-300 shadow-[0_0_10px_rgba(34,197,94,0.3)]';
     return 'bg-white/10 border-white/20 text-white/60';
-  };
+  }, []);
 
   // Login Screen
   if (!authenticated) {
@@ -843,11 +858,35 @@ export default function ClientDashboard() {
   // Loading state
   if (loading && !leads.length) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-black text-white">
-        <div className="text-center">
-          <div className="animate-spin h-8 w-8 border-4 border-blue-500 border-t-transparent rounded-full mx-auto mb-4"></div>
-          <p>{t.loading}</p>
-        </div>
+      <div className="min-h-screen bg-gradient-to-br from-[#0f172a] via-[#1e1b4b] to-[#0f172a] text-white">
+        {/* Header with Logo and Language Toggle */}
+        <header className="w-full px-6 py-4 border-b border-white/10">
+          <div className="w-full flex items-center justify-between">
+            <a href={`/${locale}`} className="inline-block">
+              <AvenirLogo />
+            </a>
+            <UniversalLanguageToggle />
+          </div>
+        </header>
+
+        {/* Main Content */}
+        <main className="container mx-auto px-6 py-8">
+          {/* Stats Grid Skeleton */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+            {Array.from({ length: 4 }).map((_, i) => (
+              <StatsCardSkeleton key={i} />
+            ))}
+          </div>
+
+          {/* Leads Table Skeleton */}
+          <div className="bg-white/5 border border-white/10 rounded-xl p-6">
+            <div className="flex items-center justify-between mb-6">
+              <SkeletonLoader variant="text" width="200px" height="1.5rem" />
+              <SkeletonLoader variant="rect" width="120px" height="2rem" />
+            </div>
+            <TableSkeleton rows={5} />
+          </div>
+        </main>
       </div>
     );
   }

@@ -43,6 +43,11 @@ export async function POST(req: NextRequest) {
         success: true,
         translated: cachedTranslation.translated,
         cached: true
+      }, {
+        headers: {
+          'Cache-Control': 'public, max-age=3600, s-maxage=3600', // Cache for 1 hour
+          'Content-Type': 'application/json'
+        }
       });
     }
 
@@ -89,6 +94,11 @@ export async function POST(req: NextRequest) {
       success: true,
       translated: translated,
       cached: false
+    }, {
+      headers: {
+        'Cache-Control': 'public, max-age=3600, s-maxage=3600', // Cache for 1 hour
+        'Content-Type': 'application/json'
+      }
     });
 
   } catch (error) {
