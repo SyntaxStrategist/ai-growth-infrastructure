@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import { useTranslations } from 'next-intl';
 
 interface Campaign {
   id: string;
@@ -36,7 +37,12 @@ interface Metrics {
   average_conversion_rate: number;
 }
 
-export default function OutreachCenter() {
+interface OutreachCenterProps {
+  locale?: string;
+}
+
+export default function OutreachCenter({ locale = 'en' }: OutreachCenterProps) {
+  const t = useTranslations('outreach');
   const [campaigns, setCampaigns] = useState<Campaign[]>([]);
   const [emails, setEmails] = useState<Email[]>([]);
   const [metrics, setMetrics] = useState<Metrics | null>(null);
@@ -116,11 +122,11 @@ export default function OutreachCenter() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Outreach Center</h1>
-          <p className="text-gray-600">Manage and monitor your automated outreach campaigns</p>
+          <h1 className="text-2xl font-bold text-gray-900">{t('title')}</h1>
+          <p className="text-gray-600">{t('subtitle')}</p>
         </div>
         <button className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center">
-          📧 New Campaign
+          📧 {t('newCampaign')}
         </button>
       </div>
 
@@ -133,7 +139,7 @@ export default function OutreachCenter() {
                 <span className="text-2xl">📧</span>
               </div>
               <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">Emails Sent</p>
+                <p className="text-sm font-medium text-gray-600">{t('metrics.emailsSent')}</p>
                 <p className="text-2xl font-bold text-gray-900">{metrics.total_emails_sent}</p>
               </div>
             </div>
@@ -145,7 +151,7 @@ export default function OutreachCenter() {
                 <span className="text-2xl">👁️</span>
               </div>
               <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">Open Rate</p>
+                <p className="text-sm font-medium text-gray-600">{t('metrics.openRate')}</p>
                 <p className="text-2xl font-bold text-gray-900">{formatPercentage(metrics.average_open_rate)}</p>
               </div>
             </div>
@@ -157,7 +163,7 @@ export default function OutreachCenter() {
                 <span className="text-2xl">💬</span>
               </div>
               <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">Reply Rate</p>
+                <p className="text-sm font-medium text-gray-600">{t('metrics.replyRate')}</p>
                 <p className="text-2xl font-bold text-gray-900">{formatPercentage(metrics.average_reply_rate)}</p>
               </div>
             </div>
@@ -169,7 +175,7 @@ export default function OutreachCenter() {
                 <span className="text-2xl">📈</span>
               </div>
               <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">Conversion Rate</p>
+                <p className="text-sm font-medium text-gray-600">{t('metrics.conversionRate')}</p>
                 <p className="text-2xl font-bold text-gray-900">{formatPercentage(metrics.average_conversion_rate)}</p>
               </div>
             </div>
@@ -188,7 +194,7 @@ export default function OutreachCenter() {
             }`}
             onClick={() => setActiveTab('overview')}
           >
-            Overview
+            {t('tabs.overview')}
           </button>
           <button 
             className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
@@ -198,7 +204,7 @@ export default function OutreachCenter() {
             }`}
             onClick={() => setActiveTab('campaigns')}
           >
-            Campaigns
+            {t('tabs.campaigns')}
           </button>
           <button 
             className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
@@ -208,7 +214,7 @@ export default function OutreachCenter() {
             }`}
             onClick={() => setActiveTab('emails')}
           >
-            Emails
+            {t('tabs.emails')}
           </button>
           <button 
             className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
@@ -218,7 +224,7 @@ export default function OutreachCenter() {
             }`}
             onClick={() => setActiveTab('analytics')}
           >
-            Analytics
+            {t('tabs.analytics')}
           </button>
         </div>
 
@@ -229,7 +235,7 @@ export default function OutreachCenter() {
               <div className="bg-white rounded-lg shadow">
                 <div className="p-6 border-b">
                   <h3 className="text-lg font-semibold flex items-center">
-                    📅 Recent Campaigns
+                    📅 {t('sections.recentCampaigns')}
                   </h3>
                 </div>
                 <div className="p-6">
@@ -255,25 +261,25 @@ export default function OutreachCenter() {
               <div className="bg-white rounded-lg shadow">
                 <div className="p-6 border-b">
                   <h3 className="text-lg font-semibold flex items-center">
-                    📊 Performance Insights
+                    📊 {t('sections.performanceInsights')}
                   </h3>
                 </div>
                 <div className="p-6">
                   <div className="space-y-4">
                     <div className="flex items-center justify-between">
-                      <span className="text-sm text-gray-600">Best performing day</span>
+                      <span className="text-sm text-gray-600">{t('insights.bestPerformingDay')}</span>
                       <span className="font-medium">Tuesday</span>
                     </div>
                     <div className="flex items-center justify-between">
-                      <span className="text-sm text-gray-600">Best performing time</span>
+                      <span className="text-sm text-gray-600">{t('insights.bestPerformingTime')}</span>
                       <span className="font-medium">10:00 AM</span>
                     </div>
                     <div className="flex items-center justify-between">
-                      <span className="text-sm text-gray-600">Top template</span>
-                      <span className="font-medium">AI Automation</span>
+                      <span className="text-sm text-gray-600">{t('insights.topTemplate')}</span>
+                      <span className="font-medium">{t('templates.aiAutomation')}</span>
                     </div>
                     <div className="flex items-center justify-between">
-                      <span className="text-sm text-gray-600">Avg. response time</span>
+                      <span className="text-sm text-gray-600">{t('insights.avgResponseTime')}</span>
                       <span className="font-medium">2.3 hours</span>
                     </div>
                   </div>
@@ -287,7 +293,7 @@ export default function OutreachCenter() {
           <div className="space-y-4">
             <div className="bg-white rounded-lg shadow">
               <div className="p-6 border-b">
-                <h3 className="text-lg font-semibold">All Campaigns</h3>
+                <h3 className="text-lg font-semibold">{t('sections.allCampaigns')}</h3>
               </div>
               <div className="p-6">
                 <div className="space-y-4">
@@ -329,7 +335,7 @@ export default function OutreachCenter() {
           <div className="space-y-4">
             <div className="bg-white rounded-lg shadow">
               <div className="p-6 border-b">
-                <h3 className="text-lg font-semibold">Recent Emails</h3>
+                <h3 className="text-lg font-semibold">{t('sections.recentEmails')}</h3>
               </div>
               <div className="p-6">
                 <div className="space-y-3">
@@ -363,28 +369,28 @@ export default function OutreachCenter() {
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               <div className="bg-white rounded-lg shadow">
                 <div className="p-6 border-b">
-                  <h3 className="text-lg font-semibold">Conversion Funnel</h3>
+                  <h3 className="text-lg font-semibold">{t('sections.conversionFunnel')}</h3>
                 </div>
                 <div className="p-6">
                   <div className="space-y-4">
                     <div className="flex items-center justify-between">
-                      <span className="text-sm text-gray-600">Emails Sent</span>
+                      <span className="text-sm text-gray-600">{t('funnel.emailsSent')}</span>
                       <span className="font-medium">1,000</span>
                     </div>
                     <div className="flex items-center justify-between">
-                      <span className="text-sm text-gray-600">Emails Delivered</span>
+                      <span className="text-sm text-gray-600">{t('funnel.emailsDelivered')}</span>
                       <span className="font-medium">950 (95%)</span>
                     </div>
                     <div className="flex items-center justify-between">
-                      <span className="text-sm text-gray-600">Emails Opened</span>
+                      <span className="text-sm text-gray-600">{t('funnel.emailsOpened')}</span>
                       <span className="font-medium">285 (30%)</span>
                     </div>
                     <div className="flex items-center justify-between">
-                      <span className="text-sm text-gray-600">Emails Replied</span>
+                      <span className="text-sm text-gray-600">{t('funnel.emailsReplied')}</span>
                       <span className="font-medium">57 (6%)</span>
                     </div>
                     <div className="flex items-center justify-between">
-                      <span className="text-sm text-gray-600">Conversions</span>
+                      <span className="text-sm text-gray-600">{t('funnel.conversions')}</span>
                       <span className="font-medium">12 (1.2%)</span>
                     </div>
                   </div>
@@ -393,12 +399,12 @@ export default function OutreachCenter() {
 
               <div className="bg-white rounded-lg shadow">
                 <div className="p-6 border-b">
-                  <h3 className="text-lg font-semibold">Template Performance</h3>
+                  <h3 className="text-lg font-semibold">{t('sections.templatePerformance')}</h3>
                 </div>
                 <div className="p-6">
                   <div className="space-y-4">
                     <div className="flex items-center justify-between">
-                      <span className="text-sm text-gray-600">AI Automation</span>
+                      <span className="text-sm text-gray-600">{t('templates.aiAutomation')}</span>
                       <div className="flex items-center space-x-2">
                         <span className="text-sm font-medium">32% open</span>
                         <span className="text-sm text-gray-500">•</span>
@@ -406,7 +412,7 @@ export default function OutreachCenter() {
                       </div>
                     </div>
                     <div className="flex items-center justify-between">
-                      <span className="text-sm text-gray-600">Follow-up Value</span>
+                      <span className="text-sm text-gray-600">{t('templates.followUpValue')}</span>
                       <div className="flex items-center space-x-2">
                         <span className="text-sm font-medium">28% open</span>
                         <span className="text-sm text-gray-500">•</span>
@@ -414,7 +420,7 @@ export default function OutreachCenter() {
                       </div>
                     </div>
                     <div className="flex items-center justify-between">
-                      <span className="text-sm text-gray-600">Nurture Sequence</span>
+                      <span className="text-sm text-gray-600">{t('templates.nurtureSequence')}</span>
                       <div className="flex items-center space-x-2">
                         <span className="text-sm font-medium">25% open</span>
                         <span className="text-sm text-gray-500">•</span>

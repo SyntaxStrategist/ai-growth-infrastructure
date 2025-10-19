@@ -146,12 +146,10 @@ export default function OutreachPage() {
         >
           <div>
             <h1 className="text-3xl font-bold mb-2">
-              {locale === 'fr' ? 'Centre d\'Outreach' : 'Outreach Center'}
+              {t('outreach.title')}
             </h1>
             <p className="text-white/60">
-              {locale === 'fr' 
-                ? 'Gérez et surveillez vos campagnes d\'outreach automatisées'
-                : 'Manage and monitor your automated outreach campaigns'}
+              {t('outreach.subtitle')}
             </p>
           </div>
           <div className="flex items-center gap-3">
@@ -193,7 +191,7 @@ export default function OutreachPage() {
           animate={{ opacity: 1 }}
           transition={{ duration: 0.6, delay: 0.2 }}
         >
-          <OutreachCenter />
+          <OutreachCenter locale={locale} />
         </motion.div>
       </div>
     </div>

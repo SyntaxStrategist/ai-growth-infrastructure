@@ -176,5 +176,48 @@
     "close": "Close",
     "error": "Error",
     "loading": "Loading..."
+  },
+  "outreach": {
+    "title": "Outreach Center",
+    "subtitle": "Manage and monitor your automated outreach campaigns",
+    "newCampaign": "New Campaign",
+    "tabs": {
+      "overview": "Overview",
+      "campaigns": "Campaigns",
+      "emails": "Emails",
+      "analytics": "Analytics"
+    },
+    "metrics": {
+      "emailsSent": "Emails Sent",
+      "openRate": "Open Rate",
+      "replyRate": "Reply Rate",
+      "conversionRate": "Conversion Rate"
+    },
+    "sections": {
+      "recentCampaigns": "Recent Campaigns",
+      "performanceInsights": "Performance Insights",
+      "allCampaigns": "All Campaigns",
+      "recentEmails": "Recent Emails",
+      "conversionFunnel": "Conversion Funnel",
+      "templatePerformance": "Template Performance"
+    },
+    "funnel": {
+      "emailsSent": "Emails Sent",
+      "emailsDelivered": "Emails Delivered",
+      "emailsOpened": "Emails Opened",
+      "emailsReplied": "Emails Replied",
+      "conversions": "Conversions"
+    },
+    "templates": {
+      "aiAutomation": "AI Automation",
+      "followUpValue": "Follow-up Value",
+      "nurtureSequence": "Nurture Sequence"
+    },
+    "insights": {
+      "bestPerformingDay": "Best performing day",
+      "bestPerformingTime": "Best performing time",
+      "topTemplate": "Top template",
+      "avgResponseTime": "Avg. response time"
+    }
   }
 }

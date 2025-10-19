@@ -853,7 +853,7 @@ export default function Dashboard() {
               href={`/${locale}/dashboard/outreach`}
               className="px-4 py-2 rounded-lg bg-orange-500/20 border border-orange-500/40 text-orange-400 hover:bg-orange-500/30 transition-all duration-300 text-sm font-medium"
             >
-              {locale === 'fr' ? '📧 Outreach' : '📧 Outreach'}
+              📧 {locale === 'fr' ? 'Prospection' : 'Outreach'}
             </a>
             <a
               href={`/${locale}/admin/prospect-intelligence`}

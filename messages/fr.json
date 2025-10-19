@@ -176,5 +176,48 @@
     "close": "Fermer",
     "error": "Erreur",
     "loading": "Chargement..."
+  },
+  "outreach": {
+    "title": "Centre de prospection automatisée",
+    "subtitle": "Gérez et suivez vos campagnes de prospection automatisée",
+    "newCampaign": "Nouvelle campagne",
+    "tabs": {
+      "overview": "Aperçu",
+      "campaigns": "Campagnes",
+      "emails": "Courriels",
+      "analytics": "Analytique"
+    },
+    "metrics": {
+      "emailsSent": "Courriels envoyés",
+      "openRate": "Taux d'ouverture",
+      "replyRate": "Taux de réponse",
+      "conversionRate": "Taux de conversion"
+    },
+    "sections": {
+      "recentCampaigns": "Campagnes récentes",
+      "performanceInsights": "Aperçus de performance",
+      "allCampaigns": "Toutes les campagnes",
+      "recentEmails": "Courriels récents",
+      "conversionFunnel": "Entonnoir de conversion",
+      "templatePerformance": "Performance des modèles"
+    },
+    "funnel": {
+      "emailsSent": "Courriels envoyés",
+      "emailsDelivered": "Courriels livrés",
+      "emailsOpened": "Courriels ouverts",
+      "emailsReplied": "Réponses reçues",
+      "conversions": "Conversions"
+    },
+    "templates": {
+      "aiAutomation": "Automatisation IA",
+      "followUpValue": "Valeur de relance",
+      "nurtureSequence": "Séquence de suivi"
+    },
+    "insights": {
+      "bestPerformingDay": "Meilleur jour de performance",
+      "bestPerformingTime": "Meilleur moment de performance",
+      "topTemplate": "Meilleur modèle",
+      "avgResponseTime": "Délai de réponse moyen"
+    }
   }
 }
