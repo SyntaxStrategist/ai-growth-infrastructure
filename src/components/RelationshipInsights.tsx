@@ -27,6 +27,11 @@ export default function RelationshipInsights({ locale, clientId = null }: Relati
   const [leads, setLeads] = useState<LeadWithHistory[]>([]);
   const [loading, setLoading] = useState(true);
   const [expandedLead, setExpandedLead] = useState<string | null>(null);
+  
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const [leadsPerPage] = useState(4);
+  const [totalLeads, setTotalLeads] = useState(0);
 
   const isFrench = locale === 'fr';
 
@@ -42,11 +47,36 @@ export default function RelationshipInsights({ locale, clientId = null }: Relati
     viewHistory: isFrench ? 'Voir l\'historique' : 'View History',
     hideHistory: isFrench ? 'Masquer l\'historique' : 'Hide History',
     noHistory: isFrench ? 'Aucun historique' : 'No history',
+    // Pagination labels
+    previous: isFrench ? 'Précédent' : 'Previous',
+    next: isFrench ? 'Suivant' : 'Next',
+    showing: isFrench ? 'Affichage' : 'Showing',
+    of: isFrench ? 'sur' : 'of',
   };
 
   useEffect(() => {
     fetchLeadsWithInsights();
   }, []);
+
+  // Pagination functions
+  const totalPages = Math.ceil(totalLeads / leadsPerPage);
+  const startIndex = (currentPage - 1) * leadsPerPage;
+  const endIndex = startIndex + leadsPerPage;
+  const currentLeads = leads.slice(startIndex, endIndex);
+
+  const goToPreviousPage = () => {
+    if (currentPage > 1) {
+      setCurrentPage(currentPage - 1);
+      setExpandedLead(null); // Close any expanded leads when changing pages
+    }
+  };
+
+  const goToNextPage = () => {
+    if (currentPage < totalPages) {
+      setCurrentPage(currentPage + 1);
+      setExpandedLead(null); // Close any expanded leads when changing pages
+    }
+  };
 
   async function fetchLeadsWithInsights() {
     try {
@@ -148,6 +178,7 @@ export default function RelationshipInsights({ locale, clientId = null }: Relati
       console.log('[RelationshipInsights] ============================================');
 
       setLeads((data || []) as LeadWithHistory[]);
+      setTotalLeads((data || []).length);
     } catch (err) {
       console.error('[RelationshipInsights] ============================================');
       console.error('[RelationshipInsights] ❌ CRITICAL ERROR');
@@ -225,8 +256,14 @@ export default function RelationshipInsights({ locale, clientId = null }: Relati
         </div>
       </div>
 
-      <div className="space-y-4">
-        {leads.map((lead, idx) => (
+      <motion.div 
+        key={currentPage}
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.3 }}
+        className="space-y-4"
+      >
+        {currentLeads.map((lead, idx) => (
           <motion.div
             key={lead.email}
             initial={{ opacity: 0, x: -20 }}
@@ -352,7 +389,82 @@ export default function RelationshipInsights({ locale, clientId = null }: Relati
             )}
           </motion.div>
         ))}
-      </div>
+      </motion.div>
+
+      {/* Pagination Controls */}
+      {totalLeads > leadsPerPage && (
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3, delay: 0.2 }}
+          className="mt-6 flex items-center justify-between"
+        >
+          {/* Pagination Info */}
+          <div className="text-sm text-white/60">
+            {t.showing} {startIndex + 1}-{Math.min(endIndex, totalLeads)} {t.of} {totalLeads}
+          </div>
+
+          {/* Pagination Buttons */}
+          <div className="flex items-center gap-2">
+            <button
+              onClick={goToPreviousPage}
+              disabled={currentPage === 1}
+              className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
+                currentPage === 1
+                  ? 'bg-white/5 border border-white/10 text-white/30 cursor-not-allowed'
+                  : 'bg-white/10 border border-white/20 text-white/80 hover:bg-white/20 hover:border-white/30 hover:text-white'
+              }`}
+            >
+              {t.previous}
+            </button>
+
+            {/* Page Numbers */}
+            <div className="flex items-center gap-1">
+              {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                let pageNum;
+                if (totalPages <= 5) {
+                  pageNum = i + 1;
+                } else if (currentPage <= 3) {
+                  pageNum = i + 1;
+                } else if (currentPage >= totalPages - 2) {
+                  pageNum = totalPages - 4 + i;
+                } else {
+                  pageNum = currentPage - 2 + i;
+                }
+
+                return (
+                  <button
+                    key={pageNum}
+                    onClick={() => {
+                      setCurrentPage(pageNum);
+                      setExpandedLead(null);
+                    }}
+                    className={`w-8 h-8 rounded-lg text-sm font-medium transition-all ${
+                      currentPage === pageNum
+                        ? 'bg-blue-500 border border-blue-400 text-white shadow-[0_0_10px_rgba(59,130,246,0.3)]'
+                        : 'bg-white/10 border border-white/20 text-white/80 hover:bg-white/20 hover:border-white/30 hover:text-white'
+                    }`}
+                  >
+                    {pageNum}
+                  </button>
+                );
+              })}
+            </div>
+
+            <button
+              onClick={goToNextPage}
+              disabled={currentPage === totalPages}
+              className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
+                currentPage === totalPages
+                  ? 'bg-white/5 border border-white/10 text-white/30 cursor-not-allowed'
+                  : 'bg-white/10 border border-white/20 text-white/80 hover:bg-white/20 hover:border-white/30 hover:text-white'
+              }`}
+            >
+              {t.next}
+            </button>
+          </div>
+        </motion.div>
+      )}
     </motion.div>
   );
 }
