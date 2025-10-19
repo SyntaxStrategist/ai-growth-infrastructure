@@ -81,10 +81,11 @@ export default function ClientDashboard() {
     total: 0,
     avgConfidence: 0,
     topIntent: '',
+    rawTopIntent: '',
     highUrgency: 0,
   });
   const [isIntentTruncated, setIsIntentTruncated] = useState(false);
-  const [translatedIntentCache, setTranslatedIntentCache] = useState<string | null>(null);
+  const [originalIntentCache, setOriginalIntentCache] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [leadsPerPage] = useState(5);
   const [pagination, setPagination] = useState({
@@ -115,23 +116,26 @@ export default function ClientDashboard() {
   // Translate topIntent when stats change (with cache to prevent re-render loop)
   useEffect(() => {
     (async () => {
+      const rawIntent = stats?.rawTopIntent || stats?.topIntent; // Prefer raw intent if available
+
+      // Run only if we have a valid new intent to translate
       if (
-        stats.topIntent &&
-        stats.topIntent !== 'Aucun' &&
-        stats.topIntent !== 'None' &&
-        stats.topIntent !== translatedIntentCache
+        rawIntent &&
+        rawIntent !== 'Aucun' &&
+        rawIntent !== 'None' &&
+        rawIntent !== originalIntentCache // Only translate if new raw intent
       ) {
-        console.log("[IntentTranslation] Running translation once for:", stats.topIntent, locale);
-        const translatedIntent = await translateIntent(stats.topIntent, locale);
-        setStats(prev => ({ ...prev, topIntent: translatedIntent }));
-        setTranslatedIntentCache(stats.topIntent);
+        console.log('[IntentTranslation] Translating:', rawIntent, '→', locale);
+        const translated = await translateIntent(rawIntent, locale);
+        setStats(prev => ({ ...prev, topIntent: translated }));
+        setOriginalIntentCache(rawIntent); // ✅ Cache the source English intent only
       }
     })();
-  }, [stats.topIntent, locale, translatedIntentCache]);
+  }, [stats?.rawTopIntent, locale]);
 
   // Clear translation cache when locale changes
   useEffect(() => {
-    setTranslatedIntentCache(null);
+    setOriginalIntentCache(null);
   }, [locale]);
 
   // Async helper function for translation
@@ -490,7 +494,13 @@ export default function ClientDashboard() {
       intentCounts[b] - intentCounts[a]
     )[0] || (isFrench ? 'Aucun' : 'None');
 
-    const calculatedStats = { total, avgConfidence, topIntent: rawTopIntent, highUrgency };
+    const calculatedStats = { 
+      total, 
+      avgConfidence, 
+      topIntent: rawTopIntent, 
+      rawTopIntent: rawTopIntent, // store original English intent here
+      highUrgency 
+    };
     
     console.log('[ClientDashboard] Stats calculated:', {
       total: calculatedStats.total,
