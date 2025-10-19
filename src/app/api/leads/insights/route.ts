@@ -83,7 +83,10 @@ function isFrenchText(text: string): boolean {
   const hasFrenchChars = frenchIndicators.some(char => lowerText.includes(char));
   const hasFrenchWords = frenchWords.some(word => lowerText.includes(word));
   
-  return hasFrenchChars || hasFrenchWords;
+  const isFrench = hasFrenchChars || hasFrenchWords;
+  console.log(`[RelationshipInsights] Language detection for "${text.substring(0, 50)}...": hasFrenchChars=${hasFrenchChars}, hasFrenchWords=${hasFrenchWords}, isFrench=${isFrench}`);
+  
+  return isFrench;
 }
 
 // Translation functions
@@ -137,32 +140,38 @@ function translateInsight(value: string, targetLocale: string): string {
   const isValueFrench = isFrenchText(value);
   const isTargetFrench = targetLocale === 'fr';
   
+  // Always log the detection and original value
+  console.log(`[RelationshipInsights] Detected locale: ${targetLocale}`);
+  console.log(`[RelationshipInsights] Original insight: "${value}"`);
+  
   if (isTargetFrench && !isValueFrench) {
     // We need French, but value is in English - translate to French
     const translated = insightTranslations[value as keyof typeof insightTranslations] || value;
-    if (translated !== value) {
-      console.log(`[LeadsInsightsAPI] Translating summary from EN → FR: "${value.substring(0, 30)}..." → "${translated.substring(0, 30)}..."`);
-    }
+    console.log(`[RelationshipInsights] Translated insight → "${translated}"`);
     return translated;
   } else if (!isTargetFrench && isValueFrench) {
     // We need English, but value is in French - translate to English
     const translated = insightTranslations[value as keyof typeof insightTranslations] || value;
-    if (translated !== value) {
-      console.log(`[LeadsInsightsAPI] Translating summary from FR → EN: "${value.substring(0, 30)}..." → "${translated.substring(0, 30)}..."`);
-    }
+    console.log(`[RelationshipInsights] Translated insight → "${translated}"`);
     return translated;
   }
   
+  // No translation needed - already in correct language
+  console.log(`[RelationshipInsights] No translation needed - already in correct language`);
   return value;
 }
 
 // Main translation function for relationship data
 async function translateRelationshipData(data: any[], locale: string): Promise<any[]> {
-  return data.map((lead: any) => {
+  console.log(`[RelationshipInsights] Starting translation for ${data.length} leads with locale: ${locale}`);
+  
+  return data.map((lead: any, index: number) => {
+    console.log(`[RelationshipInsights] Processing lead ${index + 1}: ${lead.name} (${lead.email})`);
     const translatedLead = { ...lead };
     
     // Translate relationship insight
     if (lead.relationship_insight) {
+      console.log(`[RelationshipInsights] Processing 💡 insight for lead ${index + 1}`);
       translatedLead.relationship_insight = translateInsight(lead.relationship_insight, locale);
     }
     
