@@ -48,6 +48,13 @@ export function SessionProvider({ children }: SessionProviderProps) {
     console.log('[AuthFix] ============================================');
     console.log('[AuthFix] SessionProvider: Refreshing session...');
     
+    // Check if client_session exists before attempting to restore
+    const clientSession = localStorage.getItem('client_session');
+    if (!clientSession) {
+      console.log('[AuthFix] SessionProvider: No client_session found, skipping refresh');
+      return;
+    }
+    
     const sessionState = restoreSession();
     setSession(sessionState);
     
@@ -75,9 +82,20 @@ export function SessionProvider({ children }: SessionProviderProps) {
   // Listen for storage changes (e.g., from other tabs)
   useEffect(() => {
     const handleStorageChange = (e: StorageEvent) => {
-      if (e.key === 'client_session' || e.key === 'clientId') {
-        console.log('[AuthFix] SessionProvider: Storage change detected, refreshing session...');
+      if (e.key !== "client_session") {
+        console.log("[AuthFix] Storage change ignored for key:", e.key);
+        return;
+      }
+      
+      console.log('[AuthFix] SessionProvider: Storage change detected for client_session, refreshing session...');
+      
+      // Only refresh if there's actually a client_session in localStorage
+      const clientSession = localStorage.getItem('client_session');
+      if (clientSession) {
+        console.log('[AuthFix] Session restored from valid storage event');
         refreshSession();
+      } else {
+        console.log('[AuthFix] No client_session found in storage event, ignoring');
       }
     };
 
