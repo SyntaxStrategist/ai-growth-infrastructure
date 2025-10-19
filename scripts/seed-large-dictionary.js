@@ -41,16 +41,21 @@ const supabase = createClient(
 
 // Configuration
 const CONFIG = {
-  BATCH_SIZE: 5000,
-  MAX_TEXT_LENGTH: 300,
-  MIN_SIMILARITY_THRESHOLD: 0.7,
-  TARGET_ENTRIES: 75000, // Aim for 75k entries
+  BATCH_SIZE: 1000, // Smaller batches for better performance
+  MAX_TEXT_LENGTH: 100, // Focus on short words/phrases (1-3 words)
+  TARGET_ENTRIES: 10000, // Aim for 10k entries
+  MAX_WORDS: 3, // Maximum words per phrase
   DATA_SOURCES: [
     {
       name: 'Tatoeba',
       url: 'https://downloads.tatoeba.org/exports/per_language/eng/eng_sentences.tsv.bz2',
       fallback: 'https://downloads.tatoeba.org/exports/per_language/fra/fra_sentences.tsv.bz2',
       type: 'sentences'
+    },
+    {
+      name: 'Tatoeba Links',
+      url: 'https://downloads.tatoeba.org/exports/sentence_links.tsv.bz2',
+      type: 'links'
     },
     {
       name: 'OPUS Europarl',
@@ -113,7 +118,7 @@ function extractBz2(inputPath, outputPath) {
 }
 
 /**
- * Generate high-quality bilingual pairs from Tatoeba sentences
+ * Generate high-quality bilingual pairs from Tatoeba with proper alignment
  */
 async function generateTatoebaPairs() {
   console.log('🌐 [DictionarySeeder] Generating Tatoeba bilingual pairs...');
@@ -139,171 +144,71 @@ async function generateTatoebaPairs() {
     await downloadFile(CONFIG.DATA_SOURCES[0].fallback, fraPath);
     await extractBz2(fraPath, fraExtracted);
     
-    // Read and process sentences
+    // Download sentence links for proper alignment
+    const linksPath = path.join(tempDir, 'sentence_links.tsv.bz2');
+    const linksExtracted = path.join(tempDir, 'sentence_links.tsv');
+    await downloadFile(CONFIG.DATA_SOURCES[1].url, linksPath);
+    await extractBz2(linksPath, linksExtracted);
+    
+    // Load sentences into maps
     const engSentences = new Map();
     const fraSentences = new Map();
     
-    // Load English sentences
+    console.log('📖 [DictionarySeeder] Loading English sentences...');
     const engData = fs.readFileSync(engExtracted, 'utf8');
     engData.split('\n').forEach(line => {
       const [id, lang, text] = line.split('\t');
-      if (id && text && text.length <= CONFIG.MAX_TEXT_LENGTH) {
-        engSentences.set(id, normalizeText(text));
+      if (id && text) {
+        const normalized = normalizeText(text);
+        if (normalized) {
+          engSentences.set(id, normalized);
+        }
       }
     });
     
-    // Load French sentences
+    console.log('📖 [DictionarySeeder] Loading French sentences...');
     const fraData = fs.readFileSync(fraExtracted, 'utf8');
     fraData.split('\n').forEach(line => {
       const [id, lang, text] = line.split('\t');
-      if (id && text && text.length <= CONFIG.MAX_TEXT_LENGTH) {
-        fraSentences.set(id, normalizeText(text));
-      }
-    });
-    
-    // Generate pairs (simplified approach - in reality you'd need sentence alignment)
-    // For now, we'll create pairs from common words and phrases
-    const commonPairs = [
-      // Common words
-      ['hello', 'bonjour'], ['goodbye', 'au revoir'], ['yes', 'oui'], ['no', 'non'],
-      ['please', 's\'il vous plaît'], ['thank you', 'merci'], ['sorry', 'désolé'],
-      ['good morning', 'bonjour'], ['good evening', 'bonsoir'], ['good night', 'bonne nuit'],
-      
-      // Business terms
-      ['meeting', 'réunion'], ['conference', 'conférence'], ['presentation', 'présentation'],
-      ['project', 'projet'], ['team', 'équipe'], ['company', 'entreprise'],
-      ['customer', 'client'], ['service', 'service'], ['product', 'produit'],
-      ['sales', 'ventes'], ['marketing', 'marketing'], ['finance', 'finance'],
-      
-      // Technology terms
-      ['computer', 'ordinateur'], ['software', 'logiciel'], ['application', 'application'],
-      ['database', 'base de données'], ['network', 'réseau'], ['security', 'sécurité'],
-      ['development', 'développement'], ['programming', 'programmation'],
-      ['artificial intelligence', 'intelligence artificielle'], ['machine learning', 'apprentissage automatique'],
-      
-      // Time and dates
-      ['today', 'aujourd\'hui'], ['tomorrow', 'demain'], ['yesterday', 'hier'],
-      ['week', 'semaine'], ['month', 'mois'], ['year', 'année'],
-      ['monday', 'lundi'], ['tuesday', 'mardi'], ['wednesday', 'mercredi'],
-      ['thursday', 'jeudi'], ['friday', 'vendredi'], ['saturday', 'samedi'], ['sunday', 'dimanche'],
-      
-      // Numbers
-      ['one', 'un'], ['two', 'deux'], ['three', 'trois'], ['four', 'quatre'], ['five', 'cinq'],
-      ['six', 'six'], ['seven', 'sept'], ['eight', 'huit'], ['nine', 'neuf'], ['ten', 'dix'],
-      ['hundred', 'cent'], ['thousand', 'mille'], ['million', 'million'],
-      
-      // Colors
-      ['red', 'rouge'], ['blue', 'bleu'], ['green', 'vert'], ['yellow', 'jaune'],
-      ['black', 'noir'], ['white', 'blanc'], ['gray', 'gris'], ['brown', 'marron'],
-      
-      // Family
-      ['father', 'père'], ['mother', 'mère'], ['brother', 'frère'], ['sister', 'sœur'],
-      ['son', 'fils'], ['daughter', 'fille'], ['family', 'famille'],
-      
-      // Food
-      ['bread', 'pain'], ['water', 'eau'], ['coffee', 'café'], ['tea', 'thé'],
-      ['milk', 'lait'], ['sugar', 'sucre'], ['salt', 'sel'], ['pepper', 'poivre'],
-      ['meat', 'viande'], ['fish', 'poisson'], ['chicken', 'poulet'], ['beef', 'bœuf'],
-      ['vegetable', 'légume'], ['fruit', 'fruit'], ['apple', 'pomme'], ['banana', 'banane'],
-      
-      // Travel
-      ['hotel', 'hôtel'], ['restaurant', 'restaurant'], ['airport', 'aéroport'],
-      ['train', 'train'], ['bus', 'bus'], ['car', 'voiture'], ['taxi', 'taxi'],
-      ['ticket', 'billet'], ['passport', 'passeport'], ['luggage', 'bagages'],
-      
-      // Health
-      ['doctor', 'médecin'], ['hospital', 'hôpital'], ['medicine', 'médicament'],
-      ['health', 'santé'], ['pain', 'douleur'], ['fever', 'fièvre'],
-      
-      // Education
-      ['school', 'école'], ['university', 'université'], ['student', 'étudiant'],
-      ['teacher', 'professeur'], ['book', 'livre'], ['lesson', 'leçon'],
-      ['homework', 'devoirs'], ['exam', 'examen'], ['grade', 'note'],
-      
-      // Work
-      ['office', 'bureau'], ['desk', 'bureau'], ['chair', 'chaise'],
-      ['computer', 'ordinateur'], ['phone', 'téléphone'], ['email', 'email'],
-      ['meeting', 'réunion'], ['schedule', 'horaire'], ['deadline', 'échéance'],
-      
-      // Emotions
-      ['happy', 'heureux'], ['sad', 'triste'], ['angry', 'en colère'],
-      ['excited', 'excité'], ['nervous', 'nerveux'], ['calm', 'calme'],
-      ['tired', 'fatigué'], ['energetic', 'énergique'], ['confident', 'confiant'],
-      
-      // Weather
-      ['sunny', 'ensoleillé'], ['rainy', 'pluvieux'], ['cloudy', 'nuageux'],
-      ['snowy', 'neigeux'], ['windy', 'venteux'], ['hot', 'chaud'], ['cold', 'froid'],
-      ['temperature', 'température'], ['weather', 'temps'],
-      
-      // Common phrases
-      ['how are you', 'comment allez-vous'], ['what time is it', 'quelle heure est-il'],
-      ['where is', 'où est'], ['how much', 'combien'], ['what is your name', 'quel est votre nom'],
-      ['nice to meet you', 'ravi de vous rencontrer'], ['have a good day', 'bonne journée'],
-      ['see you later', 'à plus tard'], ['take care', 'prenez soin de vous'],
-      
-      // Business phrases
-      ['business meeting', 'réunion d\'affaires'], ['project deadline', 'échéance du projet'],
-      ['customer service', 'service client'], ['sales report', 'rapport de ventes'],
-      ['market analysis', 'analyse de marché'], ['financial statement', 'état financier'],
-      ['quarterly review', 'examen trimestriel'], ['annual report', 'rapport annuel'],
-      ['strategic planning', 'planification stratégique'], ['risk management', 'gestion des risques'],
-      
-      // Technology phrases
-      ['user interface', 'interface utilisateur'], ['data processing', 'traitement des données'],
-      ['cloud computing', 'informatique en nuage'], ['cyber security', 'cybersécurité'],
-      ['software development', 'développement de logiciels'], ['system integration', 'intégration système'],
-      ['performance optimization', 'optimisation des performances'], ['quality assurance', 'assurance qualité'],
-      
-      // Academic terms
-      ['research', 'recherche'], ['analysis', 'analyse'], ['hypothesis', 'hypothèse'],
-      ['methodology', 'méthodologie'], ['conclusion', 'conclusion'], ['recommendation', 'recommandation'],
-      ['bibliography', 'bibliographie'], ['citation', 'citation'], ['reference', 'référence'],
-      
-      // Legal terms
-      ['contract', 'contrat'], ['agreement', 'accord'], ['liability', 'responsabilité'],
-      ['copyright', 'droits d\'auteur'], ['trademark', 'marque de commerce'], ['patent', 'brevet'],
-      ['lawsuit', 'procès'], ['settlement', 'règlement'], ['verdict', 'verdict'],
-      
-      // Medical terms
-      ['diagnosis', 'diagnostic'], ['treatment', 'traitement'], ['surgery', 'chirurgie'],
-      ['prescription', 'ordonnance'], ['symptom', 'symptôme'], ['therapy', 'thérapie'],
-      ['recovery', 'récupération'], ['rehabilitation', 'rééducation'], ['prevention', 'prévention']
-    ];
-    
-    // Add common pairs
-    commonPairs.forEach(([eng, fra]) => {
-      if (eng.length <= CONFIG.MAX_TEXT_LENGTH && fra.length <= CONFIG.MAX_TEXT_LENGTH) {
-        pairs.add(JSON.stringify({ english: eng, french: fra }));
-      }
-    });
-    
-    // Generate additional pairs from sentence data (simplified)
-    let count = 0;
-    for (const [id, engText] of engSentences) {
-      if (count >= 10000) break; // Limit to prevent memory issues
-      
-      // Simple word-by-word translation for short sentences
-      if (engText.split(' ').length <= 3) {
-        const words = engText.split(' ');
-        const translatedWords = words.map(word => {
-          // Simple word mapping (in reality, you'd use a proper dictionary)
-          const wordMap = {
-            'the': 'le', 'a': 'un', 'an': 'une', 'and': 'et', 'or': 'ou',
-            'but': 'mais', 'in': 'dans', 'on': 'sur', 'at': 'à', 'to': 'à',
-            'for': 'pour', 'with': 'avec', 'by': 'par', 'from': 'de', 'of': 'de'
-          };
-          return wordMap[word.toLowerCase()] || word;
-        });
-        
-        const fraText = translatedWords.join(' ');
-        if (fraText.length <= CONFIG.MAX_TEXT_LENGTH) {
-          pairs.add(JSON.stringify({ english: engText, french: fraText }));
+      if (id && text) {
+        const normalized = normalizeText(text);
+        if (normalized) {
+          fraSentences.set(id, normalized);
         }
       }
-      count++;
-    }
+    });
     
-    console.log(`✅ [DictionarySeeder] Generated ${pairs.size} Tatoeba pairs`);
+    console.log('🔗 [DictionarySeeder] Processing sentence links...');
+    const linksData = fs.readFileSync(linksExtracted, 'utf8');
+    let processedLinks = 0;
+    let validPairs = 0;
+    
+    linksData.split('\n').forEach(line => {
+      if (processedLinks >= 50000) return; // Limit processing for performance
+      
+      const [linkId, sentenceId1, sentenceId2] = line.split('\t');
+      if (sentenceId1 && sentenceId2) {
+        const engText = engSentences.get(sentenceId1);
+        const fraText = fraSentences.get(sentenceId2);
+        
+        if (engText && fraText) {
+          pairs.add(JSON.stringify({ english: engText, french: fraText }));
+          validPairs++;
+        }
+        
+        // Also try reverse direction
+        const engText2 = engSentences.get(sentenceId2);
+        const fraText2 = fraSentences.get(sentenceId1);
+        
+        if (engText2 && fraText2) {
+          pairs.add(JSON.stringify({ english: engText2, french: fraText2 }));
+          validPairs++;
+        }
+      }
+      processedLinks++;
+    });
+    
+    console.log(`✅ [DictionarySeeder] Generated ${pairs.size} Tatoeba pairs from ${processedLinks} links`);
     return Array.from(pairs).map(pair => JSON.parse(pair));
     
   } catch (error) {
@@ -315,7 +220,9 @@ async function generateTatoebaPairs() {
       path.join(tempDir, 'eng_sentences.tsv.bz2'),
       path.join(tempDir, 'eng_sentences.tsv'),
       path.join(tempDir, 'fra_sentences.tsv.bz2'),
-      path.join(tempDir, 'fra_sentences.tsv')
+      path.join(tempDir, 'fra_sentences.tsv'),
+      path.join(tempDir, 'sentence_links.tsv.bz2'),
+      path.join(tempDir, 'sentence_links.tsv')
     ];
     
     tempFiles.forEach(file => {
@@ -327,17 +234,36 @@ async function generateTatoebaPairs() {
 }
 
 /**
- * Normalize text for consistent processing
+ * Normalize text for consistent processing - focus on short words/phrases
  */
 function normalizeText(text) {
   if (!text || typeof text !== 'string') return '';
   
-  return text
+  // Clean and normalize text
+  let normalized = text
     .toLowerCase()
     .trim()
     .replace(/[^\w\s\-'àâäéèêëïîôöùûüÿç]/g, '') // Remove special chars except French accents
     .replace(/\s+/g, ' ') // Normalize whitespace
-    .substring(0, CONFIG.MAX_TEXT_LENGTH);
+    .trim();
+  
+  // Check word count (1-3 words max)
+  const words = normalized.split(/\s+/).filter(word => word.length > 0);
+  if (words.length > CONFIG.MAX_WORDS || words.length === 0) {
+    return '';
+  }
+  
+  // Check length limit
+  if (normalized.length > CONFIG.MAX_TEXT_LENGTH) {
+    return '';
+  }
+  
+  // Filter out very short words (less than 2 characters) unless it's a single word
+  if (words.length > 1 && words.some(word => word.length < 2)) {
+    return '';
+  }
+  
+  return normalized;
 }
 
 /**
@@ -348,119 +274,116 @@ function generateCuratedPairs() {
   
   const pairs = [];
   
-  // Extended business vocabulary
-  const businessTerms = [
-    ['accounting', 'comptabilité'], ['administration', 'administration'],
-    ['advertising', 'publicité'], ['analytics', 'analytique'],
-    ['audit', 'audit'], ['automation', 'automatisation'],
-    ['budget', 'budget'], ['campaign', 'campagne'],
-    ['capacity', 'capacité'], ['capital', 'capital'],
-    ['cash flow', 'flux de trésorerie'], ['collaboration', 'collaboration'],
-    ['communication', 'communication'], ['competition', 'concurrence'],
-    ['compliance', 'conformité'], ['consultation', 'consultation'],
-    ['cooperation', 'coopération'], ['coordination', 'coordination'],
-    ['corporate', 'corporatif'], ['cost', 'coût'],
-    ['creativity', 'créativité'], ['culture', 'culture'],
-    ['customer satisfaction', 'satisfaction client'], ['data analysis', 'analyse de données'],
-    ['decision making', 'prise de décision'], ['delivery', 'livraison'],
-    ['development', 'développement'], ['distribution', 'distribution'],
-    ['diversity', 'diversité'], ['efficiency', 'efficacité'],
-    ['employment', 'emploi'], ['entrepreneurship', 'entrepreneuriat'],
-    ['environment', 'environnement'], ['equity', 'équité'],
-    ['evaluation', 'évaluation'], ['excellence', 'excellence'],
-    ['expansion', 'expansion'], ['experience', 'expérience'],
-    ['expertise', 'expertise'], ['flexibility', 'flexibilité'],
-    ['forecasting', 'prévision'], ['franchise', 'franchise'],
-    ['globalization', 'mondialisation'], ['governance', 'gouvernance'],
-    ['growth', 'croissance'], ['human resources', 'ressources humaines'],
-    ['implementation', 'mise en œuvre'], ['improvement', 'amélioration'],
-    ['innovation', 'innovation'], ['integration', 'intégration'],
-    ['investment', 'investissement'], ['leadership', 'leadership'],
-    ['logistics', 'logistique'], ['management', 'gestion'],
-    ['manufacturing', 'fabrication'], ['market research', 'étude de marché'],
-    ['merger', 'fusion'], ['negotiation', 'négociation'],
-    ['networking', 'réseautage'], ['operations', 'opérations'],
-    ['organization', 'organisation'], ['partnership', 'partenariat'],
-    ['performance', 'performance'], ['planning', 'planification'],
-    ['policy', 'politique'], ['portfolio', 'portefeuille'],
-    ['procurement', 'approvisionnement'], ['productivity', 'productivité'],
-    ['profit', 'profit'], ['project management', 'gestion de projet'],
-    ['promotion', 'promotion'], ['quality', 'qualité'],
-    ['recruitment', 'recrutement'], ['regulation', 'réglementation'],
-    ['reputation', 'réputation'], ['research', 'recherche'],
-    ['resource', 'ressource'], ['revenue', 'revenu'],
-    ['risk', 'risque'], ['satisfaction', 'satisfaction'],
-    ['scalability', 'évolutivité'], ['strategy', 'stratégie'],
-    ['sustainability', 'durabilité'], ['technology', 'technologie'],
-    ['training', 'formation'], ['transformation', 'transformation'],
-    ['transparency', 'transparence'], ['valuation', 'évaluation'],
-    ['value', 'valeur'], ['venture', 'entreprise'],
-    ['vision', 'vision'], ['workforce', 'main-d\'œuvre']
+  // Common words and phrases (1-3 words max)
+  const commonTerms = [
+    // Basic words
+    ['hello', 'bonjour'], ['goodbye', 'au revoir'], ['yes', 'oui'], ['no', 'non'],
+    ['please', 's\'il vous plaît'], ['thank you', 'merci'], ['sorry', 'désolé'],
+    ['good morning', 'bonjour'], ['good evening', 'bonsoir'], ['good night', 'bonne nuit'],
+    ['how are you', 'comment allez-vous'], ['what time', 'quelle heure'],
+    ['where is', 'où est'], ['how much', 'combien'], ['what is', 'qu\'est-ce que'],
+    
+    // Business terms
+    ['meeting', 'réunion'], ['conference', 'conférence'], ['project', 'projet'],
+    ['team', 'équipe'], ['company', 'entreprise'], ['customer', 'client'],
+    ['service', 'service'], ['product', 'produit'], ['sales', 'ventes'],
+    ['marketing', 'marketing'], ['finance', 'finance'], ['budget', 'budget'],
+    ['management', 'gestion'], ['strategy', 'stratégie'], ['quality', 'qualité'],
+    ['performance', 'performance'], ['development', 'développement'],
+    ['business plan', 'plan d\'affaires'], ['market research', 'étude de marché'],
+    ['customer service', 'service client'], ['sales report', 'rapport de ventes'],
+    
+    // Technology terms
+    ['computer', 'ordinateur'], ['software', 'logiciel'], ['application', 'application'],
+    ['database', 'base de données'], ['network', 'réseau'], ['security', 'sécurité'],
+    ['programming', 'programmation'], ['algorithm', 'algorithme'],
+    ['artificial intelligence', 'intelligence artificielle'], ['machine learning', 'apprentissage automatique'],
+    ['user interface', 'interface utilisateur'], ['data processing', 'traitement des données'],
+    ['cloud computing', 'informatique en nuage'], ['cyber security', 'cybersécurité'],
+    ['software development', 'développement de logiciels'], ['system integration', 'intégration système'],
+    
+    // Time and dates
+    ['today', 'aujourd\'hui'], ['tomorrow', 'demain'], ['yesterday', 'hier'],
+    ['week', 'semaine'], ['month', 'mois'], ['year', 'année'],
+    ['monday', 'lundi'], ['tuesday', 'mardi'], ['wednesday', 'mercredi'],
+    ['thursday', 'jeudi'], ['friday', 'vendredi'], ['saturday', 'samedi'], ['sunday', 'dimanche'],
+    
+    // Numbers
+    ['one', 'un'], ['two', 'deux'], ['three', 'trois'], ['four', 'quatre'], ['five', 'cinq'],
+    ['six', 'six'], ['seven', 'sept'], ['eight', 'huit'], ['nine', 'neuf'], ['ten', 'dix'],
+    ['hundred', 'cent'], ['thousand', 'mille'], ['million', 'million'],
+    
+    // Colors
+    ['red', 'rouge'], ['blue', 'bleu'], ['green', 'vert'], ['yellow', 'jaune'],
+    ['black', 'noir'], ['white', 'blanc'], ['gray', 'gris'], ['brown', 'marron'],
+    
+    // Family
+    ['father', 'père'], ['mother', 'mère'], ['brother', 'frère'], ['sister', 'sœur'],
+    ['son', 'fils'], ['daughter', 'fille'], ['family', 'famille'],
+    
+    // Food
+    ['bread', 'pain'], ['water', 'eau'], ['coffee', 'café'], ['tea', 'thé'],
+    ['milk', 'lait'], ['sugar', 'sucre'], ['salt', 'sel'], ['pepper', 'poivre'],
+    ['meat', 'viande'], ['fish', 'poisson'], ['chicken', 'poulet'], ['beef', 'bœuf'],
+    ['vegetable', 'légume'], ['fruit', 'fruit'], ['apple', 'pomme'], ['banana', 'banane'],
+    
+    // Travel
+    ['hotel', 'hôtel'], ['restaurant', 'restaurant'], ['airport', 'aéroport'],
+    ['train', 'train'], ['bus', 'bus'], ['car', 'voiture'], ['taxi', 'taxi'],
+    ['ticket', 'billet'], ['passport', 'passeport'], ['luggage', 'bagages'],
+    
+    // Health
+    ['doctor', 'médecin'], ['hospital', 'hôpital'], ['medicine', 'médicament'],
+    ['health', 'santé'], ['pain', 'douleur'], ['fever', 'fièvre'],
+    
+    // Education
+    ['school', 'école'], ['university', 'université'], ['student', 'étudiant'],
+    ['teacher', 'professeur'], ['book', 'livre'], ['lesson', 'leçon'],
+    ['homework', 'devoirs'], ['exam', 'examen'], ['grade', 'note'],
+    
+    // Work
+    ['office', 'bureau'], ['desk', 'bureau'], ['chair', 'chaise'],
+    ['phone', 'téléphone'], ['email', 'email'], ['schedule', 'horaire'],
+    ['deadline', 'échéance'], ['meeting room', 'salle de réunion'],
+    
+    // Emotions
+    ['happy', 'heureux'], ['sad', 'triste'], ['angry', 'en colère'],
+    ['excited', 'excité'], ['nervous', 'nerveux'], ['calm', 'calme'],
+    ['tired', 'fatigué'], ['energetic', 'énergique'], ['confident', 'confiant'],
+    
+    // Weather
+    ['sunny', 'ensoleillé'], ['rainy', 'pluvieux'], ['cloudy', 'nuageux'],
+    ['snowy', 'neigeux'], ['windy', 'venteux'], ['hot', 'chaud'], ['cold', 'froid'],
+    ['temperature', 'température'], ['weather', 'temps']
   ];
   
-  // Technology and IT terms
-  const techTerms = [
-    ['algorithm', 'algorithme'], ['analytics', 'analytique'],
-    ['application', 'application'], ['architecture', 'architecture'],
-    ['authentication', 'authentification'], ['authorization', 'autorisation'],
-    ['backup', 'sauvegarde'], ['bandwidth', 'bande passante'],
-    ['browser', 'navigateur'], ['cache', 'cache'],
-    ['client', 'client'], ['cloud', 'nuage'],
-    ['compiler', 'compilateur'], ['configuration', 'configuration'],
-    ['connectivity', 'connectivité'], ['container', 'conteneur'],
-    ['cryptography', 'cryptographie'], ['dashboard', 'tableau de bord'],
-    ['deployment', 'déploiement'], ['development', 'développement'],
-    ['encryption', 'chiffrement'], ['framework', 'framework'],
-    ['functionality', 'fonctionnalité'], ['hardware', 'matériel'],
-    ['infrastructure', 'infrastructure'], ['integration', 'intégration'],
-    ['interface', 'interface'], ['internet', 'internet'],
-    ['maintenance', 'maintenance'], ['monitoring', 'surveillance'],
-    ['optimization', 'optimisation'], ['platform', 'plateforme'],
-    ['programming', 'programmation'], ['protocol', 'protocole'],
-    ['scalability', 'évolutivité'], ['server', 'serveur'],
-    ['software', 'logiciel'], ['solution', 'solution'],
-    ['storage', 'stockage'], ['system', 'système'],
-    ['testing', 'test'], ['troubleshooting', 'dépannage'],
-    ['upgrade', 'mise à niveau'], ['user', 'utilisateur'],
-    ['version', 'version'], ['virtualization', 'virtualisation'],
-    ['web', 'web'], ['workflow', 'flux de travail']
-  ];
-  
-  // Academic and research terms
-  const academicTerms = [
-    ['academic', 'académique'], ['analysis', 'analyse'],
-    ['assessment', 'évaluation'], ['bibliography', 'bibliographie'],
-    ['citation', 'citation'], ['concept', 'concept'],
-    ['conference', 'conférence'], ['criteria', 'critères'],
-    ['data', 'données'], ['dissertation', 'thèse'],
-    ['documentation', 'documentation'], ['empirical', 'empirique'],
-    ['evaluation', 'évaluation'], ['evidence', 'preuve'],
-    ['experiment', 'expérience'], ['findings', 'résultats'],
-    ['framework', 'cadre'], ['hypothesis', 'hypothèse'],
-    ['implementation', 'mise en œuvre'], ['interpretation', 'interprétation'],
-    ['investigation', 'enquête'], ['journal', 'revue'],
-    ['literature', 'littérature'], ['methodology', 'méthodologie'],
-    ['observation', 'observation'], ['peer review', 'évaluation par les pairs'],
-    ['publication', 'publication'], ['qualitative', 'qualitatif'],
-    ['quantitative', 'quantitatif'], ['questionnaire', 'questionnaire'],
-    ['research', 'recherche'], ['review', 'examen'],
-    ['sample', 'échantillon'], ['statistics', 'statistiques'],
-    ['study', 'étude'], ['survey', 'enquête'],
-    ['thesis', 'thèse'], ['theory', 'théorie'],
-    ['validation', 'validation'], ['variable', 'variable']
-  ];
-  
-  // Combine all terms
-  const allTerms = [...businessTerms, ...techTerms, ...academicTerms];
-  
-  allTerms.forEach(([eng, fra]) => {
-    if (eng.length <= CONFIG.MAX_TEXT_LENGTH && fra.length <= CONFIG.MAX_TEXT_LENGTH) {
-      pairs.push({ english: eng, french: fra });
+  // Filter and add terms
+  commonTerms.forEach(([eng, fra]) => {
+    const normalizedEng = normalizeText(eng);
+    const normalizedFra = normalizeText(fra);
+    
+    if (normalizedEng && normalizedFra) {
+      pairs.push({ english: normalizedEng, french: normalizedFra });
     }
   });
   
   console.log(`✅ [DictionarySeeder] Generated ${pairs.length} curated pairs`);
   return pairs;
+}
+
+/**
+ * Randomly sample pairs to reach target count
+ */
+function samplePairs(allPairs, targetCount) {
+  console.log(`🎲 [DictionarySeeder] Sampling ${targetCount} pairs from ${allPairs.length} total pairs...`);
+  
+  if (allPairs.length <= targetCount) {
+    return allPairs;
+  }
+  
+  // Shuffle array and take first targetCount items
+  const shuffled = [...allPairs].sort(() => Math.random() - 0.5);
+  return shuffled.slice(0, targetCount);
 }
 
 /**
@@ -472,6 +395,7 @@ async function insertPairs(pairs) {
   let totalInserted = 0;
   let totalSkipped = 0;
   let totalErrors = 0;
+  const sampleEntries = [];
   
   // Process in batches
   for (let i = 0; i < pairs.length; i += CONFIG.BATCH_SIZE) {
@@ -492,7 +416,7 @@ async function insertPairs(pairs) {
         is_active: true
       }));
       
-      // Insert batch
+      // Insert batch with conflict handling
       const { data, error } = await supabase
         .from('translation_dictionary')
         .upsert(batchData, { 
@@ -513,6 +437,11 @@ async function insertPairs(pairs) {
       totalInserted += inserted;
       totalSkipped += skipped;
       
+      // Collect sample entries from successful inserts
+      if (data && data.length > 0) {
+        sampleEntries.push(...data.slice(0, 2)); // Take 2 samples per batch
+      }
+      
       console.log(`✅ [DictionarySeeder] Batch ${batchNumber}: ${inserted} inserted, ${skipped} skipped`);
       
     } catch (error) {
@@ -521,7 +450,7 @@ async function insertPairs(pairs) {
     }
   }
   
-  return { totalInserted, totalSkipped, totalErrors };
+  return { totalInserted, totalSkipped, totalErrors, sampleEntries };
 }
 
 /**
@@ -623,8 +552,12 @@ async function main() {
       process.exit(1);
     }
     
+    // Sample to target count
+    const sampledPairs = samplePairs(uniquePairs, CONFIG.TARGET_ENTRIES);
+    console.log(`🎲 [DictionarySeeder] Sampled pairs: ${sampledPairs.length}`);
+    
     // Insert pairs
-    const results = await insertPairs(uniquePairs);
+    const results = await insertPairs(sampledPairs);
     
     // Summary
     console.log('\n📊 [DictionarySeeder] Seeding Summary:');
@@ -632,10 +565,18 @@ async function main() {
     console.log(`   ⏭️  Total skipped: ${results.totalSkipped}`);
     console.log(`   ❌ Total errors: ${results.totalErrors}`);
     
+    // Show sample entries
+    if (results.sampleEntries && results.sampleEntries.length > 0) {
+      console.log(`\n📝 [DictionarySeeder] Sample entries (${Math.min(5, results.sampleEntries.length)}):`);
+      results.sampleEntries.slice(0, 5).forEach((entry, index) => {
+        console.log(`   ${index + 1}. "${entry.english_text}" → "${entry.french_text}"`);
+      });
+    }
+    
     if (results.totalErrors === 0) {
-      console.log('🎉 [DictionarySeeder] Large dictionary seeding completed successfully!');
+      console.log('\n🎉 [DictionarySeeder] Large dictionary seeding completed successfully!');
     } else {
-      console.log('⚠️  [DictionarySeeder] Large dictionary seeding completed with errors.');
+      console.log('\n⚠️  [DictionarySeeder] Large dictionary seeding completed with errors.');
     }
     
     // Verify the data
@@ -660,3 +601,4 @@ module.exports = {
   insertPairs,
   verifySeededData
 };
+
