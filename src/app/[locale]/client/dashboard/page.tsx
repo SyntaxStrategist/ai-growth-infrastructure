@@ -665,8 +665,9 @@ async function translateIntent(rawTopIntent: string, locale: string): Promise<st
   }
 
   async function handlePermanentDelete(leadId: string) {
+    const originalLeads = [...allLeads];
+    
     try {
-      const originalLeads = [...allLeads];
       setAllLeads(allLeads.filter(l => l.id !== leadId));
       setConfirmPermanentDelete(null);
 
