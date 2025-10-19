@@ -9,7 +9,8 @@ import AvenirLogo from '../../../../components/AvenirLogo';
 import UniversalLanguageToggle from '../../../../components/UniversalLanguageToggle';
 import type { LeadAction } from '../../../api/lead-actions/route';
 import { isLegacyClientId, DEMO_CLIENT_EMAIL } from '../../../../lib/uuid-utils';
-import { restoreSession, saveSession, clearSession, type ClientData } from '../../../../utils/session';
+import { useSession } from '../../../../components/SessionProvider';
+import { saveSession, clearSession, type ClientData } from '../../../../utils/session';
 
 // Dynamic imports to prevent hydration mismatches
 const PredictiveGrowthEngine = dynamic(() => import('../../../../components/PredictiveGrowthEngine'), { 
@@ -53,9 +54,11 @@ export default function ClientDashboard() {
   const locale = useLocale();
   const router = useRouter();
   const isFrench = locale === 'fr';
+  const { session, clearSession: clearSessionContext, refreshSession } = useSession();
 
-  const [authenticated, setAuthenticated] = useState(false);
-  const [client, setClient] = useState<ClientData | null>(null);
+  // Use session from context instead of local state
+  const authenticated = session.isAuthenticated;
+  const client = session.client;
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loginError, setLoginError] = useState('');
@@ -154,46 +157,28 @@ export default function ClientDashboard() {
     },
   };
 
-  // Restore session using the session utility
+  // Check for legacy client_id and handle auto-refresh if needed
   useEffect(() => {
-    console.log('[AuthFix] ============================================');
-    console.log('[AuthFix] Client Dashboard: Restoring session...');
-    
-    const sessionState = restoreSession();
-    
-    if (sessionState.isAuthenticated && sessionState.client) {
-      const clientData = sessionState.client;
+    if (authenticated && client && isLegacyClientId(client.clientId)) {
+      console.log('[AuthFix] ============================================');
+      console.log('[AuthFix] Invalid client_id detected — refreshing session');
+      console.log('[AuthFix] Legacy client_id:', client.clientId);
       
-      // Check if client_id is in legacy string format
-      if (clientData.clientId && isLegacyClientId(clientData.clientId)) {
-        console.log('[AuthFix] Invalid client_id detected — refreshing session');
-        console.log('[AuthFix] Legacy client_id:', clientData.clientId);
-        
-        // Clear session using utility
-        clearSession();
-        
-        // If it's the demo client, automatically re-login
-        if (clientData.email === DEMO_CLIENT_EMAIL) {
-          console.log('[AuthFix] Auto-refreshing demo client session...');
-          handleAutoRefreshDemoClient(clientData.email, clientData.language);
-          return;
-        }
-        
-        // For other clients, just clear and let them re-login manually
-        console.log('[AuthFix] Session cleared — please log in again');
+      // Clear session using context
+      clearSessionContext();
+      
+      // If it's the demo client, automatically re-login
+      if (client.email === DEMO_CLIENT_EMAIL) {
+        console.log('[AuthFix] Auto-refreshing demo client session...');
+        handleAutoRefreshDemoClient(client.email, client.language);
         return;
       }
       
-      // Session is valid, restore it
-      setClient(clientData);
-      setAuthenticated(true);
-      console.log('[AuthFix] Session restored successfully in dashboard');
-    } else {
-      console.log('[AuthFix] No valid session found');
+      // For other clients, just clear and let them re-login manually
+      console.log('[AuthFix] Session cleared — please log in again');
+      console.log('[AuthFix] ============================================');
     }
-    
-    console.log('[AuthFix] ============================================');
-  }, []);
+  }, [authenticated, client, clearSessionContext]);
 
   // Fetch client leads when authenticated or tab changes
   useEffect(() => {
@@ -253,8 +238,8 @@ export default function ClientDashboard() {
       localStorage.setItem('clientId', data.data.clientId);
       console.log('[ClientDashboard] ✅ Client ID stored in localStorage:', data.data.clientId);
       
-      setClient(data.data);
-      setAuthenticated(true);
+      // Refresh session context to pick up the new session
+      refreshSession();
 
     } catch (err) {
       console.error('[ClientDashboard] ❌ Login error:', err);
@@ -297,8 +282,8 @@ export default function ClientDashboard() {
         console.log('[Fix] ✅ Language preference preserved:', language);
       }
       
-      setClient(data.data);
-      setAuthenticated(true);
+      // Refresh session context to pick up the new session
+      refreshSession();
 
     } catch (err) {
       console.error('[Fix] ❌ Auto-refresh failed:', err);
@@ -637,12 +622,10 @@ export default function ClientDashboard() {
     console.log('[AuthFix] ============================================');
     console.log('[AuthFix] Logging out user...');
     
-    // Clear all session data using utility
-    clearSession();
+    // Clear all session data using context
+    clearSessionContext();
     
     // Reset component state
-    setAuthenticated(false);
-    setClient(null);
     setLeads([]);
     
     console.log('[AuthFix] Logout completed, redirecting to login...');

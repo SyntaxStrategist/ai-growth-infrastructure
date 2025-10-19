@@ -16,10 +16,24 @@ interface SessionProviderProps {
 }
 
 export function SessionProvider({ children }: SessionProviderProps) {
-  const [session, setSession] = useState<SessionState>({
-    isAuthenticated: false,
-    client: null,
-    isLoading: true,
+  // Initialize session state synchronously on mount
+  const [session, setSession] = useState<SessionState>(() => {
+    console.log('[AuthFix] ============================================');
+    console.log('[AuthFix] Restoring session from localStorage...');
+    
+    const sessionState = restoreSession();
+    
+    if (sessionState.isAuthenticated) {
+      console.log('[AuthFix] Session restored successfully');
+      console.log('[AuthFix] Client ID:', sessionState.client?.clientId);
+      console.log('[AuthFix] Business:', sessionState.client?.businessName);
+      console.log('[AuthFix] Email:', sessionState.client?.email);
+    } else {
+      console.log('[AuthFix] No session found');
+    }
+    
+    console.log('[AuthFix] ============================================');
+    return sessionState;
   });
 
   const refreshSession = () => {
@@ -49,17 +63,6 @@ export function SessionProvider({ children }: SessionProviderProps) {
     console.log('[AuthFix] SessionProvider: Session cleared');
     console.log('[AuthFix] ============================================');
   };
-
-  // Restore session on mount (session already restored by EarlySessionProvider)
-  useEffect(() => {
-    console.log('[AuthFix] ============================================');
-    console.log('[AuthFix] SessionProvider: Initializing (session already restored by EarlySessionProvider)...');
-    
-    refreshSession();
-    
-    console.log('[AuthFix] SessionProvider: Initialization complete');
-    console.log('[AuthFix] ============================================');
-  }, []);
 
   // Listen for storage changes (e.g., from other tabs)
   useEffect(() => {
