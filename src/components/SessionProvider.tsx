@@ -16,9 +16,17 @@ interface SessionProviderProps {
 }
 
 export function SessionProvider({ children }: SessionProviderProps) {
-  // Initialize session state synchronously on mount
-  const [session, setSession] = useState<SessionState>(() => {
+  // Initialize session state with loading state
+  const [session, setSession] = useState<SessionState>({
+    isAuthenticated: false,
+    client: null,
+    isLoading: true,
+  });
+
+  // Restore session on client-side mount
+  useEffect(() => {
     console.log('[AuthFix] ============================================');
+    console.log('[AuthFix] Client-side session restoration started');
     console.log('[AuthFix] Restoring session from localStorage...');
     
     const sessionState = restoreSession();
@@ -33,8 +41,8 @@ export function SessionProvider({ children }: SessionProviderProps) {
     }
     
     console.log('[AuthFix] ============================================');
-    return sessionState;
-  });
+    setSession(sessionState);
+  }, []);
 
   const refreshSession = () => {
     console.log('[AuthFix] ============================================');

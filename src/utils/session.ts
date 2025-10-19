@@ -31,6 +31,15 @@ const SESSION_KEYS = {
  * Returns session state with authentication status and client data
  */
 export function restoreSession(): SessionState {
+  // Only run on client side
+  if (typeof window === 'undefined') {
+    return {
+      isAuthenticated: false,
+      client: null,
+      isLoading: true,
+    };
+  }
+
   console.log('[AuthFix] ============================================');
   console.log('[AuthFix] Restoring session from localStorage...');
   
@@ -88,6 +97,11 @@ export function restoreSession(): SessionState {
  * Stores client data and related session information
  */
 export function saveSession(clientData: ClientData): void {
+  // Only run on client side
+  if (typeof window === 'undefined') {
+    return;
+  }
+
   console.log('[AuthFix] ============================================');
   console.log('[AuthFix] Saving session to localStorage...');
   console.log('[AuthFix] Client ID:', clientData.clientId);
@@ -122,6 +136,11 @@ export function saveSession(clientData: ClientData): void {
  * Used for logout and session cleanup
  */
 export function clearSession(): void {
+  // Only run on client side
+  if (typeof window === 'undefined') {
+    return;
+  }
+
   console.log('[AuthFix] ============================================');
   console.log('[AuthFix] Clearing session data...');
   
@@ -148,6 +167,10 @@ export function clearSession(): void {
  * Quick check without full session restoration
  */
 export function isAuthenticated(): boolean {
+  if (typeof window === 'undefined') {
+    return false;
+  }
+  
   try {
     const clientSession = localStorage.getItem(SESSION_KEYS.CLIENT_SESSION);
     return !!clientSession;
@@ -161,6 +184,10 @@ export function isAuthenticated(): boolean {
  * Returns null if not authenticated
  */
 export function getCurrentClientId(): string | null {
+  if (typeof window === 'undefined') {
+    return null;
+  }
+  
   try {
     return localStorage.getItem(SESSION_KEYS.CLIENT_ID);
   } catch {
@@ -173,6 +200,10 @@ export function getCurrentClientId(): string | null {
  * Returns 'en' as default if not set
  */
 export function getCurrentLanguage(): string {
+  if (typeof window === 'undefined') {
+    return 'en';
+  }
+  
   try {
     return localStorage.getItem(SESSION_KEYS.LANGUAGE) || 'en';
   } catch {
