@@ -41,7 +41,7 @@ export interface FeedbackRecord {
 
 export interface PerformanceMetric {
   id?: string;
-  event_type: 'api_response' | 'ai_analysis' | 'translation' | 'lead_processing';
+  event_type: 'api_response' | 'ai_analysis' | 'translation' | 'lead_processing' | 'email_response';
   metric_name: string;
   metric_value: number;
   metric_unit?: string;
