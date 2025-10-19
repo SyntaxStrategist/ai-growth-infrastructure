@@ -1,6 +1,20 @@
 -- Translation System Tables
 -- This migration creates the 3-layer translation system infrastructure
 
+-- Handle schema_migrations table to make migration idempotent
+DO $$ 
+BEGIN
+    -- Check if this migration version already exists in schema_migrations
+    IF NOT EXISTS (
+        SELECT 1 FROM supabase_migrations.schema_migrations 
+        WHERE version = '20241220'
+    ) THEN
+        -- Insert migration version if it doesn't exist
+        INSERT INTO supabase_migrations.schema_migrations (version, statements, name)
+        VALUES ('20241220', ARRAY['-- Translation System Tables Migration'], 'create_translation_tables');
+    END IF;
+END $$;
+
 -- 1. Translation Cache Table (Layer 2)
 -- Stores AI-generated translations with metadata
 CREATE TABLE IF NOT EXISTS public.translation_cache (
