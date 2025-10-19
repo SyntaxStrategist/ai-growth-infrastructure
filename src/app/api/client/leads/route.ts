@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabase } from '../../../../lib/supabase';
 import { getClientDataAndLeads, getClientDataAndAllLeads } from '../../../../lib/query-batching';
+import { resolveClientId, validateClientId } from '../../../../lib/client-resolver';
 import OpenAI from 'openai';
 
 const openai = new OpenAI({
@@ -169,34 +170,58 @@ export async function GET(req: NextRequest) {
     const page = parseInt(searchParams.get('page') || '1');
     const limit = parseInt(searchParams.get('limit') || '5');
 
-    console.log('[E2E-Test] [ClientLeads] ============================================');
-    console.log('[E2E-Test] [ClientLeads] Request received');
-    console.log('[E2E-Test] [ClientLeads] Client ID:', clientId);
-    console.log('[E2E-Test] [ClientLeads] Locale:', locale);
-    console.log('[E2E-Test] [ClientLeads] Status filter:', status);
+    console.log('[ClientResolver] ============================================');
+    console.log('[ClientResolver] Request received');
+    console.log('[ClientResolver] Input Client ID:', clientId);
+    console.log('[ClientResolver] Locale:', locale);
+    console.log('[ClientResolver] Status filter:', status);
 
-    // Validate clientId
+    // Validate clientId format
     if (!clientId || clientId.trim() === '' || clientId === 'unknown' || clientId === 'null' || clientId === 'undefined') {
-      console.error('[E2E-Test] [ClientLeads] ❌ Missing or invalid clientId parameter:', clientId);
+      console.error('[ClientResolver] ❌ Missing or invalid clientId parameter:', clientId);
       return NextResponse.json(
         { success: false, error: 'Valid clientId required' },
         { status: 400 }
       );
     }
 
-    // Use batched query to get client data and leads
-    const { client, leads: leadsQuery } = await getClientDataAndLeads(clientId, status, page, limit);
+    // Validate client ID format
+    const validation = validateClientId(clientId);
+    if (!validation.isValid) {
+      console.error('[ClientResolver] ❌ Invalid client ID format:', clientId, validation.message);
+      return NextResponse.json(
+        { success: false, error: `Invalid client ID format: ${validation.message}` },
+        { status: 400 }
+      );
+    }
+
+    console.log(`[ClientResolver] ✅ Client ID format valid (${validation.type}):`, clientId);
+
+    // Resolve client ID to UUID using universal resolver
+    let clientUuid: string;
+    try {
+      clientUuid = await resolveClientId(clientId);
+      console.log(`[ClientResolver] ✅ Resolved client ID: "${clientId}" → "${clientUuid}"`);
+    } catch (error) {
+      console.error('[ClientResolver] ❌ Failed to resolve client ID:', error);
+      return NextResponse.json(
+        { success: false, error: `Failed to resolve client ID: ${error instanceof Error ? error.message : 'Unknown error'}` },
+        { status: 404 }
+      );
+    }
+
+    // Use batched query to get client data and leads with resolved UUID
+    const { client, leads: leadsQuery } = await getClientDataAndLeads(clientUuid, status, page, limit);
     
     if (client.error || !client.data) {
-      console.error('[E2E-Test] [ClientLeads] ❌ Client not found:', clientId);
+      console.error('[ClientResolver] ❌ Client not found after resolution:', clientUuid);
       return NextResponse.json(
         { success: false, error: 'Client not found' },
         { status: 404 }
       );
     }
     
-    const clientUuid = client.data.id;
-    console.log('[E2E-Test] [ClientLeads] Client UUID:', clientUuid);
+    console.log('[ClientResolver] ✅ Client data retrieved successfully');
     
     // Use batched query results
     const { data: leadActions, error: actionsError } = leadsQuery;

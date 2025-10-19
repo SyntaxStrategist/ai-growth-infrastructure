@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from '@supabase/supabase-js';
 import { translateDynamic } from '../../../../../lib/translateDynamic';
+import { resolveClientId, validateClientId } from '../../../../lib/client-resolver';
 import OpenAI from 'openai';
 
 const openai = new OpenAI({
@@ -279,7 +280,7 @@ export async function GET(req: NextRequest) {
     const locale = url.searchParams.get('locale') || 'en';
     const clientId = url.searchParams.get('clientId');
 
-    console.log('[LeadsInsightsAPI] Query params:', {
+    console.log('[ClientResolver] Query params:', {
       locale,
       clientId: clientId || 'all (admin)',
       table: 'lead_memory',
@@ -294,31 +295,36 @@ export async function GET(req: NextRequest) {
       limit: 20,
     });
 
-    console.log('[LeadsInsightsAPI] Executing Supabase query...');
+    console.log('[ClientResolver] Executing Supabase query...');
     const queryStart = Date.now();
     
     // If clientId provided, need to resolve to internal UUID first
     let query;
     if (clientId) {
-      console.log('[LeadsInsightsAPI] Resolving client_id:', clientId);
+      console.log('[ClientResolver] Resolving client_id:', clientId);
       
-      // First, resolve the public client_id to internal UUID
-      const { data: clientData, error: clientError } = await supabase
-        .from('clients')
-        .select('id')
-        .eq('client_id', clientId)
-        .single();
-      
-      if (clientError || !clientData) {
-        console.error('[LeadsInsightsAPI] ❌ Client not found:', clientId);
+      // Validate client ID format
+      const validation = validateClientId(clientId);
+      if (!validation.isValid) {
+        console.error('[ClientResolver] ❌ Invalid client ID format:', clientId, validation.message);
         return NextResponse.json(
-          { success: false, error: 'Client not found' },
+          { success: false, error: `Invalid client ID format: ${validation.message}` },
+          { status: 400 }
+        );
+      }
+
+      // Resolve client ID to UUID using universal resolver
+      let clientUuid: string;
+      try {
+        clientUuid = await resolveClientId(clientId);
+        console.log(`[ClientResolver] ✅ Resolved client ID: "${clientId}" → "${clientUuid}"`);
+      } catch (error) {
+        console.error('[ClientResolver] ❌ Failed to resolve client ID:', error);
+        return NextResponse.json(
+          { success: false, error: `Failed to resolve client ID: ${error instanceof Error ? error.message : 'Unknown error'}` },
           { status: 404 }
         );
       }
-      
-      const clientUuid = clientData.id;
-      console.log('[LeadsInsightsAPI] Resolved client_id:', clientId, '→ internal UUID:', clientUuid);
       
       // Join with lead_actions to get client-specific leads using the internal UUID
       const { data: leadActionsData, error: leadActionsError } = await supabase

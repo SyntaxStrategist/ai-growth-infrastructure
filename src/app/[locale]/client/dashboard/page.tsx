@@ -17,6 +17,7 @@ import type { LeadAction } from '../../../api/lead-actions/route';
 import { isLegacyClientId, DEMO_CLIENT_EMAIL } from '../../../../lib/uuid-utils';
 import { useSession } from '../../../../components/SessionProvider';
 import { saveSession, clearSession, type ClientData } from '../../../../utils/session';
+import { getLocalStorageItem, removeLocalStorageItem } from '../../../../lib/safe-localstorage';
 
 // Dynamic imports to prevent hydration mismatches
 const PredictiveGrowthEngine = dynamic(() => import('../../../../components/PredictiveGrowthEngine'), { 
@@ -450,8 +451,7 @@ export default function ClientDashboard() {
       console.log('[ClientDashboard] ✅ Login successful:', data.data);
       
       // Store full session and client_id separately for settings page
-      localStorage.setItem('client_session', JSON.stringify(data.data));
-      localStorage.setItem('clientId', data.data.clientId);
+      saveSession(data.data);
       console.log('[ClientDashboard] ✅ Client ID stored in localStorage:', data.data.clientId);
       
       // Refresh session context to pick up the new session
@@ -487,14 +487,12 @@ export default function ClientDashboard() {
       console.log('[Fix] ✅ Demo client auto-refresh successful:', data.data);
       
       // Store updated session with new UUID-based client_id
-      localStorage.setItem('client_session', JSON.stringify(data.data));
-      localStorage.setItem('clientId', data.data.clientId);
+      saveSession(data.data);
       console.log('[Fix] ✅ Updated client_id stored:', data.data.clientId);
       
       // Preserve language preference
       if (language) {
-        localStorage.setItem('avenir_language', language);
-        document.cookie = `avenir_language=${language}; path=/; max-age=31536000; SameSite=Lax`;
+        saveSession({ ...data.data, language });
         console.log('[Fix] ✅ Language preference preserved:', language);
       }
       
@@ -504,8 +502,7 @@ export default function ClientDashboard() {
     } catch (err) {
       console.error('[Fix] ❌ Auto-refresh failed:', err);
       // If auto-refresh fails, just clear the session
-      localStorage.removeItem('client_session');
-      localStorage.removeItem('clientId');
+      clearSession();
     }
   }
 
