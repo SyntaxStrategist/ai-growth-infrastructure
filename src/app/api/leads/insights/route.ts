@@ -76,14 +76,11 @@ const insightTranslations = {
 
 // Helper function to detect if text is in French
 function isFrenchText(text: string): boolean {
-  const frenchAccents = /[éèêàùçôâîïûü]/i;
-  const frenchWords = /\b(le|la|les|des|une|un|est|avec|pour|prêt|démonstration|relation|conversion|étape|phase|succès)\b/i;
-  
+  const frenchAccents = /[éèêëàùûüïîôç]/i;
   const hasAccents = frenchAccents.test(text);
-  const hasWords = frenchWords.test(text);
-  const isFrench = hasAccents || hasWords;
+  const isFrench = hasAccents;
   
-  console.log(`[💡 Translation Fix] Language detection for "${text.substring(0, 50)}...": hasAccents=${hasAccents}, hasWords=${hasWords}, isFrench=${isFrench}`);
+  console.log(`[💡 Translation Fix] Detection: hasAccents=${hasAccents}, isFrench=${isFrench}`);
   
   return isFrench;
 }
@@ -183,14 +180,14 @@ async function translateRelationshipData(data: any[], locale: string): Promise<a
       // Explicit translation logic
       if (locale === 'fr' && !isFrenchText(lead.relationship_insight)) {
         translatedLead.relationship_insight = insightTranslations[lead.relationship_insight as keyof typeof insightTranslations] || lead.relationship_insight;
-        console.log(`[💡 Translation Applied] ${lead.name} → "${translatedLead.relationship_insight}"`);
+        console.log(`[💡 Translation Applied] ${lead.name} → ${translatedLead.relationship_insight}`);
       } else if (locale === 'en' && isFrenchText(lead.relationship_insight)) {
         translatedLead.relationship_insight = insightTranslations[lead.relationship_insight as keyof typeof insightTranslations] || lead.relationship_insight;
-        console.log(`[💡 Translation Applied] ${lead.name} → "${translatedLead.relationship_insight}"`);
+        console.log(`[💡 Translation Applied] ${lead.name} → ${translatedLead.relationship_insight}`);
       } else {
         // No translation needed
         translatedLead.relationship_insight = lead.relationship_insight;
-        console.log(`[💡 Translation Applied] ${lead.name} → "${translatedLead.relationship_insight}" (no translation needed)`);
+        console.log(`[💡 Translation Applied] ${lead.name} → ${translatedLead.relationship_insight}`);
       }
     }
     
