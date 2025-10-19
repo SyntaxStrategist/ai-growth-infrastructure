@@ -270,6 +270,14 @@ export const AVENIR_ICP: ICPProfile = {
   }
 };
 
+/**
+ * Get the base Avenir AI ICP profile
+ * This function returns the standard ICP profile for Avenir AI Solutions
+ */
+export function getAvenirICPProfile(): ICPProfile {
+  return AVENIR_ICP;
+}
+
 export interface ICPScore {
   overall: number; // 0-100
   breakdown: {
@@ -593,26 +601,39 @@ function parseDealSize(dealSize?: string): { min?: number; max?: number; currenc
  * Adjust ICP weights based on client business goals
  */
 function adjustWeightsForClient(baseICP: ICPProfile, signupData: any): Record<string, number> {
-  const weights = { ...baseICP.weights };
+  // Create a flat weights object from the nested ICP structure
+  const weights: Record<string, number> = {
+    // Company size weight
+    companySize: baseICP.companySize.weight,
+    // Pain point weights
+    automation: baseICP.painPoints.automation.weight,
+    growth: baseICP.painPoints.growth.weight,
+    efficiency: baseICP.painPoints.efficiency.weight,
+    aiReadiness: baseICP.painPoints.aiReadiness.weight,
+    // Contact method weights
+    form: baseICP.contactMethods.form.weight,
+    email: baseICP.contactMethods.email.weight,
+    phone: baseICP.contactMethods.phone.weight,
+  };
   
   // Adjust weights based on business goal
   if (signupData.main_business_goal) {
     switch (signupData.main_business_goal) {
       case 'Generate more qualified leads':
-        weights.leadQuality = Math.min(1.0, weights.leadQuality * 1.2);
-        weights.conversionProbability = Math.min(1.0, weights.conversionProbability * 1.1);
+        weights.growth = Math.min(1.0, weights.growth * 1.2);
+        weights.automation = Math.min(1.0, weights.automation * 1.1);
         break;
       case 'Improve follow-ups and conversions':
-        weights.conversionProbability = Math.min(1.0, weights.conversionProbability * 1.3);
-        weights.engagementScore = Math.min(1.0, weights.engagementScore * 1.2);
+        weights.automation = Math.min(1.0, weights.automation * 1.3);
+        weights.efficiency = Math.min(1.0, weights.efficiency * 1.2);
         break;
       case 'Nurture existing clients':
-        weights.engagementScore = Math.min(1.0, weights.engagementScore * 1.4);
-        weights.retentionScore = Math.min(1.0, weights.retentionScore * 1.3);
+        weights.efficiency = Math.min(1.0, weights.efficiency * 1.4);
+        weights.growth = Math.min(1.0, weights.growth * 1.3);
         break;
       case 'Save time with automation':
-        weights.automationReadiness = Math.min(1.0, weights.automationReadiness * 1.3);
-        weights.efficiencyScore = Math.min(1.0, weights.efficiencyScore * 1.2);
+        weights.automation = Math.min(1.0, weights.automation * 1.3);
+        weights.efficiency = Math.min(1.0, weights.efficiency * 1.2);
         break;
     }
   }
