@@ -54,6 +54,79 @@ export default function RelationshipInsights({ locale, clientId = null }: Relati
     of: isFrench ? 'sur' : 'of',
   };
 
+  // Comprehensive translation mappings for dynamic content
+  const toneTranslations = {
+    // English to French
+    'Professional and direct': 'Professionnel et direct',
+    'Frustrated but motivated': 'Frustré mais motivé',
+    'Satisfied and technical': 'Satisfait et technique',
+    'Enthusiastic and engaged': 'Enthousiaste et engagé',
+    'Excited and committed': 'Excité et engagé',
+    'Strategic and analytical': 'Stratégique et analytique',
+    'Curious and exploratory': 'Curieux et exploratoire',
+    'Formal': 'Formel',
+    'Casual': 'Décontracté',
+    'Urgent': 'Urgent',
+    'Neutral': 'Neutre',
+    'Friendly': 'Amical',
+    'Professional': 'Professionnel',
+    'Analytical': 'Analytique',
+    'Exploratory and open': 'Exploratoire et ouvert',
+    'Interested and specific': 'Intéressé et spécifique',
+    // French to English
+    'Professionnel et direct': 'Professional and direct',
+    'Frustré mais motivé': 'Frustrated but motivated',
+    'Satisfait et technique': 'Satisfied and technical',
+    'Enthousiaste et engagé': 'Enthusiastic and engaged',
+    'Excité et engagé': 'Excited and committed',
+    'Stratégique et analytique': 'Strategic and analytical',
+    'Curieux et exploratoire': 'Curious and exploratory',
+    'Formel': 'Formal',
+    'Décontracté': 'Casual',
+    'Neutre': 'Neutral',
+    'Amical': 'Friendly',
+    'Professionnel': 'Professional',
+    'Analytique': 'Analytical',
+    'Exploratoire et ouvert': 'Exploratory and open',
+    'Intéressé et spécifique': 'Interested and specific',
+  };
+
+  const urgencyTranslations = {
+    // English to French
+    'High': 'Élevée',
+    'Medium': 'Moyenne',
+    'Low': 'Faible',
+    // French to English
+    'Élevée': 'High',
+    'Moyenne': 'Medium',
+    'Faible': 'Low',
+  };
+
+  const insightTranslations = {
+    // English to French
+    'Demo successful. Moving to technical phase. High conversion probability.': 'Démonstration réussie. Passage à la phase technique. Probabilité de conversion élevée.',
+    'CONVERTED! Excellent relationship progression. Ready for onboarding process.': 'CONVERTI! Excellente progression relationnelle. Prêt pour le processus d\'intégration.',
+    'Strong initial interest, follow up soon.': 'Fort intérêt initial, suivi bientôt.',
+    'Technical discussion phase, high potential.': 'Phase de discussion technique, potentiel élevé.',
+    'Marketing pilot phase, monitor closely.': 'Phase pilote marketing, surveiller de près.',
+    'Effective recommendations. Ready for personalized demonstration.': 'Recommandations efficaces. Prêt pour démonstration personnalisée.',
+    'Lead showing strong engagement, schedule follow-up.': 'Lead montrant un fort engagement, planifier un suivi.',
+    'High-value prospect, prioritize outreach.': 'Prospect de haute valeur, prioriser la prospection.',
+    'Technical evaluation in progress, provide support.': 'Évaluation technique en cours, fournir un support.',
+    'Ready for proposal phase, prepare materials.': 'Prêt pour la phase de proposition, préparer les documents.',
+    // French to English
+    'Démonstration réussie. Passage à la phase technique. Probabilité de conversion élevée.': 'Demo successful. Moving to technical phase. High conversion probability.',
+    'CONVERTI! Excellente progression relationnelle. Prêt pour le processus d\'intégration.': 'CONVERTED! Excellent relationship progression. Ready for onboarding process.',
+    'Fort intérêt initial, suivi bientôt.': 'Strong initial interest, follow up soon.',
+    'Phase de discussion technique, potentiel élevé.': 'Technical discussion phase, high potential.',
+    'Phase pilote marketing, surveiller de près.': 'Marketing pilot phase, monitor closely.',
+    'Recommandations efficaces. Prêt pour démonstration personnalisée.': 'Effective recommendations. Ready for personalized demonstration.',
+    'Lead montrant un fort engagement, planifier un suivi.': 'Lead showing strong engagement, schedule follow-up.',
+    'Prospect de haute valeur, prioriser la prospection.': 'High-value prospect, prioritize outreach.',
+    'Évaluation technique en cours, fournir un support.': 'Technical evaluation in progress, provide support.',
+    'Prêt pour la phase de proposition, préparer les documents.': 'Ready for proposal phase, prepare materials.',
+  };
+
   useEffect(() => {
     fetchLeadsWithInsights();
   }, []);
@@ -203,11 +276,51 @@ export default function RelationshipInsights({ locale, clientId = null }: Relati
     });
   }
 
-  function formatHistoryValue(value: string | number): string {
+  // Translation functions
+  const translateTone = (value: string): string => {
+    if (isFrench) {
+      // If we're on French dashboard, translate English tones to French
+      return toneTranslations[value as keyof typeof toneTranslations] || value;
+    } else {
+      // If we're on English dashboard, translate French tones to English
+      return toneTranslations[value as keyof typeof toneTranslations] || value;
+    }
+  };
+
+  const translateUrgency = (value: string): string => {
+    if (isFrench) {
+      // If we're on French dashboard, translate English urgency to French
+      return urgencyTranslations[value as keyof typeof urgencyTranslations] || value;
+    } else {
+      // If we're on English dashboard, translate French urgency to English
+      return urgencyTranslations[value as keyof typeof urgencyTranslations] || value;
+    }
+  };
+
+  const translateInsight = (value: string): string => {
+    if (isFrench) {
+      // If we're on French dashboard, translate English insights to French
+      return insightTranslations[value as keyof typeof insightTranslations] || value;
+    } else {
+      // If we're on English dashboard, translate French insights to English
+      return insightTranslations[value as keyof typeof insightTranslations] || value;
+    }
+  };
+
+  function formatHistoryValue(value: string | number, type: 'tone' | 'urgency' | 'confidence' = 'confidence'): string {
     if (typeof value === 'number') {
       return (value * 100).toFixed(0) + '%';
     }
-    return value;
+    
+    const stringValue = value.toString();
+    
+    if (type === 'tone') {
+      return translateTone(stringValue);
+    } else if (type === 'urgency') {
+      return translateUrgency(stringValue);
+    }
+    
+    return stringValue;
   }
 
   if (loading) {
@@ -288,7 +401,7 @@ export default function RelationshipInsights({ locale, clientId = null }: Relati
                 <div className="flex items-start gap-2">
                   <span className="text-lg flex-shrink-0">💡</span>
                   <p className="text-sm text-blue-300 leading-relaxed">
-                    {lead.relationship_insight}
+                    {translateInsight(lead.relationship_insight)}
                   </p>
                 </div>
               </div>
@@ -319,7 +432,7 @@ export default function RelationshipInsights({ locale, clientId = null }: Relati
                     <div className="space-y-1">
                       {lead.tone_history.map((entry, i) => (
                         <div key={i} className="flex items-center justify-between text-xs">
-                          <span className="text-white/70">{formatHistoryValue(entry.value)}</span>
+                          <span className="text-white/70">{formatHistoryValue(entry.value, 'tone')}</span>
                           <span className="text-white/40">{formatDate(entry.timestamp)}</span>
                         </div>
                       ))}
@@ -375,7 +488,7 @@ export default function RelationshipInsights({ locale, clientId = null }: Relati
                         
                         return (
                           <div key={i} className="flex items-center justify-between text-xs">
-                            <span className={`${color} font-medium`}>{formatHistoryValue(entry.value)}</span>
+                            <span className={`${color} font-medium`}>{formatHistoryValue(entry.value, 'urgency')}</span>
                             <span className="text-white/40">{formatDate(entry.timestamp)}</span>
                           </div>
                         );
