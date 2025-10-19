@@ -192,7 +192,7 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({
         success: true,
         action,
-        data: result.data || result.variants || result.variant,
+        data: ('data' in result ? result.data : ('variants' in result ? result.variants : ('variant' in result ? result.variant : null))),
         metadata: {
           prompt_name: promptName,
           language,
