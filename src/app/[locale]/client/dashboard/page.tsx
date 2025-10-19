@@ -111,6 +111,42 @@ export default function ClientDashboard() {
     return () => window.removeEventListener('resize', checkTruncation);
   }, [stats.topIntent]);
 
+  // Translate topIntent when stats change
+  useEffect(() => {
+    (async () => {
+      if (stats.topIntent && stats.topIntent !== 'Aucun' && stats.topIntent !== 'None') {
+        const translatedIntent = await translateIntent(stats.topIntent, locale);
+        if (translatedIntent !== stats.topIntent) {
+          setStats(prev => ({ ...prev, topIntent: translatedIntent }));
+        }
+      }
+    })();
+  }, [stats.topIntent, locale]);
+
+  // Async helper function for translation
+  async function translateIntent(rawTopIntent: string, locale: string): Promise<string> {
+    try {
+      const response = await fetch('/api/translate-intent', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ intent: rawTopIntent, locale }),
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        if (data.success) {
+          console.log(`[IntentTranslation] Dashboard: "${rawTopIntent}" → "${data.translated}"`);
+          return data.translated;
+        }
+      }
+    } catch (error) {
+      console.error('[IntentTranslation] Dashboard translation failed:', error);
+    }
+    
+    // Fallback to original intent
+    return rawTopIntent;
+  }
+
   const t = {
     loginTitle: isFrench ? 'Connexion Client' : 'Client Login',
     loginSubtitle: isFrench ? 'Accédez à votre tableau de bord' : 'Access your dashboard',
@@ -443,31 +479,7 @@ export default function ClientDashboard() {
       intentCounts[b] - intentCounts[a]
     )[0] || (isFrench ? 'Aucun' : 'None');
 
-    // Translate the top intent if it exists and is not already in the target language
-    let topIntent = rawTopIntent;
-    if (rawTopIntent && rawTopIntent !== 'Aucun' && rawTopIntent !== 'None') {
-      try {
-        const response = await fetch('/api/translate-intent', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ intent: rawTopIntent, locale: locale })
-        });
-        
-        if (response.ok) {
-          const data = await response.json();
-          if (data.success) {
-            topIntent = data.translated;
-            console.log(`[IntentTranslation] Dashboard: "${rawTopIntent}" → "${topIntent}"`);
-          }
-        }
-      } catch (error) {
-        console.error('[IntentTranslation] Dashboard translation failed:', error);
-        // Fallback to original intent
-        topIntent = rawTopIntent;
-      }
-    }
-
-    const calculatedStats = { total, avgConfidence, topIntent, highUrgency };
+    const calculatedStats = { total, avgConfidence, topIntent: rawTopIntent, highUrgency };
     
     console.log('[ClientDashboard] Stats calculated:', {
       total: calculatedStats.total,
