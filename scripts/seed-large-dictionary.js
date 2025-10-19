@@ -197,65 +197,127 @@ async function generateTatoebaPairs() {
     const linksExtracted = await downloadFile(CONFIG.DATA_SOURCES[1].url, linksPath);
     const linksFile = await extractTarBz2(linksPath, tempDir, 'links.csv');
     
-    // Load sentences into maps
-    const engSentences = new Map();
-    const fraSentences = new Map();
+    // Load sentences into maps with language tracking
+    const allSentences = new Map(); // id -> {text, language}
+    const engSentences = new Map(); // id -> text
+    const fraSentences = new Map(); // id -> text
     
     console.log('📖 [DictionarySeeder] Loading English sentences...');
     const engData = fs.readFileSync(engExtracted, 'utf8');
-    engData.split('\n').forEach(line => {
-      const [id, lang, text] = line.split('\t');
-      if (id && text) {
-        const normalized = normalizeText(text);
-        if (normalized) {
-          engSentences.set(id, normalized);
-        }
+    let engCount = 0;
+    let engTotal = 0;
+    
+    // Debug: Show sample English lines
+    const engSampleLines = engData.split('\n').slice(0, 3);
+    console.log('🔍 [DictionarySeeder] Sample English lines:');
+    engSampleLines.forEach((line, i) => {
+      if (line.trim()) {
+        console.log(`   ${i + 1}. ${line.substring(0, 100)}...`);
       }
     });
     
-    console.log('📖 [DictionarySeeder] Loading French sentences...');
-    const fraData = fs.readFileSync(fraExtracted, 'utf8');
-    fraData.split('\n').forEach(line => {
+    engData.split('\n').forEach(line => {
+      engTotal++;
       const [id, lang, text] = line.split('\t');
-      if (id && text) {
+      if (id && text && lang === 'eng') {
         const normalized = normalizeText(text);
         if (normalized) {
-          fraSentences.set(id, normalized);
+          allSentences.set(id, { text: normalized, language: 'eng' });
+          engSentences.set(id, normalized);
+          engCount++;
         }
       }
     });
+    console.log(`📖 [DictionarySeeder] Loaded ${engCount} English sentences from ${engTotal} total lines`);
+    
+    console.log('📖 [DictionarySeeder] Loading French sentences...');
+    const fraData = fs.readFileSync(fraExtracted, 'utf8');
+    let fraCount = 0;
+    let fraTotal = 0;
+    
+    // Debug: Show sample French lines
+    const fraSampleLines = fraData.split('\n').slice(0, 3);
+    console.log('🔍 [DictionarySeeder] Sample French lines:');
+    fraSampleLines.forEach((line, i) => {
+      if (line.trim()) {
+        console.log(`   ${i + 1}. ${line.substring(0, 100)}...`);
+      }
+    });
+    
+    fraData.split('\n').forEach(line => {
+      fraTotal++;
+      const [id, lang, text] = line.split('\t');
+      if (id && text && lang === 'fra') {
+        const normalized = normalizeText(text);
+        if (normalized) {
+          allSentences.set(id, { text: normalized, language: 'fra' });
+          fraSentences.set(id, normalized);
+          fraCount++;
+        }
+      }
+    });
+    console.log(`📖 [DictionarySeeder] Loaded ${fraCount} French sentences from ${fraTotal} total lines`);
     
     console.log('🔗 [DictionarySeeder] Processing sentence links...');
     const linksData = fs.readFileSync(linksFile, 'utf8');
     let processedLinks = 0;
     let validPairs = 0;
+    let targetReached = false;
     
-    linksData.split('\n').forEach(line => {
-      if (processedLinks >= 50000) return; // Limit processing for performance
+    // Debug: Show first few lines of links file
+    const sampleLines = linksData.split('\n').slice(0, 5);
+    console.log('🔍 [DictionarySeeder] Sample links file lines:');
+    sampleLines.forEach((line, i) => {
+      if (line.trim()) {
+        console.log(`   ${i + 1}. ${line.substring(0, 100)}...`);
+      }
+    });
+    
+    for (const line of linksData.split('\n')) {
+      if (targetReached || processedLinks >= 100000) break; // Process more links to find valid pairs
       
-      const [linkId, sentenceId1, sentenceId2] = line.split('\t');
-      if (sentenceId1 && sentenceId2) {
-        const engText = engSentences.get(sentenceId1);
-        const fraText = fraSentences.get(sentenceId2);
+      // Try both tab and comma separation
+      let parts = line.split('\t');
+      if (parts.length < 2) {
+        parts = line.split(',');
+      }
+      
+      if (parts.length >= 2) {
+        const sentenceId1 = parts[0].trim();
+        const sentenceId2 = parts[1].trim();
         
-        if (engText && fraText) {
-          pairs.add(JSON.stringify({ english: engText, french: fraText }));
-          validPairs++;
-        }
-        
-        // Also try reverse direction
-        const engText2 = engSentences.get(sentenceId2);
-        const fraText2 = fraSentences.get(sentenceId1);
-        
-        if (engText2 && fraText2) {
-          pairs.add(JSON.stringify({ english: engText2, french: fraText2 }));
-          validPairs++;
+        if (sentenceId1 && sentenceId2 && sentenceId1 !== sentenceId2) {
+          const sent1 = allSentences.get(sentenceId1);
+          const sent2 = allSentences.get(sentenceId2);
+          
+          if (sent1 && sent2) {
+            // Check if we have an English-French pair
+            if (sent1.language === 'eng' && sent2.language === 'fra') {
+              pairs.add(JSON.stringify({ english: sent1.text, french: sent2.text }));
+              validPairs++;
+            } else if (sent1.language === 'fra' && sent2.language === 'eng') {
+              pairs.add(JSON.stringify({ english: sent2.text, french: sent1.text }));
+              validPairs++;
+            }
+            
+            // Check if we've reached our target
+            if (validPairs >= CONFIG.TARGET_ENTRIES) {
+              targetReached = true;
+              break;
+            }
+          }
         }
       }
       processedLinks++;
-    });
+      
+      // Log progress every 10,000 links
+      if (processedLinks % 10000 === 0) {
+        console.log(`🔗 [DictionarySeeder] Processed ${processedLinks} links, found ${validPairs} valid pairs`);
+      }
+    }
     
     console.log(`✅ [DictionarySeeder] Generated ${pairs.size} Tatoeba pairs from ${processedLinks} links`);
+    console.log(`📊 [DictionarySeeder] Final stats: ${engCount} English, ${fraCount} French sentences loaded`);
     return Array.from(pairs).map(pair => JSON.parse(pair));
     
   } catch (error) {
