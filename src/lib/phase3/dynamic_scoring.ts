@@ -192,41 +192,41 @@ async function getConversionPatterns(): Promise<ConversionPattern[]> {
  */
 function calculateConversionProbability(prospect: any, patterns: ConversionPattern[]): number {
   let probability = 0.05; // Base 5% probability
-  let matches = 0;
+  let matchCount = 0;
   let totalWeight = 0;
   
   // Match prospect characteristics to conversion patterns
   patterns.forEach(pattern => {
-    let matches = false;
+    let isMatch = false;
     
     switch (pattern.patternType) {
       case 'industry':
-        matches = prospect.industry?.toLowerCase() === pattern.patternValue.toLowerCase();
+        isMatch = prospect.industry?.toLowerCase() === pattern.patternValue.toLowerCase();
         break;
       case 'company_size':
         const size = prospect.metadata?.employeeCount || 0;
-        matches = getSizeRange(size) === pattern.patternValue;
+        isMatch = getSizeRange(size) === pattern.patternValue;
         break;
       case 'tech_stack':
         const techStack = prospect.metadata?.techStack || [];
-        matches = techStack.includes(pattern.patternValue);
+        isMatch = techStack.includes(pattern.patternValue);
         break;
       case 'pain_point':
         const painPoints = prospect.metadata?.painPoints || [];
-        matches = painPoints.includes(pattern.patternValue);
+        isMatch = painPoints.includes(pattern.patternValue);
         break;
       case 'geography':
-        matches = prospect.region?.toUpperCase() === pattern.patternValue.toUpperCase();
+        isMatch = prospect.region?.toUpperCase() === pattern.patternValue.toUpperCase();
         break;
       case 'icp_score':
         const icpScore = prospect.automation_need_score || 0;
-        matches = getICPRange(icpScore) === pattern.patternValue;
+        isMatch = getICPRange(icpScore) === pattern.patternValue;
         break;
     }
     
-    if (matches) {
+    if (isMatch) {
       probability += pattern.conversionRate * pattern.confidence;
-      matches++;
+      matchCount++;
       totalWeight += pattern.confidence;
     }
   });

@@ -213,7 +213,7 @@ export async function runOptimizedProspectPipeline(config: OptimizedPipelineConf
     console.log('');
 
     // Import and run the original pipeline with optimized config
-    const { runProspectPipeline } = await import('../prospect_pipeline');
+    const { runProspectPipeline } = await import('../../../prospect-intelligence/prospect_pipeline');
     const pipelineResult = await runProspectPipeline({
       industries: config.industries,
       regions: config.regions,
