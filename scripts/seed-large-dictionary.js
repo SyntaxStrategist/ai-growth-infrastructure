@@ -29,6 +29,7 @@ const path = require('path');
 const https = require('https');
 const zlib = require('zlib');
 const bz2 = require('unbzip2-stream');
+const tar = require('tar');
 
 // Load environment variables
 require('dotenv').config({ path: '.env.local' });
@@ -54,7 +55,7 @@ const CONFIG = {
     },
     {
       name: 'Tatoeba Links',
-      url: 'https://downloads.tatoeba.org/exports/sentence_links.tsv.bz2',
+      url: 'https://downloads.tatoeba.org/exports/links.tar.bz2',
       type: 'links'
     },
     {
@@ -118,6 +119,53 @@ function extractBz2(inputPath, outputPath) {
 }
 
 /**
+ * Extract tar.bz2 compressed file and find specific file inside
+ */
+function extractTarBz2(inputPath, outputDir, targetFile) {
+  return new Promise((resolve, reject) => {
+    console.log(`📦 [DictionarySeeder] Extracting .tar.bz2 file ${inputPath}...`);
+    
+    const input = fs.createReadStream(inputPath);
+    const extractor = tar.extract({
+      cwd: outputDir,
+      filter: (path) => {
+        // Only extract the target file (links.csv or links.tsv)
+        return path === targetFile || path.endsWith('/' + targetFile);
+      }
+    });
+    
+    input.pipe(bz2()).pipe(extractor);
+    
+    extractor.on('end', () => {
+      const extractedPath = path.join(outputDir, targetFile);
+      if (fs.existsSync(extractedPath)) {
+        console.log(`✅ [DictionarySeeder] Extracted ${targetFile} to ${extractedPath}`);
+        resolve(extractedPath);
+      } else {
+        // Try alternative paths
+        const altPaths = [
+          path.join(outputDir, 'links', targetFile),
+          path.join(outputDir, 'links.csv'),
+          path.join(outputDir, 'links.tsv')
+        ];
+        
+        for (const altPath of altPaths) {
+          if (fs.existsSync(altPath)) {
+            console.log(`✅ [DictionarySeeder] Found ${targetFile} at ${altPath}`);
+            resolve(altPath);
+            return;
+          }
+        }
+        
+        reject(new Error(`Target file ${targetFile} not found in extracted archive`));
+      }
+    });
+    
+    extractor.on('error', reject);
+  });
+}
+
+/**
  * Generate high-quality bilingual pairs from Tatoeba with proper alignment
  */
 async function generateTatoebaPairs() {
@@ -145,10 +193,9 @@ async function generateTatoebaPairs() {
     await extractBz2(fraPath, fraExtracted);
     
     // Download sentence links for proper alignment
-    const linksPath = path.join(tempDir, 'sentence_links.tsv.bz2');
-    const linksExtracted = path.join(tempDir, 'sentence_links.tsv');
-    await downloadFile(CONFIG.DATA_SOURCES[1].url, linksPath);
-    await extractBz2(linksPath, linksExtracted);
+    const linksPath = path.join(tempDir, 'links.tar.bz2');
+    const linksExtracted = await downloadFile(CONFIG.DATA_SOURCES[1].url, linksPath);
+    const linksFile = await extractTarBz2(linksPath, tempDir, 'links.csv');
     
     // Load sentences into maps
     const engSentences = new Map();
@@ -179,7 +226,7 @@ async function generateTatoebaPairs() {
     });
     
     console.log('🔗 [DictionarySeeder] Processing sentence links...');
-    const linksData = fs.readFileSync(linksExtracted, 'utf8');
+    const linksData = fs.readFileSync(linksFile, 'utf8');
     let processedLinks = 0;
     let validPairs = 0;
     
@@ -221,8 +268,9 @@ async function generateTatoebaPairs() {
       path.join(tempDir, 'eng_sentences.tsv'),
       path.join(tempDir, 'fra_sentences.tsv.bz2'),
       path.join(tempDir, 'fra_sentences.tsv'),
-      path.join(tempDir, 'sentence_links.tsv.bz2'),
-      path.join(tempDir, 'sentence_links.tsv')
+      path.join(tempDir, 'links.tar.bz2'),
+      path.join(tempDir, 'links.csv'),
+      path.join(tempDir, 'links.tsv')
     ];
     
     tempFiles.forEach(file => {
