@@ -158,7 +158,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({
         success: true,
         message: `${type} logged successfully`,
-        id: result.id,
+        ...( 'id' in result ? { id: result.id } : {} ),
         data: result
       });
     } else {
