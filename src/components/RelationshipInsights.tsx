@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 
 type HistoryEntry = {
@@ -54,78 +54,6 @@ export default function RelationshipInsights({ locale, clientId = null }: Relati
     of: isFrench ? 'sur' : 'of',
   };
 
-  // Comprehensive translation mappings for dynamic content
-  const toneTranslations = {
-    // English to French
-    'Professional and direct': 'Professionnel et direct',
-    'Frustrated but motivated': 'Frustré mais motivé',
-    'Satisfied and technical': 'Satisfait et technique',
-    'Enthusiastic and engaged': 'Enthousiaste et engagé',
-    'Excited and committed': 'Excité et engagé',
-    'Strategic and analytical': 'Stratégique et analytique',
-    'Curious and exploratory': 'Curieux et exploratoire',
-    'Formal': 'Formel',
-    'Casual': 'Décontracté',
-    'Urgent': 'Urgent',
-    'Neutral': 'Neutre',
-    'Friendly': 'Amical',
-    'Professional': 'Professionnel',
-    'Analytical': 'Analytique',
-    'Exploratory and open': 'Exploratoire et ouvert',
-    'Interested and specific': 'Intéressé et spécifique',
-    // French to English
-    'Professionnel et direct': 'Professional and direct',
-    'Frustré mais motivé': 'Frustrated but motivated',
-    'Satisfait et technique': 'Satisfied and technical',
-    'Enthousiaste et engagé': 'Enthusiastic and engaged',
-    'Excité et engagé': 'Excited and committed',
-    'Stratégique et analytique': 'Strategic and analytical',
-    'Curieux et exploratoire': 'Curious and exploratory',
-    'Formel': 'Formal',
-    'Décontracté': 'Casual',
-    'Neutre': 'Neutral',
-    'Amical': 'Friendly',
-    'Professionnel': 'Professional',
-    'Analytique': 'Analytical',
-    'Exploratoire et ouvert': 'Exploratory and open',
-    'Intéressé et spécifique': 'Interested and specific',
-  };
-
-  const urgencyTranslations = {
-    // English to French
-    'High': 'Élevée',
-    'Medium': 'Moyenne',
-    'Low': 'Faible',
-    // French to English
-    'Élevée': 'High',
-    'Moyenne': 'Medium',
-    'Faible': 'Low',
-  };
-
-  const insightTranslations = {
-    // English to French
-    'Demo successful. Moving to technical phase. High conversion probability.': 'Démonstration réussie. Passage à la phase technique. Probabilité de conversion élevée.',
-    'CONVERTED! Excellent relationship progression. Ready for onboarding process.': 'CONVERTI! Excellente progression relationnelle. Prêt pour le processus d\'intégration.',
-    'Strong initial interest, follow up soon.': 'Fort intérêt initial, suivi bientôt.',
-    'Technical discussion phase, high potential.': 'Phase de discussion technique, potentiel élevé.',
-    'Marketing pilot phase, monitor closely.': 'Phase pilote marketing, surveiller de près.',
-    'Effective recommendations. Ready for personalized demonstration.': 'Recommandations efficaces. Prêt pour démonstration personnalisée.',
-    'Lead showing strong engagement, schedule follow-up.': 'Lead montrant un fort engagement, planifier un suivi.',
-    'High-value prospect, prioritize outreach.': 'Prospect de haute valeur, prioriser la prospection.',
-    'Technical evaluation in progress, provide support.': 'Évaluation technique en cours, fournir un support.',
-    'Ready for proposal phase, prepare materials.': 'Prêt pour la phase de proposition, préparer les documents.',
-    // French to English
-    'Démonstration réussie. Passage à la phase technique. Probabilité de conversion élevée.': 'Demo successful. Moving to technical phase. High conversion probability.',
-    'CONVERTI! Excellente progression relationnelle. Prêt pour le processus d\'intégration.': 'CONVERTED! Excellent relationship progression. Ready for onboarding process.',
-    'Fort intérêt initial, suivi bientôt.': 'Strong initial interest, follow up soon.',
-    'Phase de discussion technique, potentiel élevé.': 'Technical discussion phase, high potential.',
-    'Phase pilote marketing, surveiller de près.': 'Marketing pilot phase, monitor closely.',
-    'Recommandations efficaces. Prêt pour démonstration personnalisée.': 'Effective recommendations. Ready for personalized demonstration.',
-    'Lead montrant un fort engagement, planifier un suivi.': 'Lead showing strong engagement, schedule follow-up.',
-    'Prospect de haute valeur, prioriser la prospection.': 'High-value prospect, prioritize outreach.',
-    'Évaluation technique en cours, fournir un support.': 'Technical evaluation in progress, provide support.',
-    'Prêt pour la phase de proposition, préparer les documents.': 'Ready for proposal phase, prepare materials.',
-  };
 
   useEffect(() => {
     fetchLeadsWithInsights();
@@ -250,43 +178,8 @@ export default function RelationshipInsights({ locale, clientId = null }: Relati
       })));
       console.log('[RelationshipInsights] ============================================');
 
-      // Process leads with translation logging
-      const processedLeads = (data || []).map((lead: any) => {
-        console.log(`[RelationshipInsights] Processing lead: ${lead.name} (${lead.email})`);
-        
-        // Log relationship insight translation
-        if (lead.relationship_insight) {
-          const isInsightFrench = isFrenchText(lead.relationship_insight);
-          console.log(`[RelationshipInsights] Lead insight appears to be: ${isInsightFrench ? 'French' : 'English'}`);
-        }
-        
-        // Log tone history translation
-        if (lead.tone_history && lead.tone_history.length > 0) {
-          lead.tone_history.forEach((entry: any, index: number) => {
-            if (typeof entry.value === 'string') {
-              const isToneFrench = isFrenchText(entry.value);
-              console.log(`[RelationshipInsights] Tone history entry ${index} appears to be: ${isToneFrench ? 'French' : 'English'}`);
-            }
-          });
-        }
-        
-        // Log urgency history translation
-        if (lead.urgency_history && lead.urgency_history.length > 0) {
-          lead.urgency_history.forEach((entry: any, index: number) => {
-            if (typeof entry.value === 'string') {
-              const isUrgencyFrench = isFrenchText(entry.value);
-              console.log(`[RelationshipInsights] Urgency history entry ${index} appears to be: ${isUrgencyFrench ? 'French' : 'English'}`);
-            }
-          });
-        }
-        
-        return lead;
-      });
-
-      setLeads(processedLeads as LeadWithHistory[]);
-      setTotalLeads(processedLeads.length);
-      
-      console.log(`[RelationshipInsights] ✅ Locale-based translations applied successfully for ${processedLeads.length} leads`);
+      setLeads((data || []) as LeadWithHistory[]);
+      setTotalLeads((data || []).length);
     } catch (err) {
       console.error('[RelationshipInsights] ============================================');
       console.error('[RelationshipInsights] ❌ CRITICAL ERROR');
@@ -311,119 +204,13 @@ export default function RelationshipInsights({ locale, clientId = null }: Relati
     });
   }
 
-  // Memoized translation functions to prevent double translation
-  const translationFunctions = useMemo(() => {
-    // Helper function to detect if text is in French
-    const isFrenchText = (text: string): boolean => {
-      const frenchIndicators = ['é', 'è', 'ê', 'ë', 'à', 'â', 'ä', 'ç', 'ù', 'û', 'ü', 'ô', 'ö', 'î', 'ï'];
-      const frenchWords = ['démonstration', 'réussie', 'passage', 'phase', 'technique', 'probabilité', 'conversion', 'élevée', 'converti', 'excellente', 'progression', 'relationnelle', 'prêt', 'processus', 'intégration', 'fort', 'intérêt', 'initial', 'suivi', 'bientôt', 'discussion', 'potentiel', 'pilote', 'marketing', 'surveiller', 'près', 'recommandations', 'efficaces', 'personnalisée', 'montrant', 'engagement', 'planifier', 'prospect', 'haute', 'valeur', 'prioriser', 'prospection', 'évaluation', 'cours', 'fournir', 'support', 'proposition', 'préparer', 'documents'];
-      
-      const lowerText = text.toLowerCase();
-      const hasFrenchChars = frenchIndicators.some(char => lowerText.includes(char));
-      const hasFrenchWords = frenchWords.some(word => lowerText.includes(word));
-      
-      return hasFrenchChars || hasFrenchWords;
-    };
 
-    // Enhanced translation functions with runtime logging
-    const translateTone = (value: string): string => {
-    const originalValue = value;
-    const isValueFrench = isFrenchText(value);
-    
-    console.log(`[RelationshipInsights] Locale detected: ${locale}`);
-    console.log(`[RelationshipInsights] Tone value: "${value}"`);
-    console.log(`[RelationshipInsights] Value appears to be: ${isValueFrench ? 'French' : 'English'}`);
-    
-    let translatedValue = value;
-    
-    if (isFrench && !isValueFrench) {
-      // We're on French dashboard, but value is in English - translate to French
-      translatedValue = toneTranslations[value as keyof typeof toneTranslations] || value;
-      console.log(`[RelationshipInsights] Translating from EN → FR for tone: "${value}" → "${translatedValue}"`);
-    } else if (!isFrench && isValueFrench) {
-      // We're on English dashboard, but value is in French - translate to English
-      translatedValue = toneTranslations[value as keyof typeof toneTranslations] || value;
-      console.log(`[RelationshipInsights] Translating from FR → EN for tone: "${value}" → "${translatedValue}"`);
-    } else {
-      console.log(`[RelationshipInsights] No translation needed for tone: "${value}" (already in correct language)`);
-    }
-    
-    return translatedValue;
-  };
-
-  const translateUrgency = (value: string): string => {
-    const originalValue = value;
-    const isValueFrench = isFrenchText(value);
-    
-    console.log(`[RelationshipInsights] Urgency value: "${value}"`);
-    console.log(`[RelationshipInsights] Value appears to be: ${isValueFrench ? 'French' : 'English'}`);
-    
-    let translatedValue = value;
-    
-    if (isFrench && !isValueFrench) {
-      // We're on French dashboard, but value is in English - translate to French
-      translatedValue = urgencyTranslations[value as keyof typeof urgencyTranslations] || value;
-      console.log(`[RelationshipInsights] Translating from EN → FR for urgency: "${value}" → "${translatedValue}"`);
-    } else if (!isFrench && isValueFrench) {
-      // We're on English dashboard, but value is in French - translate to English
-      translatedValue = urgencyTranslations[value as keyof typeof urgencyTranslations] || value;
-      console.log(`[RelationshipInsights] Translating from FR → EN for urgency: "${value}" → "${translatedValue}"`);
-    } else {
-      console.log(`[RelationshipInsights] No translation needed for urgency: "${value}" (already in correct language)`);
-    }
-    
-    return translatedValue;
-  };
-
-  const translateInsight = (value: string): string => {
-    const originalValue = value;
-    const isValueFrench = isFrenchText(value);
-    
-    console.log(`[RelationshipInsights] Insight value: "${value.substring(0, 50)}..."`);
-    console.log(`[RelationshipInsights] Value appears to be: ${isValueFrench ? 'French' : 'English'}`);
-    
-    let translatedValue = value;
-    
-    if (isFrench && !isValueFrench) {
-      // We're on French dashboard, but value is in English - translate to French
-      translatedValue = insightTranslations[value as keyof typeof insightTranslations] || value;
-      console.log(`[RelationshipInsights] Translating from EN → FR for insight: "${value.substring(0, 30)}..." → "${translatedValue.substring(0, 30)}..."`);
-    } else if (!isFrench && isValueFrench) {
-      // We're on English dashboard, but value is in French - translate to English
-      translatedValue = insightTranslations[value as keyof typeof insightTranslations] || value;
-      console.log(`[RelationshipInsights] Translating from FR → EN for insight: "${value.substring(0, 30)}..." → "${translatedValue.substring(0, 30)}..."`);
-    } else {
-      console.log(`[RelationshipInsights] No translation needed for insight: "${value.substring(0, 30)}..." (already in correct language)`);
-    }
-    
-    return translatedValue;
-  };
-
-    return {
-      translateTone,
-      translateUrgency,
-      translateInsight,
-      isFrenchText
-    };
-  }, [isFrench, locale, toneTranslations, urgencyTranslations, insightTranslations]);
-
-  // Destructure the memoized functions
-  const { translateTone, translateUrgency, translateInsight, isFrenchText } = translationFunctions;
-
-  function formatHistoryValue(value: string | number, type: 'tone' | 'urgency' | 'confidence' = 'confidence'): string {
+  function formatHistoryValue(value: string | number): string {
     if (typeof value === 'number') {
       return (value * 100).toFixed(0) + '%';
     }
     
-    const stringValue = value.toString();
-    
-    if (type === 'tone') {
-      return translateTone(stringValue);
-    } else if (type === 'urgency') {
-      return translateUrgency(stringValue);
-    }
-    
-    return stringValue;
+    return value.toString();
   }
 
   if (loading) {
@@ -504,7 +291,7 @@ export default function RelationshipInsights({ locale, clientId = null }: Relati
                 <div className="flex items-start gap-2">
                   <span className="text-lg flex-shrink-0">💡</span>
                   <p className="text-sm text-blue-300 leading-relaxed">
-                    {translateInsight(lead.relationship_insight)}
+                    {lead.relationship_insight}
                   </p>
                 </div>
               </div>
@@ -535,7 +322,7 @@ export default function RelationshipInsights({ locale, clientId = null }: Relati
                     <div className="space-y-1">
                       {lead.tone_history.map((entry, i) => (
                         <div key={i} className="flex items-center justify-between text-xs">
-                          <span className="text-white/70">{formatHistoryValue(entry.value, 'tone')}</span>
+                          <span className="text-white/70">{formatHistoryValue(entry.value)}</span>
                           <span className="text-white/40">{formatDate(entry.timestamp)}</span>
                         </div>
                       ))}
@@ -591,7 +378,7 @@ export default function RelationshipInsights({ locale, clientId = null }: Relati
                         
                         return (
                           <div key={i} className="flex items-center justify-between text-xs">
-                            <span className={`${color} font-medium`}>{formatHistoryValue(entry.value, 'urgency')}</span>
+                            <span className={`${color} font-medium`}>{formatHistoryValue(entry.value)}</span>
                             <span className="text-white/40">{formatDate(entry.timestamp)}</span>
                           </div>
                         );
