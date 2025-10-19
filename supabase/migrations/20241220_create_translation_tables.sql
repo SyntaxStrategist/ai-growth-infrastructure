@@ -157,30 +157,14 @@ BEGIN
 END;
 $$ language 'plpgsql';
 
--- Triggers for automatic timestamp updates (conditional creation)
-DO $$ 
-BEGIN
-    IF NOT EXISTS (
-        SELECT 1 FROM pg_trigger 
-        WHERE tgname = 'update_translation_cache_updated_at'
-    ) THEN
-        CREATE TRIGGER update_translation_cache_updated_at 
-        BEFORE UPDATE ON public.translation_cache 
-        FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
-    END IF;
-END $$;
+-- Triggers for automatic timestamp updates
+CREATE TRIGGER update_translation_cache_updated_at 
+BEFORE UPDATE ON public.translation_cache 
+FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
-DO $$ 
-BEGIN
-    IF NOT EXISTS (
-        SELECT 1 FROM pg_trigger 
-        WHERE tgname = 'update_translation_dictionary_updated_at'
-    ) THEN
-        CREATE TRIGGER update_translation_dictionary_updated_at 
-        BEFORE UPDATE ON public.translation_dictionary 
-        FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
-    END IF;
-END $$;
+CREATE TRIGGER update_translation_dictionary_updated_at 
+BEFORE UPDATE ON public.translation_dictionary 
+FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
 -- Note: Usage count tracking is handled in application code
 -- PostgreSQL doesn't support AFTER SELECT triggers
