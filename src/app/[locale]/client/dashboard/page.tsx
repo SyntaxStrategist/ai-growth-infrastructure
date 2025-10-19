@@ -159,24 +159,28 @@ export default function ClientDashboard() {
 
   // Check for legacy client_id and handle auto-refresh if needed
   useEffect(() => {
-    if (authenticated && client && isLegacyClientId(client.clientId)) {
-      console.log('[AuthFix] ============================================');
-      console.log('[AuthFix] Invalid client_id detected — refreshing session');
-      console.log('[AuthFix] Legacy client_id:', client.clientId);
-      
-      // Clear session using context
-      clearSessionContext();
-      
-      // If it's the demo client, automatically re-login
-      if (client.email === DEMO_CLIENT_EMAIL) {
-        console.log('[AuthFix] Auto-refreshing demo client session...');
-        handleAutoRefreshDemoClient(client.email, client.language);
-        return;
+    if (authenticated && client) {
+      if (isLegacyClientId(client.clientId)) {
+        console.log('[AuthFix] ============================================');
+        console.log('[AuthFix] Invalid client_id detected — refreshing session');
+        console.log('[AuthFix] Legacy client_id:', client.clientId);
+        
+        // Clear session using context
+        clearSessionContext();
+        
+        // If it's the demo client, automatically re-login
+        if (client.email === DEMO_CLIENT_EMAIL) {
+          console.log('[AuthFix] Auto-refreshing demo client session...');
+          handleAutoRefreshDemoClient(client.email, client.language);
+          return;
+        }
+        
+        // For other clients, just clear and let them re-login manually
+        console.log('[AuthFix] Session cleared — please log in again');
+        console.log('[AuthFix] ============================================');
+      } else {
+        console.log('[AuthFix] Client ID validated successfully:', client.clientId);
       }
-      
-      // For other clients, just clear and let them re-login manually
-      console.log('[AuthFix] Session cleared — please log in again');
-      console.log('[AuthFix] ============================================');
     }
   }, [authenticated, client, clearSessionContext]);
 

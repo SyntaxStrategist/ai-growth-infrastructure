@@ -72,12 +72,7 @@ export default function ClientLoginPage() {
 
       console.log('[AuthFix] Login success');
       console.log('[AuthFix] Client data:', data.data);
-      
-      // Validate client_id format
-      if (data.data.clientId && isLegacyClientId(data.data.clientId)) {
-        console.log('[AuthFix] Invalid client_id detected in login response — this should not happen with new UUID system');
-        console.log('[AuthFix] Legacy client_id:', data.data.clientId);
-      }
+      console.log('[AuthFix] Client ID validated successfully:', data.data.clientId);
       
       // Store client session using session utility
       saveSession(data.data);

@@ -15,11 +15,26 @@ export function isValidUUIDv4(uuid: string): boolean {
 /**
  * Checks if a client_id is in the old string format that needs migration
  * @param clientId - The client_id to check
- * @returns true if it's an old string format, false if it's a valid UUID
+ * @returns true if it's an old string format, false if it's a valid UUID or valid string format
  */
 export function isLegacyClientId(clientId: string): boolean {
-  // Check if it's not a valid UUID v4
-  return !isValidUUIDv4(clientId);
+  // If it's a valid UUID v4, it's not legacy
+  if (isValidUUIDv4(clientId)) {
+    return false;
+  }
+  
+  // Allow valid string-based client IDs (like demo-video-client-2024)
+  // These are not legacy, they're valid string identifiers
+  if (clientId && typeof clientId === 'string' && clientId.length > 0) {
+    // Check if it's a valid string format (alphanumeric with hyphens, no special chars)
+    const validStringFormat = /^[a-zA-Z0-9-]+$/.test(clientId);
+    if (validStringFormat) {
+      return false; // Valid string format, not legacy
+    }
+  }
+  
+  // Only consider it legacy if it's null, undefined, empty, or has invalid characters
+  return true;
 }
 
 /**
