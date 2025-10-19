@@ -199,8 +199,11 @@ async function translateIntent(rawTopIntent: string, locale: string): Promise<st
     avgConfidence: isFrench ? 'Confiance Moyenne' : 'Avg Confidence',
     topIntent: isFrench ? 'Intention Principale' : 'Top Intent',
     highUrgency: isFrench ? 'Urgence Élevée' : 'High Urgency',
+    insights: isFrench ? '📊 Analyses' : '📊 Insights',
+    prospectIntelligence: isFrench ? '🧠 Intelligence de Prospection' : '🧠 Prospect Intelligence',
     apiAccess: isFrench ? '🔑 Accès API' : '🔑 API Access',
     logout: isFrench ? 'Déconnexion' : 'Logout',
+    icpNotConfigured: isFrench ? 'Cette section s\'activera une fois votre profil client idéal configuré.' : 'This section will activate once your ICP is configured.',
     name: isFrench ? 'Nom' : 'Name',
     message: isFrench ? 'Message' : 'Message',
     summary: isFrench ? 'Résumé IA' : 'AI Summary',
@@ -714,6 +717,20 @@ async function translateIntent(rawTopIntent: string, locale: string): Promise<st
     router.push(`/${locale}/client/login`);
   }
 
+  // Smooth scroll function for navigation
+  const scrollToSection = (sectionId: string) => {
+    const element = document.getElementById(sectionId);
+    if (element) {
+      element.scrollIntoView({ 
+        behavior: 'smooth',
+        block: 'start'
+      });
+    } else {
+      // Show friendly message if section doesn't exist
+      showToast(t.icpNotConfigured);
+    }
+  };
+
   // Client-side pagination logic
   const totalPages = Math.ceil(allLeads.length / leadsPerPage);
   const startIndex = (currentPage - 1) * leadsPerPage;
@@ -913,6 +930,18 @@ async function translateIntent(rawTopIntent: string, locale: string): Promise<st
             <p className="text-white/50 text-sm mt-1">{client?.businessName}</p>
           </div>
           <div className="flex items-center gap-3">
+            <button
+              onClick={() => scrollToSection('insights')}
+              className="px-4 py-2 rounded-lg bg-cyan-500/20 border border-cyan-500/40 text-cyan-400 hover:bg-cyan-500/30 transition-all duration-300 text-sm font-medium"
+            >
+              {t.insights}
+            </button>
+            <button
+              onClick={() => scrollToSection('intelligence')}
+              className="px-4 py-2 rounded-lg bg-pink-500/20 border border-pink-500/40 text-pink-400 hover:bg-pink-500/30 transition-all duration-300 text-sm font-medium"
+            >
+              {t.prospectIntelligence}
+            </button>
             <a
               href={`/${locale}/client/settings`}
               className="px-4 py-2 rounded-lg bg-purple-500/20 border border-purple-500/40 text-purple-400 hover:bg-purple-500/30 transition-all duration-300 text-sm font-medium"
@@ -1101,6 +1130,7 @@ async function translateIntent(rawTopIntent: string, locale: string): Promise<st
 
         {/* Relationship Insights */}
         <motion.div
+          id="insights"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 0.6, delay: 0.55 }}
@@ -1111,6 +1141,7 @@ async function translateIntent(rawTopIntent: string, locale: string): Promise<st
 
         {/* Prospect Intelligence */}
         <motion.div
+          id="intelligence"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 0.6, delay: 0.6 }}
