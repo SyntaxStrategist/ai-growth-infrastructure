@@ -84,6 +84,7 @@ export default function ClientDashboard() {
     highUrgency: 0,
   });
   const [isIntentTruncated, setIsIntentTruncated] = useState(false);
+  const [translatedIntentCache, setTranslatedIntentCache] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [leadsPerPage] = useState(5);
   const [pagination, setPagination] = useState({
@@ -111,17 +112,27 @@ export default function ClientDashboard() {
     return () => window.removeEventListener('resize', checkTruncation);
   }, [stats.topIntent]);
 
-  // Translate topIntent when stats change
+  // Translate topIntent when stats change (with cache to prevent re-render loop)
   useEffect(() => {
     (async () => {
-      if (stats.topIntent && stats.topIntent !== 'Aucun' && stats.topIntent !== 'None') {
+      if (
+        stats.topIntent &&
+        stats.topIntent !== 'Aucun' &&
+        stats.topIntent !== 'None' &&
+        stats.topIntent !== translatedIntentCache
+      ) {
+        console.log("[IntentTranslation] Running translation once for:", stats.topIntent, locale);
         const translatedIntent = await translateIntent(stats.topIntent, locale);
-        if (translatedIntent !== stats.topIntent) {
-          setStats(prev => ({ ...prev, topIntent: translatedIntent }));
-        }
+        setStats(prev => ({ ...prev, topIntent: translatedIntent }));
+        setTranslatedIntentCache(stats.topIntent);
       }
     })();
-  }, [stats.topIntent, locale]);
+  }, [stats.topIntent, locale, translatedIntentCache]);
+
+  // Clear translation cache when locale changes
+  useEffect(() => {
+    setTranslatedIntentCache(null);
+  }, [locale]);
 
   // Async helper function for translation
   async function translateIntent(rawTopIntent: string, locale: string): Promise<string> {
