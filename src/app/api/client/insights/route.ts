@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabase } from '../../../../lib/supabase';
+import { resolveClientId, validateClientId } from '../../../../lib/client-resolver';
 
 export async function GET(req: NextRequest) {
   try {
@@ -14,11 +15,67 @@ export async function GET(req: NextRequest) {
     
     console.log('[ClientInsights] Fetching insights for client:', clientId);
     
-    // Fetch leads data scoped to this client
+    // Validate client ID format
+    const validation = validateClientId(clientId);
+    if (!validation.isValid) {
+      console.error('[ClientInsights] ❌ Invalid client ID format:', clientId, validation.message);
+      return NextResponse.json(
+        { success: false, error: `Invalid client ID format: ${validation.message}` },
+        { status: 400 }
+      );
+    }
+
+    // Resolve client ID to UUID using universal resolver
+    let clientUuid: string;
+    try {
+      clientUuid = await resolveClientId(clientId);
+      console.log(`[ClientInsights] ✅ Resolved client ID: "${clientId}" → "${clientUuid}"`);
+    } catch (error) {
+      console.error('[ClientInsights] ❌ Failed to resolve client ID:', error);
+      return NextResponse.json(
+        { success: false, error: `Failed to resolve client ID: ${error instanceof Error ? error.message : 'Unknown error'}` },
+        { status: 404 }
+      );
+    }
+    
+    // Join with lead_actions to get client-specific leads using the internal UUID
+    const { data: leadActionsData, error: leadActionsError } = await supabase
+      .from('lead_actions')
+      .select('lead_id')
+      .eq('client_id', clientUuid);
+    
+    if (leadActionsError) {
+      console.error('[ClientInsights] ❌ Error fetching lead_actions:', leadActionsError);
+      return NextResponse.json(
+        { success: false, error: 'Failed to fetch lead actions' },
+        { status: 500 }
+      );
+    }
+    
+    const leadIds = leadActionsData?.map(la => la.lead_id) || [];
+    console.log('[ClientInsights] Found', leadIds.length, 'leads for client');
+    
+    if (leadIds.length === 0) {
+      console.log('[ClientInsights] No leads found for client, returning empty insights');
+      return NextResponse.json({
+        success: true,
+        data: {
+          total: 0,
+          avgConfidence: 0,
+          intentCounts: {},
+          urgencyCounts: { high: 0, medium: 0, low: 0 },
+          toneCounts: {},
+          dailyCounts: {},
+          languageCounts: { en: 0, fr: 0 }
+        }
+      });
+    }
+    
+    // Fetch leads data from lead_memory table using the resolved lead IDs
     const { data: leads, error } = await supabase
-      .from('leads')
+      .from('lead_memory')
       .select('*')
-      .eq('client_id', clientId)
+      .in('id', leadIds)
       .eq('deleted', false);
     
     if (error) {
@@ -32,7 +89,7 @@ export async function GET(req: NextRequest) {
     // Calculate insights from client's leads
     const total = leads.length;
     const avgConfidence = leads.length > 0 
-      ? leads.reduce((sum, lead) => sum + (lead.confidence_score || 0), 0) / leads.length 
+      ? leads.reduce((sum, lead) => sum + (lead.confidenceScore || 0), 0) / leads.length 
       : 0;
     
     // Intent distribution
@@ -45,9 +102,9 @@ export async function GET(req: NextRequest) {
     // Urgency breakdown
     const urgencyCounts = { high: 0, medium: 0, low: 0 };
     leads.forEach(lead => {
-      const urgency = lead.urgency || 'low';
-      if (urgency === 'high') urgencyCounts.high++;
-      else if (urgency === 'medium') urgencyCounts.medium++;
+      const urgency = lead.urgency || 'Low';
+      if (urgency === 'High' || urgency === 'Élevée') urgencyCounts.high++;
+      else if (urgency === 'Medium' || urgency === 'Moyenne') urgencyCounts.medium++;
       else urgencyCounts.low++;
     });
     
