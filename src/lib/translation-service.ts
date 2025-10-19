@@ -185,10 +185,13 @@ async function lookupInCache(
       return null;
     }
 
-    // Increment usage count
+    // Increment usage count (handled in application code since PostgreSQL doesn't support AFTER SELECT triggers)
     await supabase
       .from('translation_cache')
-      .update({ usage_count: data.usage_count + 1 })
+      .update({ 
+        usage_count: data.usage_count + 1,
+        updated_at: new Date().toISOString()
+      })
       .eq('original_text', text)
       .eq('target_language', targetLanguage);
 

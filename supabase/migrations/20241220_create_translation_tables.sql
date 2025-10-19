@@ -105,22 +105,9 @@ CREATE TRIGGER update_translation_dictionary_updated_at
 BEFORE UPDATE ON public.translation_dictionary 
 FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
--- Function to increment usage count
-CREATE OR REPLACE FUNCTION increment_translation_usage()
-RETURNS TRIGGER AS $$
-BEGIN
-    UPDATE public.translation_cache 
-    SET usage_count = usage_count + 1,
-        updated_at = NOW()
-    WHERE id = NEW.id;
-    RETURN NEW;
-END;
-$$ language 'plpgsql';
-
--- Trigger to increment usage count on cache hits
-CREATE TRIGGER increment_translation_usage_trigger
-AFTER SELECT ON public.translation_cache
-FOR EACH ROW EXECUTE FUNCTION increment_translation_usage();
+-- Note: Usage count tracking is handled in application code
+-- PostgreSQL doesn't support AFTER SELECT triggers
+-- The translation service will increment usage_count when reading from cache
 
 -- Comments for documentation
 COMMENT ON TABLE public.translation_cache IS 'Layer 2: AI-generated translation cache with usage tracking';
