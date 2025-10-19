@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from '@supabase/supabase-js';
+import { translateDynamic } from '../../../../../lib/translateDynamic';
 
 // Translation mappings for relationship data
 const toneTranslations = {
@@ -168,27 +169,18 @@ function translateInsight(value: string, targetLocale: string): string {
 async function translateRelationshipData(data: any[], locale: string): Promise<any[]> {
   console.log(`[RelationshipInsights] Starting translation for ${data.length} leads with locale: ${locale}`);
   
-  return data.map((lead: any, index: number) => {
+  return await Promise.all(data.map(async (lead: any, index: number) => {
     console.log(`[RelationshipInsights] Processing lead ${index + 1}: ${lead.name} (${lead.email})`);
     const translatedLead = { ...lead };
     
-    // Translate relationship insight
+    // Translate relationship insight using dynamic translation
     if (lead.relationship_insight) {
       console.log(`[RelationshipInsights] Processing 💡 insight for lead ${index + 1}`);
       const originalInsight = lead.relationship_insight;
       
-      // Explicit translation logic
-      if (locale === 'fr' && !isFrenchText(lead.relationship_insight)) {
-        translatedLead.relationship_insight = insightTranslations[lead.relationship_insight as keyof typeof insightTranslations] || lead.relationship_insight;
-        console.log(`[💡 Translation Applied] ${lead.name} → ${translatedLead.relationship_insight}`);
-      } else if (locale === 'en' && isFrenchText(lead.relationship_insight)) {
-        translatedLead.relationship_insight = insightTranslations[lead.relationship_insight as keyof typeof insightTranslations] || lead.relationship_insight;
-        console.log(`[💡 Translation Applied] ${lead.name} → ${translatedLead.relationship_insight}`);
-      } else {
-        // No translation needed
-        translatedLead.relationship_insight = lead.relationship_insight;
-        console.log(`[💡 Translation Applied] ${lead.name} → ${translatedLead.relationship_insight}`);
-      }
+      // Use dynamic translation utility
+      translatedLead.relationship_insight = await translateDynamic(lead.relationship_insight, locale as "fr" | "en");
+      console.log(`[💡 Translation Applied] ${lead.name} → ${translatedLead.relationship_insight}`);
     }
     
     // Translate tone history
@@ -208,7 +200,7 @@ async function translateRelationshipData(data: any[], locale: string): Promise<a
     }
     
     return translatedLead;
-  });
+  }));
 }
 
 export async function GET(req: NextRequest) {
