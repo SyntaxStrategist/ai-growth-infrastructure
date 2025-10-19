@@ -36,6 +36,10 @@ const RelationshipInsights = dynamic(() => import('../../../../components/Relati
   ssr: false,
   loading: () => <SkeletonLoader variant="card" height="12rem" />
 });
+const ClientProspectIntelligence = dynamic(() => import('../../../../components/ClientProspectIntelligence'), { 
+  ssr: false,
+  loading: () => <SkeletonLoader variant="card" height="12rem" />
+});
 
 // ClientData type is now imported from session utility
 
@@ -1105,11 +1109,21 @@ async function translateIntent(rawTopIntent: string, locale: string): Promise<st
           <RelationshipInsights locale={locale} clientId={client?.clientId || null} />
         </motion.div>
 
-        {/* Leads Section */}
+        {/* Prospect Intelligence */}
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 0.6, delay: 0.6 }}
+          className="mb-8"
+        >
+          <ClientProspectIntelligence />
+        </motion.div>
+
+        {/* Leads Section */}
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.6, delay: 0.65 }}
           className="space-y-4"
         >
           {/* LEADS Title */}

@@ -219,5 +219,51 @@
       "topTemplate": "Meilleur modèle",
       "avgResponseTime": "Délai de réponse moyen"
     }
+  },
+  "clientProspectIntelligence": {
+    "title": "Intelligence de Prospection",
+    "subtitle": "Découvrez et analysez des prospects basés sur votre profil d'entreprise",
+    "noIcpData": {
+      "title": "Aucune Donnée ICP Trouvée",
+      "message": "Veuillez mettre à jour vos préférences d'entreprise dans les paramètres de votre compte pour activer l'intelligence de prospection.",
+      "button": "Mettre à Jour les Paramètres"
+    },
+    "scan": {
+      "title": "Démarrer l'Analyse de Prospects",
+      "button": "Analyser les Prospects",
+      "scanning": "Analyse en cours...",
+      "description": "Découvrez des prospects qui correspondent à votre profil de client idéal"
+    },
+    "results": {
+      "title": "Résultats de Prospection",
+      "totalFound": "Total de Prospects Trouvés",
+      "highPriority": "Prospects Priorité Haute",
+      "averageScore": "Score Moyen",
+      "lastScan": "Dernière Analyse"
+    },
+    "prospects": {
+      "title": "Prospects",
+      "businessName": "Nom de l'Entreprise",
+      "website": "Site Web",
+      "industry": "Industrie",
+      "score": "Score",
+      "status": "Statut",
+      "actions": "Actions"
+    },
+    "filters": {
+      "title": "Filtres",
+      "industry": "Industrie",
+      "score": "Score Minimum",
+      "region": "Région",
+      "apply": "Appliquer les Filtres",
+      "clear": "Effacer les Filtres"
+    },
+    "analytics": {
+      "title": "Analytique",
+      "industryBreakdown": "Répartition par Industrie",
+      "scoreDistribution": "Distribution des Scores",
+      "topIndustries": "Top Industries",
+      "averageScores": "Scores Moyens"
+    }
   }
 }

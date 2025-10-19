@@ -219,5 +219,51 @@
       "topTemplate": "Top template",
       "avgResponseTime": "Avg. response time"
     }
+  },
+  "clientProspectIntelligence": {
+    "title": "Prospect Intelligence",
+    "subtitle": "Discover and analyze prospects based on your business profile",
+    "noIcpData": {
+      "title": "No ICP Data Found",
+      "message": "Please update your business preferences in your account settings to enable prospect intelligence.",
+      "button": "Update Settings"
+    },
+    "scan": {
+      "title": "Start Prospect Scan",
+      "button": "Scan Prospects",
+      "scanning": "Scanning...",
+      "description": "Discover prospects that match your ideal client profile"
+    },
+    "results": {
+      "title": "Prospect Results",
+      "totalFound": "Total Prospects Found",
+      "highPriority": "High Priority Prospects",
+      "averageScore": "Average Score",
+      "lastScan": "Last Scan"
+    },
+    "prospects": {
+      "title": "Prospects",
+      "businessName": "Business Name",
+      "website": "Website",
+      "industry": "Industry",
+      "score": "Score",
+      "status": "Status",
+      "actions": "Actions"
+    },
+    "filters": {
+      "title": "Filters",
+      "industry": "Industry",
+      "score": "Minimum Score",
+      "region": "Region",
+      "apply": "Apply Filters",
+      "clear": "Clear Filters"
+    },
+    "analytics": {
+      "title": "Analytics",
+      "industryBreakdown": "Industry Breakdown",
+      "scoreDistribution": "Score Distribution",
+      "topIndustries": "Top Industries",
+      "averageScores": "Average Scores"
+    }
   }
 }
