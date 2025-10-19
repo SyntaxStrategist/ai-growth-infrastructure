@@ -16,6 +16,8 @@ export default function ClientLoginPage() {
   const isFrench = locale === 'fr';
   const { refreshSession } = useSession();
 
+  console.log('[AuthFix] ClientLoginPage component loaded');
+
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
@@ -43,7 +45,7 @@ export default function ClientLoginPage() {
     setError('');
 
     console.log('[AuthFix] ============================================');
-    console.log('[AuthFix] Login button clicked');
+    console.log('[AuthFix] Login form submitted');
 
     // Validation
     if (!email || !password) {
@@ -101,6 +103,11 @@ export default function ClientLoginPage() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleButtonClick = (e: React.MouseEvent) => {
+    console.log('[AuthFix] Login button clicked');
+    // Let the form handle the submission
   };
 
   return (
@@ -216,6 +223,7 @@ export default function ClientLoginPage() {
             <button
               type="submit"
               disabled={loading}
+              onClick={handleButtonClick}
               className={`w-full py-4 rounded-lg font-semibold text-lg transition-all transform hover:scale-[1.02] shadow-lg ${
                 loading
                   ? 'bg-gray-500/50 cursor-not-allowed'
