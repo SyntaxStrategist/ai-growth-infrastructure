@@ -178,7 +178,20 @@ async function translateRelationshipData(data: any[], locale: string): Promise<a
     // Translate relationship insight
     if (lead.relationship_insight) {
       console.log(`[RelationshipInsights] Processing 💡 insight for lead ${index + 1}`);
-      translatedLead.relationship_insight = translateInsight(lead.relationship_insight, locale);
+      const originalInsight = lead.relationship_insight;
+      
+      // Explicit translation logic
+      if (locale === 'fr' && !isFrenchText(lead.relationship_insight)) {
+        translatedLead.relationship_insight = insightTranslations[lead.relationship_insight as keyof typeof insightTranslations] || lead.relationship_insight;
+        console.log(`[💡 Translation Applied] ${lead.name} → "${translatedLead.relationship_insight}"`);
+      } else if (locale === 'en' && isFrenchText(lead.relationship_insight)) {
+        translatedLead.relationship_insight = insightTranslations[lead.relationship_insight as keyof typeof insightTranslations] || lead.relationship_insight;
+        console.log(`[💡 Translation Applied] ${lead.name} → "${translatedLead.relationship_insight}"`);
+      } else {
+        // No translation needed
+        translatedLead.relationship_insight = lead.relationship_insight;
+        console.log(`[💡 Translation Applied] ${lead.name} → "${translatedLead.relationship_insight}" (no translation needed)`);
+      }
     }
     
     // Translate tone history
