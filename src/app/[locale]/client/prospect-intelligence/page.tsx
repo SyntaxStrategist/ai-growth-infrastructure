@@ -105,11 +105,7 @@ export default function ClientProspectIntelligencePage() {
     try {
       console.log('[ClientProspectIntelligence] Fetching config for client:', session.client.clientId);
       
-      const response = await fetch('/api/client/prospect-intelligence/config', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ clientId: session.client.clientId })
-      });
+      const response = await fetch(`/api/client/prospect-intelligence/config?clientId=${session.client.clientId}`);
       const json = await response.json();
 
       if (json.success) {
@@ -132,11 +128,7 @@ export default function ClientProspectIntelligencePage() {
 
       console.log('[ClientProspectIntelligence] Loading prospects for client:', session.client.clientId);
       
-      const response = await fetch('/api/client/prospect-intelligence/prospects', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ clientId: session.client.clientId })
-      });
+      const response = await fetch(`/api/client/prospect-intelligence/prospects?clientId=${session.client.clientId}`);
       const json = await response.json();
 
       if (json.success) {
@@ -170,10 +162,11 @@ export default function ClientProspectIntelligencePage() {
 
       const response = await fetch('/api/client/prospect-intelligence/scan', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(scanConfig),
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          ...scanConfig,
+          clientId: session.client.clientId
+        }),
       });
 
       const data = await response.json();

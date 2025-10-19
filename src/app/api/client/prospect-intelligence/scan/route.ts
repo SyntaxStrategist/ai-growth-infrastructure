@@ -4,19 +4,8 @@
 // ============================================
 
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
+import { getAuthenticatedClientId, createServerSupabaseClient } from '../../../../../lib/supabase-server-auth';
 import { runProspectPipeline } from '../../../../../../prospect-intelligence/prospect_pipeline';
-
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-
-if (!supabaseUrl || !supabaseKey) {
-  throw new Error('Supabase credentials not configured');
-}
-
-const supabase = createClient(supabaseUrl, supabaseKey, {
-  auth: { persistSession: false }
-});
 
 /**
  * Transform client ICP data into pipeline configuration
@@ -132,43 +121,21 @@ function calculateMinScoreFromICP(icpData: any): number {
   return Math.min(baseScore, 90); // Cap at 90
 }
 
-/**
- * Get authenticated client ID from request
- */
-async function getAuthenticatedClientId(req: NextRequest): Promise<string> {
-  // Try to get client ID from API key header
-  const apiKey = req.headers.get('x-api-key');
-  if (apiKey) {
-    const { data: client } = await supabase
-      .from('clients')
-      .select('client_id')
-      .eq('api_key', apiKey)
-      .single();
-    
-    if (client) {
-      return client.client_id;
-    }
-  }
-  
-  // Try to get from request body
-  const body = await req.json().catch(() => ({}));
-  if (body.clientId) {
-    return body.clientId;
-  }
-  
-  throw new Error('Client authentication required');
-}
+// Authentication function is now imported from supabase-server-auth
 
 export async function POST(req: NextRequest) {
   console.log('[ClientProspectAPI] ============================================');
   console.log('[ClientProspectAPI] Client prospect scan request received');
 
   try {
-    // 1. Authenticate client
+    // 1. Authenticate client using new Supabase session system
     const clientId = await getAuthenticatedClientId(req);
     console.log('[ClientProspectAPI] Authenticated client:', clientId);
 
-    // 2. Fetch client's ICP data from clients table
+    // 2. Create Supabase client for database operations
+    const supabase = createServerSupabaseClient();
+
+    // 3. Fetch client's ICP data from clients table
     const { data: client, error: clientError } = await supabase
       .from('clients')
       .select('icp_data, business_name, industry_category, primary_service, client_id')
