@@ -8,11 +8,13 @@ import AvenirLogo from '../../../../components/AvenirLogo';
 import UniversalLanguageToggle from '../../../../components/UniversalLanguageToggle';
 import { isLegacyClientId, DEMO_CLIENT_EMAIL } from '../../../../lib/uuid-utils';
 import { saveSession } from '../../../../utils/session';
+import { useSession } from '../../../../components/SessionProvider';
 
 export default function ClientLoginPage() {
   const locale = useLocale();
   const router = useRouter();
   const isFrench = locale === 'fr';
+  const { refreshSession } = useSession();
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -30,7 +32,7 @@ export default function ClientLoginPage() {
     backToHome: isFrench ? '← Retour à l\'accueil' : '← Back to Home',
     noAccount: isFrench ? 'Pas encore de compte ?' : 'Don\'t have an account?',
     signUp: isFrench ? 'Créer un compte' : 'Sign Up',
-    invalidCredentials: isFrench ? 'Identifiants invalides' : 'Invalid credentials',
+    invalidCredentials: isFrench ? 'Email ou mot de passe invalide' : 'Invalid email or password',
     requiredFields: isFrench ? 'Tous les champs sont requis' : 'All fields are required',
     emailPlaceholder: isFrench ? 'votre@courriel.com' : 'your@email.com',
     passwordPlaceholder: isFrench ? 'Entrez votre mot de passe' : 'Enter your password',
@@ -49,10 +51,10 @@ export default function ClientLoginPage() {
     setLoading(true);
 
     try {
-      console.log('[ClientLogin] ============================================');
-      console.log('[ClientLogin] Login attempt');
-      console.log('[ClientLogin] Email:', email);
-      console.log('[ClientLogin] Locale:', locale);
+      console.log('[AuthFix] ============================================');
+      console.log('[AuthFix] Login submitted');
+      console.log('[AuthFix] Email:', email);
+      console.log('[AuthFix] Locale:', locale);
 
       const response = await fetch('/api/client/auth', {
         method: 'POST',
@@ -68,25 +70,30 @@ export default function ClientLoginPage() {
         throw new Error(data.error || t.invalidCredentials);
       }
 
-      console.log('[ClientLogin] ✅ Login successful:', data.data);
+      console.log('[AuthFix] Login success');
+      console.log('[AuthFix] Client data:', data.data);
       
       // Validate client_id format
       if (data.data.clientId && isLegacyClientId(data.data.clientId)) {
-        console.log('[Fix] Invalid client_id detected in login response — this should not happen with new UUID system');
-        console.log('[Fix] Legacy client_id:', data.data.clientId);
+        console.log('[AuthFix] Invalid client_id detected in login response — this should not happen with new UUID system');
+        console.log('[AuthFix] Legacy client_id:', data.data.clientId);
       }
       
       // Store client session using session utility
       saveSession(data.data);
-      console.log('[ClientLogin] ✅ Session saved using utility');
+      console.log('[AuthFix] Session saved to localStorage');
+
+      // Refresh session context to pick up the new session
+      refreshSession();
+      console.log('[AuthFix] Session context refreshed');
 
       // Redirect to client dashboard
       const dashboardPath = `/${locale}/client/dashboard`;
-      console.log('[ClientLogin] Redirecting to:', dashboardPath);
+      console.log('[AuthFix] Redirecting to:', dashboardPath);
       router.push(dashboardPath);
 
     } catch (err) {
-      console.error('[ClientLogin] ❌ Login error:', err);
+      console.error('[AuthFix] ❌ Login error:', err);
       setError(err instanceof Error ? err.message : t.invalidCredentials);
     } finally {
       setLoading(false);
