@@ -153,7 +153,8 @@ export async function POST(req: NextRequest) {
     }
 
     if (result.success) {
-      console.log(`[FeedbackAPI] ✅ ${type} logged successfully:`, result.id || 'no-id');
+      if ('id' in result) console.log(`[FeedbackAPI] ✅ ${type} logged successfully:`, result.id);
+      else console.log(`[FeedbackAPI] ✅ ${type} logged successfully.`);
       return NextResponse.json({
         success: true,
         message: `${type} logged successfully`,
