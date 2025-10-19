@@ -117,7 +117,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({
         success: true,
         action,
-        data: result.data,
+        data: ('data' in result ? result.data : null),
         message: `${action} completed successfully`
       });
     } else {
