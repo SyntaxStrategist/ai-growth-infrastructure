@@ -3,6 +3,7 @@ import { supabase } from '../../../../lib/supabase';
 import { generateApiKey, hashPassword, generateClientId } from '../../../../lib/clients';
 import { isTestClient, logTestDetection } from '../../../../lib/test-detection';
 import { google } from 'googleapis';
+import { generatePersonalizedICP } from '../../../../lib/phase3/icp_profile';
 
 export async function POST(req: NextRequest) {
   try {
@@ -21,11 +22,18 @@ export async function POST(req: NextRequest) {
     const email_tone = body.emailTone || body.email_tone || 'Friendly';
     const followup_speed = body.followupSpeed || body.followup_speed || 'Instant';
 
+    // Extract ICP fields (optional)
+    const target_client_type = body.targetClientType || body.target_client_type || '';
+    const average_deal_size = body.averageDealSize || body.average_deal_size || '';
+    const main_business_goal = body.mainBusinessGoal || body.main_business_goal || '';
+    const biggest_challenge = body.biggestChallenge || body.biggest_challenge || '';
+
     console.log('[E2E-Test] [ClientRegistration] New registration request:', { 
       name, 
       email, 
       business_name, 
-      language 
+      language,
+      hasIcpData: !!(target_client_type || average_deal_size || main_business_goal || biggest_challenge)
     });
 
     // Validation
@@ -140,6 +148,16 @@ export async function POST(req: NextRequest) {
       email_tone: email_tone,
       followup_speed: followup_speed,
       ai_personalized_reply: true, // Enable AI replies by default
+      // ICP data (optional fields)
+      icp_data: {
+        target_client_type: target_client_type || null,
+        average_deal_size: average_deal_size || null,
+        main_business_goal: main_business_goal || null,
+        biggest_challenge: biggest_challenge || null,
+        icp_version: "1.0",
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      }
     };
 
     console.log('[E2E-Test] [ClientRegistration] Inserting into Supabase with data:', {
@@ -182,6 +200,23 @@ export async function POST(req: NextRequest) {
       language: newClient.language,
     });
     console.log('[E2E-Test] [ClientRegistration] ✅ API key assigned:', apiKey);
+
+    // Generate personalized ICP if ICP data is provided
+    if (target_client_type || average_deal_size || main_business_goal || biggest_challenge) {
+      try {
+        const icpData = {
+          target_client_type,
+          average_deal_size,
+          main_business_goal,
+          biggest_challenge
+        };
+        
+        await generatePersonalizedICP(newClient.id, icpData);
+        console.log('[E2E-Test] [ClientRegistration] ✅ Personalized ICP generated for client:', newClient.id);
+      } catch (error) {
+        console.log('[E2E-Test] [ClientRegistration] ⚠️ ICP generation failed (non-blocking):', error instanceof Error ? error.message : error);
+      }
+    }
 
     // TODO: Send welcome email (currently disabled for E2E testing)
     // sendWelcomeEmail(...) would go here

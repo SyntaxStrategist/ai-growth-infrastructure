@@ -517,3 +517,183 @@ export function getICPOptimizedCriteria(): any {
     minICPScore: 70 // Minimum ICP score to consider
   };
 }
+
+/**
+ * Generate personalized ICP based on client signup data
+ */
+export async function generatePersonalizedICP(clientId: string, signupData: {
+  target_client_type?: string;
+  average_deal_size?: string;
+  main_business_goal?: string;
+  biggest_challenge?: string;
+}): Promise<void> {
+  try {
+    console.log('[ICP Generation] Starting personalized ICP generation for client:', clientId);
+    console.log('[ICP Generation] Signup data:', signupData);
+
+    // Get base Avenir ICP profile
+    const baseICP = getAvenirICPProfile();
+    
+    // Create personalized ICP based on signup data
+    const personalizedICP = {
+      ...baseICP,
+      clientCustomizations: {
+        targetClientType: signupData.target_client_type || null,
+        dealSizeRange: parseDealSize(signupData.average_deal_size),
+        businessGoal: signupData.main_business_goal || null,
+        primaryChallenge: signupData.biggest_challenge || null,
+      },
+      // Adjust weights based on client goals
+      adjustedWeights: adjustWeightsForClient(baseICP, signupData),
+      // Add client-specific insights
+      clientInsights: generateClientInsights(signupData),
+    };
+
+    console.log('[ICP Generation] Generated personalized ICP:', {
+      clientId,
+      hasCustomizations: !!personalizedICP.clientCustomizations,
+      businessGoal: personalizedICP.clientCustomizations.businessGoal,
+      primaryChallenge: personalizedICP.clientCustomizations.primaryChallenge
+    });
+
+    // For now, we'll log the personalized ICP
+    // In the future, this could be saved to a client_icp_profiles table
+    // or used to enhance prospect scoring in real-time
+    
+    console.log('[ICP Generation] ✅ Personalized ICP generated successfully for client:', clientId);
+    
+  } catch (error) {
+    console.error('[ICP Generation] ❌ Failed to generate personalized ICP:', error);
+    throw error;
+  }
+}
+
+/**
+ * Parse deal size string into structured data
+ */
+function parseDealSize(dealSize?: string): { min?: number; max?: number; currency?: string } | null {
+  if (!dealSize) return null;
+  
+  // Extract numbers and currency from strings like "$2,000–$5,000" or "2000-5000"
+  const match = dealSize.match(/(\$?)(\d{1,3}(?:,\d{3})*)\s*[-–]\s*(\$?)(\d{1,3}(?:,\d{3})*)/);
+  
+  if (match) {
+    const [, currency1, minStr, currency2, maxStr] = match;
+    const currency = currency1 || currency2 || '$';
+    const min = parseInt(minStr.replace(/,/g, ''));
+    const max = parseInt(maxStr.replace(/,/g, ''));
+    
+    return { min, max, currency };
+  }
+  
+  return null;
+}
+
+/**
+ * Adjust ICP weights based on client business goals
+ */
+function adjustWeightsForClient(baseICP: ICPProfile, signupData: any): Record<string, number> {
+  const weights = { ...baseICP.weights };
+  
+  // Adjust weights based on business goal
+  if (signupData.main_business_goal) {
+    switch (signupData.main_business_goal) {
+      case 'Generate more qualified leads':
+        weights.leadQuality = Math.min(1.0, weights.leadQuality * 1.2);
+        weights.conversionProbability = Math.min(1.0, weights.conversionProbability * 1.1);
+        break;
+      case 'Improve follow-ups and conversions':
+        weights.conversionProbability = Math.min(1.0, weights.conversionProbability * 1.3);
+        weights.engagementScore = Math.min(1.0, weights.engagementScore * 1.2);
+        break;
+      case 'Nurture existing clients':
+        weights.engagementScore = Math.min(1.0, weights.engagementScore * 1.4);
+        weights.retentionScore = Math.min(1.0, weights.retentionScore * 1.3);
+        break;
+      case 'Save time with automation':
+        weights.automationReadiness = Math.min(1.0, weights.automationReadiness * 1.3);
+        weights.efficiencyScore = Math.min(1.0, weights.efficiencyScore * 1.2);
+        break;
+    }
+  }
+  
+  return weights;
+}
+
+/**
+ * Generate client-specific insights from signup data
+ */
+function generateClientInsights(signupData: any): Record<string, any> {
+  const insights: Record<string, any> = {};
+  
+  if (signupData.target_client_type) {
+    insights.targetClientProfile = {
+      description: signupData.target_client_type,
+      keywords: extractKeywords(signupData.target_client_type),
+      industryHints: extractIndustryHints(signupData.target_client_type)
+    };
+  }
+  
+  if (signupData.biggest_challenge) {
+    insights.primaryPainPoint = {
+      description: signupData.biggest_challenge,
+      category: categorizeChallenge(signupData.biggest_challenge),
+      urgency: assessUrgency(signupData.biggest_challenge)
+    };
+  }
+  
+  return insights;
+}
+
+/**
+ * Extract keywords from text
+ */
+function extractKeywords(text: string): string[] {
+  const commonWords = ['the', 'and', 'or', 'but', 'in', 'on', 'at', 'to', 'for', 'of', 'with', 'by', 'a', 'an'];
+  return text.toLowerCase()
+    .split(/\W+/)
+    .filter(word => word.length > 2 && !commonWords.includes(word))
+    .slice(0, 10); // Limit to 10 keywords
+}
+
+/**
+ * Extract industry hints from target client type
+ */
+function extractIndustryHints(text: string): string[] {
+  const industries = ['e-commerce', 'real estate', 'construction', 'technology', 'healthcare', 'finance', 'education', 'retail', 'manufacturing'];
+  return industries.filter(industry => 
+    text.toLowerCase().includes(industry.toLowerCase())
+  );
+}
+
+/**
+ * Categorize business challenge
+ */
+function categorizeChallenge(challenge: string): string {
+  const lowerChallenge = challenge.toLowerCase();
+  
+  if (lowerChallenge.includes('lead') || lowerChallenge.includes('prospect')) return 'lead_generation';
+  if (lowerChallenge.includes('convert') || lowerChallenge.includes('sale')) return 'conversion';
+  if (lowerChallenge.includes('follow') || lowerChallenge.includes('nurture')) return 'follow_up';
+  if (lowerChallenge.includes('time') || lowerChallenge.includes('automation')) return 'efficiency';
+  if (lowerChallenge.includes('client') || lowerChallenge.includes('customer')) return 'client_management';
+  
+  return 'general';
+}
+
+/**
+ * Assess urgency level of challenge
+ */
+function assessUrgency(challenge: string): 'low' | 'medium' | 'high' {
+  const lowerChallenge = challenge.toLowerCase();
+  
+  if (lowerChallenge.includes('urgent') || lowerChallenge.includes('critical') || lowerChallenge.includes('immediately')) {
+    return 'high';
+  }
+  
+  if (lowerChallenge.includes('important') || lowerChallenge.includes('priority') || lowerChallenge.includes('soon')) {
+    return 'medium';
+  }
+  
+  return 'low';
+}
