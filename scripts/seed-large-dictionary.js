@@ -28,6 +28,7 @@ const fs = require('fs');
 const path = require('path');
 const https = require('https');
 const zlib = require('zlib');
+const bz2 = require('unbzip2-stream');
 
 // Load environment variables
 require('dotenv').config({ path: '.env.local' });
@@ -95,12 +96,12 @@ async function downloadFile(url, outputPath) {
  */
 function extractBz2(inputPath, outputPath) {
   return new Promise((resolve, reject) => {
-    console.log(`📦 [DictionarySeeder] Extracting ${inputPath}...`);
+    console.log(`📦 [DictionarySeeder] Extracting .bz2 file ${inputPath}...`);
     
     const input = fs.createReadStream(inputPath);
     const output = fs.createWriteStream(outputPath);
     
-    input.pipe(zlib.createBrotliDecompress()).pipe(output);
+    input.pipe(bz2()).pipe(output);
     
     output.on('finish', () => {
       console.log(`✅ [DictionarySeeder] Extracted to ${outputPath}`);
