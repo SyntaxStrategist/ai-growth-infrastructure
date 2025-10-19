@@ -1,11 +1,4 @@
-import { createClient } from '@supabase/supabase-js';
 import OpenAI from 'openai';
-
-// Initialize Supabase client
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
 
 // Initialize OpenAI client
 const openai = new OpenAI({
@@ -21,7 +14,7 @@ function isFrenchText(text: string): boolean {
 }
 
 /**
- * Translates dynamic text using OpenAI with Supabase caching
+ * Translates dynamic text using OpenAI (no caching)
  * @param text - The text to translate
  * @param targetLocale - Target locale ("fr" or "en")
  * @returns Promise<string> - The translated text
@@ -38,22 +31,8 @@ export async function translateDynamic(text: string, targetLocale: "fr" | "en"):
     return text;
   }
   
-  // Check for cached translation
-  console.log(`[💡 Translation Applied] Checking for cached translation...`);
-  const { data: cachedTranslation, error: cacheError } = await supabase
-    .from('lead_memory_translations')
-    .select('translated_text')
-    .eq('original_text', text)
-    .eq('locale', targetLocale)
-    .single();
-  
-  if (cachedTranslation && !cacheError) {
-    console.log(`[💡 Cached Translation] Found cached translation: "${cachedTranslation.translated_text}"`);
-    return cachedTranslation.translated_text;
-  }
-  
-  // Generate new translation using OpenAI
-  console.log(`[💡 Translation Applied] No cache found, generating new translation with OpenAI...`);
+  // Generate translation using OpenAI
+  console.log(`[💡 Translation Applied] Generating translation with OpenAI...`);
   
   const sourceLanguage = isTextFrench ? 'French' : 'English';
   const targetLanguage = targetLocale === 'fr' ? 'French' : 'English';
@@ -77,23 +56,6 @@ export async function translateDynamic(text: string, targetLocale: "fr" | "en"):
     
     const translatedText = completion.choices[0]?.message?.content?.trim() || text;
     console.log(`[💡 Translation Applied] OpenAI translation generated: "${translatedText}"`);
-    
-    // Cache the translation in Supabase
-    console.log(`[💡 Translation Applied] Caching translation in Supabase...`);
-    const { error: insertError } = await supabase
-      .from('lead_memory_translations')
-      .insert({
-        original_text: text,
-        translated_text: translatedText,
-        locale: targetLocale,
-        created_at: new Date().toISOString()
-      });
-    
-    if (insertError) {
-      console.error(`[💡 Translation Applied] Error caching translation:`, insertError);
-    } else {
-      console.log(`[💡 Translation Applied] Translation cached successfully`);
-    }
     
     return translatedText;
     
