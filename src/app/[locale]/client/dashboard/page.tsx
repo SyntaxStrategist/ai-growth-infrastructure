@@ -148,28 +148,35 @@ export default function ClientDashboard() {
   }, [locale]);
 
   // Async helper function for translation
-  async function translateIntent(rawTopIntent: string, locale: string): Promise<string> {
-    try {
-      const response = await fetch('/api/translate-intent', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ intent: rawTopIntent, locale }),
-      });
-      
-      if (response.ok) {
-        const data = await response.json();
-        if (data.success) {
-          console.log(`[IntentTranslation] Dashboard: "${rawTopIntent}" → "${data.translated}"`);
-          return data.translated;
+async function translateIntent(rawTopIntent: string, locale: string): Promise<string> {
+  try {
+    const response = await fetch('/api/translate', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ 
+        text: rawTopIntent, 
+        targetLanguage: locale,
+        options: {
+          context: 'dashboard_intent',
+          priority: 9
         }
-      }
-    } catch (error) {
-      console.error('[IntentTranslation] Dashboard translation failed:', error);
-    }
+      }),
+    });
     
-    // Fallback to original intent
-    return rawTopIntent;
+    if (response.ok) {
+      const data = await response.json();
+      if (data.success) {
+        console.log(`[IntentTranslation] Dashboard: "${rawTopIntent}" → "${data.translated}"`);
+        return data.translated;
+      }
+    }
+  } catch (error) {
+    console.error('[IntentTranslation] Dashboard translation failed:', error);
   }
+  
+  // Fallback to original intent
+  return rawTopIntent;
+}
 
   const t = {
     loginTitle: isFrench ? 'Connexion Client' : 'Client Login',

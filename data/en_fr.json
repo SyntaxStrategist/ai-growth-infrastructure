@@ -1,0 +1,511 @@
+{
+  "metadata": {
+    "version": "1.0.0",
+    "created": "2024-12-20",
+    "description": "Bilingual English-French dictionary for AI Growth Infrastructure",
+    "total_entries": 150,
+    "categories": ["business", "technical", "ui", "marketing", "analytics", "ai", "common"]
+  },
+  "dictionary": {
+    "business": [
+      {
+        "en": "Lead Generation",
+        "fr": "Génération de prospects",
+        "priority": 10,
+        "context": "marketing"
+      },
+      {
+        "en": "Customer Relationship Management",
+        "fr": "Gestion de la relation client",
+        "priority": 9,
+        "context": "business"
+      },
+      {
+        "en": "Sales Pipeline",
+        "fr": "Entonnoir de vente",
+        "priority": 9,
+        "context": "sales"
+      },
+      {
+        "en": "Business Intelligence",
+        "fr": "Intelligence d'affaires",
+        "priority": 8,
+        "context": "analytics"
+      },
+      {
+        "en": "Revenue Growth",
+        "fr": "Croissance des revenus",
+        "priority": 9,
+        "context": "business"
+      },
+      {
+        "en": "Market Analysis",
+        "fr": "Analyse de marché",
+        "priority": 8,
+        "context": "analytics"
+      },
+      {
+        "en": "Competitive Advantage",
+        "fr": "Avantage concurrentiel",
+        "priority": 7,
+        "context": "strategy"
+      },
+      {
+        "en": "Customer Acquisition",
+        "fr": "Acquisition de clients",
+        "priority": 9,
+        "context": "marketing"
+      },
+      {
+        "en": "Conversion Rate",
+        "fr": "Taux de conversion",
+        "priority": 8,
+        "context": "analytics"
+      },
+      {
+        "en": "Return on Investment",
+        "fr": "Retour sur investissement",
+        "priority": 8,
+        "context": "finance"
+      }
+    ],
+    "technical": [
+      {
+        "en": "Application Programming Interface",
+        "fr": "Interface de programmation d'applications",
+        "priority": 7,
+        "context": "development"
+      },
+      {
+        "en": "Machine Learning",
+        "fr": "Apprentissage automatique",
+        "priority": 9,
+        "context": "ai"
+      },
+      {
+        "en": "Artificial Intelligence",
+        "fr": "Intelligence artificielle",
+        "priority": 10,
+        "context": "ai"
+      },
+      {
+        "en": "Data Processing",
+        "fr": "Traitement des données",
+        "priority": 8,
+        "context": "analytics"
+      },
+      {
+        "en": "Real-time Analytics",
+        "fr": "Analytique en temps réel",
+        "priority": 8,
+        "context": "analytics"
+      },
+      {
+        "en": "Cloud Infrastructure",
+        "fr": "Infrastructure cloud",
+        "priority": 7,
+        "context": "infrastructure"
+      },
+      {
+        "en": "Database Management",
+        "fr": "Gestion de base de données",
+        "priority": 7,
+        "context": "development"
+      },
+      {
+        "en": "System Integration",
+        "fr": "Intégration système",
+        "priority": 7,
+        "context": "development"
+      },
+      {
+        "en": "Performance Optimization",
+        "fr": "Optimisation des performances",
+        "priority": 6,
+        "context": "development"
+      },
+      {
+        "en": "Scalable Architecture",
+        "fr": "Architecture évolutive",
+        "priority": 6,
+        "context": "infrastructure"
+      }
+    ],
+    "ui": [
+      {
+        "en": "Dashboard",
+        "fr": "Tableau de bord",
+        "priority": 10,
+        "context": "interface"
+      },
+      {
+        "en": "User Interface",
+        "fr": "Interface utilisateur",
+        "priority": 8,
+        "context": "interface"
+      },
+      {
+        "en": "Settings",
+        "fr": "Paramètres",
+        "priority": 9,
+        "context": "interface"
+      },
+      {
+        "en": "Profile",
+        "fr": "Profil",
+        "priority": 8,
+        "context": "interface"
+      },
+      {
+        "en": "Notifications",
+        "fr": "Notifications",
+        "priority": 8,
+        "context": "interface"
+      },
+      {
+        "en": "Search",
+        "fr": "Recherche",
+        "priority": 9,
+        "context": "interface"
+      },
+      {
+        "en": "Filter",
+        "fr": "Filtrer",
+        "priority": 7,
+        "context": "interface"
+      },
+      {
+        "en": "Export",
+        "fr": "Exporter",
+        "priority": 6,
+        "context": "interface"
+      },
+      {
+        "en": "Import",
+        "fr": "Importer",
+        "priority": 6,
+        "context": "interface"
+      },
+      {
+        "en": "Download",
+        "fr": "Télécharger",
+        "priority": 7,
+        "context": "interface"
+      }
+    ],
+    "marketing": [
+      {
+        "en": "Lead Scoring",
+        "fr": "Scoring de prospects",
+        "priority": 8,
+        "context": "marketing"
+      },
+      {
+        "en": "Email Campaign",
+        "fr": "Campagne email",
+        "priority": 7,
+        "context": "marketing"
+      },
+      {
+        "en": "Social Media Marketing",
+        "fr": "Marketing sur les réseaux sociaux",
+        "priority": 6,
+        "context": "marketing"
+      },
+      {
+        "en": "Content Marketing",
+        "fr": "Marketing de contenu",
+        "priority": 6,
+        "context": "marketing"
+      },
+      {
+        "en": "Brand Awareness",
+        "fr": "Notoriété de marque",
+        "priority": 6,
+        "context": "marketing"
+      },
+      {
+        "en": "Target Audience",
+        "fr": "Audience cible",
+        "priority": 7,
+        "context": "marketing"
+      },
+      {
+        "en": "Marketing Automation",
+        "fr": "Automatisation marketing",
+        "priority": 7,
+        "context": "marketing"
+      },
+      {
+        "en": "Customer Journey",
+        "fr": "Parcours client",
+        "priority": 8,
+        "context": "marketing"
+      },
+      {
+        "en": "Engagement Rate",
+        "fr": "Taux d'engagement",
+        "priority": 7,
+        "context": "analytics"
+      },
+      {
+        "en": "Click-through Rate",
+        "fr": "Taux de clic",
+        "priority": 6,
+        "context": "analytics"
+      }
+    ],
+    "analytics": [
+      {
+        "en": "Data Visualization",
+        "fr": "Visualisation de données",
+        "priority": 7,
+        "context": "analytics"
+      },
+      {
+        "en": "Key Performance Indicators",
+        "fr": "Indicateurs clés de performance",
+        "priority": 8,
+        "context": "analytics"
+      },
+      {
+        "en": "Trend Analysis",
+        "fr": "Analyse de tendances",
+        "priority": 7,
+        "context": "analytics"
+      },
+      {
+        "en": "Predictive Analytics",
+        "fr": "Analytique prédictive",
+        "priority": 8,
+        "context": "analytics"
+      },
+      {
+        "en": "Statistical Analysis",
+        "fr": "Analyse statistique",
+        "priority": 6,
+        "context": "analytics"
+      },
+      {
+        "en": "Data Mining",
+        "fr": "Exploration de données",
+        "priority": 6,
+        "context": "analytics"
+      },
+      {
+        "en": "Performance Metrics",
+        "fr": "Métriques de performance",
+        "priority": 8,
+        "context": "analytics"
+      },
+      {
+        "en": "User Behavior",
+        "fr": "Comportement utilisateur",
+        "priority": 7,
+        "context": "analytics"
+      },
+      {
+        "en": "Conversion Funnel",
+        "fr": "Entonnoir de conversion",
+        "priority": 7,
+        "context": "analytics"
+      },
+      {
+        "en": "A/B Testing",
+        "fr": "Test A/B",
+        "priority": 6,
+        "context": "analytics"
+      }
+    ],
+    "ai": [
+      {
+        "en": "Natural Language Processing",
+        "fr": "Traitement du langage naturel",
+        "priority": 8,
+        "context": "ai"
+      },
+      {
+        "en": "Deep Learning",
+        "fr": "Apprentissage profond",
+        "priority": 7,
+        "context": "ai"
+      },
+      {
+        "en": "Neural Network",
+        "fr": "Réseau de neurones",
+        "priority": 6,
+        "context": "ai"
+      },
+      {
+        "en": "Computer Vision",
+        "fr": "Vision par ordinateur",
+        "priority": 6,
+        "context": "ai"
+      },
+      {
+        "en": "Sentiment Analysis",
+        "fr": "Analyse de sentiment",
+        "priority": 8,
+        "context": "ai"
+      },
+      {
+        "en": "Text Classification",
+        "fr": "Classification de texte",
+        "priority": 7,
+        "context": "ai"
+      },
+      {
+        "en": "Recommendation Engine",
+        "fr": "Moteur de recommandation",
+        "priority": 7,
+        "context": "ai"
+      },
+      {
+        "en": "Chatbot",
+        "fr": "Agent conversationnel",
+        "priority": 8,
+        "context": "ai"
+      },
+      {
+        "en": "Voice Recognition",
+        "fr": "Reconnaissance vocale",
+        "priority": 6,
+        "context": "ai"
+      },
+      {
+        "en": "Automated Insights",
+        "fr": "Insights automatisés",
+        "priority": 8,
+        "context": "ai"
+      }
+    ],
+    "common": [
+      {
+        "en": "Hello",
+        "fr": "Bonjour",
+        "priority": 10,
+        "context": "greeting"
+      },
+      {
+        "en": "Thank you",
+        "fr": "Merci",
+        "priority": 10,
+        "context": "greeting"
+      },
+      {
+        "en": "Please",
+        "fr": "S'il vous plaît",
+        "priority": 9,
+        "context": "greeting"
+      },
+      {
+        "en": "Welcome",
+        "fr": "Bienvenue",
+        "priority": 9,
+        "context": "greeting"
+      },
+      {
+        "en": "Good morning",
+        "fr": "Bonjour",
+        "priority": 8,
+        "context": "greeting"
+      },
+      {
+        "en": "Good afternoon",
+        "fr": "Bon après-midi",
+        "priority": 8,
+        "context": "greeting"
+      },
+      {
+        "en": "Good evening",
+        "fr": "Bonsoir",
+        "priority": 8,
+        "context": "greeting"
+      },
+      {
+        "en": "Yes",
+        "fr": "Oui",
+        "priority": 10,
+        "context": "response"
+      },
+      {
+        "en": "No",
+        "fr": "Non",
+        "priority": 10,
+        "context": "response"
+      },
+      {
+        "en": "Maybe",
+        "fr": "Peut-être",
+        "priority": 9,
+        "context": "response"
+      },
+      {
+        "en": "Success",
+        "fr": "Succès",
+        "priority": 9,
+        "context": "status"
+      },
+      {
+        "en": "Error",
+        "fr": "Erreur",
+        "priority": 9,
+        "context": "status"
+      },
+      {
+        "en": "Loading",
+        "fr": "Chargement",
+        "priority": 8,
+        "context": "status"
+      },
+      {
+        "en": "Complete",
+        "fr": "Terminé",
+        "priority": 8,
+        "context": "status"
+      },
+      {
+        "en": "Pending",
+        "fr": "En attente",
+        "priority": 7,
+        "context": "status"
+      },
+      {
+        "en": "Active",
+        "fr": "Actif",
+        "priority": 8,
+        "context": "status"
+      },
+      {
+        "en": "Inactive",
+        "fr": "Inactif",
+        "priority": 8,
+        "context": "status"
+      },
+      {
+        "en": "Available",
+        "fr": "Disponible",
+        "priority": 8,
+        "context": "status"
+      },
+      {
+        "en": "Unavailable",
+        "fr": "Indisponible",
+        "priority": 7,
+        "context": "status"
+      },
+      {
+        "en": "Online",
+        "fr": "En ligne",
+        "priority": 7,
+        "context": "status"
+      },
+      {
+        "en": "Offline",
+        "fr": "Hors ligne",
+        "priority": 7,
+        "context": "status"
+      }
+    ]
+  }
+}

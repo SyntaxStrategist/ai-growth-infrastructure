@@ -2,79 +2,26 @@ import { NextRequest, NextResponse } from 'next/server';
 import { supabase } from '../../../../lib/supabase';
 import { getClientDataAndLeads, getClientDataAndAllLeads } from '../../../../lib/query-batching';
 import { resolveClientId, validateClientId } from '../../../../lib/client-resolver';
+import { translateText } from '../../../../lib/translation-service';
 import OpenAI from 'openai';
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
 
-// Helper function to translate text values
-function translateValue(value: string, locale: string, type: 'tone' | 'intent' | 'urgency'): string {
+// Helper function to translate text values using 3-layer service
+async function translateValue(value: string, locale: string, type: 'tone' | 'intent' | 'urgency'): Promise<string> {
   if (!value) return value;
   
-  const valueLower = value.toLowerCase();
-  
-  if (locale === 'fr') {
-    // English to French
-    const translations: Record<string, Record<string, string>> = {
-      tone: {
-        'formal': 'Formel',
-        'urgent': 'Urgent',
-        'casual': 'Décontracté',
-        'professional': 'Professionnel',
-        'friendly': 'Amical',
-        'business': 'Affaires',
-      },
-      intent: {
-        'b2b partnership': 'Partenariat B2B',
-        'consultation': 'Consultation',
-        'sales inquiry': 'Demande de vente',
-        'support': 'Support',
-        'information': 'Information',
-        'demo request': 'Demande de démo',
-      },
-      urgency: {
-        'high': 'Haute',
-        'medium': 'Moyenne',
-        'low': 'Faible',
-      }
-    };
-    
-    const translated = translations[type]?.[valueLower];
-    if (translated) return translated;
-  } else if (locale === 'en') {
-    // French to English
-    const translations: Record<string, Record<string, string>> = {
-      tone: {
-        'formel': 'Formal',
-        'urgent': 'Urgent',
-        'décontracté': 'Casual',
-        'professionnel': 'Professional',
-        'amical': 'Friendly',
-        'affaires': 'Business',
-      },
-      intent: {
-        'partenariat b2b': 'B2B partnership',
-        'consultation': 'Consultation',
-        'demande de vente': 'Sales inquiry',
-        'support': 'Support',
-        'information': 'Information',
-        'demande de démo': 'Demo request',
-      },
-      urgency: {
-        'haute': 'High',
-        'élevée': 'High',
-        'moyenne': 'Medium',
-        'faible': 'Low',
-      }
-    };
-    
-    const translated = translations[type]?.[valueLower];
-    if (translated) return translated;
+  try {
+    return await translateText(value, locale, {
+      context: `lead_${type}`,
+      priority: 7
+    });
+  } catch (error) {
+    console.error(`[ClientLeads] Translation failed for ${type}:`, error);
+    return value; // Fallback to original
   }
-  
-  // Capitalize first letter
-  return value.charAt(0).toUpperCase() + value.slice(1);
 }
 
 // Helper function to detect if text is in French
@@ -109,57 +56,6 @@ function detectEnglish(text: string): boolean {
   return englishMatches >= 2; // At least 2 English indicators
 }
 
-// Helper function to translate text (AI summary, relationship insight, etc.)
-async function translateText(text: string, targetLocale: string, context: string = 'text'): Promise<string> {
-  if (!text || !process.env.OPENAI_API_KEY) return text;
-  
-  // Detect if translation is needed
-  const isFrench = detectFrench(text);
-  const isEnglish = detectEnglish(text);
-  
-  // Don't translate if already in target language
-  if (targetLocale === 'fr' && isFrench && !isEnglish) {
-    console.log(`[Dashboard i18n] ${context} already in French — no translation needed`);
-    return text;
-  }
-  if (targetLocale === 'en' && isEnglish && !isFrench) {
-    console.log(`[Dashboard i18n] ${context} already in English — no translation needed`);
-    return text;
-  }
-  
-  // If mixed or unclear, assume translation is needed if going to French and not clearly French
-  const needsTranslation = (targetLocale === 'fr' && !isFrench) || (targetLocale === 'en' && !isEnglish);
-  
-  if (!needsTranslation) {
-    return text;
-  }
-  
-  try {
-    const fromLang = targetLocale === 'fr' ? 'English' : 'French';
-    const toLang = targetLocale === 'fr' ? 'French' : 'English';
-    
-    console.log(`[Dashboard i18n] Translated ${context} → ${toLang.toUpperCase()} (was ${fromLang.toUpperCase()})`);
-    
-    const systemPrompt = targetLocale === 'fr'
-      ? 'You are a professional translator. Translate to natural French, keeping business tone and technical accuracy. Return ONLY the translation, no explanations.'
-      : 'You are a professional translator. Translate to natural English, keeping business tone and technical accuracy. Return ONLY the translation, no explanations.';
-    
-    const completion = await openai.chat.completions.create({
-      model: 'gpt-4o-mini',
-      messages: [
-        { role: 'system', content: systemPrompt },
-        { role: 'user', content: text }
-      ],
-      temperature: 0.3,
-      max_tokens: 200,
-    });
-    
-    return completion.choices[0].message.content?.trim() || text;
-  } catch (error) {
-    console.warn('[ClientLeads] ⚠️ Translation failed, using original:', error);
-    return text;
-  }
-}
 
 export async function GET(req: NextRequest) {
   try {
@@ -287,7 +183,10 @@ export async function GET(req: NextRequest) {
       const translatedSummary = await translateText(
         lead.ai_summary || '',
         locale,
-        `ai_summary for ${lead.name}`
+        {
+          context: 'lead_ai_summary',
+          priority: 8
+        }
       );
       
       // Translate relationship_insight to match dashboard locale
@@ -295,14 +194,17 @@ export async function GET(req: NextRequest) {
         ? await translateText(
             lead.relationship_insight,
             locale,
-            `relationship_insight for ${lead.name}`
+            {
+              context: 'lead_relationship_insight',
+              priority: 9
+            }
           )
         : undefined;
       
       // Translate values
-      const translatedTone = translateValue(lead.tone || '', locale, 'tone');
-      const translatedIntent = translateValue(lead.intent || '', locale, 'intent');
-      const translatedUrgency = translateValue(lead.urgency || '', locale, 'urgency');
+      const translatedTone = await translateValue(lead.tone || '', locale, 'tone');
+      const translatedIntent = await translateValue(lead.intent || '', locale, 'intent');
+      const translatedUrgency = await translateValue(lead.urgency || '', locale, 'urgency');
       
       console.log(`[ClientLeads]   → tone: "${lead.tone}" → "${translatedTone}"`);
       console.log(`[ClientLeads]   → intent: "${lead.intent}" → "${translatedIntent}"`);

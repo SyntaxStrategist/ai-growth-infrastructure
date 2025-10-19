@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from '@supabase/supabase-js';
-import { translateDynamic } from '../../../../../lib/translateDynamic';
+import { translateText } from '../../../../lib/translation-service';
 import { resolveClientId, validateClientId } from '../../../../lib/client-resolver';
 import OpenAI from 'openai';
 
@@ -140,39 +140,6 @@ function translateUrgency(value: string, targetLocale: string): string {
 }
 
 // Force translation function that always translates regardless of detected language
-async function translateText(text: string, targetLocale: string): Promise<string> {
-  if (!text || typeof text !== 'string') return text;
-  
-  console.log(`[Force Translation] Translating to ${targetLocale}: "${text.substring(0, 50)}..."`);
-  
-  const sourceLanguage = targetLocale === 'fr' ? 'English' : 'French';
-  const targetLanguage = targetLocale === 'fr' ? 'French' : 'English';
-  
-  try {
-    const completion = await openai.chat.completions.create({
-      model: "gpt-4o-mini",
-      messages: [
-        {
-          role: "system",
-          content: `You are a professional translator. Translate the following ${sourceLanguage} text to ${targetLanguage} while preserving the original tone, meaning, and context. Return only the translated text without any additional commentary or formatting.`
-        },
-        {
-          role: "user",
-          content: text
-        }
-      ],
-      max_tokens: 200,
-      temperature: 0.1,
-    });
-
-    const translated = completion.choices[0]?.message?.content?.trim() || text;
-    console.log(`[Force Translation] Result: "${translated.substring(0, 50)}..."`);
-    return translated;
-  } catch (error) {
-    console.error('[Force Translation] Error:', error);
-    return text; // Return original text if translation fails
-  }
-}
 
 function translateInsight(value: string, targetLocale: string): string {
   const isValueFrench = isFrenchText(value);
@@ -214,22 +181,28 @@ async function translateRelationshipData(data: any[], locale: string): Promise<a
     console.log(`[RelationshipInsights] Processing lead ${index + 1}: ${lead.name} (${lead.email})`);
     const translatedLead = { ...lead };
     
-    // Force translate relationship insight regardless of detected language
-    if (lead.relationship_insight) {
-      console.log(`[💡 Translation] Force translating insight to ${locale}:`, lead.relationship_insight);
-      const originalInsight = lead.relationship_insight;
-      
-      // Force translation using OpenAI directly (bypass language detection)
-      translatedLead.relationship_insight = await translateText(lead.relationship_insight, locale);
-      console.log(`[💡 Translation Applied] ${lead.name} → ${translatedLead.relationship_insight}`);
-    }
+        // Force translate relationship insight regardless of detected language
+        if (lead.relationship_insight) {
+          console.log(`[💡 Translation] Force translating insight to ${locale}:`, lead.relationship_insight);
+          const originalInsight = lead.relationship_insight;
+          
+          // Use 3-layer translation service
+          translatedLead.relationship_insight = await translateText(lead.relationship_insight, locale, {
+            context: 'relationship_insight',
+            priority: 8
+          });
+          console.log(`[💡 Translation Applied] ${lead.name} → ${translatedLead.relationship_insight}`);
+        }
     
     // Force translate tone history values
     if (lead.tone_history && Array.isArray(lead.tone_history)) {
       translatedLead.tone_history = await Promise.all(
         lead.tone_history.map(async (entry: any) => ({
           ...entry,
-          value: typeof entry.value === 'string' ? await translateText(entry.value, locale) : entry.value,
+          value: typeof entry.value === 'string' ? await translateText(entry.value, locale, {
+            context: 'tone_history',
+            priority: 6
+          }) : entry.value,
         }))
       );
     }
@@ -239,7 +212,10 @@ async function translateRelationshipData(data: any[], locale: string): Promise<a
       translatedLead.urgency_history = await Promise.all(
         lead.urgency_history.map(async (entry: any) => ({
           ...entry,
-          value: typeof entry.value === 'string' ? await translateText(entry.value, locale) : entry.value,
+          value: typeof entry.value === 'string' ? await translateText(entry.value, locale, {
+            context: 'urgency_history',
+            priority: 6
+          }) : entry.value,
         }))
       );
     }
