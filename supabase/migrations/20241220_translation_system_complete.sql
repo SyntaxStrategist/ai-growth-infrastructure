@@ -1,7 +1,31 @@
--- Translation System Tables
--- This migration creates the 3-layer translation system infrastructure
--- Note: This migration is idempotent and safe to run multiple times
+-- Enable pg_trgm extension for fuzzy text matching
+-- This extension provides trigram-based text similarity functions
 
+-- Enable the pg_trgm extension
+CREATE EXTENSION IF NOT EXISTS pg_trgm;
+
+-- Create similarity index on translation_dictionary for fuzzy matching
+CREATE INDEX IF NOT EXISTS idx_translation_dictionary_english_trgm 
+ON public.translation_dictionary USING gin (english_text gin_trgm_ops);
+
+CREATE INDEX IF NOT EXISTS idx_translation_dictionary_french_trgm 
+ON public.translation_dictionary USING gin (french_text gin_trgm_ops);
+
+-- Create similarity index on translation_cache for fuzzy matching
+CREATE INDEX IF NOT EXISTS idx_translation_cache_original_trgm 
+ON public.translation_cache USING gin (original_text gin_trgm_ops);
+
+CREATE INDEX IF NOT EXISTS idx_translation_cache_translated_trgm 
+ON public.translation_cache USING gin (translated_text gin_trgm_ops);
+
+-- Comments for documentation
+COMMENT ON EXTENSION pg_trgm IS 'Trigram matching for fuzzy text search and similarity';
+COMMENT ON INDEX idx_translation_dictionary_english_trgm IS 'Trigram index for fuzzy matching on English text';
+COMMENT ON INDEX idx_translation_dictionary_french_trgm IS 'Trigram index for fuzzy matching on French text';
+COMMENT ON INDEX idx_translation_cache_original_trgm IS 'Trigram index for fuzzy matching on original text in cache';
+COMMENT ON INDEX idx_translation_cache_translated_trgm IS 'Trigram index for fuzzy matching on translated text in cache';
+
+-- Translation Tables
 -- 1. Translation Cache Table (Layer 2)
 -- Stores AI-generated translations with metadata
 CREATE TABLE IF NOT EXISTS public.translation_cache (
@@ -196,3 +220,94 @@ COMMENT ON COLUMN public.translation_cache.usage_count IS 'Number of times this 
 COMMENT ON COLUMN public.translation_cache.expires_at IS 'When this cached translation expires (default 1 year)';
 COMMENT ON COLUMN public.translation_dictionary.priority IS 'Higher priority entries are matched first (1-10)';
 COMMENT ON COLUMN public.translation_dictionary.category IS 'Category for organizing dictionary entries (e.g., business, technical, ui)';
+
+-- Fuzzy Dictionary Functions
+
+-- Create the fuzzy dictionary lookup function
+CREATE OR REPLACE FUNCTION fuzzy_dictionary_lookup(
+  search_text TEXT,
+  source_column TEXT,
+  target_column TEXT,
+  similarity_threshold DECIMAL DEFAULT 0.7
+)
+RETURNS TABLE (
+  translated_text TEXT,
+  similarity DECIMAL
+) AS $$
+BEGIN
+  -- Dynamic query to handle both English->French and French->English lookups
+  RETURN QUERY EXECUTE format('
+    SELECT 
+      %I as translated_text,
+      similarity(%I, %L) as similarity
+    FROM public.translation_dictionary 
+    WHERE is_active = true 
+      AND similarity(%I, %L) > %s
+    ORDER BY similarity(%I, %L) DESC, priority DESC
+    LIMIT 1
+  ', 
+    target_column,           -- %I: target column (french_text or english_text)
+    source_column,           -- %I: source column for similarity calculation
+    search_text,             -- %L: search text (literal)
+    source_column,           -- %I: source column for WHERE clause
+    search_text,             -- %L: search text for WHERE clause (literal)
+    similarity_threshold,    -- %s: similarity threshold
+    source_column,           -- %I: source column for ORDER BY
+    search_text              -- %L: search text for ORDER BY (literal)
+  );
+END;
+$$ LANGUAGE plpgsql;
+
+-- Create a simpler version for exact matches
+CREATE OR REPLACE FUNCTION exact_dictionary_lookup(
+  search_text TEXT,
+  source_column TEXT,
+  target_column TEXT
+)
+RETURNS TABLE (
+  translated_text TEXT
+) AS $$
+BEGIN
+  RETURN QUERY EXECUTE format('
+    SELECT %I as translated_text
+    FROM public.translation_dictionary 
+    WHERE is_active = true 
+      AND LOWER(%I) = LOWER(%L)
+    ORDER BY priority DESC
+    LIMIT 1
+  ', 
+    target_column,    -- %I: target column
+    source_column,    -- %I: source column for comparison
+    search_text       -- %L: search text (literal)
+  );
+END;
+$$ LANGUAGE plpgsql;
+
+-- Create a function to get dictionary statistics
+CREATE OR REPLACE FUNCTION get_dictionary_stats()
+RETURNS TABLE (
+  total_entries BIGINT,
+  active_entries BIGINT,
+  categories TEXT[],
+  avg_priority DECIMAL
+) AS $$
+BEGIN
+  RETURN QUERY
+  SELECT 
+    COUNT(*) as total_entries,
+    COUNT(*) FILTER (WHERE is_active = true) as active_entries,
+    ARRAY_AGG(DISTINCT category) as categories,
+    AVG(priority) as avg_priority
+  FROM public.translation_dictionary;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Comments for documentation
+COMMENT ON FUNCTION fuzzy_dictionary_lookup IS 'Fuzzy matching function for translation dictionary using pg_trgm similarity';
+COMMENT ON FUNCTION exact_dictionary_lookup IS 'Exact matching function for translation dictionary';
+COMMENT ON FUNCTION get_dictionary_stats IS 'Get statistics about the translation dictionary';
+
+-- Grant execute permissions
+GRANT EXECUTE ON FUNCTION fuzzy_dictionary_lookup TO authenticated;
+GRANT EXECUTE ON FUNCTION exact_dictionary_lookup TO authenticated;
+GRANT EXECUTE ON FUNCTION get_dictionary_stats TO authenticated;
