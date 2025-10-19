@@ -76,15 +76,18 @@ const insightTranslations = {
 
 // Helper function to detect if text is in French
 function isFrenchText(text: string): boolean {
+  // French-specific accented characters
   const frenchIndicators = ['é', 'è', 'ê', 'ë', 'à', 'â', 'ä', 'ç', 'ù', 'û', 'ü', 'ô', 'ö', 'î', 'ï'];
-  const frenchWords = ['démonstration', 'réussie', 'passage', 'phase', 'technique', 'probabilité', 'conversion', 'élevée', 'converti', 'excellente', 'progression', 'relationnelle', 'prêt', 'processus', 'intégration', 'fort', 'intérêt', 'initial', 'suivi', 'bientôt', 'discussion', 'potentiel', 'pilote', 'marketing', 'surveiller', 'près', 'recommandations', 'efficaces', 'personnalisée', 'montrant', 'engagement', 'planifier', 'prospect', 'haute', 'valeur', 'prioriser', 'prospection', 'évaluation', 'cours', 'fournir', 'support', 'proposition', 'préparer', 'documents'];
+  
+  // Actual French words that don't appear in English
+  const frenchWords = ['les', 'des', 'une', 'le', 'la', 'est', 'avec', 'pour', 'dans', 'sur', 'par', 'de', 'du', 'démonstration', 'réussie', 'passage', 'technique', 'probabilité', 'conversion', 'élevée', 'converti', 'excellente', 'progression', 'relationnelle', 'prêt', 'processus', 'intégration', 'fort', 'intérêt', 'initial', 'suivi', 'bientôt', 'discussion', 'potentiel', 'pilote', 'surveiller', 'près', 'recommandations', 'efficaces', 'personnalisée', 'montrant', 'engagement', 'planifier', 'prospect', 'haute', 'valeur', 'prioriser', 'prospection', 'évaluation', 'cours', 'fournir', 'support', 'proposition', 'préparer', 'documents'];
   
   const lowerText = text.toLowerCase();
   const hasFrenchChars = frenchIndicators.some(char => lowerText.includes(char));
   const hasFrenchWords = frenchWords.some(word => lowerText.includes(word));
   
   const isFrench = hasFrenchChars || hasFrenchWords;
-  console.log(`[RelationshipInsights] Language detection for "${text.substring(0, 50)}...": hasFrenchChars=${hasFrenchChars}, hasFrenchWords=${hasFrenchWords}, isFrench=${isFrench}`);
+  console.log(`[💡 Translation Fix] Language detection for "${text.substring(0, 50)}...": hasFrenchChars=${hasFrenchChars}, hasFrenchWords=${hasFrenchWords}, isFrench=${isFrench}`);
   
   return isFrench;
 }
@@ -146,18 +149,24 @@ function translateInsight(value: string, targetLocale: string): string {
   
   if (isTargetFrench && !isValueFrench) {
     // We need French, but value is in English - translate to French
+    console.log(`[💡 Translation Fix] Sentence detected as English → translating EN → FR`);
     const translated = insightTranslations[value as keyof typeof insightTranslations] || value;
     console.log(`[RelationshipInsights] Translated insight → "${translated}"`);
     return translated;
   } else if (!isTargetFrench && isValueFrench) {
     // We need English, but value is in French - translate to English
+    console.log(`[💡 Translation Fix] Sentence detected as French → translating FR → EN`);
     const translated = insightTranslations[value as keyof typeof insightTranslations] || value;
     console.log(`[RelationshipInsights] Translated insight → "${translated}"`);
     return translated;
   }
   
   // No translation needed - already in correct language
-  console.log(`[RelationshipInsights] No translation needed - already in correct language`);
+  if (isValueFrench) {
+    console.log(`[💡 Translation Fix] Sentence detected as French → skipping translation`);
+  } else {
+    console.log(`[💡 Translation Fix] Sentence detected as English → skipping translation`);
+  }
   return value;
 }
 
