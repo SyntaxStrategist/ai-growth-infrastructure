@@ -273,8 +273,12 @@ async function generateTatoebaPairs() {
       }
     });
     
-    for (const line of linksData.split('\n')) {
-      if (targetReached || processedLinks >= 100000) break; // Process more links to find valid pairs
+    // Process all links until we reach target or end of file
+    const allLines = linksData.split('\n');
+    console.log(`🔗 [DictionarySeeder] Processing ${allLines.length} total links...`);
+    
+    for (const line of allLines) {
+      if (targetReached) break; // Stop early if target reached
       
       // Try both tab and comma separation
       let parts = line.split('\t');
@@ -303,6 +307,7 @@ async function generateTatoebaPairs() {
             // Check if we've reached our target
             if (validPairs >= CONFIG.TARGET_ENTRIES) {
               targetReached = true;
+              console.log(`🎯 [DictionarySeeder] Target reached! Found ${validPairs} valid pairs`);
               break;
             }
           }
@@ -310,14 +315,30 @@ async function generateTatoebaPairs() {
       }
       processedLinks++;
       
-      // Log progress every 10,000 links
-      if (processedLinks % 10000 === 0) {
+      // Log progress every 100,000 links
+      if (processedLinks % 100000 === 0) {
         console.log(`🔗 [DictionarySeeder] Processed ${processedLinks} links, found ${validPairs} valid pairs`);
       }
     }
     
+    // Final progress log
+    if (processedLinks % 100000 !== 0) {
+      console.log(`🔗 [DictionarySeeder] Processed ${processedLinks} links, found ${validPairs} valid pairs`);
+    }
+    
     console.log(`✅ [DictionarySeeder] Generated ${pairs.size} Tatoeba pairs from ${processedLinks} links`);
     console.log(`📊 [DictionarySeeder] Final stats: ${engCount} English, ${fraCount} French sentences loaded`);
+    
+    if (targetReached) {
+      console.log(`🎯 [DictionarySeeder] Successfully reached target of ${CONFIG.TARGET_ENTRIES} pairs!`);
+    } else {
+      console.log(`⚠️  [DictionarySeeder] Processed all ${processedLinks} links but only found ${validPairs} valid pairs`);
+    }
+    
+    // Show pairing efficiency
+    const efficiency = processedLinks > 0 ? ((validPairs / processedLinks) * 100).toFixed(2) : 0;
+    console.log(`📈 [DictionarySeeder] Pairing efficiency: ${efficiency}% (${validPairs}/${processedLinks} links)`);
+    
     return Array.from(pairs).map(pair => JSON.parse(pair));
     
   } catch (error) {
