@@ -1,6 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from '@supabase/supabase-js';
 import { translateDynamic } from '../../../../../lib/translateDynamic';
+import OpenAI from 'openai';
+
+const openai = new OpenAI({
+  apiKey: process.env.OPENAI_API_KEY,
+});
 
 // Translation mappings for relationship data
 const toneTranslations = {
@@ -133,6 +138,41 @@ function translateUrgency(value: string, targetLocale: string): string {
   return value;
 }
 
+// Force translation function that always translates regardless of detected language
+async function translateText(text: string, targetLocale: string): Promise<string> {
+  if (!text || typeof text !== 'string') return text;
+  
+  console.log(`[Force Translation] Translating to ${targetLocale}: "${text.substring(0, 50)}..."`);
+  
+  const sourceLanguage = targetLocale === 'fr' ? 'English' : 'French';
+  const targetLanguage = targetLocale === 'fr' ? 'French' : 'English';
+  
+  try {
+    const completion = await openai.chat.completions.create({
+      model: "gpt-4o-mini",
+      messages: [
+        {
+          role: "system",
+          content: `You are a professional translator. Translate the following ${sourceLanguage} text to ${targetLanguage} while preserving the original tone, meaning, and context. Return only the translated text without any additional commentary or formatting.`
+        },
+        {
+          role: "user",
+          content: text
+        }
+      ],
+      max_tokens: 200,
+      temperature: 0.1,
+    });
+
+    const translated = completion.choices[0]?.message?.content?.trim() || text;
+    console.log(`[Force Translation] Result: "${translated.substring(0, 50)}..."`);
+    return translated;
+  } catch (error) {
+    console.error('[Force Translation] Error:', error);
+    return text; // Return original text if translation fails
+  }
+}
+
 function translateInsight(value: string, targetLocale: string): string {
   const isValueFrench = isFrenchText(value);
   const isTargetFrench = targetLocale === 'fr';
@@ -173,30 +213,34 @@ async function translateRelationshipData(data: any[], locale: string): Promise<a
     console.log(`[RelationshipInsights] Processing lead ${index + 1}: ${lead.name} (${lead.email})`);
     const translatedLead = { ...lead };
     
-    // Translate relationship insight using dynamic translation
+    // Force translate relationship insight regardless of detected language
     if (lead.relationship_insight) {
-      console.log(`[RelationshipInsights] Processing 💡 insight for lead ${index + 1}`);
+      console.log(`[💡 Translation] Force translating insight to ${locale}:`, lead.relationship_insight);
       const originalInsight = lead.relationship_insight;
       
-      // Use dynamic translation utility
-      translatedLead.relationship_insight = await translateDynamic(lead.relationship_insight, locale as "fr" | "en");
+      // Force translation using OpenAI directly (bypass language detection)
+      translatedLead.relationship_insight = await translateText(lead.relationship_insight, locale);
       console.log(`[💡 Translation Applied] ${lead.name} → ${translatedLead.relationship_insight}`);
     }
     
-    // Translate tone history
+    // Force translate tone history values
     if (lead.tone_history && Array.isArray(lead.tone_history)) {
-      translatedLead.tone_history = lead.tone_history.map((entry: any) => ({
-        ...entry,
-        value: typeof entry.value === 'string' ? translateTone(entry.value, locale) : entry.value
-      }));
+      translatedLead.tone_history = await Promise.all(
+        lead.tone_history.map(async (entry: any) => ({
+          ...entry,
+          value: typeof entry.value === 'string' ? await translateText(entry.value, locale) : entry.value,
+        }))
+      );
     }
     
-    // Translate urgency history
+    // Force translate urgency history values
     if (lead.urgency_history && Array.isArray(lead.urgency_history)) {
-      translatedLead.urgency_history = lead.urgency_history.map((entry: any) => ({
-        ...entry,
-        value: typeof entry.value === 'string' ? translateUrgency(entry.value, locale) : entry.value
-      }));
+      translatedLead.urgency_history = await Promise.all(
+        lead.urgency_history.map(async (entry: any) => ({
+          ...entry,
+          value: typeof entry.value === 'string' ? await translateText(entry.value, locale) : entry.value,
+        }))
+      );
     }
     
     return translatedLead;
