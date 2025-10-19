@@ -61,31 +61,92 @@ ON public.translation_dictionary (english_text, french_text);
 ALTER TABLE public.translation_cache ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.translation_dictionary ENABLE ROW LEVEL SECURITY;
 
--- Policies for translation_cache
-CREATE POLICY "Allow public read access to translation_cache"
-ON public.translation_cache FOR SELECT
-USING (TRUE);
+-- Policies for translation_cache (conditional creation)
+DO $$ 
+BEGIN
+    -- Check if policy exists before creating
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_policies 
+        WHERE schemaname = 'public' 
+        AND tablename = 'translation_cache' 
+        AND policyname = 'Allow public read access to translation_cache'
+    ) THEN
+        CREATE POLICY "Allow public read access to translation_cache"
+        ON public.translation_cache FOR SELECT
+        USING (TRUE);
+    END IF;
+END $$;
 
-CREATE POLICY "Allow authenticated insert to translation_cache"
-ON public.translation_cache FOR INSERT
-WITH CHECK (auth.role() = 'authenticated');
+DO $$ 
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_policies 
+        WHERE schemaname = 'public' 
+        AND tablename = 'translation_cache' 
+        AND policyname = 'Allow authenticated insert to translation_cache'
+    ) THEN
+        CREATE POLICY "Allow authenticated insert to translation_cache"
+        ON public.translation_cache FOR INSERT
+        WITH CHECK (auth.role() = 'authenticated');
+    END IF;
+END $$;
 
-CREATE POLICY "Allow authenticated update to translation_cache"
-ON public.translation_cache FOR UPDATE
-USING (auth.role() = 'authenticated');
+DO $$ 
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_policies 
+        WHERE schemaname = 'public' 
+        AND tablename = 'translation_cache' 
+        AND policyname = 'Allow authenticated update to translation_cache'
+    ) THEN
+        CREATE POLICY "Allow authenticated update to translation_cache"
+        ON public.translation_cache FOR UPDATE
+        USING (auth.role() = 'authenticated');
+    END IF;
+END $$;
 
--- Policies for translation_dictionary
-CREATE POLICY "Allow public read access to translation_dictionary"
-ON public.translation_dictionary FOR SELECT
-USING (is_active = TRUE);
+-- Policies for translation_dictionary (conditional creation)
+DO $$ 
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_policies 
+        WHERE schemaname = 'public' 
+        AND tablename = 'translation_dictionary' 
+        AND policyname = 'Allow public read access to translation_dictionary'
+    ) THEN
+        CREATE POLICY "Allow public read access to translation_dictionary"
+        ON public.translation_dictionary FOR SELECT
+        USING (is_active = TRUE);
+    END IF;
+END $$;
 
-CREATE POLICY "Allow authenticated insert to translation_dictionary"
-ON public.translation_dictionary FOR INSERT
-WITH CHECK (auth.role() = 'authenticated');
+DO $$ 
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_policies 
+        WHERE schemaname = 'public' 
+        AND tablename = 'translation_dictionary' 
+        AND policyname = 'Allow authenticated insert to translation_dictionary'
+    ) THEN
+        CREATE POLICY "Allow authenticated insert to translation_dictionary"
+        ON public.translation_dictionary FOR INSERT
+        WITH CHECK (auth.role() = 'authenticated');
+    END IF;
+END $$;
 
-CREATE POLICY "Allow authenticated update to translation_dictionary"
-ON public.translation_dictionary FOR UPDATE
-USING (auth.role() = 'authenticated');
+DO $$ 
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_policies 
+        WHERE schemaname = 'public' 
+        AND tablename = 'translation_dictionary' 
+        AND policyname = 'Allow authenticated update to translation_dictionary'
+    ) THEN
+        CREATE POLICY "Allow authenticated update to translation_dictionary"
+        ON public.translation_dictionary FOR UPDATE
+        USING (auth.role() = 'authenticated');
+    END IF;
+END $$;
 
 -- Functions for automatic timestamp updates
 CREATE OR REPLACE FUNCTION update_updated_at_column()
@@ -96,14 +157,30 @@ BEGIN
 END;
 $$ language 'plpgsql';
 
--- Triggers for automatic timestamp updates
-CREATE TRIGGER update_translation_cache_updated_at 
-BEFORE UPDATE ON public.translation_cache 
-FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+-- Triggers for automatic timestamp updates (conditional creation)
+DO $$ 
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_trigger 
+        WHERE tgname = 'update_translation_cache_updated_at'
+    ) THEN
+        CREATE TRIGGER update_translation_cache_updated_at 
+        BEFORE UPDATE ON public.translation_cache 
+        FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+    END IF;
+END $$;
 
-CREATE TRIGGER update_translation_dictionary_updated_at 
-BEFORE UPDATE ON public.translation_dictionary 
-FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+DO $$ 
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_trigger 
+        WHERE tgname = 'update_translation_dictionary_updated_at'
+    ) THEN
+        CREATE TRIGGER update_translation_dictionary_updated_at 
+        BEFORE UPDATE ON public.translation_dictionary 
+        FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+    END IF;
+END $$;
 
 -- Note: Usage count tracking is handled in application code
 -- PostgreSQL doesn't support AFTER SELECT triggers
