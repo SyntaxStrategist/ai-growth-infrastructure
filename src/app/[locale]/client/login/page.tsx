@@ -44,8 +44,7 @@ export default function ClientLoginPage() {
     e.preventDefault();
     setError('');
 
-    console.log('[AuthFix] ============================================');
-    console.log('[AuthFix] Login form submitted');
+    console.log('[AuthFix] Login button clicked');
 
     // Validation
     if (!email || !password) {
@@ -57,20 +56,17 @@ export default function ClientLoginPage() {
 
     try {
       console.log('[AuthFix] POST /api/client/auth started');
-      console.log('[AuthFix] Email:', email);
-      console.log('[AuthFix] Locale:', locale);
-
-      const response = await fetch('/api/client/auth', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+      
+      const res = await fetch("/api/client/auth", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password }),
       });
+      
+      const data = await res.json();
+      console.log("[AuthFix] Login response:", data);
 
-      const data = await response.json();
-
-      if (!response.ok || !data.success) {
+      if (!res.ok || !data.success) {
         throw new Error(data.error || t.invalidCredentials);
       }
 
@@ -105,10 +101,6 @@ export default function ClientLoginPage() {
     }
   };
 
-  const handleButtonClick = (e: React.MouseEvent) => {
-    console.log('[AuthFix] Login button clicked');
-    // Let the form handle the submission
-  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 via-blue-900 to-gray-900 text-white">
@@ -223,7 +215,6 @@ export default function ClientLoginPage() {
             <button
               type="submit"
               disabled={loading}
-              onClick={handleButtonClick}
               className={`w-full py-4 rounded-lg font-semibold text-lg transition-all transform hover:scale-[1.02] shadow-lg ${
                 loading
                   ? 'bg-gray-500/50 cursor-not-allowed'
