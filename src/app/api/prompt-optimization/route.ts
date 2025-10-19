@@ -268,7 +268,7 @@ export async function PUT(req: NextRequest) {
         success: true,
         action,
         message: `${action} completed successfully`,
-        data: result.data
+        data: ('data' in result ? result.data : null),
       });
     } else {
       console.error(`[PromptOptimizationAPI] Failed to ${action}:`, result.error);
