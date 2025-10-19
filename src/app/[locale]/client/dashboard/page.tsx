@@ -32,14 +32,7 @@ const ActivityLog = dynamic(() => import('../../../../components/ActivityLog'), 
   ssr: false,
   loading: () => <SkeletonLoader variant="card" height="6rem" />
 });
-const RelationshipInsights = dynamic(() => import('../../../../components/RelationshipInsights'), { 
-  ssr: false,
-  loading: () => <SkeletonLoader variant="card" height="12rem" />
-});
-const ClientProspectIntelligence = dynamic(() => import('../../../../components/ClientProspectIntelligence'), { 
-  ssr: false,
-  loading: () => <SkeletonLoader variant="card" height="12rem" />
-});
+// Note: RelationshipInsights and ClientProspectIntelligence are now accessed via full-page routes
 
 // ClientData type is now imported from session utility
 
@@ -717,18 +710,9 @@ async function translateIntent(rawTopIntent: string, locale: string): Promise<st
     router.push(`/${locale}/client/login`);
   }
 
-  // Smooth scroll function for navigation
-  const scrollToSection = (sectionId: string) => {
-    const element = document.getElementById(sectionId);
-    if (element) {
-      element.scrollIntoView({ 
-        behavior: 'smooth',
-        block: 'start'
-      });
-    } else {
-      // Show friendly message if section doesn't exist
-      showToast(t.icpNotConfigured);
-    }
+  // Navigation function for full-page routes
+  const navigateToPage = (path: string) => {
+    router.push(`/${locale}${path}`);
   };
 
   // Client-side pagination logic
@@ -931,13 +915,13 @@ async function translateIntent(rawTopIntent: string, locale: string): Promise<st
           </div>
           <div className="flex items-center gap-3">
             <button
-              onClick={() => scrollToSection('insights')}
+              onClick={() => navigateToPage('/client/insights')}
               className="px-4 py-2 rounded-lg bg-cyan-500/20 border border-cyan-500/40 text-cyan-400 hover:bg-cyan-500/30 transition-all duration-300 text-sm font-medium"
             >
               {t.insights}
             </button>
             <button
-              onClick={() => scrollToSection('intelligence')}
+              onClick={() => navigateToPage('/client/prospect-intelligence')}
               className="px-4 py-2 rounded-lg bg-pink-500/20 border border-pink-500/40 text-pink-400 hover:bg-pink-500/30 transition-all duration-300 text-sm font-medium"
             >
               {t.prospectIntelligence}
@@ -1128,26 +1112,70 @@ async function translateIntent(rawTopIntent: string, locale: string): Promise<st
           <PredictiveGrowthEngine locale={locale} clientId={client?.clientId || null} />
         </motion.div>
 
-        {/* Relationship Insights */}
+        {/* Relationship Insights Navigation Card */}
         <motion.div
-          id="insights"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 0.6, delay: 0.55 }}
           className="mb-8"
         >
-          <RelationshipInsights locale={locale} clientId={client?.clientId || null} />
+          <div className="bg-white/5 backdrop-blur-sm rounded-xl p-6 border border-white/10">
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="text-xl font-semibold mb-2 text-cyan-400">📊 {t.insights}</h3>
+                <p className="text-white/60 mb-4">
+                  {isFrench 
+                    ? 'Analysez vos données de leads avec des graphiques détaillés et des tendances'
+                    : 'Analyze your lead data with detailed charts and trends'
+                  }
+                </p>
+                <div className="flex items-center gap-4 text-sm text-white/60">
+                  <span>• {isFrench ? 'Distribution des intentions' : 'Intent distribution'}</span>
+                  <span>• {isFrench ? 'Analyse de l\'urgence' : 'Urgency analysis'}</span>
+                  <span>• {isFrench ? 'Tendances temporelles' : 'Temporal trends'}</span>
+                </div>
+              </div>
+              <button
+                onClick={() => navigateToPage('/client/insights')}
+                className="px-6 py-3 rounded-lg bg-cyan-500/20 border border-cyan-500/40 text-cyan-400 hover:bg-cyan-500/30 transition-all font-medium"
+              >
+                {isFrench ? 'Voir les Analyses' : 'View Insights'}
+              </button>
+            </div>
+          </div>
         </motion.div>
 
-        {/* Prospect Intelligence */}
+        {/* Prospect Intelligence Navigation Card */}
         <motion.div
-          id="intelligence"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 0.6, delay: 0.6 }}
           className="mb-8"
         >
-          <ClientProspectIntelligence />
+          <div className="bg-white/5 backdrop-blur-sm rounded-xl p-6 border border-white/10">
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="text-xl font-semibold mb-2 text-pink-400">🧠 {t.prospectIntelligence}</h3>
+                <p className="text-white/60 mb-4">
+                  {isFrench 
+                    ? 'Découvrez et analysez vos prospects idéaux basés sur votre profil client'
+                    : 'Discover and analyze your ideal prospects based on your client profile'
+                  }
+                </p>
+                <div className="flex items-center gap-4 text-sm text-white/60">
+                  <span>• {isFrench ? 'Scan automatique' : 'Automatic scanning'}</span>
+                  <span>• {isFrench ? 'Scoring intelligent' : 'Intelligent scoring'}</span>
+                  <span>• {isFrench ? 'Profil personnalisé' : 'Personalized profile'}</span>
+                </div>
+              </div>
+              <button
+                onClick={() => navigateToPage('/client/prospect-intelligence')}
+                className="px-6 py-3 rounded-lg bg-pink-500/20 border border-pink-500/40 text-pink-400 hover:bg-pink-500/30 transition-all font-medium"
+              >
+                {isFrench ? 'Voir la Prospection' : 'View Intelligence'}
+              </button>
+            </div>
+          </div>
         </motion.div>
 
         {/* Leads Section */}
