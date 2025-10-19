@@ -8,6 +8,7 @@ import { supabase, validateApiKey, upsertLeadWithHistory } from "../../../lib/su
 import { enrichLeadWithAI } from "../../../lib/ai-enrichment";
 import { isTestLead, logTestDetection } from "../../../lib/test-detection";
 import { buildPersonalizedHtmlEmail } from "../../../lib/personalized-email";
+import { trackAiOutcome } from "../../../lib/outcome-tracker";
 
 type LeadPayload = {
 	name?: string;
@@ -23,6 +24,56 @@ const sheetRange = "Sheet1!A:D"; // [Name, Email, Message, Timestamp]
 
 async function sleep(ms: number) {
 	return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+/**
+ * Log AI analysis feedback silently in the background
+ * This function ensures complete isolation - no modification to existing behavior
+ */
+async function logAiAnalysisFeedback(
+	enrichment: { intent: string; tone: string; urgency: string; confidence_score: number },
+	leadId: string | null,
+	clientId: string | null,
+	message: string,
+	aiSummary: string,
+	responseTimeMs: number
+) {
+	try {
+		// Log AI outcome tracking silently
+		await trackAiOutcome(
+			'ai_enrichment_analysis',
+			{
+				confidence: enrichment.confidence_score,
+				predicted_value: {
+					intent: enrichment.intent,
+					tone: enrichment.tone,
+					urgency: enrichment.urgency
+				},
+				factors: ['message_content', 'ai_summary', 'language_detection']
+			},
+			{
+				actual_value: {
+					intent: enrichment.intent,
+					tone: enrichment.tone,
+					urgency: enrichment.urgency
+				},
+				success: true,
+				response_time_ms: responseTimeMs
+			},
+			{
+				leadId: leadId || undefined,
+				clientId: clientId || undefined,
+				notes: `AI analysis completed for lead enrichment`,
+				notesEn: `AI analysis completed for lead enrichment`,
+				notesFr: `Analyse IA terminée pour l'enrichissement du lead`
+			}
+		);
+		
+		console.log('[Feedback Integration] ✅ AI analysis feedback logged silently');
+	} catch (error) {
+		// Silent failure - don't affect existing functionality
+		console.log('[Feedback Integration] ⚠️ Failed to log AI analysis feedback (silent):', error instanceof Error ? error.message : error);
+	}
 }
 
 async function retry<T>(fn: () => Promise<T>, opts?: { maxAttempts?: number; baseMs?: number; jitter?: boolean }) {
@@ -218,11 +269,14 @@ export async function POST(req: NextRequest) {
 				console.log('[AI Intelligence] ============================================');
 				console.log('[AI Intelligence] Analyzing lead for enrichment...');
 				
+				// Track AI analysis timing for feedback logging
+				const aiAnalysisStartTime = Date.now();
 				const enrichment = await enrichLeadWithAI({
 					message,
 					aiSummary,
 					language: locale,
 				});
+				const aiAnalysisResponseTime = Date.now() - aiAnalysisStartTime;
 				
 				console.log('[AI Intelligence] ✅ Enrichment complete:', {
 					intent: enrichment.intent,
@@ -256,6 +310,18 @@ export async function POST(req: NextRequest) {
 					isNew: result.isNew,
 					leadId: result.leadId,
 					hasInsight: !!result.insight,
+				});
+				
+				// Log AI analysis feedback silently in the background (complete isolation)
+				logAiAnalysisFeedback(
+					enrichment,
+					result.leadId,
+					clientId,
+					message,
+					aiSummary,
+					aiAnalysisResponseTime
+				).catch(() => {
+					// Silent failure - don't affect existing functionality
 				});
 				
 				// Link to client in lead_actions
@@ -505,11 +571,14 @@ export async function POST(req: NextRequest) {
 				console.log('[Lead API] ============================================');
 				console.log('[AI Intelligence] Analyzing lead for enrichment...');
 				
+				// Track AI analysis timing for feedback logging
+				const aiAnalysisStartTime = Date.now();
 				const enrichment = await enrichLeadWithAI({
 					message,
 					aiSummary,
 					language: locale,
 				});
+				const aiAnalysisResponseTime = Date.now() - aiAnalysisStartTime;
 				
 				console.log('[AI Intelligence] ✅ Enrichment complete:', {
 					intent: enrichment.intent,
@@ -566,6 +635,18 @@ export async function POST(req: NextRequest) {
 					leadId: result.leadId,
 					hasInsight: !!result.insight,
 					insight: result.insight || 'none',
+				});
+				
+				// Log AI analysis feedback silently in the background (complete isolation)
+				logAiAnalysisFeedback(
+					enrichment,
+					result.leadId,
+					clientId,
+					message,
+					aiSummary,
+					aiAnalysisResponseTime
+				).catch(() => {
+					// Silent failure - don't affect existing functionality
 				});
 				
 				if (result.isNew) {

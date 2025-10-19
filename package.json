@@ -22,7 +22,9 @@
     "fix-growth-brain": "node scripts/apply-growth-brain-fix.js",
     "seed:dictionary": "node scripts/seed-translation-dictionary.js",
     "seed:large-dictionary": "node scripts/seed-large-dictionary.js",
-    "test:fuzzy-matching": "node scripts/test-fuzzy-matching.js"
+    "test:fuzzy-matching": "node scripts/test-fuzzy-matching.js",
+    "test:feedback-system": "node scripts/test-feedback-system.js",
+    "verify:feedback-migration": "node scripts/verify-feedback-migration.js"
   },
   "dependencies": {
     "@prisma/client": "^6.17.1",

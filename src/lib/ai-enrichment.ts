@@ -1,5 +1,8 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import OpenAI from "openai";
+import { logPerformanceMetric } from "./feedback-processor";
+import { getActivePromptVariant, getPromptContent } from "./prompt-registry";
+import { executePromptWithTracking } from "./prompt-optimizer";
 
 export type LeadEnrichment = {
   intent: string;
@@ -7,6 +10,83 @@ export type LeadEnrichment = {
   urgency: "Low" | "Medium" | "High";
   confidence_score: number;
 };
+
+/**
+ * Enhanced AI enrichment with prompt optimization (Phase 2.2)
+ * Uses the prompt optimization system while maintaining backward compatibility
+ */
+export async function enrichLeadWithAIOptimized(params: {
+  message: string;
+  aiSummary: string;
+  language: string;
+  clientId?: string;
+  requestId?: string;
+  useOptimization?: boolean;
+}): Promise<LeadEnrichment> {
+  const { message, aiSummary, language, clientId, requestId, useOptimization = true } = params;
+  
+  if (!useOptimization) {
+    // Fallback to original function for backward compatibility
+    return enrichLeadWithAI({ message, aiSummary, language });
+  }
+
+  try {
+    console.log('[AI Enrichment] Using optimized prompt system...');
+    
+    const promptName = `ai_enrichment_${language}`;
+    const inputData = {
+      message,
+      aiSummary
+    };
+
+    const options = {
+      clientId,
+      requestId,
+      environment: 'production' as const,
+      metadata: {
+        language,
+        message_length: message.length,
+        ai_summary_length: aiSummary.length
+      }
+    };
+
+    // Execute with prompt optimization
+    const { success, output, executionId, error } = await executePromptWithTracking(
+      promptName,
+      inputData,
+      options
+    );
+
+    if (!success || !output) {
+      console.error('[AI Enrichment] Optimized prompt execution failed:', error);
+      // Fallback to original function
+      return enrichLeadWithAI({ message, aiSummary, language });
+    }
+
+    // Validate and format output
+    const enrichment = {
+      intent: output.intent || "Unknown",
+      tone: output.tone || "Neutral",
+      urgency: ["Low", "Medium", "High"].includes(output.urgency) ? output.urgency : "Medium",
+      confidence_score: Math.max(0, Math.min(1, Number(output.confidence_score) || 0.5)),
+    };
+
+    console.log('[AI Enrichment] ✅ Optimized enrichment complete:', {
+      intent: enrichment.intent,
+      tone: enrichment.tone,
+      urgency: enrichment.urgency,
+      confidence: enrichment.confidence_score,
+      executionId
+    });
+
+    return enrichment;
+
+  } catch (error) {
+    console.error('[AI Enrichment] Error in optimized enrichment:', error);
+    // Fallback to original function
+    return enrichLeadWithAI({ message, aiSummary, language });
+  }
+}
 
 export async function enrichLeadWithAI(params: {
   message: string;
@@ -47,6 +127,8 @@ Résumé IA: "${aiSummary}"`
 Lead message: "${message}"
 AI summary: "${aiSummary}"`;
 
+  const startTime = Date.now();
+  
   try {
     const response = await openai.chat.completions.create({
       model: "gpt-4o-mini",
@@ -63,15 +145,63 @@ AI summary: "${aiSummary}"`;
 
     const content = response.choices?.[0]?.message?.content || "{}";
     const parsed = JSON.parse(content);
+    const responseTime = Date.now() - startTime;
 
-    return {
+    const enrichment = {
       intent: parsed.intent || "Unknown",
       tone: parsed.tone || "Neutral",
       urgency: ["Low", "Medium", "High"].includes(parsed.urgency) ? parsed.urgency : "Medium",
       confidence_score: Math.max(0, Math.min(1, Number(parsed.confidence_score) || 0.5)),
     };
+
+    // Log AI analysis performance metrics silently
+    logPerformanceMetric(
+      'ai_analysis',
+      'response_time',
+      responseTime,
+      'ai_enrichment_analysis',
+      {
+        metadata: {
+          model: 'gpt-4o-mini',
+          language: language,
+          message_length: message.length,
+          ai_summary_length: aiSummary.length,
+          confidence_score: enrichment.confidence_score,
+          intent: enrichment.intent,
+          tone: enrichment.tone,
+          urgency: enrichment.urgency
+        }
+      }
+    ).catch(() => {
+      // Silent failure - don't affect existing functionality
+    });
+
+    return enrichment;
   } catch (error) {
+    const responseTime = Date.now() - startTime;
     console.error('[AI Enrichment] Failed:', error instanceof Error ? error.message : error);
+    
+    // Log error performance metrics silently
+    logPerformanceMetric(
+      'ai_analysis',
+      'error_count',
+      1,
+      'ai_enrichment_analysis',
+      {
+        metadata: {
+          model: 'gpt-4o-mini',
+          language: language,
+          message_length: message.length,
+          ai_summary_length: aiSummary.length,
+          error_message: error instanceof Error ? error.message : 'Unknown error',
+          response_time_ms: responseTime
+        },
+        errorMessageEn: error instanceof Error ? error.message : 'AI enrichment failed',
+        errorMessageFr: error instanceof Error ? error.message : 'Enrichissement IA échoué'
+      }
+    ).catch(() => {
+      // Silent failure - don't affect existing functionality
+    });
     
     // Return safe defaults on failure
     return {
