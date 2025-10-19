@@ -76,15 +76,16 @@ const insightTranslations = {
 
 // Helper function to detect if text is in French
 function isFrenchText(text: string): boolean {
-  // Minimal set of French-specific markers
-  const frenchMarkers = ['é','è','ê','à','ù','ç','ô','â','î','les','des','une','le','la','est','avec','pour','prêt','démo','relation','conversion'];
+  const frenchAccents = /[éèêàùçôâîïûü]/i;
+  const frenchWords = /\b(le|la|les|des|une|un|est|avec|pour|prêt|démonstration|relation|conversion|étape|phase|succès)\b/i;
   
-  const lowerText = text.toLowerCase();
-  const hasFrenchMarkers = frenchMarkers.some(marker => lowerText.includes(marker));
+  const hasAccents = frenchAccents.test(text);
+  const hasWords = frenchWords.test(text);
+  const isFrench = hasAccents || hasWords;
   
-  console.log(`[💡 Translation Fix] Language detection for "${text.substring(0, 50)}...": hasFrenchMarkers=${hasFrenchMarkers}, isFrench=${hasFrenchMarkers}`);
+  console.log(`[💡 Translation Fix] Language detection for "${text.substring(0, 50)}...": hasAccents=${hasAccents}, hasWords=${hasWords}, isFrench=${isFrench}`);
   
-  return hasFrenchMarkers;
+  return isFrench;
 }
 
 // Translation functions
@@ -142,16 +143,16 @@ function translateInsight(value: string, targetLocale: string): string {
   console.log(`[RelationshipInsights] Detected locale: ${targetLocale}`);
   console.log(`[RelationshipInsights] Original insight: "${value}"`);
   
-  // Force translation based on locale
+  // Enforce strict translation logic
   if (isTargetFrench && !isValueFrench) {
     // French locale but English text - force EN→FR translation
-    console.log(`[💡 Translation Fix] Sentence detected as English → translating EN→FR`);
+    console.log(`[💡 Translation Fix] Detected English text in FR locale → translating EN→FR`);
     const translated = insightTranslations[value as keyof typeof insightTranslations] || value;
     console.log(`[RelationshipInsights] Translated insight → "${translated}"`);
     return translated;
   } else if (!isTargetFrench && isValueFrench) {
     // English locale but French text - force FR→EN translation
-    console.log(`[💡 Translation Fix] Sentence detected as French → translating FR→EN`);
+    console.log(`[💡 Translation Fix] Detected French text in EN locale → translating FR→EN`);
     const translated = insightTranslations[value as keyof typeof insightTranslations] || value;
     console.log(`[RelationshipInsights] Translated insight → "${translated}"`);
     return translated;
@@ -159,9 +160,9 @@ function translateInsight(value: string, targetLocale: string): string {
   
   // Text matches locale - no translation needed
   if (isValueFrench) {
-    console.log(`[💡 Translation Fix] Sentence detected as French → already correct for French locale`);
+    console.log(`[💡 Translation Fix] Detected French text in FR locale → already correct`);
   } else {
-    console.log(`[💡 Translation Fix] Sentence detected as English → already correct for English locale`);
+    console.log(`[💡 Translation Fix] Detected English text in EN locale → already correct`);
   }
   return value;
 }
