@@ -3,6 +3,94 @@ import { NextRequest, NextResponse } from "next/server";
 import { supabase } from "../../../lib/supabase";
 import { randomUUID } from "crypto";
 
+// Translation mappings for action data
+const tagTranslations = {
+  // English to French
+  'Converted': 'Converti',
+  'Hot Lead': 'Lead chaud',
+  'Cold Lead': 'Lead froid',
+  'Warm Lead': 'Lead tiède',
+  'Follow Up': 'Suivi',
+  'Not Interested': 'Pas intéressé',
+  'Interested': 'Intéressé',
+  'Qualified': 'Qualifié',
+  'Unqualified': 'Non qualifié',
+  'Demo Scheduled': 'Démonstration programmée',
+  'Demo Completed': 'Démonstration terminée',
+  'Proposal Sent': 'Proposition envoyée',
+  'Negotiating': 'Négociation',
+  'Closed Won': 'Fermé gagné',
+  'Closed Lost': 'Fermé perdu',
+  // French to English
+  'Converti': 'Converted',
+  'Lead chaud': 'Hot Lead',
+  'Lead froid': 'Cold Lead',
+  'Lead tiède': 'Warm Lead',
+  'Suivi': 'Follow Up',
+  'Pas intéressé': 'Not Interested',
+  'Intéressé': 'Interested',
+  'Qualifié': 'Qualified',
+  'Non qualifié': 'Unqualified',
+  'Démonstration programmée': 'Demo Scheduled',
+  'Démonstration terminée': 'Demo Completed',
+  'Proposition envoyée': 'Proposal Sent',
+  'Négociation': 'Negotiating',
+  'Fermé gagné': 'Closed Won',
+  'Fermé perdu': 'Closed Lost',
+};
+
+// Helper function to detect if text is in French
+function isFrenchText(text: string): boolean {
+  const frenchIndicators = ['é', 'è', 'ê', 'ë', 'à', 'â', 'ä', 'ç', 'ù', 'û', 'ü', 'ô', 'ö', 'î', 'ï'];
+  const frenchWords = ['converti', 'démonstration', 'programmée', 'terminée', 'proposition', 'envoyée', 'négociation', 'fermé', 'gagné', 'perdu', 'intéressé', 'qualifié'];
+  
+  const lowerText = text.toLowerCase();
+  const hasFrenchChars = frenchIndicators.some(char => lowerText.includes(char));
+  const hasFrenchWords = frenchWords.some(word => lowerText.includes(word));
+  
+  return hasFrenchChars || hasFrenchWords;
+}
+
+// Translation function for action tags
+function translateTag(value: string, targetLocale: string): string {
+  if (!value) return value;
+  
+  const isValueFrench = isFrenchText(value);
+  const isTargetFrench = targetLocale === 'fr';
+  
+  if (isTargetFrench && !isValueFrench) {
+    // We need French, but value is in English - translate to French
+    const translated = tagTranslations[value as keyof typeof tagTranslations] || value;
+    if (translated !== value) {
+      console.log(`[LeadActions] Translating tag from EN → FR: "${value}" → "${translated}"`);
+    }
+    return translated;
+  } else if (!isTargetFrench && isValueFrench) {
+    // We need English, but value is in French - translate to English
+    const translated = tagTranslations[value as keyof typeof tagTranslations] || value;
+    if (translated !== value) {
+      console.log(`[LeadActions] Translating tag from FR → EN: "${value}" → "${translated}"`);
+    }
+    return translated;
+  }
+  
+  return value;
+}
+
+// Main translation function for action data
+function translateActionData(data: any[], locale: string): any[] {
+  return data.map((action: any) => {
+    const translatedAction = { ...action };
+    
+    // Translate tag field
+    if (action.tag) {
+      translatedAction.tag = translateTag(action.tag, locale);
+    }
+    
+    return translatedAction;
+  });
+}
+
 export interface LeadAction {
   id: string;
   lead_id: string;
@@ -355,10 +443,12 @@ export async function GET(req: NextRequest) {
     const url = new URL(req.url);
     const limit = parseInt(url.searchParams.get('limit') || '5', 10);
     const clientId = url.searchParams.get('clientId');
+    const locale = url.searchParams.get('locale') || 'en';
     
     console.log('[LeadActions] Query params:', {
       limit,
       clientId: clientId || 'all (admin)',
+      locale,
       order: 'timestamp DESC',
     });
 
@@ -444,8 +534,13 @@ export async function GET(req: NextRequest) {
       console.log('[LeadActions] ℹ️  No actions found in lead_actions table');
     }
 
+    // Apply locale-aware translation to action data
+    console.log(`[LeadActions] Locale detected: ${locale}`);
+    const translatedData = translateActionData(data, locale);
+    console.log('[LeadActions] ✅ Translation applied successfully');
+
     console.log('[LeadActions] ============================================');
-    return NextResponse.json({ success: true, data });
+    return NextResponse.json({ success: true, data: translatedData });
   } catch (error) {
     console.error('[LeadActions] ============================================');
     console.error('[LeadActions] ❌ GET request failed');

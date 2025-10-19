@@ -1,6 +1,191 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from '@supabase/supabase-js';
 
+// Translation mappings for relationship data
+const toneTranslations = {
+  // English to French
+  'Professional and direct': 'Professionnel et direct',
+  'Frustrated but motivated': 'Frustré mais motivé',
+  'Satisfied and technical': 'Satisfait et technique',
+  'Enthusiastic and engaged': 'Enthousiaste et engagé',
+  'Excited and committed': 'Excité et engagé',
+  'Strategic and analytical': 'Stratégique et analytique',
+  'Curious and exploratory': 'Curieux et exploratoire',
+  'Formal': 'Formel',
+  'Casual': 'Décontracté',
+  'Urgent': 'Urgent',
+  'Neutral': 'Neutre',
+  'Friendly': 'Amical',
+  'Professional': 'Professionnel',
+  'Analytical': 'Analytique',
+  'Exploratory and open': 'Exploratoire et ouvert',
+  'Interested and specific': 'Intéressé et spécifique',
+  // French to English
+  'Professionnel et direct': 'Professional and direct',
+  'Frustré mais motivé': 'Frustrated but motivated',
+  'Satisfait et technique': 'Satisfied and technical',
+  'Enthousiaste et engagé': 'Enthusiastic and engaged',
+  'Excité et engagé': 'Excited and committed',
+  'Stratégique et analytique': 'Strategic and analytical',
+  'Curieux et exploratoire': 'Curious and exploratory',
+  'Formel': 'Formal',
+  'Décontracté': 'Casual',
+  'Neutre': 'Neutral',
+  'Amical': 'Friendly',
+  'Professionnel': 'Professional',
+  'Analytique': 'Analytical',
+  'Exploratoire et ouvert': 'Exploratory and open',
+  'Intéressé et spécifique': 'Interested and specific',
+};
+
+const urgencyTranslations = {
+  // English to French
+  'High': 'Élevée',
+  'Medium': 'Moyenne',
+  'Low': 'Faible',
+  // French to English
+  'Élevée': 'High',
+  'Moyenne': 'Medium',
+  'Faible': 'Low',
+};
+
+const insightTranslations = {
+  // English to French
+  'Demo successful. Moving to technical phase. High conversion probability.': 'Démonstration réussie. Passage à la phase technique. Probabilité de conversion élevée.',
+  'CONVERTED! Excellent relationship progression. Ready for onboarding process.': 'CONVERTI! Excellente progression relationnelle. Prêt pour le processus d\'intégration.',
+  'Strong initial interest, follow up soon.': 'Fort intérêt initial, suivi bientôt.',
+  'Technical discussion phase, high potential.': 'Phase de discussion technique, potentiel élevé.',
+  'Marketing pilot phase, monitor closely.': 'Phase pilote marketing, surveiller de près.',
+  'Effective recommendations. Ready for personalized demonstration.': 'Recommandations efficaces. Prêt pour démonstration personnalisée.',
+  'Lead showing strong engagement, schedule follow-up.': 'Lead montrant un fort engagement, planifier un suivi.',
+  'High-value prospect, prioritize outreach.': 'Prospect de haute valeur, prioriser la prospection.',
+  'Technical evaluation in progress, provide support.': 'Évaluation technique en cours, fournir un support.',
+  'Ready for proposal phase, prepare materials.': 'Prêt pour la phase de proposition, préparer les documents.',
+  // French to English
+  'Démonstration réussie. Passage à la phase technique. Probabilité de conversion élevée.': 'Demo successful. Moving to technical phase. High conversion probability.',
+  'CONVERTI! Excellente progression relationnelle. Prêt pour le processus d\'intégration.': 'CONVERTED! Excellent relationship progression. Ready for onboarding process.',
+  'Fort intérêt initial, suivi bientôt.': 'Strong initial interest, follow up soon.',
+  'Phase de discussion technique, potentiel élevé.': 'Technical discussion phase, high potential.',
+  'Phase pilote marketing, surveiller de près.': 'Marketing pilot phase, monitor closely.',
+  'Recommandations efficaces. Prêt pour démonstration personnalisée.': 'Effective recommendations. Ready for personalized demonstration.',
+  'Lead montrant un fort engagement, planifier un suivi.': 'Lead showing strong engagement, schedule follow-up.',
+  'Prospect de haute valeur, prioriser la prospection.': 'High-value prospect, prioritize outreach.',
+  'Évaluation technique en cours, fournir un support.': 'Technical evaluation in progress, provide support.',
+  'Prêt pour la phase de proposition, préparer les documents.': 'Ready for proposal phase, prepare materials.',
+};
+
+// Helper function to detect if text is in French
+function isFrenchText(text: string): boolean {
+  const frenchIndicators = ['é', 'è', 'ê', 'ë', 'à', 'â', 'ä', 'ç', 'ù', 'û', 'ü', 'ô', 'ö', 'î', 'ï'];
+  const frenchWords = ['démonstration', 'réussie', 'passage', 'phase', 'technique', 'probabilité', 'conversion', 'élevée', 'converti', 'excellente', 'progression', 'relationnelle', 'prêt', 'processus', 'intégration', 'fort', 'intérêt', 'initial', 'suivi', 'bientôt', 'discussion', 'potentiel', 'pilote', 'marketing', 'surveiller', 'près', 'recommandations', 'efficaces', 'personnalisée', 'montrant', 'engagement', 'planifier', 'prospect', 'haute', 'valeur', 'prioriser', 'prospection', 'évaluation', 'cours', 'fournir', 'support', 'proposition', 'préparer', 'documents'];
+  
+  const lowerText = text.toLowerCase();
+  const hasFrenchChars = frenchIndicators.some(char => lowerText.includes(char));
+  const hasFrenchWords = frenchWords.some(word => lowerText.includes(word));
+  
+  return hasFrenchChars || hasFrenchWords;
+}
+
+// Translation functions
+function translateTone(value: string, targetLocale: string): string {
+  const isValueFrench = isFrenchText(value);
+  const isTargetFrench = targetLocale === 'fr';
+  
+  if (isTargetFrench && !isValueFrench) {
+    // We need French, but value is in English - translate to French
+    const translated = toneTranslations[value as keyof typeof toneTranslations] || value;
+    if (translated !== value) {
+      console.log(`[LeadsInsightsAPI] Translating tone from EN → FR: "${value}" → "${translated}"`);
+    }
+    return translated;
+  } else if (!isTargetFrench && isValueFrench) {
+    // We need English, but value is in French - translate to English
+    const translated = toneTranslations[value as keyof typeof toneTranslations] || value;
+    if (translated !== value) {
+      console.log(`[LeadsInsightsAPI] Translating tone from FR → EN: "${value}" → "${translated}"`);
+    }
+    return translated;
+  }
+  
+  return value;
+}
+
+function translateUrgency(value: string, targetLocale: string): string {
+  const isValueFrench = isFrenchText(value);
+  const isTargetFrench = targetLocale === 'fr';
+  
+  if (isTargetFrench && !isValueFrench) {
+    // We need French, but value is in English - translate to French
+    const translated = urgencyTranslations[value as keyof typeof urgencyTranslations] || value;
+    if (translated !== value) {
+      console.log(`[LeadsInsightsAPI] Translating urgency from EN → FR: "${value}" → "${translated}"`);
+    }
+    return translated;
+  } else if (!isTargetFrench && isValueFrench) {
+    // We need English, but value is in French - translate to English
+    const translated = urgencyTranslations[value as keyof typeof urgencyTranslations] || value;
+    if (translated !== value) {
+      console.log(`[LeadsInsightsAPI] Translating urgency from FR → EN: "${value}" → "${translated}"`);
+    }
+    return translated;
+  }
+  
+  return value;
+}
+
+function translateInsight(value: string, targetLocale: string): string {
+  const isValueFrench = isFrenchText(value);
+  const isTargetFrench = targetLocale === 'fr';
+  
+  if (isTargetFrench && !isValueFrench) {
+    // We need French, but value is in English - translate to French
+    const translated = insightTranslations[value as keyof typeof insightTranslations] || value;
+    if (translated !== value) {
+      console.log(`[LeadsInsightsAPI] Translating summary from EN → FR: "${value.substring(0, 30)}..." → "${translated.substring(0, 30)}..."`);
+    }
+    return translated;
+  } else if (!isTargetFrench && isValueFrench) {
+    // We need English, but value is in French - translate to English
+    const translated = insightTranslations[value as keyof typeof insightTranslations] || value;
+    if (translated !== value) {
+      console.log(`[LeadsInsightsAPI] Translating summary from FR → EN: "${value.substring(0, 30)}..." → "${translated.substring(0, 30)}..."`);
+    }
+    return translated;
+  }
+  
+  return value;
+}
+
+// Main translation function for relationship data
+async function translateRelationshipData(data: any[], locale: string): Promise<any[]> {
+  return data.map((lead: any) => {
+    const translatedLead = { ...lead };
+    
+    // Translate relationship insight
+    if (lead.relationship_insight) {
+      translatedLead.relationship_insight = translateInsight(lead.relationship_insight, locale);
+    }
+    
+    // Translate tone history
+    if (lead.tone_history && Array.isArray(lead.tone_history)) {
+      translatedLead.tone_history = lead.tone_history.map((entry: any) => ({
+        ...entry,
+        value: typeof entry.value === 'string' ? translateTone(entry.value, locale) : entry.value
+      }));
+    }
+    
+    // Translate urgency history
+    if (lead.urgency_history && Array.isArray(lead.urgency_history)) {
+      translatedLead.urgency_history = lead.urgency_history.map((entry: any) => ({
+        ...entry,
+        value: typeof entry.value === 'string' ? translateUrgency(entry.value, locale) : entry.value
+      }));
+    }
+    
+    return translatedLead;
+  });
+}
+
 export async function GET(req: NextRequest) {
   try {
     console.log('[LeadsInsightsAPI] ============================================');
@@ -196,7 +381,12 @@ export async function GET(req: NextRequest) {
     });
     console.log('[LeadsInsightsAPI] ============================================');
 
-    return NextResponse.json({ success: true, data });
+    // Apply locale-aware translation to all data
+    console.log(`[LeadsInsightsAPI] Locale detected: ${locale}`);
+    const translatedData = await translateRelationshipData(data, locale);
+    console.log('[LeadsInsightsAPI] ✅ Translation applied successfully');
+
+    return NextResponse.json({ success: true, data: translatedData });
     
   } catch (error: any) {
     console.error('[LeadsInsightsAPI] ============================================');
