@@ -587,8 +587,9 @@ async function translateIntent(rawTopIntent: string, locale: string): Promise<st
   }
 
   async function handleArchiveLead(leadId: string) {
+    const originalLeads = [...allLeads];
+    
     try {
-      const originalLeads = [...allLeads];
       setAllLeads(allLeads.filter(l => l.id !== leadId));
 
       const res = await fetch('/api/lead-actions', {
