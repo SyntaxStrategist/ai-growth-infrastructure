@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { supabase } from './supabase';
+import { createServerSupabaseClient } from './supabase-server-auth';
 
 // In-memory cache for resolved client IDs
 const clientIdCache = new Map<string, { uuid: string; timestamp: number }>();
@@ -47,11 +47,13 @@ export async function resolveClientId(inputId: string): Promise<string> {
   try {
     console.log(`[ClientResolver] 🔍 Querying Supabase for string ID: "${inputId}"`);
     
+    const supabase = createServerSupabaseClient();
     const { data: clientData, error: clientError } = await supabase
       .from('clients')
       .select('id, client_id')
       .eq('client_id', inputId)
       .single();
+
 
     if (clientError) {
       console.error(`[ClientResolver] ❌ Supabase query failed for "${inputId}":`, clientError);
@@ -93,6 +95,7 @@ async function resolveDemoClientId(): Promise<string> {
   try {
     console.log(`[ClientResolver] 🔍 Resolving demo client: "${demoClientId}"`);
     
+    const supabase = createServerSupabaseClient();
     const { data: demoClient, error: demoError } = await supabase
       .from('clients')
       .select('id, client_id')

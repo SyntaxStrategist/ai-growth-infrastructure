@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { supabase } from '../../../../lib/supabase';
+import { createServerSupabaseClient } from '../../../../lib/supabase-server-auth';
 import { generateApiKey, hashPassword, generateClientId } from '../../../../lib/clients';
 import { isTestClient, logTestDetection } from '../../../../lib/test-detection';
 import { google } from 'googleapis';
@@ -9,8 +9,8 @@ export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
     
-    // Use the main Supabase client which has fallback logic
-    // const supabase = createServerSupabaseClient();
+    // Use the same Supabase client as prospect intelligence endpoints
+    const supabase = createServerSupabaseClient();
     
     
     // Accept both camelCase (from frontend) and snake_case (from tests)
@@ -178,6 +178,7 @@ export async function POST(req: NextRequest) {
     let newClient;
     let dbError;
 
+
     // Try regular insert first
     const insertResult = await supabase
       .from('clients')
@@ -187,6 +188,7 @@ export async function POST(req: NextRequest) {
     
     newClient = insertResult.data;
     dbError = insertResult.error;
+
 
     if (dbError) {
       console.error('[E2E-Test] [ClientRegistration] ❌ Database error:', dbError);
