@@ -365,8 +365,8 @@ export default function ClientProspectIntelligencePage() {
 
   // Filter prospects based on toggle
   let filteredProspects = hideTestProspects 
-    ? prospects.filter(p => !p.is_test)
-    : prospects;
+    ? (prospects || []).filter(p => !p.is_test)
+    : (prospects || []);
 
   if (showOnlyHighPriority) {
     filteredProspects = filteredProspects.filter(p => isHighPriority(p.automation_need_score));
@@ -457,6 +457,18 @@ export default function ClientProspectIntelligencePage() {
           </h1>
           <p className="text-white/60">{t.subtitle}</p>
           <p className="text-white/50 text-sm mt-1">{session.client?.businessName ?? ''}</p>
+          
+          {/* Data Source Indicator */}
+          <div className="mt-3 flex items-center gap-2">
+            <span className="text-sm text-white/50">Data Source:</span>
+            <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
+              prospects && prospects.length > 0 && prospects[0]?.metadata?.source === 'pdl' 
+                ? 'bg-green-500/20 text-green-400 border border-green-500/40' 
+                : 'bg-yellow-500/20 text-yellow-400 border border-yellow-500/40'
+            }`}>
+              {prospects && prospects.length > 0 && prospects[0]?.metadata?.source === 'pdl' ? 'PDL (Live)' : 'Simulated'}
+            </span>
+          </div>
         </motion.div>
 
         {/* Configuration Panel */}
@@ -718,7 +730,7 @@ export default function ClientProspectIntelligencePage() {
             </div>
           ) : filteredProspects.length === 0 ? (
             <div className="p-8 text-center text-white/60">
-              <p>{prospects.length === 0 ? t.noProspects : t.noHighPriorityFound}</p>
+              <p>{(prospects || []).length === 0 ? t.noProspects : t.noHighPriorityFound}</p>
             </div>
           ) : (
             <div className="overflow-x-auto">

@@ -584,8 +584,8 @@ export default function ProspectIntelligencePage() {
   // Filter prospects based on toggle
   // Filter by test status first, then by priority
   let filteredProspects = hideTestProspects 
-    ? prospects.filter(p => !p.is_test) // Hide test prospects when enabled
-    : prospects; // Show all by default
+    ? (prospects || []).filter(p => !p.is_test) // Hide test prospects when enabled
+    : (prospects || []); // Show all by default
 
   // Then apply high-priority filter
   if (showOnlyHighPriority) {
@@ -603,7 +603,7 @@ export default function ProspectIntelligencePage() {
   // Reset to page 1 when filters change
   useEffect(() => {
     setCurrentPage(1);
-  }, [hideTestProspects, showOnlyHighPriority, prospects.length]);
+  }, [hideTestProspects, showOnlyHighPriority, prospects?.length]);
 
   // Debug: Log filter results
   console.log("✅ Filter applied: hideTestProspects =", hideTestProspects, "Visible prospects:", filteredProspects.length);
@@ -657,6 +657,18 @@ export default function ProspectIntelligencePage() {
             {t.title}
           </h1>
           <p className="text-white/60">{t.subtitle}</p>
+          
+          {/* Data Source Indicator */}
+          <div className="mt-3 flex items-center gap-2">
+            <span className="text-sm text-white/50">Data Source:</span>
+            <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
+              prospects && prospects.length > 0 && prospects[0]?.metadata?.source === 'pdl' 
+                ? 'bg-green-500/20 text-green-400 border border-green-500/40' 
+                : 'bg-yellow-500/20 text-yellow-400 border border-yellow-500/40'
+            }`}>
+              {prospects && prospects.length > 0 && prospects[0]?.metadata?.source === 'pdl' ? 'PDL (Live)' : 'Simulated'}
+            </span>
+          </div>
         </motion.div>
 
         {/* Configuration Panel */}
@@ -958,7 +970,7 @@ export default function ProspectIntelligencePage() {
             </div>
           ) : filteredProspects.length === 0 ? (
             <div className="p-8 text-center text-white/60">
-              <p>{prospects.length === 0 ? t.noProspects : t.noHighPriorityFound}</p>
+              <p>{(prospects || []).length === 0 ? t.noProspects : t.noHighPriorityFound}</p>
             </div>
           ) : (
             <div className="overflow-x-auto">
