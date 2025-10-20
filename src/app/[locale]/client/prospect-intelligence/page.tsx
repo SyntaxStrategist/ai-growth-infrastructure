@@ -7,7 +7,6 @@ import { motion } from 'framer-motion';
 import { useSession } from '../../../../components/SessionProvider';
 import UniversalLanguageToggle from '../../../../components/UniversalLanguageToggle';
 import ProspectProofModal from '../../../../components/ProspectProofModal';
-import EmailPreviewModal from '../../../../components/EmailPreviewModal';
 
 interface ProspectCandidate {
   id: string;
@@ -66,12 +65,10 @@ export default function ClientProspectIntelligencePage() {
   const [toastMessage, setToastMessage] = useState('');
   const [showOnlyHighPriority, setShowOnlyHighPriority] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
-  const [sendingOutreach, setSendingOutreach] = useState<Record<string, boolean>>({});
   const [generatingProof, setGeneratingProof] = useState(false);
   
   // Modal states
   const [proofModalOpen, setProofModalOpen] = useState(false);
-  const [emailPreviewModalOpen, setEmailPreviewModalOpen] = useState(false);
   const [selectedProspect, setSelectedProspect] = useState<ProspectCandidate | null>(null);
   
   // Metrics state
@@ -137,7 +134,6 @@ export default function ClientProspectIntelligencePage() {
     contacted: isFrench ? 'Contacté' : 'Contacted',
     notContacted: isFrench ? 'Non Contacté' : 'Not Contacted',
     viewProof: isFrench ? '📊 Voir preuve' : '📊 View Proof',
-    sendOutreach: isFrench ? 'Envoyer Outreach' : 'Send Outreach',
     noProspects: isFrench ? 'Aucun prospect trouvé' : 'No prospects found',
     noHighPriorityFound: isFrench ? 'Aucun prospect haute priorité trouvé' : 'No high priority prospects found',
     urgent: isFrench ? 'Urgent' : 'Urgent',
@@ -828,20 +824,7 @@ export default function ClientProspectIntelligencePage() {
                           >
                             {t.viewProof}
                           </button>
-                          <button
-                            onClick={() => {
-                              setSelectedProspect(prospect);
-                              setEmailPreviewModalOpen(true);
-                            }}
-                            disabled={sendingOutreach[prospect.id]}
-                            className={`px-3 py-1 text-xs border rounded transition-colors ${
-                              sendingOutreach[prospect.id]
-                                ? 'bg-gray-500/20 border-gray-400/50 text-gray-400 cursor-not-allowed'
-                                : 'bg-green-500/20 border-green-400/50 text-green-400 hover:bg-green-500/30'
-                            }`}
-                          >
-                            {sendingOutreach[prospect.id] ? 'Sending...' : t.sendOutreach}
-                          </button>
+                          {/* Outreach temporarily hidden on client dashboard */}
                         </div>
                       </td>
                     </tr>
@@ -889,28 +872,6 @@ export default function ClientProspectIntelligencePage() {
         />
       )}
 
-      {emailPreviewModalOpen && selectedProspect && (
-        <EmailPreviewModal
-          prospect={{
-            id: selectedProspect.id,
-            business_name: selectedProspect.business_name,
-            website: selectedProspect.website,
-            contact_email: selectedProspect.contact_email,
-            industry: selectedProspect.industry || 'Unknown'
-          }}
-          isOpen={emailPreviewModalOpen}
-          onClose={() => setEmailPreviewModalOpen(false)}
-          testMode={false}
-          onSendSuccess={() => {
-            setToastMessage('Email sent successfully!');
-            setShowToast(true);
-            setTimeout(() => setShowToast(false), 3000);
-          }}
-          onSendError={(error) => {
-            setError(error);
-          }}
-        />
-      )}
     </div>
   );
 }
