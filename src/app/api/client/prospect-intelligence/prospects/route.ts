@@ -4,7 +4,8 @@
 // Fetch prospect details scoped to authenticated client
 
 import { NextRequest, NextResponse } from 'next/server';
-import { getAuthenticatedClientId, createServerSupabaseClient } from '../../../../../lib/supabase-server-auth';
+import { createUnifiedSupabaseClient } from '../../../../../lib/supabase-unified';
+import { resolveClientId } from '../../../../../lib/client-resolver';
 
 /**
  * GET - Fetch prospects scoped to authenticated client
@@ -12,21 +13,53 @@ import { getAuthenticatedClientId, createServerSupabaseClient } from '../../../.
  */
 export async function GET(req: NextRequest) {
   try {
-    console.log('[ClientProspectAPI] Fetching client-scoped prospects...');
+    console.log('🔍 [ClientProspectProspects] ============================================');
+    console.log('🔍 [ClientProspectProspects] CLIENT PROSPECT PROSPECTS DEBUG');
+    console.log('🔍 [ClientProspectProspects] ============================================');
     
-    // Authenticate client using new Supabase session system
-    const clientId = await getAuthenticatedClientId(req);
-    console.log('[ClientProspectAPI] Authenticated client:', clientId);
+    // Get client ID from query parameters
+    const clientId = req.nextUrl.searchParams.get('clientId');
+    console.log('🔍 [ClientProspectProspects] Client ID from query:', clientId);
+    
+    if (!clientId) {
+      console.error('🔍 [ClientProspectProspects] ❌ No client ID provided');
+      return NextResponse.json(
+        { success: false, error: 'Client ID required' },
+        { status: 400 }
+      );
+    }
+
+    // Resolve client ID to UUID
+    let resolvedClientId: string;
+    try {
+      resolvedClientId = await resolveClientId(clientId);
+      console.log('🔍 [ClientProspectProspects] ✅ Resolved client ID:', resolvedClientId);
+    } catch (error) {
+      console.error('🔍 [ClientProspectProspects] ❌ Failed to resolve client ID:', error);
+      return NextResponse.json(
+        { success: false, error: `Failed to resolve client ID: ${error instanceof Error ? error.message : 'Unknown error'}` },
+        { status: 404 }
+      );
+    }
 
     // Create Supabase client for database operations
-    const supabase = createServerSupabaseClient();
+    const supabase = createUnifiedSupabaseClient();
 
-    // Fetch client's ICP data to filter prospects
+    // Fetch client's ICP data to filter prospects using resolved UUID
+    console.log('🔍 [ClientProspectProspects] Querying clients table with resolved UUID:', resolvedClientId);
     const { data: client, error: clientError } = await supabase
       .from('clients')
       .select('icp_data, business_name, industry_category')
-      .eq('client_id', clientId)
+      .eq('id', resolvedClientId)
       .single();
+
+    console.log('🔍 [ClientProspectProspects] ============================================');
+    console.log('🔍 [ClientProspectProspects] DATABASE QUERY RESULT');
+    console.log('🔍 [ClientProspectProspects] ============================================');
+    console.log('🔍 [ClientProspectProspects] Success:', !clientError);
+    console.log('🔍 [ClientProspectProspects] Error:', clientError);
+    console.log('🔍 [ClientProspectProspects] Client Data:', client);
+    console.log('🔍 [ClientProspectProspects] ============================================');
 
     if (clientError) {
       console.error('[ClientProspectAPI] Failed to fetch client data:', clientError);

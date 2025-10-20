@@ -35,12 +35,40 @@ export async function resolveClientId(inputId: string): Promise<string> {
 
   console.log(`[ClientResolver] 🔍 Resolving client ID: "${inputId}"`);
 
-  // If it's already a valid UUID, return it directly
+  // If it's already a valid UUID, verify it exists in the database
   if (isValidUUIDv4(inputId)) {
-    console.log(`[ClientResolver] ✅ Input is valid UUID: "${inputId}"`);
-    // Cache the UUID for future use
-    clientIdCache.set(inputId, { uuid: inputId, timestamp: Date.now() });
-    return inputId;
+    console.log(`[ClientResolver] 🔍 Input is valid UUID, verifying existence: "${inputId}"`);
+    
+    const supabase = createUnifiedSupabaseClient();
+    
+    // First check if it exists as the primary key (id)
+    const { data: primaryKeyData, error: primaryKeyError } = await supabase
+      .from('clients')
+      .select('id')
+      .eq('id', inputId)
+      .single();
+    
+    if (!primaryKeyError && primaryKeyData) {
+      console.log(`[ClientResolver] ✅ UUID exists as primary key: "${inputId}"`);
+      clientIdCache.set(inputId, { uuid: inputId, timestamp: Date.now() });
+      return inputId;
+    }
+    
+    // If not found as primary key, check if it exists as client_id
+    const { data: clientIdData, error: clientIdError } = await supabase
+      .from('clients')
+      .select('id, client_id')
+      .eq('client_id', inputId)
+      .single();
+    
+    if (!clientIdError && clientIdData) {
+      console.log(`[ClientResolver] ✅ UUID exists as client_id, resolved to primary key: "${inputId}" → "${clientIdData.id}"`);
+      clientIdCache.set(inputId, { uuid: clientIdData.id, timestamp: Date.now() });
+      return clientIdData.id;
+    }
+    
+    console.error(`[ClientResolver] ❌ UUID not found in database: "${inputId}"`);
+    throw new Error(`Client not found: ${inputId}`);
   }
 
   // If it's a string ID, query Supabase to find the matching UUID
