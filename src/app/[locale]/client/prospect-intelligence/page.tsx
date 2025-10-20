@@ -169,9 +169,9 @@ export default function ClientProspectIntelligencePage() {
     if (!session.client) return;
     
     try {
-      console.log('[ClientProspectIntelligence] Fetching config for client:', session.client.clientId);
+      console.log('[ClientProspectIntelligence] Fetching config for client:', session.client?.clientId);
       
-      const response = await fetch(`/api/client/prospect-intelligence/config?clientId=${session.client.clientId}`);
+      const response = await fetch(`/api/client/prospect-intelligence/config?clientId=${session.client?.clientId}`);
       const json = await response.json();
 
       if (json.success) {
@@ -206,9 +206,9 @@ export default function ClientProspectIntelligencePage() {
       setLoading(true);
       setError(null);
 
-      console.log('[ClientProspectIntelligence] Loading prospects for client:', session.client.clientId);
+      console.log('[ClientProspectIntelligence] Loading prospects for client:', session.client?.clientId);
       
-      const response = await fetch(`/api/client/prospect-intelligence/prospects?clientId=${session.client.clientId}`);
+      const response = await fetch(`/api/client/prospect-intelligence/prospects?clientId=${session.client?.clientId}`);
       const json = await response.json();
 
       if (json.success) {
@@ -244,7 +244,7 @@ export default function ClientProspectIntelligencePage() {
       setScanning(true);
       setError(null);
 
-      console.log('[ClientProspectIntelligence] Starting prospect scan for client:', session.client.clientId);
+      console.log('[ClientProspectIntelligence] Starting prospect scan for client:', session.client?.clientId);
       
       const scanConfig = {
         maxResults: config.maxResults,
@@ -254,7 +254,7 @@ export default function ClientProspectIntelligencePage() {
         testMode: config.testMode,
         usePdl: config.usePdl,
         scanForms: config.scanForms,
-        clientId: session.client.clientId // Scope to client
+        clientId: session.client?.clientId // Scope to client
       };
 
       const response = await fetch('/api/client/prospect-intelligence/scan', {
@@ -399,7 +399,7 @@ export default function ClientProspectIntelligencePage() {
           <div className="flex items-center justify-between mb-8">
             <div>
               <h1 className="text-3xl font-bold mb-2">{t.title}</h1>
-              <p className="text-white/60">{session.client.businessName}</p>
+              <p className="text-white/60">{session.client?.businessName ?? ''}</p>
             </div>
             <div className="flex items-center gap-3">
               <UniversalLanguageToggle />
@@ -456,7 +456,7 @@ export default function ClientProspectIntelligencePage() {
             {t.title}
           </h1>
           <p className="text-white/60">{t.subtitle}</p>
-          <p className="text-white/50 text-sm mt-1">{session.client.businessName}</p>
+          <p className="text-white/50 text-sm mt-1">{session.client?.businessName ?? ''}</p>
         </motion.div>
 
         {/* Configuration Panel */}
@@ -889,7 +889,7 @@ export default function ClientProspectIntelligencePage() {
       {/* Modals */}
       {proofModalOpen && selectedProspect && (
         <ProspectProofModal
-          prospect={selectedProspect}
+          prospectId={selectedProspect.id}
           isOpen={proofModalOpen}
           onClose={() => setProofModalOpen(false)}
         />
@@ -897,9 +897,24 @@ export default function ClientProspectIntelligencePage() {
 
       {emailPreviewModalOpen && selectedProspect && (
         <EmailPreviewModal
-          prospect={selectedProspect}
+          prospect={{
+            id: selectedProspect.id,
+            business_name: selectedProspect.business_name,
+            website: selectedProspect.website,
+            contact_email: selectedProspect.contact_email,
+            industry: selectedProspect.industry || 'Unknown'
+          }}
           isOpen={emailPreviewModalOpen}
           onClose={() => setEmailPreviewModalOpen(false)}
+          testMode={false}
+          onSendSuccess={() => {
+            setToastMessage('Email sent successfully!');
+            setShowToast(true);
+            setTimeout(() => setShowToast(false), 3000);
+          }}
+          onSendError={(error) => {
+            setError(error);
+          }}
         />
       )}
     </div>
