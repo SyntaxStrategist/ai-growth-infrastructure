@@ -207,9 +207,7 @@ export default function ClientProspectIntelligencePage() {
   }
 
   // Check if client has ICP data (will be determined by config fetch)
-  const hasIcpData = config && config.icp_data && 
-    Object.keys(config.icp_data).length > 0 && 
-    (config.icp_data.target_client_type || config.icp_data.main_business_goal);
+  const hasIcpData = config && config.hasIcpData === true;
 
   if (loading) {
     return (

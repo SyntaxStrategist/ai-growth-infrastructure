@@ -68,9 +68,16 @@ export async function GET(req: NextRequest) {
       );
     }
 
-    // Check if ICP data exists
-    if (!client.icp_data || Object.keys(client.icp_data).length === 0) {
-      console.log('[ClientProspectAPI] No ICP data found for client');
+    // Check if ICP data exists and has meaningful values
+    const hasValidIcpData = client.icp_data && 
+      Object.keys(client.icp_data).length > 0 && 
+      (client.icp_data.target_client_type || 
+       client.icp_data.average_deal_size || 
+       client.icp_data.main_business_goal || 
+       client.icp_data.biggest_challenge);
+    
+    if (!hasValidIcpData) {
+      console.log('[ClientProspectAPI] No valid ICP data found for client');
       return NextResponse.json({
         success: false,
         hasIcpData: false,
