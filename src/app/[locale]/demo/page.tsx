@@ -2,11 +2,11 @@
 
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { useLocale } from 'next-intl';
+import { useLocale, useTranslations } from 'next-intl';
 import dynamic from 'next/dynamic';
 
 // Dynamic imports for better bundle splitting
-const UniversalLanguageToggle = dynamic(() => import('../../components/UniversalLanguageToggle'), {
+const UniversalLanguageToggle = dynamic(() => import('../../../components/UniversalLanguageToggle'), {
   ssr: true, // Keep SSR for language toggle as it's above the fold
 });
 
@@ -26,8 +26,9 @@ type Lead = {
   relationship_insight?: string;
 };
 
-export default function DemoClientDashboard() {
+export default function LocalizedDemoClientDashboard() {
   const locale = useLocale();
+  const t = useTranslations();
   const isFrench = locale === 'fr';
   const [activeTab, setActiveTab] = useState<'active' | 'archived' | 'deleted' | 'converted'>('active');
   const [filter, setFilter] = useState({ urgency: 'all', language: 'all', minConfidence: 0 });
@@ -36,175 +37,115 @@ export default function DemoClientDashboard() {
   // Mock client data
   const mockClient = {
     businessName: isFrench ? 'Entreprise Démo Inc.' : 'Demo Business Inc.',
-    contactName: isFrench ? 'Jean Dupont' : 'John Smith',
-    email: 'michael@test.com',
+    industry: isFrench ? 'Technologie' : 'Technology',
+    region: isFrench ? 'Canada' : 'Canada'
   };
 
-  // Mock stats
-  const stats = {
-    total: 24,
-    avgConfidence: 0.87,
-    topIntent: isFrench ? 'Demande de Prix' : 'Quote Request',
-    highUrgency: 6,
-  };
-
-  // Mock leads data
+  // Mock leads data (same as original demo)
   const mockLeads: Lead[] = [
     {
       id: '1',
-      name: 'Construction Pro Inc.',
+      name: isFrench ? 'Construction Pro Inc.' : 'Construction Pro Inc.',
       email: 'contact@constructionpro.com',
-      message: 'We need a quote for commercial renovation services. Our project timeline is urgent.',
+      message: isFrench 
+        ? 'Nous avons besoin d\'un devis pour des services de rénovation commerciale. Notre échéancier de projet est urgent.'
+        : 'We need a quote for commercial renovation services. Our project timeline is urgent.',
       ai_summary: isFrench 
-        ? 'Client professionnel recherchant des services de rénovation commerciale avec échéancier serré.'
+        ? 'Client professionnel recherchant des services de rénovation commerciale avec un échéancier serré.'
         : 'Professional client seeking commercial renovation services with tight timeline.',
-      intent: isFrench ? 'Demande de Prix' : 'Quote Request',
+      intent: isFrench ? 'Demande de Devis' : 'Quote Request',
       tone: isFrench ? 'Professionnel' : 'Professional',
       urgency: isFrench ? 'Élevée' : 'High',
       confidence_score: 0.92,
-      timestamp: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
-      current_tag: isFrench ? 'Prioritaire' : 'Priority',
+      timestamp: '2025-10-20T13:06:25.000Z',
+      current_tag: isFrench ? 'Priorité' : 'Priority',
       language: 'EN',
       relationship_insight: isFrench 
-        ? 'Client potentiel à forte valeur avec besoin urgent'
+        ? 'Client potentiel à haute valeur avec besoin urgent'
         : 'High-value potential client with urgent need'
     },
     {
       id: '2',
-      name: 'RealtyMax Group',
+      name: isFrench ? 'Groupe RealtyMax' : 'RealtyMax Group',
       email: 'info@realtymax.ca',
-      message: 'Interested in your property management automation. Can we schedule a demo?',
-      ai_summary: isFrench
-        ? 'Client immobilier intéressé par l\'automatisation de la gestion immobilière.'
+      message: isFrench 
+        ? 'Intéressé par votre automatisation de gestion immobilière. Pouvons-nous planifier une démo?'
+        : 'Interested in your property management automation. Can we schedule a demo?',
+      ai_summary: isFrench 
+        ? 'Client immobilier intéressé par l\'automatisation de gestion immobilière.'
         : 'Real estate client interested in property management automation.',
       intent: isFrench ? 'Demande de Démo' : 'Demo Request',
       tone: isFrench ? 'Amical' : 'Friendly',
       urgency: isFrench ? 'Moyenne' : 'Medium',
       confidence_score: 0.85,
-      timestamp: new Date(Date.now() - 5 * 60 * 60 * 1000).toISOString(),
-      current_tag: null,
+      timestamp: '2025-10-20T10:06:25.000Z',
       language: 'EN',
-      relationship_insight: isFrench
+      relationship_insight: isFrench 
         ? 'Client engagé prêt pour une conversation de vente'
         : 'Engaged client ready for sales conversation'
     },
     {
       id: '3',
-      name: 'Metro Renovations',
+      name: isFrench ? 'Rénovations Metro' : 'Metro Renovations',
       email: 'contact@metroreno.com',
-      message: 'Looking for AI-powered lead qualification for our renovation business.',
-      ai_summary: isFrench
-        ? 'Entreprise de rénovation recherchant une qualification automatisée des leads.'
+      message: isFrench 
+        ? 'À la recherche d\'une qualification de leads alimentée par l\'IA pour notre entreprise de rénovation.'
+        : 'Looking for AI-powered lead qualification for our renovation business.',
+      ai_summary: isFrench 
+        ? 'Entreprise de rénovation recherchant une qualification de leads automatisée.'
         : 'Renovation company seeking automated lead qualification.',
       intent: isFrench ? 'Demande d\'Information' : 'Information Request',
       tone: isFrench ? 'Curieux' : 'Curious',
       urgency: isFrench ? 'Moyenne' : 'Medium',
       confidence_score: 0.78,
-      timestamp: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(),
+      timestamp: '2025-10-19T15:06:25.000Z',
       current_tag: isFrench ? 'Suivi' : 'Follow-up',
-      language: 'EN',
+      language: 'EN'
     },
     {
       id: '4',
-      name: 'Agence Marketing Plus',
+      name: isFrench ? 'Agence Marketing Plus' : 'Agence Marketing Plus',
       email: 'bonjour@marketingplus.ca',
-      message: 'Nous cherchons une solution d\'automatisation pour nos campagnes de génération de leads.',
-      ai_summary: isFrench
-        ? 'Agence marketing cherchant une automatisation pour la génération de leads.'
+      message: isFrench 
+        ? 'Nous cherchons une solution d\'automatisation pour nos campagnes de génération de leads.'
+        : 'Nous cherchons une solution d\'automatisation pour nos campagnes de génération de leads.',
+      ai_summary: isFrench 
+        ? 'Agence de marketing recherchant l\'automatisation pour les campagnes de génération de leads.'
         : 'Marketing agency seeking automation for lead generation campaigns.',
       intent: isFrench ? 'Consultation' : 'Consultation',
       tone: isFrench ? 'Professionnel' : 'Professional',
       urgency: isFrench ? 'Faible' : 'Low',
       confidence_score: 0.81,
-      timestamp: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
-      current_tag: null,
-      language: 'FR',
-    },
+      timestamp: '2025-10-18T15:06:25.000Z',
+      language: 'FR'
+    }
   ];
 
-  const t = {
-    dashboardTitle: isFrench ? 'Tableau de bord Client' : 'Client Dashboard',
-    subtitle: isFrench ? 'Tableau d\'intelligence en temps réel' : 'Real-time lead intelligence dashboard',
-    demoNotice: isFrench ? 'MODE DÉMO - Données d\'exemple' : 'DEMO MODE - Sample Data',
-    totalLeads: isFrench ? 'Total de Leads' : 'Total Leads',
-    avgConfidence: isFrench ? 'Confiance Moyenne' : 'Avg Confidence',
-    topIntent: isFrench ? 'Intention Principale' : 'Top Intent',
-    highUrgency: isFrench ? 'Urgence Élevée' : 'High Urgency',
-    apiAccess: isFrench ? '🔑 Accès API' : '🔑 API Access',
-    settings: isFrench ? '⚙️ Paramètres' : '⚙️ Settings',
-    name: isFrench ? 'Nom' : 'Name',
-    email: isFrench ? 'Courriel' : 'Email',
-    message: isFrench ? 'Message' : 'Message',
-    summary: isFrench ? 'Résumé IA' : 'AI Summary',
-    intent: isFrench ? 'Intention' : 'Intent',
-    tone: isFrench ? 'Ton' : 'Tone',
-    urgency: isFrench ? 'Urgence' : 'Urgency',
-    confidence: isFrench ? 'Confiance' : 'Confidence',
-    timestamp: isFrench ? 'Horodatage' : 'Timestamp',
-    language: isFrench ? 'Langue' : 'Language',
-    filters: {
-      all: isFrench ? 'Tous' : 'All',
-      urgency: isFrench ? 'Urgence' : 'Urgency',
-      high: isFrench ? 'Élevée' : 'High',
-      medium: isFrench ? 'Moyenne' : 'Medium',
-      low: isFrench ? 'Faible' : 'Low',
-      language: isFrench ? 'Langue' : 'Language',
-      minConfidence: isFrench ? 'Confiance Min' : 'Min Confidence',
-    },
-    tabs: {
-      active: isFrench ? 'Leads Actifs' : 'Active Leads',
-      archived: isFrench ? 'Leads Archivés' : 'Archived Leads',
-      deleted: isFrench ? 'Leads Supprimés' : 'Deleted Leads',
-      converted: isFrench ? 'Leads Convertis' : 'Converted Leads',
-    },
-    actions: {
-      tag: isFrench ? 'Étiqueter' : 'Tag',
-      archive: isFrench ? 'Archiver' : 'Archive',
-      delete: isFrench ? 'Supprimer' : 'Delete',
-      disabled: isFrench ? '(Désactivé en démo)' : '(Disabled in demo)',
-    },
-    footer: {
-      demo: isFrench 
-        ? 'Cette page est une démonstration en direct du tableau de bord client d\'Avenir AI Solutions.'
-        : 'This page is a live demo simulation of the Avenir AI Solutions client dashboard.',
-      copyright: isFrench
-        ? '© 2025 Avenir AI Solutions. Tous droits réservés.'
-        : '© 2025 Avenir AI Solutions. All rights reserved.',
-    },
+  // Calculate stats from mock data
+  const stats = {
+    total: mockLeads.length,
+    avgConfidence: mockLeads.reduce((sum, lead) => sum + lead.confidence_score, 0) / mockLeads.length,
+    topIntent: isFrench ? 'Demande de Devis' : 'Quote Request',
+    highUrgency: mockLeads.filter(lead => lead.urgency === (isFrench ? 'Élevée' : 'High')).length
   };
 
-  // Filter leads based on active filters
+  // Filter leads based on current filters
   const filteredLeads = mockLeads.filter(lead => {
-    if (filter.urgency !== 'all' && lead.urgency !== filter.urgency && 
-        !(filter.urgency === 'High' && lead.urgency === 'Élevée') &&
-        !(filter.urgency === 'Medium' && lead.urgency === 'Moyenne') &&
-        !(filter.urgency === 'Low' && lead.urgency === 'Faible')) {
-      return false;
-    }
-    if (filter.language !== 'all' && lead.language !== filter.language) {
-      return false;
-    }
-    if (lead.confidence_score < filter.minConfidence / 100) {
-      return false;
-    }
-    if (tagFilter !== 'all' && lead.current_tag !== tagFilter) {
-      return false;
-    }
+    if (filter.urgency !== 'all' && lead.urgency !== filter.urgency) return false;
+    if (filter.language !== 'all' && lead.language !== filter.language) return false;
+    if (lead.confidence_score < filter.minConfidence) return false;
+    if (tagFilter !== 'all' && lead.current_tag !== tagFilter) return false;
     return true;
   });
 
   // Get tag badge color
-  function getTagBadgeColor(tag: string | null | undefined) {
-    if (!tag) return '';
-    switch (tag.toLowerCase()) {
-      case 'priority':
-      case 'prioritaire':
+  function getTagBadgeColor(tag: string) {
+    switch (tag) {
+      case isFrench ? 'Priorité' : 'Priority':
         return 'bg-red-500/20 border-red-500/40 text-red-400';
-      case 'follow-up':
-      case 'suivi':
+      case isFrench ? 'Suivi' : 'Follow-up':
         return 'bg-yellow-500/20 border-yellow-500/40 text-yellow-400';
-      case 'qualified':
-      case 'qualifié':
+      case isFrench ? 'Qualifié' : 'Qualified':
         return 'bg-green-500/20 border-green-500/40 text-green-400';
       default:
         return 'bg-blue-500/20 border-blue-500/40 text-blue-400';
@@ -222,11 +163,11 @@ export default function DemoClientDashboard() {
         <motion.div
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.4 }}
+          transition={{ duration: 0.6 }}
           className="mb-6 p-4 rounded-lg bg-yellow-500/10 border border-yellow-500/30 text-center"
         >
           <p className="text-yellow-300 font-semibold text-sm">
-            ⚠️ {t.demoNotice}
+            ⚠️ {isFrench ? 'MODE DÉMO - Données d\'exemple' : 'DEMO MODE - Sample Data'}
           </p>
         </motion.div>
 
@@ -238,24 +179,38 @@ export default function DemoClientDashboard() {
           className="mb-8 flex items-center justify-between flex-wrap gap-4"
         >
           <div>
-            <h1 className="text-heading mb-2">{t.dashboardTitle}</h1>
-            <p className="text-muted">{t.subtitle}</p>
-            <p className="text-muted text-sm mt-1">{mockClient.businessName}</p>
+            <h1 className="text-3xl font-bold mb-2">{isFrench ? 'Tableau de Bord Client' : 'Client Dashboard'}</h1>
+            <p className="text-white/60">{isFrench ? 'Tableau d\'intelligence en temps réel' : 'Real-time lead intelligence dashboard'}</p>
+            <p className="text-white/50 text-sm mt-1">{mockClient.businessName}</p>
           </div>
           <div className="flex items-center gap-3">
             <button
               disabled
-              className="px-4 py-2 rounded-lg bg-purple-500/20 border border-purple-500/40 text-purple-400/50 cursor-not-allowed transition-all duration-300 text-sm font-medium opacity-50"
-              title={t.actions.disabled}
+              className="px-4 py-2 rounded-lg bg-cyan-500/20 border border-cyan-500/40 text-cyan-400/50 cursor-not-allowed transition-all duration-300 text-sm font-medium opacity-50"
+              title={isFrench ? '(Désactivé en démo)' : '(Disabled in demo)'}
             >
-              {t.settings}
+              📊 {isFrench ? 'Analyses' : 'Insights'}
+            </button>
+            <button
+              disabled
+              className="px-4 py-2 rounded-lg bg-pink-500/20 border border-pink-500/40 text-pink-400/50 cursor-not-allowed transition-all duration-300 text-sm font-medium opacity-50"
+              title={isFrench ? '(Désactivé en démo)' : '(Disabled in demo)'}
+            >
+              🧠 {isFrench ? 'Intelligence de Prospection' : 'Prospect Intelligence'}
+            </button>
+            <button
+              disabled
+              className="px-4 py-2 rounded-lg bg-purple-500/20 border border-purple-500/40 text-purple-400/50 cursor-not-allowed transition-all duration-300 text-sm font-medium opacity-50"
+              title={isFrench ? '(Désactivé en démo)' : '(Disabled in demo)'}
+            >
+              ⚙️ {isFrench ? 'Paramètres' : 'Settings'}
             </button>
             <button
               disabled
               className="px-4 py-2 rounded-lg bg-cyan-500/20 border border-cyan-500/40 text-cyan-400/50 cursor-not-allowed transition-all duration-300 text-sm font-medium opacity-50"
-              title={t.actions.disabled}
+              title={isFrench ? '(Désactivé en démo)' : '(Disabled in demo)'}
             >
-              {t.apiAccess}
+              {isFrench ? '🔑 Accès API' : '🔑 API Access'}
             </button>
           </div>
         </motion.div>
@@ -273,7 +228,7 @@ export default function DemoClientDashboard() {
             transition={{ duration: 0.4, delay: 0.2 }}
             className="card-base card-hover p-4 bg-gradient-to-br from-blue-500/10 to-purple-500/10"
           >
-            <div className="text-muted mb-1">{t.totalLeads}</div>
+            <div className="text-muted mb-1">{isFrench ? 'Total des Leads' : 'Total Leads'}</div>
             <div className="text-3xl font-bold">{stats.total}</div>
           </motion.div>
           
@@ -283,7 +238,7 @@ export default function DemoClientDashboard() {
             transition={{ duration: 0.4, delay: 0.3 }}
             className="card-base card-hover p-4 bg-gradient-to-br from-blue-500/10 to-purple-500/10"
           >
-            <div className="text-muted mb-1">{t.avgConfidence}</div>
+            <div className="text-muted mb-1">{isFrench ? 'Confiance Moyenne' : 'Avg Confidence'}</div>
             <div className="text-3xl font-bold">{(stats.avgConfidence * 100).toFixed(0)}%</div>
           </motion.div>
           
@@ -293,7 +248,7 @@ export default function DemoClientDashboard() {
             transition={{ duration: 0.4, delay: 0.4 }}
             className="card-base card-hover p-4 bg-gradient-to-br from-blue-500/10 to-purple-500/10"
           >
-            <div className="text-muted mb-1">{t.topIntent}</div>
+            <div className="text-muted mb-1">{isFrench ? 'Intention Principale' : 'Top Intent'}</div>
             <div className="text-xl font-semibold truncate">{stats.topIntent}</div>
           </motion.div>
           
@@ -303,7 +258,7 @@ export default function DemoClientDashboard() {
             transition={{ duration: 0.4, delay: 0.5 }}
             className="card-base card-hover p-4 bg-gradient-to-br from-blue-500/10 to-purple-500/10"
           >
-            <div className="text-muted mb-1">{t.highUrgency}</div>
+            <div className="text-muted mb-1">{isFrench ? 'Urgence Élevée' : 'High Urgency'}</div>
             <div className="text-3xl font-bold text-red-400">{stats.highUrgency}</div>
           </motion.div>
         </motion.div>
@@ -312,31 +267,56 @@ export default function DemoClientDashboard() {
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          transition={{ duration: 0.6, delay: 0.25 }}
+          transition={{ duration: 0.6, delay: 0.3 }}
           className="mb-6 flex gap-2 border-b border-white/10"
         >
-          {(['active', 'archived', 'deleted', 'converted'] as const).map(tab => (
-            <button
-              key={tab}
-              onClick={() => setActiveTab(tab)}
-              className={`px-4 py-2 font-medium transition-all duration-200 border-b-2 ${
-                activeTab === tab
-                  ? tab === 'converted'
-                    ? 'border-green-500 text-green-400 shadow-[0_0_10px_rgba(34,197,94,0.5)]'
-                    : 'border-blue-500 text-blue-400 shadow-[0_0_10px_rgba(59,130,246,0.5)]'
-                  : 'border-transparent text-white/60 hover:text-white/80'
-              }`}
-            >
-              {t.tabs[tab]}
-            </button>
-          ))}
+          <button
+            onClick={() => setActiveTab('active')}
+            className={`px-4 py-2 font-medium transition-all duration-200 border-b-2 ${
+              activeTab === 'active' 
+                ? 'border-blue-500 text-blue-400 shadow-[0_0_10px_rgba(59,130,246,0.5)]' 
+                : 'border-transparent text-white/60 hover:text-white/80'
+            }`}
+          >
+            {isFrench ? 'Leads Actifs' : 'Active Leads'}
+          </button>
+          <button
+            onClick={() => setActiveTab('archived')}
+            className={`px-4 py-2 font-medium transition-all duration-200 border-b-2 ${
+              activeTab === 'archived' 
+                ? 'border-blue-500 text-blue-400 shadow-[0_0_10px_rgba(59,130,246,0.5)]' 
+                : 'border-transparent text-white/60 hover:text-white/80'
+            }`}
+          >
+            {isFrench ? 'Leads Archivés' : 'Archived Leads'}
+          </button>
+          <button
+            onClick={() => setActiveTab('deleted')}
+            className={`px-4 py-2 font-medium transition-all duration-200 border-b-2 ${
+              activeTab === 'deleted' 
+                ? 'border-blue-500 text-blue-400 shadow-[0_0_10px_rgba(59,130,246,0.5)]' 
+                : 'border-transparent text-white/60 hover:text-white/80'
+            }`}
+          >
+            {isFrench ? 'Leads Supprimés' : 'Deleted Leads'}
+          </button>
+          <button
+            onClick={() => setActiveTab('converted')}
+            className={`px-4 py-2 font-medium transition-all duration-200 border-b-2 ${
+              activeTab === 'converted' 
+                ? 'border-blue-500 text-blue-400 shadow-[0_0_10px_rgba(59,130,246,0.5)]' 
+                : 'border-transparent text-white/60 hover:text-white/80'
+            }`}
+          >
+            {isFrench ? 'Leads Convertis' : 'Converted Leads'}
+          </button>
         </motion.div>
 
         {/* Filters */}
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          transition={{ duration: 0.6, delay: 0.3 }}
+          transition={{ duration: 0.6, delay: 0.35 }}
           className="flex flex-wrap gap-3 mb-6"
         >
           <select
@@ -344,44 +324,41 @@ export default function DemoClientDashboard() {
             onChange={(e) => setFilter({ ...filter, urgency: e.target.value })}
             className="px-3 py-2 rounded-md bg-white/5 border border-white/10 text-sm hover:border-blue-400/40 transition-all"
           >
-            <option value="all">{t.filters.all} {t.filters.urgency}</option>
-            <option value="High">{t.filters.high}</option>
-            <option value="Medium">{t.filters.medium}</option>
-            <option value="Low">{t.filters.low}</option>
+            <option value="all">{isFrench ? 'Toute' : 'All'} {isFrench ? 'Urgence' : 'Urgency'}</option>
+            <option value={isFrench ? 'Élevée' : 'High'}>{isFrench ? 'Élevée' : 'High'}</option>
+            <option value={isFrench ? 'Moyenne' : 'Medium'}>{isFrench ? 'Moyenne' : 'Medium'}</option>
+            <option value={isFrench ? 'Faible' : 'Low'}>{isFrench ? 'Faible' : 'Low'}</option>
           </select>
-
           <select
             value={filter.language}
             onChange={(e) => setFilter({ ...filter, language: e.target.value })}
             className="px-3 py-2 rounded-md bg-white/5 border border-white/10 text-sm hover:border-blue-400/40 transition-all"
           >
-            <option value="all">{t.filters.all} {t.filters.language}</option>
+            <option value="all">{isFrench ? 'Toute' : 'All'} {isFrench ? 'Langue' : 'Language'}</option>
             <option value="EN">EN</option>
             <option value="FR">FR</option>
           </select>
-
           <div className="flex items-center gap-2">
-            <label className="text-sm text-white/70">{t.filters.minConfidence}:</label>
+            <label className="text-sm text-white/70">{isFrench ? 'Confiance Min' : 'Min Confidence'}:</label>
             <input
               type="range"
               min="0"
               max="100"
-              value={filter.minConfidence}
-              onChange={(e) => setFilter({ ...filter, minConfidence: parseInt(e.target.value) })}
+              value={filter.minConfidence * 100}
+              onChange={(e) => setFilter({ ...filter, minConfidence: parseInt(e.target.value) / 100 })}
               className="w-32"
             />
-            <span className="text-sm font-mono text-white/80 min-w-[3rem]">{filter.minConfidence}%</span>
+            <span className="text-sm font-mono text-white/80 min-w-[3rem]">{Math.round(filter.minConfidence * 100)}%</span>
           </div>
-
           <select
             value={tagFilter}
             onChange={(e) => setTagFilter(e.target.value)}
             className="px-3 py-2 rounded-md bg-white/5 border border-white/10 text-sm hover:border-blue-400/40 transition-all"
           >
-            <option value="all">{t.filters.all} Tags</option>
-            <option value="Priority">{isFrench ? 'Prioritaire' : 'Priority'}</option>
-            <option value="Follow-up">{isFrench ? 'Suivi' : 'Follow-up'}</option>
-            <option value="Qualified">{isFrench ? 'Qualifié' : 'Qualified'}</option>
+            <option value="all">{isFrench ? 'Tous' : 'All'} {isFrench ? 'Tags' : 'Tags'}</option>
+            <option value={isFrench ? 'Priorité' : 'Priority'}>{isFrench ? 'Priorité' : 'Priority'}</option>
+            <option value={isFrench ? 'Suivi' : 'Follow-up'}>{isFrench ? 'Suivi' : 'Follow-up'}</option>
+            <option value={isFrench ? 'Qualifié' : 'Qualified'}>{isFrench ? 'Qualifié' : 'Qualified'}</option>
           </select>
         </motion.div>
 
@@ -436,17 +413,17 @@ export default function DemoClientDashboard() {
             <div className="space-y-2 text-sm">
               <div className="flex items-center gap-3 p-2 rounded bg-white/5">
                 <span className="text-green-400">✓</span>
-                <span className="text-muted">{isFrench ? 'Lead tagué' : 'Lead tagged'}: Construction Pro Inc.</span>
+                <span className="text-muted">{isFrench ? 'Lead tagué' : 'Lead tagged'}: {isFrench ? 'Construction Pro Inc.' : 'Construction Pro Inc.'}</span>
                 <span className="text-muted text-xs ml-auto">2h {isFrench ? 'il y a' : 'ago'}</span>
               </div>
               <div className="flex items-center gap-3 p-2 rounded bg-white/5">
                 <span className="text-blue-400">→</span>
-                <span className="text-muted">{isFrench ? 'Nouveau lead reçu' : 'New lead received'}: RealtyMax Group</span>
+                <span className="text-muted">{isFrench ? 'Nouveau lead reçu' : 'New lead received'}: {isFrench ? 'Groupe RealtyMax' : 'RealtyMax Group'}</span>
                 <span className="text-muted text-xs ml-auto">5h {isFrench ? 'il y a' : 'ago'}</span>
               </div>
               <div className="flex items-center gap-3 p-2 rounded bg-white/5">
                 <span className="text-yellow-400">📦</span>
-                <span className="text-muted">{isFrench ? 'Lead archivé' : 'Lead archived'}: Old Prospect LLC</span>
+                <span className="text-muted">{isFrench ? 'Lead archivé' : 'Lead archived'}: {isFrench ? 'Ancien Prospect LLC' : 'Old Prospect LLC'}</span>
                 <span className="text-muted text-xs ml-auto">1d {isFrench ? 'il y a' : 'ago'}</span>
               </div>
             </div>
@@ -539,7 +516,7 @@ export default function DemoClientDashboard() {
             >
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 text-sm">
                 <div>
-                  <span className="text-muted text-xs block mb-1">{t.name}</span>
+                  <span className="text-muted text-xs block mb-1">{isFrench ? 'Nom' : 'Name'}</span>
                   <div className="flex items-center gap-2">
                     <p className="font-semibold">{lead.name}</p>
                     {lead.current_tag && (
@@ -550,41 +527,41 @@ export default function DemoClientDashboard() {
                   </div>
                 </div>
                 <div>
-                  <span className="text-muted text-xs block mb-1">{t.email}</span>
+                  <span className="text-muted text-xs block mb-1">{isFrench ? 'Email' : 'Email'}</span>
                   <p className="text-blue-400">{lead.email}</p>
                 </div>
                 <div>
-                  <span className="text-muted text-xs block mb-1">{t.language}</span>
+                  <span className="text-muted text-xs block mb-1">{isFrench ? 'Langue' : 'Language'}</span>
                   <p className="uppercase text-xs font-mono">{lead.language}</p>
                 </div>
                 <div className="md:col-span-2 lg:col-span-3">
-                  <span className="text-muted text-xs block mb-1">{t.message}</span>
+                  <span className="text-muted text-xs block mb-1">{isFrench ? 'Message' : 'Message'}</span>
                   <p className="text-body italic">&quot;{lead.message}&quot;</p>
                 </div>
                 <div className="md:col-span-2 lg:col-span-3">
-                  <span className="text-muted text-xs block mb-1">{t.summary}</span>
+                  <span className="text-muted text-xs block mb-1">{isFrench ? 'Résumé IA' : 'AI Summary'}</span>
                   <p className="text-body">{lead.ai_summary}</p>
                 </div>
                 <div>
-                  <span className="text-muted text-xs block mb-1">{t.intent}</span>
+                  <span className="text-muted text-xs block mb-1">{isFrench ? 'Intention' : 'Intent'}</span>
                   <p className="text-blue-300 font-medium">{lead.intent}</p>
                 </div>
                 <div>
-                  <span className="text-muted text-xs block mb-1">{t.tone}</span>
+                  <span className="text-muted text-xs block mb-1">{isFrench ? 'Ton' : 'Tone'}</span>
                   <p className="text-body">{lead.tone}</p>
                 </div>
                 <div>
-                  <span className="text-muted text-xs block mb-1">{t.urgency}</span>
+                  <span className="text-muted text-xs block mb-1">{isFrench ? 'Urgence' : 'Urgency'}</span>
                   <p className={
-                    lead.urgency === 'High' || lead.urgency === 'Élevée' ? 'text-red-400 font-semibold' :
-                    lead.urgency === 'Medium' || lead.urgency === 'Moyenne' ? 'text-yellow-400' :
+                    lead.urgency === (isFrench ? 'Élevée' : 'High') ? 'text-red-400 font-semibold' :
+                    lead.urgency === (isFrench ? 'Moyenne' : 'Medium') ? 'text-yellow-400' :
                     'text-green-400'
                   }>
                     {lead.urgency}
                   </p>
                 </div>
                 <div className="md:col-span-2 lg:col-span-3">
-                  <span className="text-muted text-xs block mb-1">{t.confidence}</span>
+                  <span className="text-muted text-xs block mb-1">{isFrench ? 'Confiance' : 'Confidence'}</span>
                   <div className="flex items-center gap-2">
                     <div className="flex-1 h-2 bg-white/10 rounded-full overflow-hidden">
                       <motion.div 
@@ -604,7 +581,7 @@ export default function DemoClientDashboard() {
                   </div>
                 )}
                 <div className="md:col-span-2 lg:col-span-3">
-                  <span className="text-muted text-xs block mb-1">{t.timestamp}</span>
+                  <span className="text-muted text-xs block mb-1">{isFrench ? 'Horodatage' : 'Timestamp'}</span>
                   <p className="text-xs font-mono text-muted">
                     {new Date(lead.timestamp).toLocaleString(isFrench ? 'fr-CA' : 'en-US')}
                   </p>
@@ -621,7 +598,7 @@ export default function DemoClientDashboard() {
                     🏷️
                   </button>
                   <span className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 bg-blue-600 text-white text-[0.9rem] rounded opacity-0 group-hover:opacity-100 transition-opacity duration-150 delay-150 whitespace-nowrap pointer-events-none z-10">
-                    {t.actions.tag} {t.actions.disabled}
+                    {isFrench ? 'Tagger' : 'Tag'} {isFrench ? '(Désactivé en démo)' : '(Disabled in demo)'}
                   </span>
                 </div>
                 <div className="relative group">
@@ -632,7 +609,7 @@ export default function DemoClientDashboard() {
                     📦
                   </button>
                   <span className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 bg-yellow-600 text-white text-[0.9rem] rounded opacity-0 group-hover:opacity-100 transition-opacity duration-150 delay-150 whitespace-nowrap pointer-events-none z-10">
-                    {t.actions.archive} {t.actions.disabled}
+                    {isFrench ? 'Archiver' : 'Archive'} {isFrench ? '(Désactivé en démo)' : '(Disabled in demo)'}
                   </span>
                 </div>
                 <div className="relative group">
@@ -643,7 +620,7 @@ export default function DemoClientDashboard() {
                     🗑️
                   </button>
                   <span className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 bg-red-600 text-white text-[0.9rem] rounded opacity-0 group-hover:opacity-100 transition-opacity duration-150 delay-150 whitespace-nowrap pointer-events-none z-10">
-                    {t.actions.delete} {t.actions.disabled}
+                    {isFrench ? 'Supprimer' : 'Delete'} {isFrench ? '(Désactivé en démo)' : '(Disabled in demo)'}
                   </span>
                 </div>
               </div>
@@ -661,8 +638,8 @@ export default function DemoClientDashboard() {
           {activeTab !== 'active' && (
             <div className="text-center py-12 text-muted">
               <p>{isFrench 
-                ? `Onglet "${t.tabs[activeTab]}" - Pas de données de démo disponibles`
-                : `"${t.tabs[activeTab]}" tab - No demo data available`}
+                ? `Onglet "${activeTab === 'archived' ? 'Archivés' : activeTab === 'deleted' ? 'Supprimés' : 'Convertis'}" - Pas de données de démo disponibles`
+                : `"${activeTab === 'archived' ? 'Archived' : activeTab === 'deleted' ? 'Deleted' : 'Converted'}" tab - No demo data available`}
               </p>
             </div>
           )}
@@ -677,10 +654,12 @@ export default function DemoClientDashboard() {
           className="mt-12 pt-8 border-t border-white/10 text-center"
         >
           <p className="text-muted text-sm mb-2">
-            {t.footer.demo}
+            {isFrench 
+              ? 'Cette page est une simulation de démo en direct du tableau de bord client Avenir AI Solutions.'
+              : 'This page is a live demo simulation of the Avenir AI Solutions client dashboard.'}
           </p>
           <p className="text-muted text-xs">
-            {t.footer.copyright}
+            {isFrench ? '© 2025 Avenir AI Solutions. Tous droits réservés.' : '© 2025 Avenir AI Solutions. All rights reserved.'}
           </p>
         </motion.div>
       </div>

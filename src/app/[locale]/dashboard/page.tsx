@@ -8,22 +8,54 @@ import UniversalLanguageToggle from "../../../components/UniversalLanguageToggle
 import { supabase } from "../../../lib/supabase";
 import type { LeadMemoryRecord } from "../../../lib/supabase";
 import type { LeadAction } from "../../api/lead-actions/route";
+import FallbackUI, { LoadingFallback, ErrorFallback, OfflineFallback } from "../../../components/FallbackUI";
+
+// Safe locale detection fallback
+function getSafeLocale(): string {
+  if (typeof window === 'undefined') return 'en';
+  
+  try {
+    // Try to get locale from URL path
+    const pathname = window.location.pathname;
+    const localeMatch = pathname.match(/^\/([a-z]{2})\//);
+    if (localeMatch && ['en', 'fr'].includes(localeMatch[1])) {
+      return localeMatch[1];
+    }
+    
+    // Fallback to localStorage
+    const storedLocale = localStorage.getItem('avenir_language');
+    if (storedLocale && ['en', 'fr'].includes(storedLocale)) {
+      return storedLocale;
+    }
+    
+    // Fallback to browser language
+    const browserLang = navigator.language.split('-')[0];
+    if (['en', 'fr'].includes(browserLang)) {
+      return browserLang;
+    }
+  } catch (error) {
+    console.warn('[Dashboard] Error detecting locale:', error);
+  }
+  
+  return 'en'; // Ultimate fallback
+}
 
 // Dynamic imports to prevent hydration mismatches
 const PredictiveGrowthEngine = dynamic(() => import("../../../components/PredictiveGrowthEngine"), { 
   ssr: false,
-  loading: () => <div className="h-32 animate-pulse bg-white/5 rounded-xl border border-white/10"></div>
+  loading: () => <LoadingFallback message="Loading growth engine..." />
 });
 const GrowthCopilot = dynamic(() => import("../../../components/GrowthCopilot"), { 
-  ssr: false 
+  ssr: false,
+  loading: () => <LoadingFallback message="Loading copilot..." />
 });
 const ActivityLog = dynamic(() => import("../../../components/ActivityLog"), { 
   ssr: false,
-  loading: () => <div className="h-24 animate-pulse bg-white/5 rounded-xl border border-white/10"></div>
+  loading: () => <LoadingFallback message="Loading activities..." />
 });
 const RelationshipInsights = dynamic(() => import("../../../components/RelationshipInsights"), { 
   ssr: false,
-  loading: () => <div className="h-48 animate-pulse bg-white/5 rounded-xl border border-white/10"></div>
+  loading: () => <LoadingFallback message="Loading insights..." />
 });
 
 type TranslatedLead = LeadMemoryRecord & {
@@ -38,6 +70,9 @@ type TranslatedLead = LeadMemoryRecord & {
 export default function Dashboard() {
   const t = useTranslations();
   const locale = useLocale();
+  
+  // Safe locale fallback for client-side operations
+  const safeLocale = typeof window !== 'undefined' ? getSafeLocale() : locale;
   const [authorized, setAuthorized] = useState(false);
   const [password, setPassword] = useState("");
   const [authError, setAuthError] = useState("");
@@ -68,6 +103,8 @@ export default function Dashboard() {
     archived: 0,
     deleted: 0
   });
+  const [isOffline, setIsOffline] = useState(false);
+  const [hasError, setHasError] = useState(false);
   
   // Pagination state for leads
   const [currentPage, setCurrentPage] = useState(1);
@@ -79,6 +116,23 @@ export default function Dashboard() {
     if (savedAuth === 'true') {
       setAuthorized(true);
     }
+  }, []);
+
+  // Offline detection
+  useEffect(() => {
+    const handleOnline = () => setIsOffline(false);
+    const handleOffline = () => setIsOffline(true);
+    
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+    
+    // Check initial state
+    setIsOffline(!navigator.onLine);
+    
+    return () => {
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+    };
   }, []);
 
   useEffect(() => {
@@ -194,6 +248,14 @@ export default function Dashboard() {
   async function fetchLeads() {
     try {
       setLoading(true);
+      setHasError(false);
+      
+      // Check if offline
+      if (isOffline) {
+        console.warn('[Dashboard] Offline - skipping fetch');
+        return;
+      }
+      
       let endpoint = '';
       switch (activeTab) {
         case 'active':
@@ -213,17 +275,20 @@ export default function Dashboard() {
       // Add client filter if selected
       if (selectedClientId !== 'all') {
         endpoint += `&clientId=${selectedClientId}`;
-        console.log('[CommandCenter] ============================================');
-        console.log('[CommandCenter] Client filter ACTIVE');
-        console.log(`[CommandCenter] Filtering by client_id: ${selectedClientId}`);
-        console.log(`[CommandCenter] Selected client: ${clients.find(c => c.client_id === selectedClientId)?.business_name || 'Unknown'}`);
-        console.log('[CommandCenter] ============================================');
       }
       
       console.log(`[Dashboard] Fetching ${activeTab} leads...`);
       console.log(`[Dashboard] Endpoint: ${endpoint}`);
       
-      const res = await fetch(endpoint, { cache: 'no-store' });
+      const res = await fetch(endpoint, { 
+        cache: 'no-store',
+        signal: AbortSignal.timeout(10000) // 10 second timeout
+      });
+      
+      if (!res.ok) {
+        throw new Error(`HTTP ${res.status}: ${res.statusText}`);
+      }
+      
       const json = await res.json();
       
       if (json.success) {
@@ -239,19 +304,27 @@ export default function Dashboard() {
           console.log(`[Dashboard] After converted filter: ${leadsData.length} leads`);
         }
         
-        // If client filter is active, confirm filtering worked
-        if (selectedClientId !== 'all') {
-          console.log('[CommandCenter] ✅ Client-filtered leads count:', leadsData.length);
-          console.log('[CommandCenter] Updating metrics for filtered view...');
-        }
-        
         setLeads(leadsData);
         calculateStats(leadsData);
         calculateCommandCenterMetrics(leadsData);
         console.log(`[Dashboard] ✅ Loaded ${leadsData.length} ${activeTab} leads`);
+      } else {
+        throw new Error(json.error || 'Failed to fetch leads');
       }
     } catch (err) {
       console.error('Failed to fetch leads:', err);
+      setHasError(true);
+      
+      // Show user-friendly error message
+      if (err instanceof Error) {
+        if (err.name === 'AbortError') {
+          showToast(safeLocale === 'fr' ? 'Délai d\'attente dépassé' : 'Request timeout');
+        } else if (err.message.includes('Failed to fetch')) {
+          showToast(safeLocale === 'fr' ? 'Erreur de connexion' : 'Connection error');
+        } else {
+          showToast(safeLocale === 'fr' ? 'Erreur lors du chargement' : 'Loading error');
+        }
+      }
     } finally {
       setLoading(false);
     }
@@ -803,10 +876,13 @@ export default function Dashboard() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-black text-white">
-        <div className="text-center">
-          <div className="animate-spin h-8 w-8 border-4 border-blue-500 border-t-transparent rounded-full mx-auto mb-4"></div>
-          <p>Loading...</p>
+      <div className="min-h-screen bg-black text-white">
+        <UniversalLanguageToggle />
+        <div className="max-w-7xl mx-auto p-8">
+          <LoadingFallback 
+            message={safeLocale === 'fr' ? 'Chargement du tableau de bord...' : 'Loading dashboard...'} 
+            className="min-h-[60vh]"
+          />
         </div>
       </div>
     );
@@ -960,6 +1036,29 @@ export default function Dashboard() {
           </div>
         </motion.div>
 
+        {/* Offline Banner */}
+        {isOffline && (
+          <motion.div
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="mb-6 p-4 bg-yellow-500/20 border border-yellow-500/40 rounded-lg"
+          >
+            <div className="flex items-center gap-3">
+              <span className="text-2xl">🔌</span>
+              <div>
+                <div className="font-semibold text-yellow-400">
+                  {safeLocale === 'fr' ? 'Mode hors ligne' : 'Offline Mode'}
+                </div>
+                <div className="text-sm text-yellow-300">
+                  {safeLocale === 'fr' 
+                    ? 'Connexion temporairement indisponible. Les données peuvent ne pas être à jour.' 
+                    : 'Connection temporarily unavailable. Data may not be up to date.'}
+                </div>
+              </div>
+            </div>
+          </motion.div>
+        )}
+
         {/* Stats Summary */}
         <motion.div
           initial={{ opacity: 0 }}
@@ -967,20 +1066,20 @@ export default function Dashboard() {
           transition={{ duration: 0.6, delay: 0.2 }}
           className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8"
         >
-          <div className="rounded-lg border border-white/10 p-4 bg-gradient-to-br from-blue-500/10 to-purple-500/10 hover:border-blue-400/30 transition-all">
-            <div className="text-sm text-white/60 mb-1">{t('dashboard.stats.totalLeads')}</div>
+          <div className="card-base card-hover p-4 bg-gradient-to-br from-blue-500/10 to-purple-500/10">
+            <div className="text-muted mb-1">{t('dashboard.stats.totalLeads')}</div>
             <div className="text-3xl font-bold">{stats.total}</div>
           </div>
-          <div className="rounded-lg border border-white/10 p-4 bg-gradient-to-br from-blue-500/10 to-purple-500/10 hover:border-blue-400/30 transition-all">
-            <div className="text-sm text-white/60 mb-1">{t('dashboard.stats.avgConfidence')}</div>
+          <div className="card-base card-hover p-4 bg-gradient-to-br from-blue-500/10 to-purple-500/10">
+            <div className="text-muted mb-1">{t('dashboard.stats.avgConfidence')}</div>
             <div className="text-3xl font-bold">{(stats.avgConfidence * 100).toFixed(0)}%</div>
           </div>
-          <div className="rounded-lg border border-white/10 p-4 bg-gradient-to-br from-blue-500/10 to-purple-500/10 hover:border-blue-400/30 transition-all">
-            <div className="text-sm text-white/60 mb-1">{t('dashboard.stats.topIntent')}</div>
+          <div className="card-base card-hover p-4 bg-gradient-to-br from-blue-500/10 to-purple-500/10">
+            <div className="text-muted mb-1">{t('dashboard.stats.topIntent')}</div>
             <div className="text-xl font-semibold truncate">{stats.topIntent}</div>
           </div>
-          <div className="rounded-lg border border-white/10 p-4 bg-gradient-to-br from-blue-500/10 to-purple-500/10 hover:border-blue-400/30 transition-all">
-            <div className="text-sm text-white/60 mb-1">{t('dashboard.stats.highUrgency')}</div>
+          <div className="card-base card-hover p-4 bg-gradient-to-br from-blue-500/10 to-purple-500/10">
+            <div className="text-muted mb-1">{t('dashboard.stats.highUrgency')}</div>
             <div className="text-3xl font-bold text-red-400">{stats.highUrgency}</div>
           </div>
         </motion.div>
@@ -1273,9 +1372,25 @@ export default function Dashboard() {
             </motion.div>
           ))}
 
-          {filteredLeads.length === 0 && (
-            <div className="text-center py-12 text-white/50">
-              {t('dashboard.table.noResults')}
+          {filteredLeads.length === 0 && !loading && (
+            <div className="text-center py-12">
+              {hasError ? (
+                <ErrorFallback 
+                  message={safeLocale === 'fr' 
+                    ? 'Impossible de charger les leads. Vérifiez votre connexion.' 
+                    : 'Unable to load leads. Please check your connection.'}
+                  onRetry={() => {
+                    setHasError(false);
+                    fetchLeads();
+                  }}
+                />
+              ) : isOffline ? (
+                <OfflineFallback />
+              ) : (
+                <div className="text-white/50">
+                  {t('dashboard.table.noResults')}
+                </div>
+              )}
             </div>
           )}
         </motion.div>

@@ -727,17 +727,9 @@ export async function POST(req: NextRequest) {
 				console.error('[AI Intelligence] Error type:', enrichError instanceof Error ? enrichError.constructor.name : typeof enrichError);
 				console.error('[AI Intelligence] Error message:', enrichError instanceof Error ? enrichError.message : String(enrichError));
 				console.error('[AI Intelligence] Error stack:', enrichError instanceof Error ? enrichError.stack : 'N/A');
-				console.error('[AI Intelligence] Full error object:', enrichError);
-				console.error('[Lead API] ============================================');
-				console.warn('[AI Intelligence] Continuing without enrichment (non-fatal)');
-			}
-		} catch (sheetsError) {
-			const msg = sheetsError instanceof Error ? sheetsError.message : "Failed to append to Google Sheet";
-			console.error('[Lead API] ❌ Google Sheets error:', msg);
-			return new Response(
-				JSON.stringify({ success: false, error: msg }),
-				{ status: 500, headers: { "Content-Type": "application/json" } }
-			);
+			console.error('[AI Intelligence] Full error object:', enrichError);
+			console.error('[Lead API] ============================================');
+			console.warn('[AI Intelligence] Continuing without enrichment (non-fatal)');
 		}
 
 		console.log('[Lead API] ============================================');
@@ -749,7 +741,15 @@ export async function POST(req: NextRequest) {
 			JSON.stringify({ success: true, storage: savedVia, action: "inserted" }),
 			{ status: 200, headers: { "Content-Type": "application/json" } }
 		);
-	} catch (error) {
+	} catch (sheetsError) {
+			const msg = sheetsError instanceof Error ? sheetsError.message : "Failed to append to Google Sheet";
+			console.error('[Lead API] ❌ Google Sheets error:', msg);
+			return new Response(
+				JSON.stringify({ success: false, error: msg }),
+				{ status: 500, headers: { "Content-Type": "application/json" } }
+		);
+	}
+} catch (error) {
 		const message = error instanceof Error ? error.message : "Unknown error";
 		console.error('[Lead API] ============================================');
 		console.error('[Lead API] ❌ FATAL ERROR');

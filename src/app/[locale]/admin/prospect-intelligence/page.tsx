@@ -6,6 +6,7 @@ import { motion } from 'framer-motion';
 import UniversalLanguageToggle from '../../../../components/UniversalLanguageToggle';
 import ProspectProofModal from '../../../../components/ProspectProofModal';
 import EmailPreviewModal from '../../../../components/EmailPreviewModal';
+import { translateIndustry } from '../../../../lib/translateIndustryFR';
 
 interface ProspectCandidate {
   id: string;
@@ -156,32 +157,20 @@ export default function ProspectIntelligencePage() {
     testDataLabel: isFrench ? '🧪 Données de test' : '🧪 Test Data',
   };
 
-  // Industry translations (EN → FR)
-  const industryTranslations: Record<string, string> = {
-    'Construction': 'Construction',
-    'Real Estate': 'Immobilier',
-    'Marketing': 'Marketing',
-    'Technology': 'Technologie',
-    'Finance': 'Finance',
-    'Legal': 'Juridique',
-    'Healthcare': 'Santé',
-    'Education': 'Éducation',
-    'Retail': 'Commerce de détail',
-    'Hospitality': 'Hôtellerie',
-    'Manufacturing': 'Fabrication',
-    'Consulting': 'Conseil',
-    'Insurance': 'Assurance',
-    'Automotive': 'Automobile',
-    'Home Services': 'Services à domicile',
-    'Events': 'Événements',
-  };
-
-  const translateIndustry = (industry: string | undefined): string => {
+  // Enhanced industry translation using the comprehensive helper
+  const translateIndustryDisplay = (industry: string | undefined): string => {
     if (!industry) return 'N/A';
-    if (isFrench && industryTranslations[industry]) {
-      return industryTranslations[industry];
+    
+    // Use the comprehensive translation helper
+    const translated = translateIndustry(industry);
+    
+    // If we're in French mode, return the translated version
+    if (isFrench) {
+      return translated;
     }
-    return industry;
+    
+    // For English mode, ensure proper capitalization
+    return industry.charAt(0).toUpperCase() + industry.slice(1).toLowerCase();
   };
 
   // Load server configuration on mount
@@ -1019,7 +1008,7 @@ export default function ProspectIntelligencePage() {
                         </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="text-sm text-white/70">{translateIndustry(prospect.industry)}</div>
+                        <div className="text-sm text-white/70">{translateIndustryDisplay(prospect.industry)}</div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="text-sm text-white/70">{prospect.region || 'N/A'}</div>
@@ -1166,7 +1155,7 @@ export default function ProspectIntelligencePage() {
               business_name: selectedProspect.business_name,
               website: selectedProspect.website,
               contact_email: selectedProspect.contact_email,
-              industry: selectedProspect.industry || 'Unknown',
+              industry: translateIndustryDisplay(selectedProspect.industry) || 'Unknown',
             }}
             testMode={config.testMode}
             onSendSuccess={handleEmailSendSuccess}

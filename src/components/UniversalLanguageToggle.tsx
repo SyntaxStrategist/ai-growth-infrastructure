@@ -1,11 +1,11 @@
 "use client";
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, memo, useCallback } from 'react';
 import { useLocale } from 'next-intl';
 import { usePathname, useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 
-export default function UniversalLanguageToggle() {
+const UniversalLanguageToggle = memo(function UniversalLanguageToggle() {
   const locale = useLocale();
   const pathname = usePathname();
   const router = useRouter();
@@ -19,51 +19,30 @@ export default function UniversalLanguageToggle() {
     setMounted(true);
   }, []);
 
-  if (!mounted) {
-    return (
-      <div 
-        className="fixed top-4 right-4 z-[20]"
-        style={{ marginTop: '0.5rem', marginRight: '0.5rem' }}
-      >
-        <div className="flex items-center gap-3 px-5 py-3 rounded-xl bg-white/10 shadow-lg backdrop-blur-sm border border-white/20">
-          <div className="w-12 h-7 bg-white/20 rounded animate-pulse"></div>
-          <div className="w-12 h-7 bg-white/20 rounded animate-pulse"></div>
-        </div>
-      </div>
-    );
-  }
-
-  const switchLanguage = async (newLocale: 'en' | 'fr') => {
+  const switchLanguage = useCallback(async (newLocale: 'en' | 'fr') => {
     if (newLocale === locale) return;
-
-    console.log('[UniversalLanguageToggle] ============================================');
-    console.log('[UniversalLanguageToggle] Switching language from', locale, 'to', newLocale);
 
     // Save to localStorage
     localStorage.setItem('avenir_language', newLocale);
-    console.log('[UniversalLanguageToggle] ✅ Saved to localStorage');
 
     // Set cookie for middleware detection
     document.cookie = `avenir_language=${newLocale}; path=/; max-age=31536000; SameSite=Lax`;
-    console.log('[UniversalLanguageToggle] ✅ Cookie set for middleware');
 
-    // Update Supabase if user is logged in
+    // Update Supabase if user is logged in (only if not in safe mode)
     const clientId = localStorage.getItem('clientId');
-    if (clientId) {
+    if (clientId && typeof window !== 'undefined') {
       try {
-        console.log('[UniversalLanguageToggle] Updating Supabase for client:', clientId);
-        
         const response = await fetch('/api/client/update-language', {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ clientId, language: newLocale }),
         });
 
-        if (response.ok) {
-          console.log('[UniversalLanguageToggle] ✅ Language preference saved to Supabase');
+        if (!response.ok) {
+          console.warn('[UniversalLanguageToggle] Failed to save language preference to Supabase');
         }
       } catch (error) {
-        console.error('[UniversalLanguageToggle] Failed to save preference:', error);
+        console.warn('[UniversalLanguageToggle] Failed to save preference:', error);
       }
     }
 
@@ -84,9 +63,22 @@ export default function UniversalLanguageToggle() {
     }
     
     const newPath = '/' + segments.join('/');
-    console.log('[UniversalLanguageToggle] Navigating to:', newPath);
     router.push(newPath);
-  };
+  }, [locale, pathname, router]);
+
+  if (!mounted) {
+    return (
+      <div 
+        className="fixed top-4 right-4 z-[20]"
+        style={{ marginTop: '0.5rem', marginRight: '0.5rem' }}
+      >
+        <div className="flex items-center gap-3 px-5 py-3 rounded-xl bg-white/10 shadow-lg backdrop-blur-sm border border-white/20">
+          <div className="w-12 h-7 bg-white/20 rounded loading-shimmer"></div>
+          <div className="w-12 h-7 bg-white/20 rounded loading-shimmer"></div>
+        </div>
+      </div>
+    );
+  }
 
   const tooltipText = locale === 'fr' ? 'Mode Français' : 'English Mode';
 
@@ -161,5 +153,7 @@ export default function UniversalLanguageToggle() {
       </div>
     </>
   );
-}
+});
+
+export default UniversalLanguageToggle;
 

@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable prefer-const */
 import { createClient } from '@supabase/supabase-js';
+import { createFailoverSupabaseClient, getFailoverStatus } from './failover';
 
 export type HistoryEntry = {
   value: string | number;
@@ -78,16 +79,34 @@ if (!isConfigured) {
   console.warn('[Supabase] Missing SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY - database features disabled');
 }
 
+// Log which key is being used for debugging
+if (process.env.SUPABASE_SERVICE_ROLE_KEY) {
+  console.log('[Supabase] Using service role key for full database access');
+} else if (process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
+  console.warn('[Supabase] Using anon key - may be limited by RLS policies');
+} else {
+  console.error('[Supabase] No valid Supabase key found');
+}
+
 function createSupabaseClient() {
-  return createClient(supabaseUrl, supabaseKey, {
-    auth: {
-      persistSession: false,
-      autoRefreshToken: false,
-    },
-  });
+  // Try to use failover client first, fall back to direct client
+  try {
+    return createFailoverSupabaseClient();
+  } catch (error) {
+    console.warn('[Supabase] Failover client not available, using direct client:', error instanceof Error ? error.message : error);
+    return createClient(supabaseUrl, supabaseKey, {
+      auth: {
+        persistSession: false,
+        autoRefreshToken: false,
+      },
+    });
+  }
 }
 
 export let supabase = createSupabaseClient();
+
+// Export failover status for monitoring
+export { getFailoverStatus };
 
 let tableCheckCompleted = false;
 

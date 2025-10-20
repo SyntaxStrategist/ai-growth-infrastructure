@@ -1,0 +1,912 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Avenir AI Solutions - Local Links Reference</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #fff;
+        }
+        h1 {
+            color: #2563eb;
+            border-bottom: 3px solid #2563eb;
+            padding-bottom: 10px;
+            margin-bottom: 30px;
+        }
+        h2 {
+            color: #1e40af;
+            margin-top: 40px;
+            margin-bottom: 20px;
+            border-left: 4px solid #2563eb;
+            padding-left: 15px;
+        }
+        h3 {
+            color: #374151;
+            margin-top: 30px;
+            margin-bottom: 15px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        th {
+            background: #2563eb;
+            color: white;
+            padding: 12px;
+            text-align: left;
+            font-weight: 600;
+        }
+        td {
+            padding: 12px;
+            border-bottom: 1px solid #e5e7eb;
+        }
+        tr:nth-child(even) {
+            background: #f9fafb;
+        }
+        tr:hover {
+            background: #f3f4f6;
+        }
+        code {
+            background: #f3f4f6;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: 'Monaco', 'Menlo', monospace;
+            font-size: 0.9em;
+        }
+        pre {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 6px;
+            padding: 15px;
+            overflow-x: auto;
+            margin: 15px 0;
+        }
+        pre code {
+            background: none;
+            padding: 0;
+        }
+        .method-get { color: #059669; font-weight: bold; }
+        .method-post { color: #dc2626; font-weight: bold; }
+        .method-put { color: #d97706; font-weight: bold; }
+        .method-delete { color: #dc2626; font-weight: bold; }
+        .method-patch { color: #7c3aed; font-weight: bold; }
+        .url {
+            font-family: 'Monaco', 'Menlo', monospace;
+            background: #f0f9ff;
+            padding: 2px 6px;
+            border-radius: 4px;
+            color: #0369a1;
+        }
+        .note {
+            background: #fef3c7;
+            border-left: 4px solid #f59e0b;
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 0 6px 6px 0;
+        }
+        .stats {
+            background: #ecfdf5;
+            border: 1px solid #10b981;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+            text-align: center;
+        }
+        .stats h3 {
+            margin-top: 0;
+            color: #047857;
+        }
+        .footer {
+            margin-top: 50px;
+            padding-top: 20px;
+            border-top: 2px solid #e5e7eb;
+            text-align: center;
+            color: #6b7280;
+            font-size: 0.9em;
+        }
+    </style>
+</head>
+<body>
+    <h1>Avenir AI Solutions - Local Links Reference</h1>
+    
+    <div class="stats">
+        <h3>📊 Route Statistics</h3>
+        <p><strong>18 Frontend Pages</strong> | <strong>42 API Endpoints</strong> | <strong>2 Languages (EN/FR)</strong></p>
+    </div>
+
+    <h2>🌐 Overview</h2>
+    <p>This document provides a comprehensive reference of all routes and endpoints in the Avenir AI Solutions Next.js application, including both frontend pages and API endpoints.</p>
+    <p><strong>Base URL:</strong> <code>http://localhost:3000</code></p>
+
+    <h2>📱 Frontend Routes (Pages)</h2>
+    
+    <h3>🌍 Public Routes</h3>
+    <table>
+        <thead>
+            <tr>
+                <th>Route</th>
+                <th>Description</th>
+                <th>Method</th>
+                <th>Notes</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><code>/</code></td>
+                <td>Root redirect</td>
+                <td><span class="method-get">GET</span></td>
+                <td>Redirects to <code>/en</code></td>
+            </tr>
+            <tr>
+                <td><code>/en</code></td>
+                <td>English homepage</td>
+                <td><span class="method-get">GET</span></td>
+                <td>Main landing page with AI chat</td>
+            </tr>
+            <tr>
+                <td><code>/fr</code></td>
+                <td>French homepage</td>
+                <td><span class="method-get">GET</span></td>
+                <td>Page d'accueil française avec chat IA</td>
+            </tr>
+            <tr>
+                <td><code>/demo</code></td>
+                <td>Demo page</td>
+                <td><span class="method-get">GET</span></td>
+                <td>Demo/example page</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <h3>👤 Client Routes (Localized)</h3>
+    <table>
+        <thead>
+            <tr>
+                <th>Route</th>
+                <th>Description</th>
+                <th>Method</th>
+                <th>Notes</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><code>/en/client/signup</code></td>
+                <td>Client registration (EN)</td>
+                <td><span class="method-get">GET</span></td>
+                <td>Client signup form</td>
+            </tr>
+            <tr>
+                <td><code>/fr/client/signup</code></td>
+                <td>Client registration (FR)</td>
+                <td><span class="method-get">GET</span></td>
+                <td>Formulaire d'inscription client</td>
+            </tr>
+            <tr>
+                <td><code>/en/client/login</code></td>
+                <td>Client login (EN)</td>
+                <td><span class="method-get">GET</span></td>
+                <td>Client authentication</td>
+            </tr>
+            <tr>
+                <td><code>/fr/client/login</code></td>
+                <td>Client login (FR)</td>
+                <td><span class="method-get">GET</span></td>
+                <td>Authentification client</td>
+            </tr>
+            <tr>
+                <td><code>/en/client/dashboard</code></td>
+                <td>Client dashboard (EN)</td>
+                <td><span class="method-get">GET</span></td>
+                <td>Main client interface</td>
+            </tr>
+            <tr>
+                <td><code>/fr/client/dashboard</code></td>
+                <td>Client dashboard (FR)</td>
+                <td><span class="method-get">GET</span></td>
+                <td>Interface client principale</td>
+            </tr>
+            <tr>
+                <td><code>/en/client/settings</code></td>
+                <td>Client settings (EN)</td>
+                <td><span class="method-get">GET</span></td>
+                <td>Client configuration</td>
+            </tr>
+            <tr>
+                <td><code>/fr/client/settings</code></td>
+                <td>Client settings (FR)</td>
+                <td><span class="method-get">GET</span></td>
+                <td>Configuration client</td>
+            </tr>
+            <tr>
+                <td><code>/en/client/api-access</code></td>
+                <td>API access page (EN)</td>
+                <td><span class="method-get">GET</span></td>
+                <td>API key management</td>
+            </tr>
+            <tr>
+                <td><code>/fr/client/api-access</code></td>
+                <td>API access page (FR)</td>
+                <td><span class="method-get">GET</span></td>
+                <td>Gestion des clés API</td>
+            </tr>
+            <tr>
+                <td><code>/en/client/insights</code></td>
+                <td>Client insights (EN)</td>
+                <td><span class="method-get">GET</span></td>
+                <td>Analytics and insights</td>
+            </tr>
+            <tr>
+                <td><code>/fr/client/insights</code></td>
+                <td>Client insights (FR)</td>
+                <td><span class="method-get">GET</span></td>
+                <td>Analyses et insights</td>
+            </tr>
+            <tr>
+                <td><code>/en/client/prospect-intelligence</code></td>
+                <td>Prospect intelligence (EN)</td>
+                <td><span class="method-get">GET</span></td>
+                <td>AI prospect analysis</td>
+            </tr>
+            <tr>
+                <td><code>/fr/client/prospect-intelligence</code></td>
+                <td>Prospect intelligence (FR)</td>
+                <td><span class="method-get">GET</span></td>
+                <td>Analyse IA des prospects</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <h3>⚙️ Admin Routes (Localized)</h3>
+    <table>
+        <thead>
+            <tr>
+                <th>Route</th>
+                <th>Description</th>
+                <th>Method</th>
+                <th>Notes</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><code>/en/admin/login</code></td>
+                <td>Admin login (EN)</td>
+                <td><span class="method-get">GET</span></td>
+                <td>Administrator authentication</td>
+            </tr>
+            <tr>
+                <td><code>/fr/admin/login</code></td>
+                <td>Admin login (FR)</td>
+                <td><span class="method-get">GET</span></td>
+                <td>Authentification administrateur</td>
+            </tr>
+            <tr>
+                <td><code>/en/admin/settings</code></td>
+                <td>Admin settings (EN)</td>
+                <td><span class="method-get">GET</span></td>
+                <td>System configuration</td>
+            </tr>
+            <tr>
+                <td><code>/fr/admin/settings</code></td>
+                <td>Admin settings (FR)</td>
+                <td><span class="method-get">GET</span></td>
+                <td>Configuration système</td>
+            </tr>
+            <tr>
+                <td><code>/en/admin/prospect-intelligence</code></td>
+                <td>Admin prospect intelligence (EN)</td>
+                <td><span class="method-get">GET</span></td>
+                <td>Admin prospect analysis</td>
+            </tr>
+            <tr>
+                <td><code>/fr/admin/prospect-intelligence</code></td>
+                <td>Admin prospect intelligence (FR)</td>
+                <td><span class="method-get">GET</span></td>
+                <td>Analyse admin des prospects</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <h3>📊 Dashboard Routes (Localized)</h3>
+    <table>
+        <thead>
+            <tr>
+                <th>Route</th>
+                <th>Description</th>
+                <th>Method</th>
+                <th>Notes</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><code>/en/dashboard</code></td>
+                <td>Main dashboard (EN)</td>
+                <td><span class="method-get">GET</span></td>
+                <td>Primary admin dashboard</td>
+            </tr>
+            <tr>
+                <td><code>/fr/dashboard</code></td>
+                <td>Main dashboard (FR)</td>
+                <td><span class="method-get">GET</span></td>
+                <td>Tableau de bord principal</td>
+            </tr>
+            <tr>
+                <td><code>/en/dashboard/clients</code></td>
+                <td>Client management (EN)</td>
+                <td><span class="method-get">GET</span></td>
+                <td>Client list and management</td>
+            </tr>
+            <tr>
+                <td><code>/fr/dashboard/clients</code></td>
+                <td>Client management (FR)</td>
+                <td><span class="method-get">GET</span></td>
+                <td>Liste et gestion des clients</td>
+            </tr>
+            <tr>
+                <td><code>/en/dashboard/insights</code></td>
+                <td>Dashboard insights (EN)</td>
+                <td><span class="method-get">GET</span></td>
+                <td>System analytics</td>
+            </tr>
+            <tr>
+                <td><code>/fr/dashboard/insights</code></td>
+                <td>Dashboard insights (FR)</td>
+                <td><span class="method-get">GET</span></td>
+                <td>Analyses système</td>
+            </tr>
+            <tr>
+                <td><code>/en/dashboard/outreach</code></td>
+                <td>Outreach management (EN)</td>
+                <td><span class="method-get">GET</span></td>
+                <td>Email outreach tools</td>
+            </tr>
+            <tr>
+                <td><code>/fr/dashboard/outreach</code></td>
+                <td>Outreach management (FR)</td>
+                <td><span class="method-get">GET</span></td>
+                <td>Outils d'email outreach</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <h2>🔌 API Endpoints</h2>
+    
+    <h3>🔐 Authentication & Authorization</h3>
+    <table>
+        <thead>
+            <tr>
+                <th>Route</th>
+                <th>Description</th>
+                <th>Method</th>
+                <th>Notes</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><code>/api/auth-dashboard</code></td>
+                <td>Dashboard authentication</td>
+                <td><span class="method-post">POST</span></td>
+                <td>Admin login endpoint</td>
+            </tr>
+            <tr>
+                <td><code>/api/client-auth</code></td>
+                <td>Client authentication</td>
+                <td><span class="method-post">POST</span></td>
+                <td>Client login endpoint</td>
+            </tr>
+            <tr>
+                <td><code>/api/client/auth</code></td>
+                <td>Client auth (alternative)</td>
+                <td><span class="method-post">POST</span></td>
+                <td>Alternative client auth</td>
+            </tr>
+            <tr>
+                <td><code>/api/rotate-key</code></td>
+                <td>API key rotation</td>
+                <td><span class="method-post">POST</span></td>
+                <td>Rotate API keys</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <h3>📋 Lead Management</h3>
+    <table>
+        <thead>
+            <tr>
+                <th>Route</th>
+                <th>Description</th>
+                <th>Method</th>
+                <th>Notes</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><code>/api/lead</code></td>
+                <td>Lead submission</td>
+                <td><span class="method-post">POST</span></td>
+                <td>Main lead capture endpoint</td>
+            </tr>
+            <tr>
+                <td><code>/api/leads</code></td>
+                <td>Lead retrieval</td>
+                <td><span class="method-get">GET</span></td>
+                <td>Get all leads</td>
+            </tr>
+            <tr>
+                <td><code>/api/leads/archived</code></td>
+                <td>Archived leads</td>
+                <td><span class="method-get">GET</span></td>
+                <td>Get archived leads</td>
+            </tr>
+            <tr>
+                <td><code>/api/leads/deleted</code></td>
+                <td>Deleted leads</td>
+                <td><span class="method-get">GET</span></td>
+                <td>Get deleted leads</td>
+            </tr>
+            <tr>
+                <td><code>/api/leads/insights</code></td>
+                <td>Lead analytics</td>
+                <td><span class="method-get">GET</span></td>
+                <td>Lead performance metrics</td>
+            </tr>
+            <tr>
+                <td><code>/api/lead-actions</code></td>
+                <td>Lead actions</td>
+                <td><span class="method-get">GET</span>, <span class="method-post">POST</span></td>
+                <td>Lead interaction tracking</td>
+            </tr>
+            <tr>
+                <td><code>/api/client/leads</code></td>
+                <td>Client leads</td>
+                <td><span class="method-get">GET</span></td>
+                <td>Client-specific leads</td>
+            </tr>
+            <tr>
+                <td><code>/api/client-leads</code></td>
+                <td>Client leads (alt)</td>
+                <td><span class="method-post">POST</span></td>
+                <td>Alternative client leads</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <h3>👥 Client Management</h3>
+    <table>
+        <thead>
+            <tr>
+                <th>Route</th>
+                <th>Description</th>
+                <th>Method</th>
+                <th>Notes</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><code>/api/clients</code></td>
+                <td>Client CRUD</td>
+                <td><span class="method-get">GET</span>, <span class="method-post">POST</span>, <span class="method-delete">DELETE</span></td>
+                <td>Client management</td>
+            </tr>
+            <tr>
+                <td><code>/api/client/register</code></td>
+                <td>Client registration</td>
+                <td><span class="method-post">POST</span></td>
+                <td>New client signup</td>
+            </tr>
+            <tr>
+                <td><code>/api/client/settings</code></td>
+                <td>Client settings</td>
+                <td><span class="method-get">GET</span>, <span class="method-put">PUT</span></td>
+                <td>Client configuration</td>
+            </tr>
+            <tr>
+                <td><code>/api/client/update-language</code></td>
+                <td>Language preference</td>
+                <td><span class="method-put">PUT</span></td>
+                <td>Update client language</td>
+            </tr>
+            <tr>
+                <td><code>/api/client/insights</code></td>
+                <td>Client insights</td>
+                <td><span class="method-get">GET</span></td>
+                <td>Client analytics</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <h3>🧠 Prospect Intelligence</h3>
+    <table>
+        <thead>
+            <tr>
+                <th>Route</th>
+                <th>Description</th>
+                <th>Method</th>
+                <th>Notes</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><code>/api/prospect-intelligence/config</code></td>
+                <td>PI configuration</td>
+                <td><span class="method-get">GET</span></td>
+                <td>Prospect intelligence settings</td>
+            </tr>
+            <tr>
+                <td><code>/api/prospect-intelligence/prospects</code></td>
+                <td>Prospect data</td>
+                <td><span class="method-get">GET</span>, <span class="method-put">PUT</span></td>
+                <td>Prospect management</td>
+            </tr>
+            <tr>
+                <td><code>/api/prospect-intelligence/scan</code></td>
+                <td>Website scanning</td>
+                <td><span class="method-get">GET</span>, <span class="method-post">POST</span></td>
+                <td>Website prospect scanning</td>
+            </tr>
+            <tr>
+                <td><code>/api/prospect-intelligence/optimize</code></td>
+                <td>Optimization</td>
+                <td><span class="method-get">GET</span>, <span class="method-post">POST</span></td>
+                <td>Prospect optimization</td>
+            </tr>
+            <tr>
+                <td><code>/api/prospect-intelligence/outreach</code></td>
+                <td>Outreach generation</td>
+                <td><span class="method-get">GET</span>, <span class="method-post">POST</span></td>
+                <td>AI outreach creation</td>
+            </tr>
+            <tr>
+                <td><code>/api/prospect-intelligence/proof</code></td>
+                <td>Proof generation</td>
+                <td><span class="method-get">GET</span></td>
+                <td>Generate proof of concept</td>
+            </tr>
+            <tr>
+                <td><code>/api/prospect-intelligence/proof-visuals</code></td>
+                <td>Visual proof</td>
+                <td><span class="method-get">GET</span>, <span class="method-post">POST</span></td>
+                <td>Generate visual proof</td>
+            </tr>
+            <tr>
+                <td><code>/api/prospect-intelligence/feedback</code></td>
+                <td>Feedback system</td>
+                <td><span class="method-get">GET</span>, <span class="method-post">POST</span>, <span class="method-put">PUT</span></td>
+                <td>User feedback collection</td>
+            </tr>
+            <tr>
+                <td><code>/api/client/prospect-intelligence/config</code></td>
+                <td>Client PI config</td>
+                <td><span class="method-get">GET</span></td>
+                <td>Client-specific PI settings</td>
+            </tr>
+            <tr>
+                <td><code>/api/client/prospect-intelligence/prospects</code></td>
+                <td>Client prospects</td>
+                <td><span class="method-get">GET</span></td>
+                <td>Client prospect data</td>
+            </tr>
+            <tr>
+                <td><code>/api/client/prospect-intelligence/scan</code></td>
+                <td>Client scanning</td>
+                <td><span class="method-post">POST</span></td>
+                <td>Client website scanning</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <h3>🤖 Intelligence Engine</h3>
+    <table>
+        <thead>
+            <tr>
+                <th>Route</th>
+                <th>Description</th>
+                <th>Method</th>
+                <th>Notes</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><code>/api/intelligence-engine</code></td>
+                <td>Main engine</td>
+                <td><span class="method-get">GET</span>, <span class="method-post">POST</span></td>
+                <td>Core intelligence processing</td>
+            </tr>
+            <tr>
+                <td><code>/api/intelligence-engine/cron</code></td>
+                <td>Scheduled tasks</td>
+                <td><span class="method-get">GET</span></td>
+                <td>Cron job endpoint</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <h3>📧 Outreach & Communication</h3>
+    <table>
+        <thead>
+            <tr>
+                <th>Route</th>
+                <th>Description</th>
+                <th>Method</th>
+                <th>Notes</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><code>/api/outreach</code></td>
+                <td>Outreach management</td>
+                <td><span class="method-get">GET</span>, <span class="method-post">POST</span></td>
+                <td>Email outreach system</td>
+            </tr>
+            <tr>
+                <td><code>/api/outreach/email-templates</code></td>
+                <td>Email templates</td>
+                <td><span class="method-get">GET</span>, <span class="method-post">POST</span>, <span class="method-put">PUT</span>, <span class="method-delete">DELETE</span></td>
+                <td>Template management</td>
+            </tr>
+            <tr>
+                <td><code>/api/gmail/auth</code></td>
+                <td>Gmail authentication</td>
+                <td><span class="method-get">GET</span></td>
+                <td>Gmail OAuth initiation</td>
+            </tr>
+            <tr>
+                <td><code>/api/gmail/callback</code></td>
+                <td>Gmail callback</td>
+                <td><span class="method-get">GET</span></td>
+                <td>Gmail OAuth callback</td>
+            </tr>
+            <tr>
+                <td><code>/api/gmail-webhook</code></td>
+                <td>Gmail webhook</td>
+                <td><span class="method-get">GET</span>, <span class="method-post">POST</span></td>
+                <td>Gmail webhook handler</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <h3>🤖 AI & Analytics</h3>
+    <table>
+        <thead>
+            <tr>
+                <th>Route</th>
+                <th>Description</th>
+                <th>Method</th>
+                <th>Notes</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><code>/api/chat</code></td>
+                <td>AI chat</td>
+                <td><span class="method-post">POST</span></td>
+                <td>OpenAI chat completion</td>
+            </tr>
+            <tr>
+                <td><code>/api/translate</code></td>
+                <td>Translation service</td>
+                <td><span class="method-get">GET</span>, <span class="method-post">POST</span></td>
+                <td>Text translation</td>
+            </tr>
+            <tr>
+                <td><code>/api/translate-intent</code></td>
+                <td>Intent translation</td>
+                <td>-</td>
+                <td>Intent-based translation</td>
+            </tr>
+            <tr>
+                <td><code>/api/insights</code></td>
+                <td>System insights</td>
+                <td><span class="method-get">GET</span></td>
+                <td>General system analytics</td>
+            </tr>
+            <tr>
+                <td><code>/api/growth-insights</code></td>
+                <td>Growth analytics</td>
+                <td><span class="method-get">GET</span></td>
+                <td>Growth metrics</td>
+            </tr>
+            <tr>
+                <td><code>/api/feedback</code></td>
+                <td>User feedback</td>
+                <td><span class="method-get">GET</span>, <span class="method-post">POST</span>, <span class="method-put">PUT</span></td>
+                <td>Feedback collection</td>
+            </tr>
+            <tr>
+                <td><code>/api/prompt-optimization</code></td>
+                <td>Prompt optimization</td>
+                <td><span class="method-get">GET</span>, <span class="method-post">POST</span>, <span class="method-put">PUT</span></td>
+                <td>AI prompt tuning</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <h3>⚙️ System & Utilities</h3>
+    <table>
+        <thead>
+            <tr>
+                <th>Route</th>
+                <th>Description</th>
+                <th>Method</th>
+                <th>Notes</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><code>/api/failover/status</code></td>
+                <td>Failover status</td>
+                <td><span class="method-get">GET</span>, <span class="method-post">POST</span></td>
+                <td>System failover monitoring</td>
+            </tr>
+            <tr>
+                <td><code>/api/debug/env</code></td>
+                <td>Environment debug</td>
+                <td>-</td>
+                <td>Debug environment variables</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <h2>🔗 Local Development URLs</h2>
+    
+    <h3>Frontend URLs</h3>
+    <pre><code>http://localhost:3000/
+http://localhost:3000/en
+http://localhost:3000/fr
+http://localhost:3000/demo
+
+# Client Routes
+http://localhost:3000/en/client/signup
+http://localhost:3000/fr/client/signup
+http://localhost:3000/en/client/login
+http://localhost:3000/fr/client/login
+http://localhost:3000/en/client/dashboard
+http://localhost:3000/fr/client/dashboard
+http://localhost:3000/en/client/settings
+http://localhost:3000/fr/client/settings
+http://localhost:3000/en/client/api-access
+http://localhost:3000/fr/client/api-access
+http://localhost:3000/en/client/insights
+http://localhost:3000/fr/client/insights
+http://localhost:3000/en/client/prospect-intelligence
+http://localhost:3000/fr/client/prospect-intelligence
+
+# Admin Routes
+http://localhost:3000/en/admin/login
+http://localhost:3000/fr/admin/login
+http://localhost:3000/en/admin/settings
+http://localhost:3000/fr/admin/settings
+http://localhost:3000/en/admin/prospect-intelligence
+http://localhost:3000/fr/admin/prospect-intelligence
+
+# Dashboard Routes
+http://localhost:3000/en/dashboard
+http://localhost:3000/fr/dashboard
+http://localhost:3000/en/dashboard/clients
+http://localhost:3000/fr/dashboard/clients
+http://localhost:3000/en/dashboard/insights
+http://localhost:3000/fr/dashboard/insights
+http://localhost:3000/en/dashboard/outreach
+http://localhost:3000/fr/dashboard/outreach</code></pre>
+
+    <h3>API URLs</h3>
+    <pre><code># Authentication
+http://localhost:3000/api/auth-dashboard
+http://localhost:3000/api/client-auth
+http://localhost:3000/api/client/auth
+http://localhost:3000/api/rotate-key
+
+# Lead Management
+http://localhost:3000/api/lead
+http://localhost:3000/api/leads
+http://localhost:3000/api/leads/archived
+http://localhost:3000/api/leads/deleted
+http://localhost:3000/api/leads/insights
+http://localhost:3000/api/lead-actions
+http://localhost:3000/api/client/leads
+http://localhost:3000/api/client-leads
+
+# Client Management
+http://localhost:3000/api/clients
+http://localhost:3000/api/client/register
+http://localhost:3000/api/client/settings
+http://localhost:3000/api/client/update-language
+http://localhost:3000/api/client/insights
+
+# Prospect Intelligence
+http://localhost:3000/api/prospect-intelligence/config
+http://localhost:3000/api/prospect-intelligence/prospects
+http://localhost:3000/api/prospect-intelligence/scan
+http://localhost:3000/api/prospect-intelligence/optimize
+http://localhost:3000/api/prospect-intelligence/outreach
+http://localhost:3000/api/prospect-intelligence/proof
+http://localhost:3000/api/prospect-intelligence/proof-visuals
+http://localhost:3000/api/prospect-intelligence/feedback
+http://localhost:3000/api/client/prospect-intelligence/config
+http://localhost:3000/api/client/prospect-intelligence/prospects
+http://localhost:3000/api/client/prospect-intelligence/scan
+
+# Intelligence Engine
+http://localhost:3000/api/intelligence-engine
+http://localhost:3000/api/intelligence-engine/cron
+
+# Outreach & Communication
+http://localhost:3000/api/outreach
+http://localhost:3000/api/outreach/email-templates
+http://localhost:3000/api/gmail/auth
+http://localhost:3000/api/gmail/callback
+http://localhost:3000/api/gmail-webhook
+
+# AI & Analytics
+http://localhost:3000/api/chat
+http://localhost:3000/api/translate
+http://localhost:3000/api/translate-intent
+http://localhost:3000/api/insights
+http://localhost:3000/api/growth-insights
+http://localhost:3000/api/feedback
+http://localhost:3000/api/prompt-optimization
+
+# System & Utilities
+http://localhost:3000/api/failover/status
+http://localhost:3000/api/debug/env</code></pre>
+
+    <h2>⚙️ Route Configuration</h2>
+    
+    <h3>Middleware</h3>
+    <ul>
+        <li><strong>File:</strong> <code>src/middleware.ts</code></li>
+        <li><strong>Purpose:</strong> Automatic locale detection and redirection</li>
+        <li><strong>Supported locales:</strong> <code>en</code>, <code>fr</code></li>
+        <li><strong>Default locale:</strong> <code>en</code></li>
+    </ul>
+
+    <h3>Internationalization</h3>
+    <ul>
+        <li><strong>Configuration:</strong> <code>src/i18n/routing.ts</code></li>
+        <li><strong>Supported languages:</strong> English (<code>en</code>), French (<code>fr</code>)</li>
+        <li><strong>Auto-redirect:</strong> Base routes without locale are redirected to detected locale</li>
+    </ul>
+
+    <h3>Route Protection</h3>
+    <ul>
+        <li><strong>Public routes:</strong> Homepage, demo, client signup/login</li>
+        <li><strong>Protected routes:</strong> All dashboard and admin routes require authentication</li>
+        <li><strong>API routes:</strong> Most require authentication or API keys</li>
+    </ul>
+
+    <div class="note">
+        <h3>📝 Notes</h3>
+        <ol>
+            <li><strong>Locale Detection:</strong> The middleware automatically detects user language preference from cookies or browser headers</li>
+            <li><strong>API Authentication:</strong> Most API endpoints require proper authentication headers</li>
+            <li><strong>CORS:</strong> API endpoints are configured for local development</li>
+            <li><strong>Webhooks:</strong> Gmail webhook endpoint is configured for external service integration</li>
+            <li><strong>Edge Runtime:</strong> Some API routes use edge runtime for better performance</li>
+        </ol>
+    </div>
+
+    <h2>🚀 Development Setup</h2>
+    <p>To run the application locally:</p>
+    <pre><code>npm run dev
+# or
+yarn dev</code></pre>
+    <p>The application will be available at <code>http://localhost:3000</code></p>
+
+    <div class="footer">
+        <p><strong>Generated on:</strong> Mon Oct 20 13:38:24 EDT 2025</p>
+        <p><strong>Total Routes:</strong> 18 frontend pages, 42 API endpoints</p>
+        <p><strong>Languages:</strong> English (en), French (fr)</p>
+    </div>
+</body>
+</html>

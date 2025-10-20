@@ -12,25 +12,26 @@ const AvenirLogo = dynamic(() => import('../../../../components/AvenirLogo'), {
 const UniversalLanguageToggle = dynamic(() => import('../../../../components/UniversalLanguageToggle'), {
   ssr: true, // Keep SSR for language toggle as it's above the fold
 });
-import { SkeletonLoader, LeadCardSkeleton, StatsCardSkeleton, TableSkeleton } from '../../../../components/SkeletonLoader';
+import { SkeletonLoader, LeadCardSkeleton, StatsCardSkeleton, TableSkeleton, DashboardSkeleton } from '../../../../components/SkeletonLoader';
 import type { LeadAction } from '../../../api/lead-actions/route';
 import { isLegacyClientId, DEMO_CLIENT_EMAIL } from '../../../../lib/uuid-utils';
 import { useSession } from '../../../../components/SessionProvider';
 import { saveSession, clearSession, type ClientData } from '../../../../utils/session';
 import { getLocalStorageItem, removeLocalStorageItem } from '../../../../lib/safe-localstorage';
+import FallbackUI, { LoadingFallback, ErrorFallback, OfflineFallback } from '../../../../components/FallbackUI';
 
 // Dynamic imports to prevent hydration mismatches
 const PredictiveGrowthEngine = dynamic(() => import('../../../../components/PredictiveGrowthEngine'), { 
   ssr: false,
-  loading: () => <SkeletonLoader variant="card" height="8rem" />
+  loading: () => <LoadingFallback message="Loading growth engine..." />
 });
 const GrowthCopilot = dynamic(() => import('../../../../components/GrowthCopilot'), { 
   ssr: false,
-  loading: () => <SkeletonLoader variant="card" height="6rem" />
+  loading: () => <LoadingFallback message="Loading copilot..." />
 });
 const ActivityLog = dynamic(() => import('../../../../components/ActivityLog'), { 
   ssr: false,
-  loading: () => <SkeletonLoader variant="card" height="6rem" />
+  loading: () => <LoadingFallback message="Loading activities..." />
 });
 // Note: RelationshipInsights and ClientProspectIntelligence are now accessed via full-page routes
 
@@ -100,6 +101,8 @@ export default function ClientDashboard() {
     hasNextPage: false,
     hasPrevPage: false
   });
+  const [isOffline, setIsOffline] = useState(false);
+  const [hasError, setHasError] = useState(false);
 
   // Memoized truncation check function for better performance
   const checkTruncation = useCallback(() => {
@@ -144,6 +147,23 @@ export default function ClientDashboard() {
   useEffect(() => {
     setOriginalIntentCache(null);
   }, [locale]);
+
+  // Offline detection
+  useEffect(() => {
+    const handleOnline = () => setIsOffline(false);
+    const handleOffline = () => setIsOffline(true);
+    
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+    
+    // Check initial state
+    setIsOffline(!navigator.onLine);
+    
+    return () => {
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+    };
+  }, []);
 
   // Async helper function for translation
 async function translateIntent(rawTopIntent: string, locale: string): Promise<string> {
@@ -296,6 +316,14 @@ async function translateIntent(rawTopIntent: string, locale: string): Promise<st
 
     try {
       setLoading(true);
+      setHasError(false);
+      
+      // Check if offline
+      if (isOffline) {
+        console.warn('[ClientDashboard] Offline - skipping fetch');
+        return;
+      }
+      
       // Clear all leads array before fetching
       setAllLeads([]);
       console.log('[ClientDashboard] ============================================');
@@ -309,7 +337,14 @@ async function translateIntent(rawTopIntent: string, locale: string): Promise<st
       const endpoint = `/api/client/leads?clientId=${client.clientId}&locale=${locale}&status=${activeTab}&page=1&limit=1000`;
       console.log('[ClientDashboard] Endpoint:', endpoint);
       
-      const res = await fetch(endpoint);
+      const res = await fetch(endpoint, {
+        signal: AbortSignal.timeout(10000) // 10 second timeout
+      });
+      
+      if (!res.ok) {
+        throw new Error(`HTTP ${res.status}: ${res.statusText}`);
+      }
+      
       const data = await res.json();
 
       console.log('[ClientDashboard] API Response:', {
@@ -337,20 +372,26 @@ async function translateIntent(rawTopIntent: string, locale: string): Promise<st
         console.log('[ClientDashboard] ✅ Loaded', leadsData.length, activeTab, 'leads for client-side pagination');
         console.log('[ClientDashboard] ============================================');
       } else {
-        console.error('[ClientDashboard] ❌ API returned error:', data.error);
-        console.log('[ClientDashboard] ============================================');
+        throw new Error(data.error || 'Failed to fetch leads');
       }
     } catch (err) {
       console.error('[ClientDashboard] ❌ Failed to fetch leads:', err);
-      console.error('[ClientDashboard] ❌ Error details:', {
-        message: err instanceof Error ? err.message : String(err),
-        stack: err instanceof Error ? err.stack : 'No stack trace',
-      });
-      console.log('[ClientDashboard] ============================================');
+      setHasError(true);
+      
+      // Show user-friendly error message
+      if (err instanceof Error) {
+        if (err.name === 'AbortError') {
+          showToast(isFrench ? 'Délai d\'attente dépassé' : 'Request timeout');
+        } else if (err.message.includes('Failed to fetch')) {
+          showToast(isFrench ? 'Erreur de connexion' : 'Connection error');
+        } else {
+          showToast(isFrench ? 'Erreur lors du chargement' : 'Loading error');
+        }
+      }
     } finally {
       setLoading(false);
     }
-  }, [client, activeTab, locale]);
+  }, [client, activeTab, locale, isOffline, isFrench]);
 
   // Memoized stats calculation for better performance
   const calculateStats = useCallback((leadsData: Lead[]) => {
@@ -859,7 +900,7 @@ async function translateIntent(rawTopIntent: string, locale: string): Promise<st
   }
 
   // Loading state
-  if (loading && !leads.length) {
+  if (loading && !allLeads.length) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-[#0f172a] via-[#1e1b4b] to-[#0f172a] text-white">
         {/* Header with Logo and Language Toggle */}
@@ -874,21 +915,10 @@ async function translateIntent(rawTopIntent: string, locale: string): Promise<st
 
         {/* Main Content */}
         <main className="container mx-auto px-6 py-8">
-          {/* Stats Grid Skeleton */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-            {Array.from({ length: 4 }).map((_, i) => (
-              <StatsCardSkeleton key={i} />
-            ))}
-          </div>
-
-          {/* Leads Table Skeleton */}
-          <div className="bg-white/5 border border-white/10 rounded-xl p-6">
-            <div className="flex items-center justify-between mb-6">
-              <SkeletonLoader variant="text" width="200px" height="1.5rem" />
-              <SkeletonLoader variant="rect" width="120px" height="2rem" />
-            </div>
-            <TableSkeleton rows={5} />
-          </div>
+          <LoadingFallback 
+            message={isFrench ? 'Chargement du tableau de bord client...' : 'Loading client dashboard...'} 
+            className="min-h-[60vh]"
+          />
         </main>
       </div>
     );
@@ -947,6 +977,29 @@ async function translateIntent(rawTopIntent: string, locale: string): Promise<st
           </div>
         </motion.div>
 
+        {/* Offline Banner */}
+        {isOffline && (
+          <motion.div
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="mb-6 p-4 bg-yellow-500/20 border border-yellow-500/40 rounded-lg"
+          >
+            <div className="flex items-center gap-3">
+              <span className="text-2xl">🔌</span>
+              <div>
+                <div className="font-semibold text-yellow-400">
+                  {isFrench ? 'Mode hors ligne' : 'Offline Mode'}
+                </div>
+                <div className="text-sm text-yellow-300">
+                  {isFrench 
+                    ? 'Connexion temporairement indisponible. Les données peuvent ne pas être à jour.' 
+                    : 'Connection temporarily unavailable. Data may not be up to date.'}
+                </div>
+              </div>
+            </div>
+          </motion.div>
+        )}
+
         {/* Stats Summary */}
         <motion.div
           initial={{ opacity: 0 }}
@@ -958,9 +1011,9 @@ async function translateIntent(rawTopIntent: string, locale: string): Promise<st
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.4, delay: 0.2 }}
-            className="group rounded-lg border border-white/10 p-4 bg-gradient-to-br from-blue-500/10 to-purple-500/10 hover:border-blue-400/30 hover:shadow-[0_0_20px_rgba(59,130,246,0.2)] transition-all duration-300"
+            className="card-base card-hover p-4 bg-gradient-to-br from-blue-500/10 to-purple-500/10"
           >
-            <div className="text-sm text-white/60 mb-1">{t.totalLeads}</div>
+            <div className="text-muted mb-1">{t.totalLeads}</div>
             <div className="text-3xl font-bold">{stats.total}</div>
           </motion.div>
           
@@ -968,9 +1021,9 @@ async function translateIntent(rawTopIntent: string, locale: string): Promise<st
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.4, delay: 0.3 }}
-            className="group rounded-lg border border-white/10 p-4 bg-gradient-to-br from-blue-500/10 to-purple-500/10 hover:border-blue-400/30 hover:shadow-[0_0_20px_rgba(59,130,246,0.2)] transition-all duration-300"
+            className="card-base card-hover p-4 bg-gradient-to-br from-blue-500/10 to-purple-500/10"
           >
-            <div className="text-sm text-white/60 mb-1">{t.avgConfidence}</div>
+            <div className="text-muted mb-1">{t.avgConfidence}</div>
             <div className="text-3xl font-bold">{(stats.avgConfidence * 100).toFixed(0)}%</div>
           </motion.div>
           
@@ -978,9 +1031,9 @@ async function translateIntent(rawTopIntent: string, locale: string): Promise<st
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.4, delay: 0.4 }}
-            className="group rounded-lg border border-white/10 p-4 bg-gradient-to-br from-blue-500/10 to-purple-500/10 hover:border-blue-400/30 hover:shadow-[0_0_20px_rgba(59,130,246,0.2)] transition-all duration-300"
+            className="card-base card-hover p-4 bg-gradient-to-br from-blue-500/10 to-purple-500/10"
           >
-            <div className="text-sm text-white/60 mb-1">{t.topIntent}</div>
+            <div className="text-muted mb-1">{t.topIntent}</div>
             <div className="relative">
               <div 
                 className="text-lg font-semibold whitespace-nowrap overflow-hidden text-ellipsis max-w-full group"
@@ -1000,9 +1053,9 @@ async function translateIntent(rawTopIntent: string, locale: string): Promise<st
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.4, delay: 0.5 }}
-            className="group rounded-lg border border-white/10 p-4 bg-gradient-to-br from-blue-500/10 to-purple-500/10 hover:border-blue-400/30 hover:shadow-[0_0_20px_rgba(59,130,246,0.2)] transition-all duration-300"
+            className="card-base card-hover p-4 bg-gradient-to-br from-blue-500/10 to-purple-500/10"
           >
-            <div className="text-sm text-white/60 mb-1">{t.highUrgency}</div>
+            <div className="text-muted mb-1">{t.highUrgency}</div>
             <div className="text-3xl font-bold text-red-400">{stats.highUrgency}</div>
           </motion.div>
         </motion.div>
@@ -1360,9 +1413,25 @@ async function translateIntent(rawTopIntent: string, locale: string): Promise<st
             </motion.div>
           ))}
 
-            {currentLeads.length === 0 && (
-              <div className="text-center py-12 text-white/50">
-                {t.noLeads}
+            {currentLeads.length === 0 && !loading && (
+              <div className="text-center py-12">
+                {hasError ? (
+                  <ErrorFallback 
+                    message={isFrench 
+                      ? 'Impossible de charger les leads. Vérifiez votre connexion.' 
+                      : 'Unable to load leads. Please check your connection.'}
+                    onRetry={() => {
+                      setHasError(false);
+                      fetchLeads();
+                    }}
+                  />
+                ) : isOffline ? (
+                  <OfflineFallback />
+                ) : (
+                  <div className="text-white/50">
+                    {t.noLeads}
+                  </div>
+                )}
               </div>
             )}
           </div>
