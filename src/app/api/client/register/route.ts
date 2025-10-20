@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { supabase } from '../../../../lib/supabase';
+import { createServerSupabaseClient } from '../../../../lib/supabase-server-auth';
 import { generateApiKey, hashPassword, generateClientId } from '../../../../lib/clients';
 import { isTestClient, logTestDetection } from '../../../../lib/test-detection';
 import { google } from 'googleapis';
@@ -8,6 +8,9 @@ import { generatePersonalizedICP } from '../../../../lib/phase3/icp_profile';
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
+    
+    // Create Supabase client for database operations
+    const supabase = createServerSupabaseClient();
     
     // Accept both camelCase (from frontend) and snake_case (from tests)
     const name = body.name || body.contactName;
