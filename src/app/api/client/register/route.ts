@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createServerSupabaseClient } from '../../../../lib/supabase-server-auth';
+import { createUnifiedSupabaseClient } from '../../../../lib/supabase-unified';
 import { generateApiKey, hashPassword, generateClientId } from '../../../../lib/clients';
 import { isTestClient, logTestDetection } from '../../../../lib/test-detection';
 import { google } from 'googleapis';
@@ -9,8 +9,8 @@ export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
     
-    // Use the same Supabase client as prospect intelligence endpoints
-    const supabase = createServerSupabaseClient();
+    // Use the unified Supabase client for consistent database access
+    const supabase = createUnifiedSupabaseClient();
     
     
     // Accept both camelCase (from frontend) and snake_case (from tests)
@@ -188,6 +188,7 @@ export async function POST(req: NextRequest) {
     
     newClient = insertResult.data;
     dbError = insertResult.error;
+
 
 
     if (dbError) {

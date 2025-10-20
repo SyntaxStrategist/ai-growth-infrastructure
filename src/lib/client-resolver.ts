@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { createServerSupabaseClient } from './supabase-server-auth';
+import { createUnifiedSupabaseClient } from './supabase-unified';
 
 // In-memory cache for resolved client IDs
 const clientIdCache = new Map<string, { uuid: string; timestamp: number }>();
@@ -47,7 +47,7 @@ export async function resolveClientId(inputId: string): Promise<string> {
   try {
     console.log(`[ClientResolver] 🔍 Querying Supabase for string ID: "${inputId}"`);
     
-    const supabase = createServerSupabaseClient();
+    const supabase = createUnifiedSupabaseClient();
     const { data: clientData, error: clientError } = await supabase
       .from('clients')
       .select('id, client_id')
@@ -55,13 +55,32 @@ export async function resolveClientId(inputId: string): Promise<string> {
       .single();
 
 
+
     if (clientError) {
       console.error(`[ClientResolver] ❌ Supabase query failed for "${inputId}":`, clientError);
+      console.error(`[ClientResolver] ❌ Error details:`, {
+        code: clientError.code,
+        message: clientError.message,
+        details: clientError.details,
+        hint: clientError.hint
+      });
       
       // Check if this is a demo client and we have a fallback
       if (inputId === 'demo-video-client-2024' || inputId === process.env.DEMO_CLIENT_ID) {
         console.log(`[ClientResolver] 🔄 Attempting demo client fallback for "${inputId}"`);
         return await resolveDemoClientId();
+      }
+      
+      // Check if this is a database connection issue
+      if (clientError.code === 'PGRST116' || clientError.message?.includes('relation') || clientError.message?.includes('does not exist')) {
+        console.error(`[ClientResolver] ❌ Database schema issue detected for "${inputId}"`);
+        throw new Error(`Database configuration issue: ${clientError.message}`);
+      }
+      
+      // Check if this is a permission issue
+      if (clientError.code === '42501' || clientError.message?.includes('permission') || clientError.message?.includes('RLS')) {
+        console.error(`[ClientResolver] ❌ Permission issue detected for "${inputId}"`);
+        throw new Error(`Permission denied: ${clientError.message}`);
       }
       
       throw new Error(`Client not found: ${inputId}`);
@@ -95,7 +114,7 @@ async function resolveDemoClientId(): Promise<string> {
   try {
     console.log(`[ClientResolver] 🔍 Resolving demo client: "${demoClientId}"`);
     
-    const supabase = createServerSupabaseClient();
+    const supabase = createUnifiedSupabaseClient();
     const { data: demoClient, error: demoError } = await supabase
       .from('clients')
       .select('id, client_id')
