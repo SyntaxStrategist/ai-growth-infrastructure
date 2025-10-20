@@ -64,7 +64,7 @@ export async function GET(req: NextRequest) {
     if (clientError) {
       console.error('[ClientProspectAPI] Failed to fetch client data:', clientError);
       return NextResponse.json(
-        { error: 'Client not found', data: [] },
+        { success: false, error: 'Client not found', data: [] },
         { status: 404 }
       );
     }
@@ -72,7 +72,15 @@ export async function GET(req: NextRequest) {
     // If no ICP data, return empty results
     if (!client.icp_data || Object.keys(client.icp_data).length === 0) {
       console.log('[ClientProspectAPI] No ICP data found, returning empty results');
-      return NextResponse.json({ data: [], count: 0 });
+      return NextResponse.json({ 
+        success: true, 
+        data: [], 
+        count: 0,
+        clientInfo: {
+          businessName: client.business_name,
+          clientId: clientId
+        }
+      });
     }
 
     // Build query based on client's ICP data
@@ -109,13 +117,14 @@ export async function GET(req: NextRequest) {
     if (error) {
       console.error('[ClientProspectAPI Error]', error.message);
       return NextResponse.json(
-        { error: error.message, data: [] },
+        { success: false, error: error.message, data: [] },
         { status: 500 }
       );
     }
 
     console.log('[ClientProspectAPI] ✅ Returning', data?.length || 0, 'client-scoped prospects');
     return NextResponse.json({ 
+      success: true,
       data: data || [], 
       count: data?.length || 0,
       clientInfo: {
@@ -127,7 +136,7 @@ export async function GET(req: NextRequest) {
   } catch (error) {
     console.error('[ClientProspectAPI Crash]', error);
     return NextResponse.json(
-      { error: 'Internal server error', data: [] },
+      { success: false, error: 'Internal server error', data: [] },
       { status: 500 }
     );
   }
