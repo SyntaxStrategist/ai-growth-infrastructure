@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getFailoverStatus, forceHealthCheck } from '../../../../lib/failover';
 
+import { handleApiError } from '../../../../lib/error-handler';
 /**
  * GET /api/failover/status
  * Returns current failover status and health information
@@ -18,10 +19,7 @@ export async function GET(req: NextRequest) {
       }
     });
   } catch (error) {
-    return NextResponse.json({
-      success: false,
-      error: error instanceof Error ? error.message : 'Unknown error'
-    }, { status: 500 });
+    return handleApiError(error, 'API');
   }
 }
 
@@ -46,9 +44,6 @@ export async function POST(req: NextRequest) {
       }
     });
   } catch (error) {
-    return NextResponse.json({
-      success: false,
-      error: error instanceof Error ? error.message : 'Unknown error'
-    }, { status: 500 });
+    return handleApiError(error, 'API');
   }
 }

@@ -7,6 +7,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createUnifiedSupabaseClient } from '../../../../../lib/supabase-unified';
 import { resolveClientId } from '../../../../../lib/client-resolver';
 
+import { handleApiError } from '../../../../../lib/error-handler';
 /**
  * GET - Get client's ICP configuration
  */
@@ -129,11 +130,7 @@ export async function GET(req: NextRequest) {
     });
 
   } catch (error) {
-    console.error('[ClientProspectAPI] ❌ Failed to get client config:', error);
-    return NextResponse.json(
-      { success: false, error: 'Failed to get configuration' },
-      { status: 500 }
-    );
+    return handleApiError(error, 'API');
   }
 }
 

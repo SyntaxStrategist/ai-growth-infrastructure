@@ -7,6 +7,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createUnifiedSupabaseClient } from '../../../../../lib/supabase-unified';
 import { resolveClientId } from '../../../../../lib/client-resolver';
 
+import { handleApiError } from '../../../../../lib/error-handler';
 /**
  * GET - Fetch prospects scoped to authenticated client
  * Only returns prospects that match the client's ICP profile
@@ -134,11 +135,7 @@ export async function GET(req: NextRequest) {
     });
 
   } catch (error) {
-    console.error('[ClientProspectAPI Crash]', error);
-    return NextResponse.json(
-      { success: false, error: 'Internal server error', data: [] },
-      { status: 500 }
-    );
+    return handleApiError(error, 'API');
   }
 }
 

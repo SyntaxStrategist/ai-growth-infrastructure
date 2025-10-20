@@ -7,6 +7,7 @@ import UniversalLanguageToggle from '../../../../components/UniversalLanguageTog
 import ProspectProofModal from '../../../../components/ProspectProofModal';
 import EmailPreviewModal from '../../../../components/EmailPreviewModal';
 import { translateIndustry } from '../../../../lib/translateIndustryFR';
+import { ProspectTableSkeleton, AdminSettingsSkeleton } from '../../../../components/SkeletonLoader';
 
 interface ProspectCandidate {
   id: string;
@@ -953,17 +954,16 @@ export default function ProspectIntelligencePage() {
           </div>
 
           {loading ? (
-            <div className="p-8 text-center text-white/60">
-              <div className="inline-block w-8 h-8 border-2 border-white/30 border-t-white rounded-full animate-spin mb-4"></div>
-              <p>{t.loading}</p>
-            </div>
+            <ProspectTableSkeleton rows={5} />
           ) : filteredProspects.length === 0 ? (
             <div className="p-8 text-center text-white/60">
               <p>{(prospects || []).length === 0 ? t.noProspects : t.noHighPriorityFound}</p>
             </div>
           ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full">
+            <>
+              {/* Desktop Table View */}
+              <div className="hidden lg:block overflow-x-auto">
+                <table className="w-full">
                 <thead className="bg-white/5">
                   <tr>
                     <th className="px-6 py-3 text-left text-xs font-medium text-white/70 uppercase tracking-wider">
@@ -1109,7 +1109,7 @@ export default function ProspectIntelligencePage() {
                   <button
                     disabled={currentPage === 1}
                     onClick={() => setCurrentPage(currentPage - 1)}
-                    className="px-4 py-2 rounded-lg text-sm text-white/80 hover:text-white hover:bg-white/10 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                    className="px-4 py-3 rounded-lg text-sm text-white/80 hover:text-white hover:bg-white/10 disabled:opacity-50 disabled:cursor-not-allowed transition-all min-h-[44px] min-w-[44px] flex items-center justify-center"
                   >
                     ◀️ {isFrench ? 'Précédent' : 'Previous'}
                   </button>
@@ -1121,13 +1121,134 @@ export default function ProspectIntelligencePage() {
                   <button
                     disabled={currentPage === totalPages}
                     onClick={() => setCurrentPage(currentPage + 1)}
-                    className="px-4 py-2 rounded-lg text-sm text-white/80 hover:text-white hover:bg-white/10 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                    className="px-4 py-3 rounded-lg text-sm text-white/80 hover:text-white hover:bg-white/10 disabled:opacity-50 disabled:cursor-not-allowed transition-all min-h-[44px] min-w-[44px] flex items-center justify-center"
                   >
                     {isFrench ? 'Suivant' : 'Next'} ▶️
                   </button>
                 </div>
               )}
-            </div>
+              </div>
+
+              {/* Mobile Card View */}
+              <div className="lg:hidden">
+                <div className="p-4 space-y-4">
+                  {paginatedProspects.map((prospect, index) => (
+                    <motion.div
+                      key={prospect.id}
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ duration: 0.3, delay: index * 0.05 }}
+                      className="bg-white/5 border border-white/10 rounded-lg p-4 space-y-3"
+                    >
+                      {/* Header with business name and badges */}
+                      <div className="flex items-start justify-between">
+                        <div className="flex-1">
+                          <h3 className="text-white font-medium text-base">{prospect.business_name}</h3>
+                          <p className="text-white/60 text-sm">{prospect.website.replace(/^https?:\/\//, '')}</p>
+                        </div>
+                        <div className="flex flex-col gap-1">
+                          {prospect.is_test && (
+                            <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-white/10 text-white/50 border border-white/20">
+                              {t.testDataLabel}
+                            </span>
+                          )}
+                          {isHighPriority(prospect.automation_need_score) && (
+                            <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold bg-orange-500/20 text-orange-400 border border-orange-500/40">
+                              {t.highPriorityBadge}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Industry and Region */}
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <p className="text-white/70 text-xs">{t.industry}</p>
+                          <p className="text-white/80 text-sm">{translateIndustryDisplay(prospect.industry)}</p>
+                        </div>
+                        <div className="text-right">
+                          <p className="text-white/70 text-xs">{t.region}</p>
+                          <p className="text-white/80 text-sm">{prospect.region || 'N/A'}</p>
+                        </div>
+                      </div>
+
+                      {/* Score and Status */}
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <p className="text-white/70 text-xs">{t.score}</p>
+                          <div className={`text-sm font-semibold ${getScoreColor(prospect.automation_need_score)}`}>
+                            {prospect.automation_need_score || 'N/A'}/100
+                          </div>
+                          <div className="text-xs text-white/50">
+                            {getScoreLabel(prospect.automation_need_score)}
+                          </div>
+                        </div>
+                        <div className="text-right">
+                          <p className="text-white/70 text-xs">{t.status}</p>
+                          <span
+                            className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                              prospect.contacted
+                                ? 'bg-green-500/20 text-green-400'
+                                : 'bg-yellow-500/20 text-yellow-400'
+                            }`}
+                          >
+                            {prospect.contacted ? t.contacted : t.notContacted}
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Actions */}
+                      <div className="flex flex-wrap gap-2 pt-2 border-t border-white/10">
+                        <button
+                          onClick={() => handleOpenEmailPreview(prospect)}
+                          disabled={prospect.contacted}
+                          className={`px-3 py-2 rounded text-xs font-semibold transition-all min-h-[44px] min-w-[44px] flex items-center justify-center ${
+                            prospect.contacted
+                              ? 'bg-green-500/20 text-green-400 cursor-not-allowed'
+                              : 'bg-purple-500/20 text-purple-400 hover:bg-purple-500/30 border border-purple-400/50'
+                          }`}
+                          title={prospect.contacted ? t.outreachSent : t.sendOutreach}
+                        >
+                          {prospect.contacted ? t.outreachSent : t.sendOutreach}
+                        </button>
+                        <button
+                          onClick={() => handleOpenProofModal(prospect)}
+                          className="px-3 py-2 rounded text-xs font-semibold bg-blue-500/20 text-blue-400 hover:bg-blue-500/30 border border-blue-400/50 transition-all min-h-[44px] min-w-[44px] flex items-center justify-center"
+                          title={t.viewProof}
+                        >
+                          {t.viewProof}
+                        </button>
+                      </div>
+                    </motion.div>
+                  ))}
+                </div>
+
+                {/* Mobile Pagination */}
+                {filteredProspects.length > ITEMS_PER_PAGE && (
+                  <div className="flex justify-center items-center gap-4 py-4 border-t border-white/10">
+                    <button
+                      disabled={currentPage === 1}
+                      onClick={() => setCurrentPage(currentPage - 1)}
+                      className="px-4 py-3 rounded-lg text-sm text-white/80 hover:text-white hover:bg-white/10 disabled:opacity-50 disabled:cursor-not-allowed transition-all min-h-[44px] min-w-[44px] flex items-center justify-center"
+                    >
+                      ◀️ {isFrench ? 'Précédent' : 'Previous'}
+                    </button>
+                    
+                    <span className="text-sm text-white/70">
+                      {isFrench ? 'Page' : 'Page'} {currentPage} {isFrench ? 'de' : 'of'} {totalPages}
+                    </span>
+                    
+                    <button
+                      disabled={currentPage === totalPages}
+                      onClick={() => setCurrentPage(currentPage + 1)}
+                      className="px-4 py-3 rounded-lg text-sm text-white/80 hover:text-white hover:bg-white/10 disabled:opacity-50 disabled:cursor-not-allowed transition-all min-h-[44px] min-w-[44px] flex items-center justify-center"
+                    >
+                      {isFrench ? 'Suivant' : 'Next'} ▶️
+                    </button>
+                  </div>
+                )}
+              </div>
+            </>
           )}
         </motion.div>
       </div>

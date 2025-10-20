@@ -149,10 +149,15 @@ export default function PredictiveGrowthEngine({ locale, clientId = null }: Pred
   const insightData = isFrench ? insights.predictive_insights?.fr : insights.predictive_insights?.en;
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.6, delay: 0.4 }}
+      className="bg-white/5 backdrop-blur-sm rounded-xl p-6 border border-white/10"
+    >
+      <div className="flex items-center justify-between mb-6">
         <div>
-          <h2 className="text-2xl font-bold bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">
+          <h2 className="text-xl font-semibold text-purple-400">
             {t.title}
           </h2>
           <p className="text-white/60 text-sm mt-1">{t.subtitle}</p>
@@ -168,53 +173,34 @@ export default function PredictiveGrowthEngine({ locale, clientId = null }: Pred
       </div>
 
       {/* Engagement Score */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6 }}
-        className="rounded-lg border border-white/10 p-6 bg-gradient-to-br from-purple-500/5 to-pink-500/5 relative overflow-hidden"
-      >
-        <div className="absolute inset-0 bg-gradient-to-br from-purple-500/10 to-pink-500/10 blur-xl"></div>
-        <div className="relative">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-semibold text-white/90">{t.engagementScore}</h3>
-            <div className="text-3xl font-bold bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">
-              {insights.engagement_score?.toFixed(0) || 0}/100
-            </div>
+      <div className="mb-6">
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-lg font-semibold text-white/90">{t.engagementScore}</h3>
+          <div className="text-3xl font-bold text-white">
+            {insights.engagement_score?.toFixed(0) || 0}/100
           </div>
-          <div className="h-3 bg-white/10 rounded-full overflow-hidden">
-            <motion.div
-              initial={{ width: 0 }}
-              animate={{ width: `${insights.engagement_score || 0}%` }}
-              transition={{ duration: 1.5, ease: "easeOut" }}
-              className="h-full bg-gradient-to-r from-purple-500 to-pink-500 rounded-full relative"
-            >
-              <motion.div
-                className="absolute inset-0 bg-gradient-to-r from-white/30 to-transparent"
-                animate={{ x: ['-100%', '100%'] }}
-                transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
-              />
-            </motion.div>
-          </div>
-          <p className="text-xs text-white/50 mt-2">
+        </div>
+        <div className="h-3 bg-white/10 rounded-full overflow-hidden">
+          <motion.div
+            initial={{ width: 0 }}
+            animate={{ width: `${insights.engagement_score || 0}%` }}
+            transition={{ duration: 1.5, ease: "easeOut" }}
+            className="h-full bg-gradient-to-r from-blue-500 to-purple-500 rounded-full"
+          />
+        </div>
+        <p className="text-xs text-white/50 mt-2">
             {isFrench 
               ? 'Basé sur la confiance, l\'urgence et le volume des leads'
               : 'Based on confidence, urgency, and lead volume'}
           </p>
         </div>
-      </motion.div>
 
       {/* Insights Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {/* Urgency Trend */}
-        <motion.div
-          initial={{ opacity: 0, x: -20 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ duration: 0.6, delay: 0.1 }}
-          className="rounded-lg border border-white/10 p-5 bg-white/5 hover:border-purple-400/30 transition-all"
-        >
+        <div className="bg-white/5 backdrop-blur-sm rounded-lg p-4 border border-white/10">
           <div className="flex items-start gap-3">
-            <div className="h-10 w-10 rounded-full bg-red-500/20 border border-red-400/30 flex items-center justify-center flex-shrink-0">
+            <div className="h-10 w-10 rounded-full bg-red-500/20 flex items-center justify-center flex-shrink-0">
               <span className="text-lg">📈</span>
             </div>
             <div className="flex-1">
@@ -236,17 +222,12 @@ export default function PredictiveGrowthEngine({ locale, clientId = null }: Pred
               )}
             </div>
           </div>
-        </motion.div>
+        </div>
 
         {/* Confidence Insight */}
-        <motion.div
-          initial={{ opacity: 0, x: 20 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ duration: 0.6, delay: 0.2 }}
-          className="rounded-lg border border-white/10 p-5 bg-white/5 hover:border-blue-400/30 transition-all"
-        >
+        <div className="bg-white/5 backdrop-blur-sm rounded-lg p-4 border border-white/10">
           <div className="flex items-start gap-3">
-            <div className="h-10 w-10 rounded-full bg-blue-500/20 border border-blue-400/30 flex items-center justify-center flex-shrink-0">
+            <div className="h-10 w-10 rounded-full bg-blue-500/20 flex items-center justify-center flex-shrink-0">
               <span className="text-lg">🎯</span>
             </div>
             <div className="flex-1">
@@ -264,17 +245,12 @@ export default function PredictiveGrowthEngine({ locale, clientId = null }: Pred
               )}
             </div>
           </div>
-        </motion.div>
+        </div>
 
         {/* Tone Insight */}
-        <motion.div
-          initial={{ opacity: 0, x: -20 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ duration: 0.6, delay: 0.3 }}
-          className="rounded-lg border border-white/10 p-5 bg-white/5 hover:border-purple-400/30 transition-all"
-        >
+        <div className="bg-white/5 backdrop-blur-sm rounded-lg p-4 border border-white/10">
           <div className="flex items-start gap-3">
-            <div className="h-10 w-10 rounded-full bg-purple-500/20 border border-purple-400/30 flex items-center justify-center flex-shrink-0">
+            <div className="h-10 w-10 rounded-full bg-purple-500/20 flex items-center justify-center flex-shrink-0">
               <span className="text-lg">💬</span>
             </div>
             <div className="flex-1">
@@ -296,17 +272,12 @@ export default function PredictiveGrowthEngine({ locale, clientId = null }: Pred
               )}
             </div>
           </div>
-        </motion.div>
+        </div>
 
         {/* Language Ratio */}
-        <motion.div
-          initial={{ opacity: 0, x: 20 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ duration: 0.6, delay: 0.4 }}
-          className="rounded-lg border border-white/10 p-5 bg-white/5 hover:border-cyan-400/30 transition-all"
-        >
+        <div className="bg-white/5 backdrop-blur-sm rounded-lg p-4 border border-white/10">
           <div className="flex items-start gap-3">
-            <div className="h-10 w-10 rounded-full bg-cyan-500/20 border border-cyan-400/30 flex items-center justify-center flex-shrink-0">
+            <div className="h-10 w-10 rounded-full bg-cyan-500/20 flex items-center justify-center flex-shrink-0">
               <span className="text-lg">🌐</span>
             </div>
             <div className="flex-1">
@@ -346,9 +317,9 @@ export default function PredictiveGrowthEngine({ locale, clientId = null }: Pred
               </div>
             </div>
           </div>
-        </motion.div>
+        </div>
       </div>
-    </div>
+    </motion.div>
   );
 }
 

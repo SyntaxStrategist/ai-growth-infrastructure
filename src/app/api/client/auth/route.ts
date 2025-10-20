@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { supabase } from '../../../../lib/supabase';
 import { verifyPassword } from '../../../../lib/clients';
 
+import { handleApiError } from '../../../../lib/error-handler';
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
@@ -110,11 +111,7 @@ export async function POST(req: NextRequest) {
     });
 
   } catch (error) {
-    console.error('[ClientAuth] ❌ Unexpected error:', error);
-    return NextResponse.json(
-      { success: false, error: 'Internal server error' },
-      { status: 500 }
-    );
+    return handleApiError(error, 'API');
   }
 }
 

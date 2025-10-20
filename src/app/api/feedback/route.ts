@@ -33,6 +33,7 @@ import {
   getEmailOutcomeAnalysis
 } from '../../../lib/outcome-tracker';
 
+import { handleApiError } from '../../../lib/error-handler';
 // Types for API requests
 interface LogFeedbackRequest {
   action_type: 'lead_conversion' | 'email_response' | 'user_action' | 'system_performance';
@@ -170,14 +171,7 @@ export async function POST(req: NextRequest) {
     }
 
   } catch (error) {
-    console.error('[FeedbackAPI] Error processing feedback request:', error);
-    return NextResponse.json(
-      { 
-        success: false, 
-        error: error instanceof Error ? error.message : 'Internal server error' 
-      },
-      { status: 500 }
-    );
+    return handleApiError(error, 'API');
   }
 }
 
@@ -261,14 +255,7 @@ export async function GET(req: NextRequest) {
     }
 
   } catch (error) {
-    console.error('[FeedbackAPI] Error retrieving feedback data:', error);
-    return NextResponse.json(
-      { 
-        success: false, 
-        error: error instanceof Error ? error.message : 'Internal server error' 
-      },
-      { status: 500 }
-    );
+    return handleApiError(error, 'API');
   }
 }
 
@@ -331,14 +318,7 @@ export async function PUT(req: NextRequest) {
     }
 
   } catch (error) {
-    console.error('[FeedbackAPI] Error updating feedback:', error);
-    return NextResponse.json(
-      { 
-        success: false, 
-        error: error instanceof Error ? error.message : 'Internal server error' 
-      },
-      { status: 500 }
-    );
+    return handleApiError(error, 'API');
   }
 }
 

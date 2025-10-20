@@ -2,6 +2,7 @@ import { NextRequest } from "next/server";
 import { getArchivedLeads } from "../../../../lib/supabase";
 import { translateAIFields } from "../../../../lib/ai-translation";
 
+import { handleApiError } from '../../../../lib/error-handler';
 export async function GET(req: NextRequest) {
   try {
     const url = new URL(req.url);

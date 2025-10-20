@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { supabase } from '../../../../lib/supabase';
 import { resolveClientId, validateClientId } from '../../../../lib/client-resolver';
 
+import { handleApiError } from '../../../../lib/error-handler';
 export async function GET(req: NextRequest) {
   try {
     const clientId = req.nextUrl.searchParams.get('clientId');
@@ -150,10 +151,6 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ success: true, data: insights });
     
   } catch (error) {
-    console.error('[ClientInsights] ❌ Error:', error);
-    return NextResponse.json(
-      { success: false, error: error instanceof Error ? error.message : 'Unknown error' },
-      { status: 500 }
-    );
+    return handleApiError(error, 'API');
   }
 }

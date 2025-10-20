@@ -5,6 +5,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 
+import { handleApiError } from '../../../../lib/error-handler';
 /**
  * Get prospect intelligence configuration status
  * Returns which data sources are available without exposing API keys
@@ -77,13 +78,6 @@ export async function GET(_req: NextRequest) {
     return NextResponse.json(responseData);
 
   } catch (error) {
-    console.error('[ProspectConfig] ❌ Error:', error);
-    return NextResponse.json(
-      {
-        success: false,
-        error: 'Failed to fetch configuration'
-      },
-      { status: 500 }
-    );
+    return handleApiError(error, 'API');
   }
 }

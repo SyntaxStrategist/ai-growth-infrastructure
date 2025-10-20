@@ -146,17 +146,16 @@ export default function ClientProspectIntelligencePage() {
     of: isFrench ? 'de' : 'of'
   };
 
-  // Check authentication and fetch data
+  // Single useEffect to fetch data when client context is ready
   useEffect(() => {
-    if (!session.isAuthenticated || !session.client) {
-      console.log('[ClientProspectIntelligence] Not authenticated, redirecting to login');
-      router.push(`/${locale}/client/login`);
-      return;
-    }
-
+    // At this point, we know client and clientId exist due to the guard above
+    if (!session.client?.clientId) return; // Additional safety check
+    
+    console.log('[ClientProspectIntelligence] Client context initialized, fetching data....');
+    
     fetchConfig();
     loadProspects();
-  }, [session, locale, router]);
+  }, [session.client?.clientId, locale, router]);
 
   const fetchConfig = async () => {
     if (!session.client) return;
@@ -420,6 +419,21 @@ export default function ClientProspectIntelligencePage() {
               {isFrench ? 'Configurer le Profil Client' : 'Configure Client Profile'}
             </a>
           </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Guard: Only render and trigger API requests after client context is ready
+  if (!session.isAuthenticated || !session.client?.clientId) {
+    console.log('[ClientProspectIntelligence] Waiting for client context...');
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-gray-900 via-blue-900 to-gray-900 text-white p-4 sm:p-8 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white mx-auto mb-4"></div>
+          <p className="text-white/70 text-lg">
+            {isFrench ? 'Chargement des données client...' : 'Loading client data...'}
+          </p>
         </div>
       </div>
     );

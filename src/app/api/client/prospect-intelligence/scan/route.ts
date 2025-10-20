@@ -7,6 +7,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getAuthenticatedClientId, createServerSupabaseClient } from '../../../../../lib/supabase-server-auth';
 import { runProspectPipeline } from '../../../../../../prospect-intelligence/prospect_pipeline';
 
+import { handleApiError } from '../../../../../lib/error-handler';
 /**
  * Transform client ICP data into pipeline configuration
  */

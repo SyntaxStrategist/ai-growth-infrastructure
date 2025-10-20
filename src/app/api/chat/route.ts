@@ -1,6 +1,7 @@
 import OpenAI from "openai";
 import { NextRequest } from "next/server";
 
+import { handleApiError } from '../../../lib/error-handler';
 const openai = new OpenAI({
 	apiKey: process.env.OPENAI_API_KEY,
 });

@@ -131,3 +131,92 @@ img, picture, video, canvas, svg {
 .text-muted {
   @apply text-xs text-white/50 uppercase tracking-wide;
 }
+
+/* Enhanced Typography and Visual Hierarchy */
+.text-hierarchy-h1 {
+  @apply text-4xl font-bold leading-tight tracking-tight;
+}
+
+.text-hierarchy-h2 {
+  @apply text-3xl font-semibold leading-tight tracking-tight;
+}
+
+.text-hierarchy-h3 {
+  @apply text-2xl font-semibold leading-snug tracking-tight;
+}
+
+.text-hierarchy-h4 {
+  @apply text-xl font-medium leading-snug tracking-tight;
+}
+
+.text-hierarchy-body {
+  @apply text-base leading-relaxed;
+}
+
+.text-hierarchy-small {
+  @apply text-sm leading-relaxed;
+}
+
+.text-hierarchy-caption {
+  @apply text-xs leading-relaxed;
+}
+
+/* Improved Button Sizes for Touch */
+.btn-touch {
+  @apply min-h-[44px] min-w-[44px] flex items-center justify-center;
+}
+
+.btn-touch-lg {
+  @apply min-h-[48px] min-w-[48px] flex items-center justify-center;
+}
+
+/* Enhanced Focus States */
+.focus-enhanced {
+  @apply focus:outline-none focus:ring-2 focus:ring-purple-500/50 focus:ring-offset-2 focus:ring-offset-transparent;
+}
+
+/* Improved Mobile Responsiveness */
+.mobile-card {
+  @apply lg:hidden;
+}
+
+.desktop-table {
+  @apply hidden lg:block;
+}
+
+/* Better Line Clamping */
+.line-clamp-2 {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.line-clamp-3 {
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* Enhanced Form Inputs */
+.input-enhanced {
+  @apply w-full px-4 py-4 rounded-lg bg-white/10 border border-white/20 text-white placeholder:text-white/50 focus:outline-none focus:ring-2 focus:ring-purple-500/50 min-h-[48px] text-base transition-all;
+}
+
+.select-enhanced {
+  @apply w-full px-4 py-4 rounded-lg bg-white/10 border border-white/20 text-white focus:outline-none focus:ring-2 focus:ring-purple-500/50 min-h-[48px] text-base transition-all;
+}
+
+/* Improved Spacing Consistency */
+.space-section {
+  @apply space-y-6;
+}
+
+.space-component {
+  @apply space-y-4;
+}
+
+.space-element {
+  @apply space-y-2;
+}

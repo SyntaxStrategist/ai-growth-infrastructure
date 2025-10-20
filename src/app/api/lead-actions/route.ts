@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { supabase } from "../../../lib/supabase";
 import { randomUUID } from "crypto";
 
+import { handleApiError } from '../../../lib/error-handler';
 // Translation mappings for action data
 const tagTranslations = {
   // English to French
@@ -421,15 +422,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ success: true, message, data: logData });
     
   } catch (error) {
-    console.error('[LeadActions] Error processing lead action:', error);
-    return NextResponse.json(
-      { 
-        success: false, 
-        message: "Internal server error", 
-        error: error instanceof Error ? error.message : "Unknown error" 
-      },
-      { status: 500 }
-    );
+    return handleApiError(error, 'API');
   }
 }
 
@@ -542,17 +535,6 @@ export async function GET(req: NextRequest) {
     console.log('[LeadActions] ============================================');
     return NextResponse.json({ success: true, data: translatedData });
   } catch (error) {
-    console.error('[LeadActions] ============================================');
-    console.error('[LeadActions] ❌ GET request failed');
-    console.error('[LeadActions] ============================================');
-    console.error('[LeadActions] Error type:', error instanceof Error ? error.constructor.name : typeof error);
-    console.error('[LeadActions] Error message:', error instanceof Error ? error.message : String(error));
-    console.error('[LeadActions] Full error object:', error);
-    console.error('[LeadActions] ============================================');
-    
-    return NextResponse.json(
-      { success: false, error: error instanceof Error ? error.message : "Internal Server Error" },
-      { status: 500 }
-    );
+    return handleApiError(error, 'API');
   }
 }

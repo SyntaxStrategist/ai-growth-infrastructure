@@ -6,6 +6,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { runProspectPipeline } from '../../../../../prospect-intelligence/prospect_pipeline';
 
+import { handleApiError } from '../../../../lib/error-handler';
 export async function POST(req: NextRequest) {
   console.log('[ProspectAPI] ============================================');
   console.log('[ProspectAPI] Scan request received');
@@ -47,14 +48,7 @@ export async function POST(req: NextRequest) {
     });
 
   } catch (error) {
-    console.error('[ProspectAPI] ❌ Scan failed:', error);
-    return NextResponse.json(
-      {
-        success: false,
-        error: error instanceof Error ? error.message : 'Scan failed'
-      },
-      { status: 500 }
-    );
+    return handleApiError(error, 'API');
   }
 }
 

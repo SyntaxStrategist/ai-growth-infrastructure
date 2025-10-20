@@ -9,6 +9,7 @@ import { enrichLeadWithAI } from "../../../lib/ai-enrichment";
 import { isTestLead, logTestDetection } from "../../../lib/test-detection";
 import { buildPersonalizedHtmlEmail } from "../../../lib/personalized-email";
 import { trackAiOutcome } from "../../../lib/outcome-tracker";
+import { handleApiError } from '../../../lib/error-handler';
 
 type LeadPayload = {
 	name?: string;
@@ -750,21 +751,8 @@ export async function POST(req: NextRequest) {
 		);
 	}
 } catch (error) {
-		const message = error instanceof Error ? error.message : "Unknown error";
-		console.error('[Lead API] ============================================');
-		console.error('[Lead API] ❌ FATAL ERROR');
-		console.error('[Lead API] ============================================');
-		console.error('[Lead API] Error type:', error instanceof Error ? error.constructor.name : typeof error);
-		console.error('[Lead API] Error message:', message);
-		console.error('[Lead API] Error stack:', error instanceof Error ? error.stack : 'N/A');
-		console.error('[Lead API] Full error object:', error);
-		console.error('[Lead API] ============================================');
-		
-		return new Response(
-			JSON.stringify({ success: false, error: message }),
-			{ status: 500, headers: { "Content-Type": "application/json" } }
-		);
-	}
+	return handleApiError(error, 'Lead API');
+}
 }
 
 // Use Node.js runtime for fs access

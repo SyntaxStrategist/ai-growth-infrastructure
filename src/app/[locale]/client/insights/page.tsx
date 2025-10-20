@@ -47,16 +47,15 @@ export default function ClientInsightsPage() {
     noData: isFrench ? 'Aucune donnée disponible' : 'No data available',
   };
 
-  // Check authentication and fetch insights
+  // Single useEffect to fetch data when client context is ready
   useEffect(() => {
-    if (!session.isAuthenticated || !session.client) {
-      console.log('[ClientInsights] Not authenticated, redirecting to login');
-      router.push(`/${locale}/client/login`);
-      return;
-    }
-
+    // At this point, we know client and clientId exist due to the guard above
+    if (!session.client?.clientId) return; // Additional safety check
+    
+    console.log('[ClientInsights] Client context initialized, fetching data....');
+    
     fetchInsights();
-  }, [session, locale, router]);
+  }, [session.client?.clientId, locale, router]);
 
   async function fetchInsights() {
     if (!session.client) return;
@@ -209,6 +208,21 @@ export default function ClientInsightsPage() {
             <div className="text-white/40 text-xl mb-4">📊</div>
             <p className="text-white/60">{t.noData}</p>
           </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Guard: Only render and trigger API requests after client context is ready
+  if (!session.isAuthenticated || !session.client?.clientId) {
+    console.log('[ClientInsights] Waiting for client context...');
+    return (
+      <div className="min-h-screen bg-black text-white flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white mx-auto mb-4"></div>
+          <p className="text-white/70 text-lg">
+            {isFrench ? 'Chargement des données client...' : 'Loading client data...'}
+          </p>
         </div>
       </div>
     );

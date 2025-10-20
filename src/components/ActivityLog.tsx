@@ -47,14 +47,19 @@ export default function ActivityLog({ actions, locale }: ActivityLogProps) {
 
   if (actions.length === 0) {
     return (
-      <div className="rounded-lg border border-white/10 p-6 bg-white/5 text-center">
+      <div className="bg-white/5 backdrop-blur-sm rounded-xl p-6 border border-white/10 text-center">
         <p className="text-white/40 text-sm">{t.noActivity}</p>
       </div>
     );
   }
 
   return (
-    <div className="rounded-lg border border-white/10 p-6 bg-white/5">
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.6, delay: 0.5 }}
+      className="bg-white/5 backdrop-blur-sm rounded-xl p-6 border border-white/10"
+    >
       <div className="flex items-center justify-between mb-4">
         <h3 className="text-lg font-semibold text-white/90">{t.title}</h3>
         <span className="text-xs text-white/40">{t.subtitle}</span>
@@ -91,7 +96,7 @@ export default function ActivityLog({ actions, locale }: ActivityLogProps) {
           </motion.div>
         ))}
       </div>
-    </div>
+    </motion.div>
   );
 }
 

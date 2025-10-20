@@ -9,6 +9,7 @@ import { analyzeConversions, generateAdaptiveWeights } from '../../../../lib/pha
 import { analyzeConversionPatterns, getConversionMetrics } from '../../../../lib/phase3/conversion_analyzer';
 import { calculateDynamicScore } from '../../../../lib/phase3/dynamic_scoring';
 
+import { handleApiError } from '../../../../lib/error-handler';
 export async function POST(request: NextRequest) {
   console.log('[ProspectOptimizationAPI] ============================================');
   console.log('[ProspectOptimizationAPI] Phase 3 optimization request received');
@@ -55,15 +56,7 @@ export async function POST(request: NextRequest) {
     }
     
   } catch (error) {
-    console.error('[ProspectOptimizationAPI] ❌ Request processing failed:', error);
-    return NextResponse.json(
-      { 
-        success: false, 
-        error: 'Request processing failed',
-        details: error instanceof Error ? error.message : 'Unknown error'
-      },
-      { status: 500 }
-    );
+    return handleApiError(error, 'API');
   }
 }
 
@@ -89,15 +82,7 @@ export async function GET(request: NextRequest) {
     }
     
   } catch (error) {
-    console.error('[ProspectOptimizationAPI] ❌ GET request failed:', error);
-    return NextResponse.json(
-      { 
-        success: false, 
-        error: 'GET request failed',
-        details: error instanceof Error ? error.message : 'Unknown error'
-      },
-      { status: 500 }
-    );
+    return handleApiError(error, 'API');
   }
 }
 
@@ -133,16 +118,7 @@ async function handleRunOptimizedPipeline(config?: OptimizedPipelineConfig) {
     });
     
   } catch (error) {
-    console.error('[ProspectOptimizationAPI] ❌ Optimized pipeline failed:', error);
-    return NextResponse.json(
-      { 
-        success: false, 
-        action: 'run_optimized_pipeline',
-        error: 'Optimized pipeline execution failed',
-        details: error instanceof Error ? error.message : 'Unknown error'
-      },
-      { status: 500 }
-    );
+    return handleApiError(error, 'API');
   }
 }
 
@@ -176,16 +152,7 @@ async function handleAnalyzeConversions(body: any) {
     });
     
   } catch (error) {
-    console.error('[ProspectOptimizationAPI] ❌ Conversion analysis failed:', error);
-    return NextResponse.json(
-      { 
-        success: false, 
-        action: 'analyze_conversions',
-        error: 'Conversion analysis failed',
-        details: error instanceof Error ? error.message : 'Unknown error'
-      },
-      { status: 500 }
-    );
+    return handleApiError(error, 'API');
   }
 }
 
@@ -219,16 +186,7 @@ async function handleGenerateAdaptiveWeights(body: any) {
     });
     
   } catch (error) {
-    console.error('[ProspectOptimizationAPI] ❌ Adaptive weights generation failed:', error);
-    return NextResponse.json(
-      { 
-        success: false, 
-        action: 'generate_adaptive_weights',
-        error: 'Adaptive weights generation failed',
-        details: error instanceof Error ? error.message : 'Unknown error'
-      },
-      { status: 500 }
-    );
+    return handleApiError(error, 'API');
   }
 }
 
@@ -258,16 +216,7 @@ async function handleGetConversionMetrics(body: any) {
     });
     
   } catch (error) {
-    console.error('[ProspectOptimizationAPI] ❌ Conversion metrics retrieval failed:', error);
-    return NextResponse.json(
-      { 
-        success: false, 
-        action: 'get_conversion_metrics',
-        error: 'Conversion metrics retrieval failed',
-        details: error instanceof Error ? error.message : 'Unknown error'
-      },
-      { status: 500 }
-    );
+    return handleApiError(error, 'API');
   }
 }
 
@@ -306,16 +255,7 @@ async function handleCalculateDynamicScore(body: any) {
     });
     
   } catch (error) {
-    console.error('[ProspectOptimizationAPI] ❌ Dynamic score calculation failed:', error);
-    return NextResponse.json(
-      { 
-        success: false, 
-        action: 'calculate_dynamic_score',
-        error: 'Dynamic score calculation failed',
-        details: error instanceof Error ? error.message : 'Unknown error'
-      },
-      { status: 500 }
-    );
+    return handleApiError(error, 'API');
   }
 }
 
@@ -469,16 +409,7 @@ async function handleGetOptimizationStatus() {
     });
     
   } catch (error) {
-    console.error('[ProspectOptimizationAPI] ❌ Optimization status retrieval failed:', error);
-    return NextResponse.json(
-      { 
-        success: false, 
-        action: 'get_optimization_status',
-        error: 'Optimization status retrieval failed',
-        details: error instanceof Error ? error.message : 'Unknown error'
-      },
-      { status: 500 }
-    );
+    return handleApiError(error, 'API');
   }
 }
 
@@ -501,15 +432,6 @@ async function handleGetDefaultConfig() {
     });
     
   } catch (error) {
-    console.error('[ProspectOptimizationAPI] ❌ Default config retrieval failed:', error);
-    return NextResponse.json(
-      { 
-        success: false, 
-        action: 'get_default_config',
-        error: 'Default config retrieval failed',
-        details: error instanceof Error ? error.message : 'Unknown error'
-      },
-      { status: 500 }
-    );
+    return handleApiError(error, 'API');
   }
 }

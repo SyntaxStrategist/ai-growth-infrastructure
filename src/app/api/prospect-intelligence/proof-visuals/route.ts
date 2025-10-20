@@ -6,6 +6,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 
+import { handleApiError } from '../../../../lib/error-handler';
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
@@ -149,14 +150,7 @@ export async function POST(req: NextRequest) {
     });
 
   } catch (error) {
-    console.error('[ProofVisualsAPI] ❌ Error:', error);
-    return NextResponse.json(
-      {
-        success: false,
-        error: error instanceof Error ? error.message : 'Failed to generate proof visuals'
-      },
-      { status: 500 }
-    );
+    return handleApiError(error, 'API');
   }
 }
 
@@ -200,14 +194,7 @@ export async function GET(req: NextRequest) {
     });
 
   } catch (error) {
-    console.error('[ProofVisualsAPI] Error:', error);
-    return NextResponse.json(
-      {
-        success: false,
-        error: error instanceof Error ? error.message : 'Failed to fetch proof visuals'
-      },
-      { status: 500 }
-    );
+    return handleApiError(error, 'API');
   }
 }
 

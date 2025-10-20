@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabase } from "../../../lib/supabase";
+import { handleApiError } from '../../../lib/error-handler';
 import type { LeadMemoryRecord } from "../../../lib/supabase";
 
 export async function POST(req: NextRequest) {
@@ -31,11 +32,7 @@ export async function POST(req: NextRequest) {
       data: (data || []) as LeadMemoryRecord[],
     });
   } catch (error) {
-    console.error('[API] Failed to fetch client leads:', error);
-    return NextResponse.json(
-      { success: false, error: "Failed to fetch leads" },
-      { status: 500 }
-    );
+    return handleApiError(error, 'API');
   }
 }
 

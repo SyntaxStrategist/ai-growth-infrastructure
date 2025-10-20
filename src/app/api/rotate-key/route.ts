@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { rotateApiKey } from "../../../lib/supabase";
 import { randomUUID } from "crypto";
 
+import { handleApiError } from '../../../lib/error-handler';
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
@@ -25,11 +26,7 @@ export async function POST(req: NextRequest) {
       data: updatedClient,
     });
   } catch (error) {
-    console.error('[API] Failed to rotate API key:', error);
-    return NextResponse.json(
-      { success: false, error: "Failed to rotate API key" },
-      { status: 500 }
-    );
+    return handleApiError(error, 'API');
   }
 }
 

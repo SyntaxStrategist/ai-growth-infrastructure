@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { runWeeklyAnalysis, runSimulationAnalysis } from "../../../lib/intelligence-engine";
 
+import { handleApiError } from '../../../lib/error-handler';
 /**
  * POST /api/intelligence-engine
  * Trigger weekly intelligence analysis
@@ -76,11 +77,7 @@ export async function POST(req: NextRequest) {
       });
     }
   } catch (error) {
-    console.error('[Intelligence Engine] Analysis failed:', error);
-    return NextResponse.json(
-      { success: false, error: "Analysis failed" },
-      { status: 500 }
-    );
+    return handleApiError(error, 'API');
   }
 }
 
@@ -100,11 +97,7 @@ export async function GET() {
       message: `Processed ${result.processed} analyses with ${result.errors} errors`,
     });
   } catch (error) {
-    console.error('[Intelligence Engine] Analysis failed:', error);
-    return NextResponse.json(
-      { success: false, error: "Analysis failed" },
-      { status: 500 }
-    );
+    return handleApiError(error, 'API');
   }
 }
 

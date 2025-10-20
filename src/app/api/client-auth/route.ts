@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { validateApiKey } from "../../../lib/supabase";
 
+import { handleApiError } from '../../../lib/error-handler';
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
@@ -33,11 +34,7 @@ export async function POST(req: NextRequest) {
       },
     });
   } catch (error) {
-    console.error('[API] Client auth failed:', error);
-    return NextResponse.json(
-      { success: false, error: "Authentication failed" },
-      { status: 500 }
-    );
+    return handleApiError(error, 'API');
   }
 }
 

@@ -2,6 +2,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from '@supabase/supabase-js';
 
+import { handleApiError } from '../../../lib/error-handler';
 // GET /api/growth-insights - Fetch latest growth_brain insights
 export async function GET(req: NextRequest) {
   try {

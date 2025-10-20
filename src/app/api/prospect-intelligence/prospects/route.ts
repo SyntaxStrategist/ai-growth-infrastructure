@@ -5,6 +5,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
+import { handleApiError } from '../../../../lib/error-handler';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
@@ -47,11 +48,7 @@ export async function GET() {
       headers: { 'Content-Type': 'application/json' }
     });
   } catch (err) {
-    console.error('[ProspectAPI Crash]', err);
-    return new Response(JSON.stringify({ error: String(err), data: [] }), {
-      status: 500,
-      headers: { 'Content-Type': 'application/json' }
-    });
+    return handleApiError(err, 'ProspectAPI');
   }
 }
 
@@ -103,12 +100,6 @@ export async function PUT(req: NextRequest) {
     });
 
   } catch (error) {
-    console.error('[ProspectsAPI] ❌ Error updating prospect:', error);
-    console.log('[ProspectsAPI] ============================================');
-    
-    return NextResponse.json(
-      { success: false, error: error instanceof Error ? error.message : 'Failed to update prospect' },
-      { status: 500 }
-    );
+    return handleApiError(error, 'ProspectsAPI');
   }
 }

@@ -8,6 +8,7 @@ import { createClient } from '@supabase/supabase-js';
 import { sendOutreachEmail } from '../../../../lib/outreach/gmail_sender';
 import { generateBrandedEmailTemplate } from '../../../../lib/email/branded_templates';
 
+import { handleApiError } from '../../../../lib/error-handler';
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
@@ -209,16 +210,7 @@ export async function POST(req: NextRequest) {
     });
 
   } catch (error) {
-    console.error('[OutreachAPI] ❌ Error:', error);
-    console.log('[OutreachAPI] ============================================');
-    
-    return NextResponse.json(
-      {
-        success: false,
-        error: error instanceof Error ? error.message : 'Failed to send outreach'
-      },
-      { status: 500 }
-    );
+    return handleApiError(error, 'API');
   }
 }
 
@@ -252,14 +244,7 @@ export async function GET(req: NextRequest) {
       data: { logs: logs || [] }
     });
   } catch (error) {
-    console.error('[OutreachAPI] Error fetching logs:', error);
-    return NextResponse.json(
-      {
-        success: false,
-        error: error instanceof Error ? error.message : 'Failed to fetch outreach logs'
-      },
-      { status: 500 }
-    );
+    return handleApiError(error, 'API');
   }
 }
 

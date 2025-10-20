@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { OutreachEngine } from '@/lib/phase4/outreach_engine';
 import { GmailAPI } from '@/lib/phase4/gmail_integration';
 
+import { handleApiError } from '@/lib/error-handler';
 const outreachEngine = new OutreachEngine();
 const gmailAPI = new GmailAPI();
 
@@ -36,11 +37,7 @@ export async function POST(request: NextRequest) {
     });
 
   } catch (error) {
-    console.error('[GmailWebhook] Error:', error);
-    return NextResponse.json({ 
-      success: false, 
-      error: 'Internal server error' 
-    }, { status: 500 });
+    return handleApiError(error, 'API');
   }
 }
 
@@ -60,11 +57,7 @@ export async function GET(request: NextRequest) {
     });
 
   } catch (error) {
-    console.error('[GmailWebhook] Error:', error);
-    return NextResponse.json({ 
-      success: false, 
-      error: 'Internal server error' 
-    }, { status: 500 });
+    return handleApiError(error, 'API');
   }
 }
 

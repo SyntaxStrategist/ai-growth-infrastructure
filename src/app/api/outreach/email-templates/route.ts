@@ -7,6 +7,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { supabase } from '../../../../lib/supabase';
 import { setClientContext, rlsOperations } from '../../../../lib/rls-helper';
 
+import { handleApiError } from '../../../../lib/error-handler';
 export async function GET(req: NextRequest) {
   try {
     // Get client ID from query parameters or headers
@@ -31,11 +32,7 @@ export async function GET(req: NextRequest) {
     });
 
   } catch (error) {
-    console.error('[Email Templates API] Error:', error);
-    return NextResponse.json(
-      { error: 'Failed to fetch email templates' },
-      { status: 500 }
-    );
+    return handleApiError(error, 'API');
   }
 }
 
@@ -82,11 +79,7 @@ export async function POST(req: NextRequest) {
     });
 
   } catch (error) {
-    console.error('[Email Templates API] Error:', error);
-    return NextResponse.json(
-      { error: 'Failed to create email template' },
-      { status: 500 }
-    );
+    return handleApiError(error, 'API');
   }
 }
 
@@ -136,11 +129,7 @@ export async function PUT(req: NextRequest) {
     });
 
   } catch (error) {
-    console.error('[Email Templates API] Error:', error);
-    return NextResponse.json(
-      { error: 'Failed to update email template' },
-      { status: 500 }
-    );
+    return handleApiError(error, 'API');
   }
 }
 
@@ -188,10 +177,6 @@ export async function DELETE(req: NextRequest) {
     });
 
   } catch (error) {
-    console.error('[Email Templates API] Error:', error);
-    return NextResponse.json(
-      { error: 'Failed to delete email template' },
-      { status: 500 }
-    );
+    return handleApiError(error, 'API');
   }
 }

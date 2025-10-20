@@ -11,6 +11,7 @@
 import { NextRequest } from "next/server";
 import { getAuthUrl } from "../../../../lib/gmail";
 
+import { handleApiError } from '../../../../lib/error-handler';
 export async function GET(_req: NextRequest) {
   try {
     const url = getAuthUrl();

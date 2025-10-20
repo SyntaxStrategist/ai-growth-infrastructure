@@ -3,17 +3,14 @@ import { NextRequest, NextResponse } from "next/server";
 import { getAllClients, createClientRecord, deleteClient } from "../../../lib/supabase";
 import { randomUUID } from "crypto";
 
+import { handleApiError } from '../../../lib/error-handler';
 // GET /api/clients - Fetch all clients
 export async function GET() {
   try {
     const clients = await getAllClients();
     return NextResponse.json({ success: true, data: clients });
   } catch (error) {
-    console.error('[API] Failed to fetch clients:', error);
-    return NextResponse.json(
-      { success: false, error: "Failed to fetch clients" },
-      { status: 500 }
-    );
+    return handleApiError(error, 'API');
   }
 }
 
@@ -41,11 +38,7 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ success: true, data: newClient });
   } catch (error) {
-    console.error('[API] Failed to create client:', error);
-    return NextResponse.json(
-      { success: false, error: "Failed to create client" },
-      { status: 500 }
-    );
+    return handleApiError(error, 'API');
   }
 }
 
@@ -65,11 +58,7 @@ export async function DELETE(req: NextRequest) {
     await deleteClient(clientId);
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error('[API] Failed to delete client:', error);
-    return NextResponse.json(
-      { success: false, error: "Failed to delete client" },
-      { status: 500 }
-    );
+    return handleApiError(error, 'API');
   }
 }
 

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createClient } from '@supabase/supabase-js';
 import { translateText } from '../../../../lib/translation-service';
 import { resolveClientId, validateClientId } from '../../../../lib/client-resolver';
+import { handleApiError } from '../../../../lib/error-handler';
 import OpenAI from 'openai';
 
 const openai = new OpenAI({

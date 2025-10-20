@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { runWeeklyAnalysis } from "../../../../lib/intelligence-engine";
 
+import { handleApiError } from '../../../../lib/error-handler';
 /**
  * GET /api/intelligence-engine/cron
  * Vercel Cron Job endpoint - runs daily at 03:00 UTC

@@ -3,6 +3,7 @@ import { supabase } from '../../../../lib/supabase';
 import { getClientDataAndLeads, getClientDataAndAllLeads } from '../../../../lib/query-batching';
 import { resolveClientId, validateClientId } from '../../../../lib/client-resolver';
 import { translateText } from '../../../../lib/translation-service';
+import { handleApiError } from '../../../../lib/error-handler';
 import OpenAI from 'openai';
 
 const openai = new OpenAI({
@@ -271,12 +272,7 @@ export async function GET(req: NextRequest) {
     });
 
   } catch (error) {
-    console.error('[E2E-Test] [ClientLeads] ❌ Unexpected error:', error);
-    console.error('[E2E-Test] [ClientLeads] ❌ Error stack:', error instanceof Error ? error.stack : 'No stack');
-    return NextResponse.json(
-      { success: false, error: 'Internal server error: ' + (error instanceof Error ? error.message : String(error)) },
-      { status: 500 }
-    );
+    return handleApiError(error, 'API');
   }
 }
 

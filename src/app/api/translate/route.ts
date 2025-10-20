@@ -8,6 +8,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { translateText, translateBatch, getTranslationStats, clearExpiredCache } from '../../../lib/translation-service';
 
+import { handleApiError } from '../../../lib/error-handler';
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
@@ -68,11 +69,7 @@ export async function POST(req: NextRequest) {
     );
 
   } catch (error) {
-    console.error('❌ [TranslateAPI] Translation request failed:', error);
-    return NextResponse.json(
-      { success: false, error: 'Internal server error' },
-      { status: 500 }
-    );
+    return handleApiError(error, 'API');
   }
 }
 
@@ -107,10 +104,6 @@ export async function GET(req: NextRequest) {
     }
 
   } catch (error) {
-    console.error('❌ [TranslateAPI] GET request failed:', error);
-    return NextResponse.json(
-      { success: false, error: 'Internal server error' },
-      { status: 500 }
-    );
+    return handleApiError(error, 'API');
   }
 }

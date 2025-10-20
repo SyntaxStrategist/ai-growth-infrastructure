@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useLocale } from 'next-intl';
 import { motion } from 'framer-motion';
 import UniversalLanguageToggle from '../../../../components/UniversalLanguageToggle';
+import { AdminSettingsSkeleton } from '../../../../components/SkeletonLoader';
 
 export default function AdminSettings() {
   const locale = useLocale();
@@ -219,10 +220,12 @@ ${settings.businessName}${tagline}`;
 
   if (loading && clients.length === 0) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 text-white p-8">
         {/* Universal Language Toggle */}
         <UniversalLanguageToggle />
-        <div className="text-white text-xl">{t.loading}</div>
+        <div className="max-w-4xl mx-auto">
+          <AdminSettingsSkeleton />
+        </div>
       </div>
     );
   }
@@ -262,7 +265,7 @@ ${settings.businessName}${tagline}`;
           <select
             value={selectedClientId}
             onChange={(e) => setSelectedClientId(e.target.value)}
-            className="w-full px-4 py-3 rounded-md bg-white/5 border border-white/10 text-white focus:border-blue-400/50 focus:outline-none transition-all"
+            className="w-full px-4 py-4 rounded-md bg-white/5 border border-white/10 text-white focus:border-blue-400/50 focus:outline-none transition-all min-h-[48px] text-base"
           >
             <option value="">{t.selectClient}...</option>
             {clients.map(client => (
@@ -288,7 +291,7 @@ ${settings.businessName}${tagline}`;
                     type="text"
                     value={settings.industryCategory}
                     onChange={(e) => handleFieldChange('industryCategory', e.target.value)}
-                    className="w-full px-4 py-3 rounded-md bg-white/5 border border-white/10 text-white placeholder:text-white/40 focus:border-blue-400/50 focus:outline-none transition-all"
+                    className="w-full px-4 py-4 rounded-md bg-white/5 border border-white/10 text-white placeholder:text-white/40 focus:border-blue-400/50 focus:outline-none transition-all min-h-[48px] text-base"
                     placeholder={isFrench ? 'Ex: Immobilier, Construction' : 'e.g., Real Estate, Construction'}
                   />
                 </div>
@@ -300,7 +303,7 @@ ${settings.businessName}${tagline}`;
                     type="text"
                     value={settings.primaryService}
                     onChange={(e) => handleFieldChange('primaryService', e.target.value)}
-                    className="w-full px-4 py-3 rounded-md bg-white/5 border border-white/10 text-white placeholder:text-white/40 focus:border-blue-400/50 focus:outline-none transition-all"
+                    className="w-full px-4 py-4 rounded-md bg-white/5 border border-white/10 text-white placeholder:text-white/40 focus:border-blue-400/50 focus:outline-none transition-all min-h-[48px] text-base"
                     placeholder={isFrench ? 'Ex: Rénovations résidentielles' : 'e.g., Residential Sales'}
                   />
                 </div>
@@ -312,7 +315,7 @@ ${settings.businessName}${tagline}`;
                     type="url"
                     value={settings.bookingLink}
                     onChange={(e) => handleFieldChange('bookingLink', e.target.value)}
-                    className="w-full px-4 py-3 rounded-md bg-white/5 border border-white/10 text-white placeholder:text-white/40 focus:border-blue-400/50 focus:outline-none transition-all"
+                    className="w-full px-4 py-4 rounded-md bg-white/5 border border-white/10 text-white placeholder:text-white/40 focus:border-blue-400/50 focus:outline-none transition-all min-h-[48px] text-base"
                     placeholder="https://calendly.com/yourname"
                   />
                 </div>

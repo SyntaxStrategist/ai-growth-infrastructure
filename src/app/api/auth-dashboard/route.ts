@@ -1,5 +1,6 @@
 import { NextRequest } from "next/server";
 
+import { handleApiError } from '../../../lib/error-handler';
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json().catch(() => null);

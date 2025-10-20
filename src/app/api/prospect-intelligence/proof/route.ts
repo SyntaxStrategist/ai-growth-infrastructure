@@ -5,6 +5,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
+import { handleApiError } from '../../../../lib/error-handler';
 import OpenAI from 'openai';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
@@ -163,14 +164,7 @@ export async function GET(req: NextRequest) {
     return NextResponse.json(proofData);
 
   } catch (error) {
-    console.error('[ProofAPI] Exception:', error);
-    return NextResponse.json(
-      {
-        success: false,
-        error: error instanceof Error ? error.message : 'Failed to fetch proof data'
-      },
-      { status: 500 }
-    );
+    return handleApiError(error, 'API');
   }
 }
 

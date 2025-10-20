@@ -5,6 +5,7 @@ import { isTestClient, logTestDetection } from '../../../../lib/test-detection';
 import { google } from 'googleapis';
 import { generatePersonalizedICP } from '../../../../lib/phase3/icp_profile';
 
+import { handleApiError } from '../../../../lib/error-handler';
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
@@ -249,13 +250,7 @@ export async function POST(req: NextRequest) {
     });
 
   } catch (error) {
-    console.error('[E2E-Test] [ClientRegistration] ❌ Unexpected error:', error);
-    console.error('[E2E-Test] [ClientRegistration] ❌ Error stack:', error instanceof Error ? error.stack : 'No stack');
-    console.error('[E2E-Test] [ClientRegistration] ❌ Error message:', error instanceof Error ? error.message : String(error));
-    return NextResponse.json(
-      { success: false, error: 'Internal server error: ' + (error instanceof Error ? error.message : String(error)) },
-      { status: 500 }
-    );
+    return handleApiError(error, 'API');
   }
 }
 

@@ -5,6 +5,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 
+import { handleApiError } from '../../../../lib/error-handler';
 export async function PUT(req: NextRequest) {
   try {
     const { clientId, language } = await req.json();
@@ -67,14 +68,7 @@ export async function PUT(req: NextRequest) {
     });
 
   } catch (error) {
-    console.error('[UpdateLanguageAPI] ❌ Error:', error);
-    return NextResponse.json(
-      {
-        success: false,
-        error: error instanceof Error ? error.message : 'Failed to update language'
-      },
-      { status: 500 }
-    );
+    return handleApiError(error, 'API');
   }
 }
 

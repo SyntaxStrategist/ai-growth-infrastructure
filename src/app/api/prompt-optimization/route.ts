@@ -28,6 +28,7 @@ import {
   initializePromptRegistry
 } from '../../../lib/prompt-registry';
 
+import { handleApiError } from '../../../lib/error-handler';
 // Types for API requests
 interface ExecutePromptRequest {
   prompt_name: string;
@@ -158,14 +159,7 @@ export async function POST(req: NextRequest) {
     }
 
   } catch (error) {
-    console.error('[PromptOptimizationAPI] Error processing request:', error);
-    return NextResponse.json(
-      { 
-        success: false, 
-        error: error instanceof Error ? error.message : 'Internal server error' 
-      },
-      { status: 500 }
-    );
+    return handleApiError(error, 'API');
   }
 }
 
@@ -237,14 +231,7 @@ export async function GET(req: NextRequest) {
     }
 
   } catch (error) {
-    console.error('[PromptOptimizationAPI] Error retrieving data:', error);
-    return NextResponse.json(
-      { 
-        success: false, 
-        error: error instanceof Error ? error.message : 'Internal server error' 
-      },
-      { status: 500 }
-    );
+    return handleApiError(error, 'API');
   }
 }
 
@@ -308,14 +295,7 @@ export async function PUT(req: NextRequest) {
     }
 
   } catch (error) {
-    console.error('[PromptOptimizationAPI] Error updating configuration:', error);
-    return NextResponse.json(
-      { 
-        success: false, 
-        error: error instanceof Error ? error.message : 'Internal server error' 
-      },
-      { status: 500 }
-    );
+    return handleApiError(error, 'API');
   }
 }
 

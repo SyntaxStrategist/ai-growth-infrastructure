@@ -5,6 +5,7 @@ import { OutreachTracker } from '@/lib/phase4/outreach_tracking';
 import { google } from 'googleapis';
 import { createClient } from '@supabase/supabase-js';
 
+import { handleApiError } from '@/lib/error-handler';
 const outreachEngine = new OutreachEngine();
 const templateEngine = new EmailTemplateEngine();
 const tracker = new OutreachTracker();
@@ -93,11 +94,7 @@ export async function GET(request: NextRequest) {
     }
 
   } catch (error) {
-    console.error('[OutreachAPI] Error:', error);
-    return NextResponse.json({ 
-      success: false, 
-      error: 'Internal server error' 
-    }, { status: 500 });
+    return handleApiError(error, 'API');
   }
 }
 
@@ -143,11 +140,7 @@ export async function POST(request: NextRequest) {
     }
 
   } catch (error) {
-    console.error('[OutreachAPI] Error:', error);
-    return NextResponse.json({ 
-      success: false, 
-      error: 'Internal server error' 
-    }, { status: 500 });
+    return handleApiError(error, 'API');
   }
 }
 
@@ -708,11 +701,7 @@ async function sendTestEmail(body: any) {
     });
 
   } catch (error) {
-    console.error('[SendTestEmail] Error:', error);
-    return NextResponse.json({ 
-      success: false, 
-      error: 'Internal server error while sending test email' 
-    }, { status: 500 });
+    return handleApiError(error, 'API');
   }
 }
 

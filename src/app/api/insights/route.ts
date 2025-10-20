@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { supabase } from "../../../lib/supabase";
 
+import { handleApiError } from '../../../lib/error-handler';
 export async function GET() {
   try {
     // Fetch all leads
@@ -67,11 +68,7 @@ export async function GET() {
       },
     });
   } catch (error) {
-    console.error('[API] Failed to fetch insights:', error);
-    return NextResponse.json(
-      { success: false, error: "Failed to fetch insights" },
-      { status: 500 }
-    );
+    return handleApiError(error, 'API');
   }
 }
 

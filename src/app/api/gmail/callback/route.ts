@@ -1,6 +1,7 @@
 import { NextRequest } from "next/server";
 import { getOAuth2Client, storeTokens, getGmailProfile } from "../../../../lib/gmail";
 
+import { handleApiError } from '../../../../lib/error-handler';
 export async function GET(req: NextRequest) {
   try {
     const url = new URL(req.url);
