@@ -620,8 +620,8 @@ export default function ProspectIntelligencePage() {
       <UniversalLanguageToggle />
       
       <div className="max-w-7xl mx-auto">
-        {/* PDL Integration Status Banner */}
-        {!serverConfig.hasPdl && (
+        {/* PDL Integration Status Banner - Only show if PDL is truly inactive */}
+        {!serverConfig.hasPdl && prospects && prospects.length > 0 && prospects[0]?.metadata?.source !== 'pdl' && (
           <div className="mb-6 p-4 rounded-lg bg-yellow-500/10 border border-yellow-500/30">
             <div className="flex items-center gap-3">
               <span className="text-2xl">⚠️</span>

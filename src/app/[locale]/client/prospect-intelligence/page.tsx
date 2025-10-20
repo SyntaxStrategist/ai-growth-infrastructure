@@ -65,7 +65,6 @@ export default function ClientProspectIntelligencePage() {
   const [showToast, setShowToast] = useState(false);
   const [toastMessage, setToastMessage] = useState('');
   const [showOnlyHighPriority, setShowOnlyHighPriority] = useState(false);
-  const [hideTestProspects, setHideTestProspects] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [sendingOutreach, setSendingOutreach] = useState<Record<string, boolean>>({});
   const [generatingProof, setGeneratingProof] = useState(false);
@@ -89,7 +88,7 @@ export default function ClientProspectIntelligencePage() {
     industries: [] as string[],
     regions: [] as string[],
     minScore: 70 as number,
-    maxResults: 20 as number,
+    maxResults: 10 as number, // Changed from 20 to 10
     testMode: false, // Client version should use live data
     usePdl: false,
     scanForms: true
@@ -113,7 +112,6 @@ export default function ClientProspectIntelligencePage() {
     minScore: isFrench ? 'Score Minimum' : 'Min Score',
     maxResults: isFrench ? 'Résultats Maximum' : 'Max Results',
     testMode: isFrench ? 'Mode Test' : 'Test Mode',
-    scanForms: isFrench ? 'Scanner les formulaires' : 'Scan Forms',
     scanButton: isFrench ? '🧠 Lancer un scan de prospects' : '🧠 Run Prospect Scan',
     scanning: isFrench ? 'Scan en cours...' : 'Scanning...',
     latestResults: isFrench ? 'Derniers Résultats' : 'Latest Results',
@@ -127,7 +125,6 @@ export default function ClientProspectIntelligencePage() {
     errors: isFrench ? 'Erreurs' : 'Errors',
     prospectCandidates: isFrench ? 'Candidats Prospects' : 'Prospect Candidates',
     showOnlyHighPriority: isFrench ? 'Afficher seulement haute priorité' : 'Show Only High Priority',
-    hideTestProspects: isFrench ? 'Masquer les données de test' : 'Hide Test Data',
     businessName: isFrench ? 'Nom de l\'Entreprise' : 'Business Name',
     industry: isFrench ? 'Industrie' : 'Industry',
     region: isFrench ? 'Région' : 'Region',
@@ -182,7 +179,7 @@ export default function ClientProspectIntelligencePage() {
           industries: json.data.industries || [],
           regions: ['CA'], // Default region for client
           minScore: json.data.minScore || 70,
-          maxResults: json.data.maxProspects || 20,
+          maxResults: Math.min(json.data.maxProspects || 10, 10), // Cap at 10
           testMode: false, // Client version uses live data
           usePdl: false, // Client version doesn't use PDL
           scanForms: true
@@ -364,9 +361,7 @@ export default function ClientProspectIntelligencePage() {
   };
 
   // Filter prospects based on toggle
-  let filteredProspects = hideTestProspects 
-    ? (prospects || []).filter(p => !p.is_test)
-    : (prospects || []);
+  let filteredProspects = (prospects || []);
 
   if (showOnlyHighPriority) {
     filteredProspects = filteredProspects.filter(p => isHighPriority(p.automation_need_score));
@@ -498,9 +493,9 @@ export default function ClientProspectIntelligencePage() {
               <label className="block text-sm text-white/70 mb-2">{t.regions}</label>
               <input
                 type="text"
-                value={config.regions.join(', ')}
-                readOnly
-                className="w-full px-3 py-2 rounded-lg bg-white/10 border border-white/20 text-white/70 cursor-not-allowed"
+                value="CA"
+                disabled
+                className="w-full px-3 py-2 rounded-lg bg-white/5 border border-white/10 text-white/50 cursor-not-allowed"
               />
               <p className="text-xs text-white/50 mt-1">
                 {isFrench ? 'Région par défaut' : 'Default region'}
@@ -512,8 +507,10 @@ export default function ClientProspectIntelligencePage() {
               <input
                 type="number"
                 value={config.minScore}
-                readOnly
-                className="w-full px-3 py-2 rounded-lg bg-white/10 border border-white/20 text-white/70 cursor-not-allowed"
+                onChange={(e) => setConfig({ ...config, minScore: parseInt(e.target.value) || 0 })}
+                className="w-full px-3 py-2 rounded-lg bg-white/10 border border-white/20 text-white focus:border-purple-400 focus:outline-none"
+                min="0"
+                max="100"
               />
               <p className="text-xs text-white/50 mt-1">
                 {isFrench ? 'Calculé automatiquement' : 'Auto-calculated'}
@@ -525,25 +522,20 @@ export default function ClientProspectIntelligencePage() {
               <input
                 type="number"
                 value={config.maxResults}
-                readOnly
-                className="w-full px-3 py-2 rounded-lg bg-white/10 border border-white/20 text-white/70 cursor-not-allowed"
+                onChange={(e) => {
+                  const value = parseInt(e.target.value) || 0;
+                  const cappedValue = Math.min(value, 10); // Cap at 10
+                  setConfig({ ...config, maxResults: cappedValue });
+                }}
+                className="w-full px-3 py-2 rounded-lg bg-white/10 border border-white/20 text-white focus:border-purple-400 focus:outline-none"
+                min="1"
+                max="10"
               />
               <p className="text-xs text-white/50 mt-1">
-                {isFrench ? 'Limite recommandée' : 'Recommended limit'}
+                {isFrench ? 'Limité à 10 résultats à la fois pour des performances optimales.' : 'Limited to 10 results at a time for optimal performance.'}
               </p>
             </div>
 
-            <div className="flex items-end">
-              <label className="flex items-center cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={config.scanForms}
-                  readOnly
-                  className="mr-2"
-                />
-                <span className="text-sm text-white/70">{t.scanForms}</span>
-              </label>
-            </div>
           </div>
 
           {/* Client ICP Info */}
@@ -708,16 +700,6 @@ export default function ClientProspectIntelligencePage() {
                     className="w-4 h-4 rounded border-white/20 bg-white/10 checked:bg-orange-500 focus:ring-2 focus:ring-orange-500"
                   />
                   <span className="text-sm text-white/70">{t.showOnlyHighPriority}</span>
-                </label>
-
-                <label className="flex items-center gap-2 cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={hideTestProspects}
-                    onChange={(e) => setHideTestProspects(e.target.checked)}
-                    className="w-4 h-4 rounded border-white/20 bg-white/10 checked:bg-blue-500 focus:ring-2 focus:ring-blue-500"
-                  />
-                  <span className="text-sm text-white/70">{t.hideTestProspects}</span>
                 </label>
               </div>
             </div>
