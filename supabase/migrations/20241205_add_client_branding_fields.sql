@@ -21,14 +21,29 @@ ON public.clients(followup_speed);
 CREATE INDEX IF NOT EXISTS idx_clients_ai_personalized_reply 
 ON public.clients(ai_personalized_reply);
 
--- Add constraints to ensure valid values
-ALTER TABLE public.clients
-ADD CONSTRAINT IF NOT EXISTS valid_email_tone 
-CHECK (email_tone IN ('Professional', 'Friendly', 'Formal', 'Energetic'));
-
-ALTER TABLE public.clients
-ADD CONSTRAINT IF NOT EXISTS valid_followup_speed 
-CHECK (followup_speed IN ('Instant', 'Within 1 hour', 'Same day'));
+-- Add constraints to ensure valid values (only if they don't exist)
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_constraint 
+        WHERE conname = 'valid_email_tone' 
+        AND conrelid = 'public.clients'::regclass
+    ) THEN
+        ALTER TABLE public.clients
+        ADD CONSTRAINT valid_email_tone 
+        CHECK (email_tone IN ('Professional', 'Friendly', 'Formal', 'Energetic'));
+    END IF;
+    
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_constraint 
+        WHERE conname = 'valid_followup_speed' 
+        AND conrelid = 'public.clients'::regclass
+    ) THEN
+        ALTER TABLE public.clients
+        ADD CONSTRAINT valid_followup_speed 
+        CHECK (followup_speed IN ('Instant', 'Within 1 hour', 'Same day'));
+    END IF;
+END $$;
 
 -- Add comments for documentation
 COMMENT ON COLUMN public.clients.custom_tagline IS 

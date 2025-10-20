@@ -19,10 +19,12 @@ CREATE TABLE IF NOT EXISTS public.avenir_profile_embeddings (
 );
 
 -- Create index for faster vector similarity search
-CREATE INDEX IF NOT EXISTS idx_avenir_profile_embeddings_embedding
-ON public.avenir_profile_embeddings
-USING ivfflat (embedding vector_cosine_ops)
-WITH (lists = 100);
+-- Note: Vector index creation skipped due to operator class compatibility
+-- Can be added later when vector extension is properly configured
+-- CREATE INDEX IF NOT EXISTS idx_avenir_profile_embeddings_embedding
+-- ON public.avenir_profile_embeddings
+-- USING hnsw (embedding vector_cosine_ops)
+-- WITH (m = 16, ef_construction = 64);
 
 -- Create index for chunk_id lookups
 CREATE INDEX IF NOT EXISTS idx_avenir_profile_embeddings_chunk_id
@@ -37,10 +39,19 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
-CREATE TRIGGER trigger_update_avenir_profile_embeddings_updated_at
-BEFORE UPDATE ON public.avenir_profile_embeddings
-FOR EACH ROW
-EXECUTE FUNCTION update_avenir_profile_embeddings_updated_at();
+-- Create trigger only if it doesn't exist
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_trigger 
+        WHERE tgname = 'trigger_update_avenir_profile_embeddings_updated_at'
+    ) THEN
+        CREATE TRIGGER trigger_update_avenir_profile_embeddings_updated_at
+        BEFORE UPDATE ON public.avenir_profile_embeddings
+        FOR EACH ROW
+        EXECUTE FUNCTION update_avenir_profile_embeddings_updated_at();
+    END IF;
+END $$;
 
 -- Add comments for documentation
 COMMENT ON TABLE public.avenir_profile_embeddings IS 'Stores vector embeddings of Avenir AI Solutions business profile for semantic matching';
