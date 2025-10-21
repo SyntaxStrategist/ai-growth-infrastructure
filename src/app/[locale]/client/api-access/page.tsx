@@ -2,16 +2,15 @@
 
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { useRouter, usePathname } from "../../../../i18n/routing";
+import { useRouter } from "next/navigation";
 import { useLocale } from 'next-intl';
-import { routing } from '../../../../i18n/routing';
 import AvenirLogo from '../../../../components/AvenirLogo';
+import { LanguageToggle } from '../../../../components/LanguageToggle';
 import { restoreSession, type ClientData } from '../../../../utils/session';
 
 export default function ApiAccess() {
   const locale = useLocale();
   const router = useRouter();
-  const pathname = usePathname();
   const isFrench = locale === 'fr';
 
   const [client, setClient] = useState<ClientData | null>(null);
@@ -44,7 +43,7 @@ export default function ApiAccess() {
     } else {
       router.push(`/${locale}/client/dashboard`);
     }
-  }, [locale, router]);
+  }, [router]);
 
   const copyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text);
@@ -69,56 +68,8 @@ export default function ApiAccess() {
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#0f172a] to-[#1e1b4b] text-white">
         {/* Language Toggle */}
         <div className="fixed top-4 right-4 z-50">
-          <div className="flex items-center gap-3 bg-white/10 hover:bg-white/15 backdrop-blur-sm rounded-xl px-5 py-3 shadow-lg transition-all border border-white/20">
-            <button
-              onClick={() => {
-                const segments = pathname.split('/');
-                const currentSegment = segments[1];
-                if (currentSegment && routing.locales.includes(currentSegment as typeof routing.locales[number])) {
-                  segments[1] = 'en';
-                } else {
-                  segments.splice(1, 0, 'en');
-                }
-                const newPath = segments.join('/');
-                router.push(newPath);
-              }}
-              className={`font-semibold uppercase tracking-wider transition-all ${
-                locale === 'en'
-                  ? 'text-purple-400 drop-shadow-[0_0_14px_rgba(192,132,252,0.8)]'
-                  : 'text-gray-400 opacity-50 hover:opacity-80'
-              }`}
-              style={{ fontSize: '18px' }}
-              title="English"
-              aria-label="Switch to English"
-            >
-              EN
-            </button>
-            
-            <div className="w-px h-6 bg-white/30"></div>
-            
-            <button
-              onClick={() => {
-                const segments = pathname.split('/');
-                const currentSegment = segments[1];
-                if (currentSegment && routing.locales.includes(currentSegment as typeof routing.locales[number])) {
-                  segments[1] = 'fr';
-                } else {
-                  segments.splice(1, 0, 'fr');
-                }
-                const newPath = segments.join('/');
-                router.push(newPath);
-              }}
-              className={`font-semibold uppercase tracking-wider transition-all ${
-                locale === 'fr'
-                  ? 'text-purple-400 drop-shadow-[0_0_14px_rgba(192,132,252,0.8)]'
-                  : 'text-gray-400 opacity-50 hover:opacity-80'
-              }`}
-              style={{ fontSize: '18px' }}
-              title="Français"
-              aria-label="Passer au français"
-            >
-              FR
-            </button>
+          <div className="bg-white/10 hover:bg-white/15 backdrop-blur-sm rounded-xl px-5 py-3 shadow-lg transition-all border border-white/20">
+            <LanguageToggle />
           </div>
         </div>
         <p>{t.notAuthenticated}</p>
@@ -148,56 +99,8 @@ export default function ApiAccess() {
             
             {/* Language Toggle - Right Side (24px from edge) */}
             <div className="relative z-50">
-              <div className="flex items-center gap-3 bg-white/10 hover:bg-white/15 backdrop-blur-sm rounded-xl px-5 py-3 shadow-lg transition-all border border-white/20">
-                <button
-                  onClick={() => {
-                    const segments = pathname.split('/');
-                    const currentSegment = segments[1];
-                    if (currentSegment && routing.locales.includes(currentSegment as typeof routing.locales[number])) {
-                      segments[1] = 'en';
-                    } else {
-                      segments.splice(1, 0, 'en');
-                    }
-                    const newPath = segments.join('/');
-                    router.push(newPath);
-                  }}
-                  className={`font-semibold uppercase tracking-wider transition-all ${
-                    locale === 'en'
-                      ? 'text-purple-400 drop-shadow-[0_0_14px_rgba(192,132,252,0.8)]'
-                      : 'text-gray-400 opacity-50 hover:opacity-80'
-                  }`}
-                  style={{ fontSize: '18px' }}
-                  title="English"
-                  aria-label="Switch to English"
-                >
-                  EN
-                </button>
-                
-                <div className="w-px h-6 bg-white/30"></div>
-                
-                <button
-                  onClick={() => {
-                    const segments = pathname.split('/');
-                    const currentSegment = segments[1];
-                    if (currentSegment && routing.locales.includes(currentSegment as typeof routing.locales[number])) {
-                      segments[1] = 'fr';
-                    } else {
-                      segments.splice(1, 0, 'fr');
-                    }
-                    const newPath = segments.join('/');
-                    router.push(newPath);
-                  }}
-                  className={`font-semibold uppercase tracking-wider transition-all ${
-                    locale === 'fr'
-                      ? 'text-purple-400 drop-shadow-[0_0_14px_rgba(192,132,252,0.8)]'
-                      : 'text-gray-400 opacity-50 hover:opacity-80'
-                  }`}
-                  style={{ fontSize: '18px' }}
-                  title="Français"
-                  aria-label="Passer au français"
-                >
-                  FR
-                </button>
+              <div className="bg-white/10 hover:bg-white/15 backdrop-blur-sm rounded-xl px-5 py-3 shadow-lg transition-all border border-white/20">
+                <LanguageToggle />
               </div>
             </div>
           </div>
