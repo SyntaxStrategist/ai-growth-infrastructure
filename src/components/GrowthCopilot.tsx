@@ -151,16 +151,87 @@ export default function GrowthCopilot({ locale, clientId = null }: GrowthCopilot
       }
 
       if (!json.data) {
-        console.log('[GrowthCopilot] No data available - growth_brain table is empty or query returned nothing');
-        setSummary({
-          trendSummary: isFrench 
-            ? 'Aucune donnée disponible. Exécutez d\'abord le moteur d\'intelligence en visitant /api/intelligence-engine'
-            : 'No data available. Run the intelligence engine first by visiting /api/intelligence-engine',
-          recommendedActions: [],
-          prediction: '',
-        });
-        setLoading(false);
-        return;
+        console.log('[GrowthCopilot] No data available - attempting to generate insights automatically...');
+        
+        // Try to automatically generate insights for this client
+        try {
+          if (clientId) {
+            console.log('[GrowthCopilot] Triggering automatic insight generation for client:', clientId);
+            const ensureRes = await fetch('/api/ensure-growth-insights', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ client_id: clientId }),
+            });
+          
+          const ensureJson = await ensureRes.json();
+          console.log('[GrowthCopilot] Auto-generation result:', ensureJson);
+          
+          if (ensureJson.success && ensureJson.data?.success) {
+            console.log('[GrowthCopilot] ✅ Insights generated automatically, retrying fetch...');
+            // Wait a moment for data to be available
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            
+            // Retry the original request
+            const retryRes = await fetch(endpoint);
+            const retryJson = await retryRes.json();
+            
+            if (retryJson.success && retryJson.data) {
+              console.log('[GrowthCopilot] ✅ Successfully fetched auto-generated insights');
+              // Use the retry data and continue with normal processing
+              json.data = retryJson.data;
+            } else {
+              throw new Error('Retry failed');
+            }
+          } else {
+            throw new Error('Auto-generation failed');
+          }
+          } else {
+            // Admin dashboard case - trigger global intelligence engine
+            console.log('[GrowthCopilot] Admin dashboard - triggering global intelligence engine...');
+            const engineRes = await fetch('/api/intelligence-engine', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+            });
+            
+            const engineJson = await engineRes.json();
+            console.log('[GrowthCopilot] Global engine result:', engineJson);
+            
+            if (engineJson.success) {
+              console.log('[GrowthCopilot] ✅ Global insights generated, retrying fetch...');
+              // Wait a moment for data to be available
+              await new Promise(resolve => setTimeout(resolve, 1000));
+              
+              // Retry the original fetch
+              const retryRes = await fetch(endpoint);
+              const retryJson = await retryRes.json();
+              
+              if (retryJson.success && retryJson.data) {
+                console.log('[GrowthCopilot] ✅ Retry successful, processing data...');
+                // Use the retry data and continue with normal processing
+                json.data = retryJson.data;
+              } else {
+                throw new Error('Retry failed');
+              }
+            } else {
+              throw new Error('Global engine failed');
+            }
+          }
+        } catch (autoError) {
+          console.error('[GrowthCopilot] ❌ Auto-generation failed:', autoError);
+          setSummary({
+            trendSummary: isFrench 
+              ? 'Aucune donnée disponible. Le système tente de générer des insights automatiquement...'
+              : 'No data available. The system is attempting to generate insights automatically...',
+            recommendedActions: [
+              isFrench 
+                ? 'Cliquez sur "Générer un nouveau résumé" pour forcer la génération d\'insights'
+                : 'Click "Generate Fresh Summary" to force insight generation'
+            ],
+            prediction: '',
+          });
+          setLoading(false);
+          return;
+        }
       }
 
       const insights = json.data;
