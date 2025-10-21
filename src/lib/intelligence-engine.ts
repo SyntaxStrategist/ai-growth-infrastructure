@@ -63,8 +63,27 @@ export async function analyzeClientLeads(
       console.log('[Engine] Found', leadIds.length, 'total leads for client via lead_actions');
       
       if (leadIds.length === 0) {
-        console.log('[Engine] No leads found for client - returning empty analysis');
-        leads = [];
+        console.log('[Engine] No lead_actions found for client - trying fallback: direct client_id query');
+        
+        // Fallback: Query lead_memory directly by client_id
+        const { data: fallbackData, error: fallbackError } = await db
+          .from('lead_memory')
+          .select('*')
+          .eq('client_id', clientId)
+          .gte('timestamp', periodStart.toISOString())
+          .lte('timestamp', periodEnd.toISOString());
+        
+        if (fallbackError) {
+          console.error('[Engine] ❌ Error in fallback query:', fallbackError);
+          throw fallbackError;
+        }
+        
+        leads = fallbackData || [];
+        console.log('[Engine] Fallback found', leads.length, 'leads directly by client_id');
+        
+        if (leads.length > 0) {
+          console.log('[Engine] ⚠️  Found leads via fallback - lead_actions may be missing for this client');
+        }
       } else {
         // Step 2: Get full lead data for those IDs within the time period
         const { data: leadData, error: leadError } = await db

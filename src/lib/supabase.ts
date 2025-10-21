@@ -671,6 +671,47 @@ export async function upsertLeadWithHistory(params: {
       console.log('[LeadMemory] Verified insight in response:', updatedLead?.relationship_insight?.substring(0, 80) + '...');
       console.log('[LeadMemory] ============================================');
       
+      // Create lead_action record if client_id is present and no action exists yet
+      if (params.client_id) {
+        try {
+          console.log('[LeadMemory] Checking if lead_action exists for updated lead...');
+          
+          // Check if lead_action already exists for this lead and client
+          const { data: existingAction, error: checkError } = await supabase
+            .from('lead_actions')
+            .select('id')
+            .eq('lead_id', existingLead.id)
+            .eq('client_id', params.client_id)
+            .limit(1);
+          
+          if (checkError) {
+            console.error('[LeadMemory] ⚠️  Error checking existing lead_action:', checkError);
+          } else if (!existingAction || existingAction.length === 0) {
+            console.log('[LeadMemory] No lead_action found - creating one...');
+            const { error: actionError } = await supabase
+              .from('lead_actions')
+              .insert({
+                lead_id: existingLead.id,
+                client_id: params.client_id,
+                action: 'created',
+                performed_by: 'system',
+                timestamp: now,
+                is_test: params.is_test || false
+              });
+            
+            if (actionError) {
+              console.error('[LeadMemory] ⚠️  Failed to create lead_action record:', actionError);
+            } else {
+              console.log('[LeadMemory] ✅ Lead_action record created for updated lead');
+            }
+          } else {
+            console.log('[LeadMemory] Lead_action already exists for this lead');
+          }
+        } catch (actionErr) {
+          console.error('[LeadMemory] ⚠️  Exception handling lead_action for updated lead:', actionErr);
+        }
+      }
+      
       return { isNew: false, leadId: existingLead.id, insight: insight };
       
     } else {
@@ -772,6 +813,34 @@ export async function upsertLeadWithHistory(params: {
       console.log('[LeadMemory] ✅ New lead created successfully');
       console.log('[LeadMemory] Inserted lead ID:', insertedLead?.id);
       console.log('[LeadMemory] ============================================');
+      
+      // Create corresponding lead_action record if client_id is present
+      if (params.client_id) {
+        try {
+          console.log('[LeadMemory] Creating lead_action record for new lead...');
+          const { error: actionError } = await supabase
+            .from('lead_actions')
+            .insert({
+              lead_id: id,
+              client_id: params.client_id,
+              action: 'created',
+              performed_by: 'system',
+              timestamp: now,
+              is_test: params.is_test || false
+            });
+          
+          if (actionError) {
+            console.error('[LeadMemory] ⚠️  Failed to create lead_action record:', actionError);
+            // Don't throw error - lead creation was successful, action creation is secondary
+          } else {
+            console.log('[LeadMemory] ✅ Lead_action record created successfully');
+          }
+        } catch (actionErr) {
+          console.error('[LeadMemory] ⚠️  Exception creating lead_action record:', actionErr);
+          // Don't throw error - lead creation was successful, action creation is secondary
+        }
+      }
+      
       return { isNew: true, leadId: id, insight: null };
     }
   } catch (err) {
