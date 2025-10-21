@@ -77,27 +77,24 @@ export default function ApiAccess() {
     <div className="min-h-screen bg-gradient-to-br from-[#0f172a] via-[#1e1b4b] to-[#0f172a] text-white">
       {/* Header with Logo and Language Toggle */}
       <header className="sticky top-0 z-50 bg-black/20 backdrop-blur-lg border-b border-white/10">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3">
-          <div className="grid grid-cols-3 items-center gap-4">
-            {/* Left: Logo - Left-aligned with consistent padding */}
-            <div className="flex justify-start">
-              <a href={`/${locale}`} className="inline-block">
-                <AvenirLogo locale={locale} showText={true} />
-              </a>
-            </div>
+        <div className="w-full px-6 py-4 flex items-center justify-between">
+          {/* Logo - Left Side (24px from edge) */}
+          <a href={`/${locale}`} className="inline-block">
+            <AvenirLogo locale={locale} showText={true} />
+          </a>
+          
+          {/* Right Side - Back Button and Language Toggle */}
+          <div className="flex items-center gap-4">
+            {/* Back to Dashboard Button */}
+            <a
+              href={`/${locale}/client/dashboard`}
+              className="px-4 py-2 rounded-lg bg-white/5 border border-white/10 text-white/70 hover:text-white hover:border-white/20 transition-all text-sm font-medium whitespace-nowrap"
+            >
+              ← {t.backToDashboard}
+            </a>
             
-            {/* Center: Back to Dashboard Button - Centered */}
-            <div className="flex justify-center">
-              <a
-                href={`/${locale}/client/dashboard`}
-                className="px-4 py-2 rounded-lg bg-white/5 border border-white/10 text-white/70 hover:text-white hover:border-white/20 transition-all text-sm font-medium whitespace-nowrap"
-              >
-                ← {t.backToDashboard}
-              </a>
-            </div>
-            
-            {/* Right: Language Toggle - Fully right-aligned */}
-            <div className="flex justify-end">
+            {/* Language Toggle - Right Side (50px up via transform, 24px from edge) */}
+            <div className="relative z-50 -translate-y-[50px]">
               <UniversalLanguageToggle />
             </div>
           </div>
