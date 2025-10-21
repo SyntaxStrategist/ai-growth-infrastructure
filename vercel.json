@@ -3,10 +3,6 @@
     {
       "path": "/api/cron/daily-prospect-queue",
       "schedule": "0 12 * * *"
-    },
-    {
-      "path": "/api/worker/daily-prospect-queue",
-      "schedule": "*/5 * * * *"
     }
   ]
 }
