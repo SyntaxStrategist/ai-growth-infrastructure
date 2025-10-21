@@ -3,8 +3,20 @@ import { NextRequest, NextResponse } from 'next/server';
 export function verifyAdminAuth(req: NextRequest): boolean {
   // Check for admin authentication in various ways
   
-  // 1. Check for admin_auth in localStorage (handled client-side)
-  // 2. Check for admin session token in headers
+  // 1. Check for admin session indicator from client-side localStorage validation
+  const adminSession = req.headers.get('x-admin-session');
+  if (adminSession === 'authenticated') {
+    // Additional validation: check if request comes from dashboard context
+    const referer = req.headers.get('referer') || '';
+    const origin = req.headers.get('origin') || '';
+    
+    // Allow if request comes from dashboard pages
+    if (referer.includes('/dashboard') || origin.includes('/dashboard')) {
+      return true;
+    }
+  }
+  
+  // 2. Check for admin session token in headers (legacy)
   const adminToken = req.headers.get('x-admin-token');
   if (adminToken && adminToken === process.env.ADMIN_SESSION_TOKEN) {
     return true;

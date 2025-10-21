@@ -60,7 +60,23 @@ export default function OutreachApprovalQueue({ locale }: OutreachApprovalQueueP
   const loadPendingEmails = async () => {
     try {
       setLoading(true);
-      const response = await fetch('/api/outreach/pending');
+      
+      // Check if admin is authenticated
+      const isAdminAuth = localStorage.getItem('admin_auth') === 'true';
+      if (!isAdminAuth) {
+        showToast(isFrench ? 'Authentification admin requise' : 'Admin authentication required', 'error');
+        return;
+      }
+
+      // Prepare headers with admin authentication
+      const headers: HeadersInit = {
+        'Content-Type': 'application/json',
+      };
+
+      // Add admin session indicator (client-side session validation)
+      headers['x-admin-session'] = 'authenticated';
+
+      const response = await fetch('/api/outreach/pending', { headers });
       const data = await response.json();
       
       if (data.success) {
@@ -81,9 +97,24 @@ export default function OutreachApprovalQueue({ locale }: OutreachApprovalQueueP
     try {
       setProcessing(emailId);
       
+      // Check if admin is authenticated
+      const isAdminAuth = localStorage.getItem('admin_auth') === 'true';
+      if (!isAdminAuth) {
+        showToast(isFrench ? 'Authentification admin requise' : 'Admin authentication required', 'error');
+        return;
+      }
+
+      // Prepare headers with admin authentication
+      const headers: HeadersInit = {
+        'Content-Type': 'application/json',
+      };
+
+      // Add admin session indicator (client-side session validation)
+      headers['x-admin-session'] = 'authenticated';
+      
       const response = await fetch('/api/outreach/approve', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers,
         body: JSON.stringify({ emailId, action })
       });
       

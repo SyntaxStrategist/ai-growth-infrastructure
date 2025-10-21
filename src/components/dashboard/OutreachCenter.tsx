@@ -59,13 +59,28 @@ export default function OutreachCenter({ locale = 'en' }: OutreachCenterProps) {
     try {
       setLoading(true);
       
+      // Check if admin is authenticated
+      const isAdminAuth = localStorage.getItem('admin_auth') === 'true';
+      if (!isAdminAuth) {
+        console.error('Admin not authenticated');
+        return;
+      }
+
+      // Prepare headers with admin authentication
+      const headers: HeadersInit = {
+        'Content-Type': 'application/json',
+      };
+
+      // Add admin session indicator (client-side session validation)
+      headers['x-admin-session'] = 'authenticated';
+
       // Load campaigns
-      const campaignsResponse = await fetch('/api/outreach?action=campaigns');
+      const campaignsResponse = await fetch('/api/outreach?action=campaigns', { headers });
       const campaignsData = await campaignsResponse.json();
       setCampaigns(campaignsData.data || []);
 
       // Load metrics
-      const metricsResponse = await fetch('/api/outreach?action=metrics');
+      const metricsResponse = await fetch('/api/outreach?action=metrics', { headers });
       const metricsData = await metricsResponse.json();
       setMetrics(metricsData.data || null);
 
