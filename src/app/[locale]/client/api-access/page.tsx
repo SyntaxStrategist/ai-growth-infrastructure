@@ -5,7 +5,6 @@ import { motion } from "framer-motion";
 import { useRouter } from "next/navigation";
 import { useLocale } from 'next-intl';
 import AvenirLogo from '../../../../components/AvenirLogo';
-import UniversalLanguageToggle from '../../../../components/UniversalLanguageToggle';
 import { restoreSession, type ClientData } from '../../../../utils/session';
 
 export default function ApiAccess() {
@@ -66,8 +65,56 @@ export default function ApiAccess() {
   if (!client) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#0f172a] to-[#1e1b4b] text-white">
-        {/* Universal Language Toggle */}
-        <UniversalLanguageToggle />
+        {/* Language Toggle */}
+        <div className="fixed top-4 right-4 z-50">
+          <div className="flex items-center gap-3 bg-white/10 hover:bg-white/15 backdrop-blur-sm rounded-xl px-5 py-3 shadow-lg transition-all border border-white/20">
+            <button
+              onClick={() => {
+                const segments = window.location.pathname.split('/');
+                if (segments[1] === 'en' || segments[1] === 'fr') {
+                  segments[1] = 'en';
+                } else {
+                  segments.unshift('en');
+                }
+                router.push('/' + segments.join('/'));
+              }}
+              className={`font-semibold uppercase tracking-wider transition-all ${
+                locale === 'en'
+                  ? 'text-purple-400 drop-shadow-[0_0_14px_rgba(192,132,252,0.8)]'
+                  : 'text-gray-400 opacity-50 hover:opacity-80'
+              }`}
+              style={{ fontSize: '18px' }}
+              title="English"
+              aria-label="Switch to English"
+            >
+              EN
+            </button>
+            
+            <div className="w-px h-6 bg-white/30"></div>
+            
+            <button
+              onClick={() => {
+                const segments = window.location.pathname.split('/');
+                if (segments[1] === 'en' || segments[1] === 'fr') {
+                  segments[1] = 'fr';
+                } else {
+                  segments.unshift('fr');
+                }
+                router.push('/' + segments.join('/'));
+              }}
+              className={`font-semibold uppercase tracking-wider transition-all ${
+                locale === 'fr'
+                  ? 'text-purple-400 drop-shadow-[0_0_14px_rgba(192,132,252,0.8)]'
+                  : 'text-gray-400 opacity-50 hover:opacity-80'
+              }`}
+              style={{ fontSize: '18px' }}
+              title="Français"
+              aria-label="Passer au français"
+            >
+              FR
+            </button>
+          </div>
+        </div>
         <p>{t.notAuthenticated}</p>
       </div>
     );
@@ -104,7 +151,7 @@ export default function ApiAccess() {
                     } else {
                       segments.unshift('en');
                     }
-                    window.location.href = '/' + segments.join('/');
+                    router.push('/' + segments.join('/'));
                   }}
                   className={`font-semibold uppercase tracking-wider transition-all ${
                     locale === 'en'
@@ -128,7 +175,7 @@ export default function ApiAccess() {
                     } else {
                       segments.unshift('fr');
                     }
-                    window.location.href = '/' + segments.join('/');
+                    router.push('/' + segments.join('/'));
                   }}
                   className={`font-semibold uppercase tracking-wider transition-all ${
                     locale === 'fr'
