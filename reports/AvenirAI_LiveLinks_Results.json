@@ -1,0 +1,702 @@
+[
+  {
+    "name": "English Landing Page",
+    "url": "https://www.aveniraisolutions.ca/en",
+    "type": "page",
+    "status": "✅ Live",
+    "httpStatus": 200,
+    "title": "Avenir AI Solutions",
+    "description": "Build smarter, faster with AI. Try our assistant.",
+    "timestamp": "2025-10-21T01:42:15.218Z"
+  },
+  {
+    "name": "French Landing Page",
+    "url": "https://www.aveniraisolutions.ca/fr",
+    "type": "page",
+    "status": "✅ Live",
+    "httpStatus": 200,
+    "title": "Avenir AI Solutions",
+    "description": "Construisez plus intelligemment et rapidement avec l'IA. Essayez notre assistant.",
+    "timestamp": "2025-10-21T01:42:16.792Z"
+  },
+  {
+    "name": "English Demo Dashboard",
+    "url": "https://www.aveniraisolutions.ca/en/demo",
+    "type": "page",
+    "status": "✅ Live",
+    "httpStatus": 200,
+    "title": "Avenir AI Solutions",
+    "description": "Build smarter, faster with AI. Try our assistant.",
+    "timestamp": "2025-10-21T01:42:18.337Z"
+  },
+  {
+    "name": "French Demo Dashboard",
+    "url": "https://www.aveniraisolutions.ca/fr/demo",
+    "type": "page",
+    "status": "✅ Live",
+    "httpStatus": 200,
+    "title": "Avenir AI Solutions",
+    "description": "Construisez plus intelligemment et rapidement avec l'IA. Essayez notre assistant.",
+    "timestamp": "2025-10-21T01:42:19.765Z"
+  },
+  {
+    "name": "English Client Login",
+    "url": "https://www.aveniraisolutions.ca/en/client/login",
+    "type": "page",
+    "status": "✅ Live",
+    "httpStatus": 200,
+    "title": "Avenir AI Solutions",
+    "description": "Build smarter, faster with AI. Try our assistant.",
+    "timestamp": "2025-10-21T01:42:21.374Z"
+  },
+  {
+    "name": "French Client Login",
+    "url": "https://www.aveniraisolutions.ca/fr/client/login",
+    "type": "page",
+    "status": "✅ Live",
+    "httpStatus": 200,
+    "title": "Avenir AI Solutions",
+    "description": "Construisez plus intelligemment et rapidement avec l'IA. Essayez notre assistant.",
+    "timestamp": "2025-10-21T01:42:22.714Z"
+  },
+  {
+    "name": "English Client Signup",
+    "url": "https://www.aveniraisolutions.ca/en/client/signup",
+    "type": "page",
+    "status": "✅ Live",
+    "httpStatus": 200,
+    "title": "Avenir AI Solutions",
+    "description": "Build smarter, faster with AI. Try our assistant.",
+    "timestamp": "2025-10-21T01:42:24.184Z"
+  },
+  {
+    "name": "French Client Signup",
+    "url": "https://www.aveniraisolutions.ca/fr/client/signup",
+    "type": "page",
+    "status": "✅ Live",
+    "httpStatus": 200,
+    "title": "Avenir AI Solutions",
+    "description": "Construisez plus intelligemment et rapidement avec l'IA. Essayez notre assistant.",
+    "timestamp": "2025-10-21T01:42:25.531Z"
+  },
+  {
+    "name": "English Client Dashboard",
+    "url": "https://www.aveniraisolutions.ca/en/client/dashboard",
+    "type": "page",
+    "status": "✅ Live",
+    "httpStatus": 200,
+    "title": "Avenir AI Solutions",
+    "description": "Build smarter, faster with AI. Try our assistant.",
+    "timestamp": "2025-10-21T01:42:27.037Z"
+  },
+  {
+    "name": "French Client Dashboard",
+    "url": "https://www.aveniraisolutions.ca/fr/client/dashboard",
+    "type": "page",
+    "status": "✅ Live",
+    "httpStatus": 200,
+    "title": "Avenir AI Solutions",
+    "description": "Construisez plus intelligemment et rapidement avec l'IA. Essayez notre assistant.",
+    "timestamp": "2025-10-21T01:42:28.366Z"
+  },
+  {
+    "name": "English Client Settings",
+    "url": "https://www.aveniraisolutions.ca/en/client/settings",
+    "type": "page",
+    "status": "✅ Live",
+    "httpStatus": 200,
+    "title": "Avenir AI Solutions",
+    "description": "Build smarter, faster with AI. Try our assistant.",
+    "timestamp": "2025-10-21T01:42:29.950Z"
+  },
+  {
+    "name": "French Client Settings",
+    "url": "https://www.aveniraisolutions.ca/fr/client/settings",
+    "type": "page",
+    "status": "✅ Live",
+    "httpStatus": 200,
+    "title": "Avenir AI Solutions",
+    "description": "Construisez plus intelligemment et rapidement avec l'IA. Essayez notre assistant.",
+    "timestamp": "2025-10-21T01:42:31.534Z"
+  },
+  {
+    "name": "English Client API Access",
+    "url": "https://www.aveniraisolutions.ca/en/client/api-access",
+    "type": "page",
+    "status": "✅ Live",
+    "httpStatus": 200,
+    "title": "Avenir AI Solutions",
+    "description": "Build smarter, faster with AI. Try our assistant.",
+    "timestamp": "2025-10-21T01:42:33.282Z"
+  },
+  {
+    "name": "French Client API Access",
+    "url": "https://www.aveniraisolutions.ca/fr/client/api-access",
+    "type": "page",
+    "status": "✅ Live",
+    "httpStatus": 200,
+    "title": "Avenir AI Solutions",
+    "description": "Construisez plus intelligemment et rapidement avec l'IA. Essayez notre assistant.",
+    "timestamp": "2025-10-21T01:42:34.717Z"
+  },
+  {
+    "name": "English Client Insights",
+    "url": "https://www.aveniraisolutions.ca/en/client/insights",
+    "type": "page",
+    "status": "✅ Live",
+    "httpStatus": 200,
+    "title": "Avenir AI Solutions",
+    "description": "Build smarter, faster with AI. Try our assistant.",
+    "timestamp": "2025-10-21T01:42:36.219Z"
+  },
+  {
+    "name": "French Client Insights",
+    "url": "https://www.aveniraisolutions.ca/fr/client/insights",
+    "type": "page",
+    "status": "✅ Live",
+    "httpStatus": 200,
+    "title": "Avenir AI Solutions",
+    "description": "Construisez plus intelligemment et rapidement avec l'IA. Essayez notre assistant.",
+    "timestamp": "2025-10-21T01:42:37.482Z"
+  },
+  {
+    "name": "English Client Prospect Intelligence",
+    "url": "https://www.aveniraisolutions.ca/en/client/prospect-intelligence",
+    "type": "page",
+    "status": "✅ Live",
+    "httpStatus": 200,
+    "title": "Avenir AI Solutions",
+    "description": "Build smarter, faster with AI. Try our assistant.",
+    "timestamp": "2025-10-21T01:42:39.002Z"
+  },
+  {
+    "name": "French Client Prospect Intelligence",
+    "url": "https://www.aveniraisolutions.ca/fr/client/prospect-intelligence",
+    "type": "page",
+    "status": "✅ Live",
+    "httpStatus": 200,
+    "title": "Avenir AI Solutions",
+    "description": "Construisez plus intelligemment et rapidement avec l'IA. Essayez notre assistant.",
+    "timestamp": "2025-10-21T01:42:40.299Z"
+  },
+  {
+    "name": "English Admin Login",
+    "url": "https://www.aveniraisolutions.ca/en/admin/login",
+    "type": "page",
+    "status": "✅ Live",
+    "httpStatus": 200,
+    "title": "Avenir AI Solutions",
+    "description": "Build smarter, faster with AI. Try our assistant.",
+    "timestamp": "2025-10-21T01:42:41.765Z"
+  },
+  {
+    "name": "French Admin Login",
+    "url": "https://www.aveniraisolutions.ca/fr/admin/login",
+    "type": "page",
+    "status": "✅ Live",
+    "httpStatus": 200,
+    "title": "Avenir AI Solutions",
+    "description": "Construisez plus intelligemment et rapidement avec l'IA. Essayez notre assistant.",
+    "timestamp": "2025-10-21T01:42:43.079Z"
+  },
+  {
+    "name": "English Admin Dashboard",
+    "url": "https://www.aveniraisolutions.ca/en/dashboard",
+    "type": "page",
+    "status": "✅ Live",
+    "httpStatus": 200,
+    "title": "Avenir AI Solutions",
+    "description": "Build smarter, faster with AI. Try our assistant.",
+    "timestamp": "2025-10-21T01:42:44.467Z"
+  },
+  {
+    "name": "French Admin Dashboard",
+    "url": "https://www.aveniraisolutions.ca/fr/dashboard",
+    "type": "page",
+    "status": "✅ Live",
+    "httpStatus": 200,
+    "title": "Avenir AI Solutions",
+    "description": "Construisez plus intelligemment et rapidement avec l'IA. Essayez notre assistant.",
+    "timestamp": "2025-10-21T01:42:45.850Z"
+  },
+  {
+    "name": "English Admin Settings",
+    "url": "https://www.aveniraisolutions.ca/en/admin/settings",
+    "type": "page",
+    "status": "✅ Live",
+    "httpStatus": 200,
+    "title": "Avenir AI Solutions",
+    "description": "Build smarter, faster with AI. Try our assistant.",
+    "timestamp": "2025-10-21T01:42:47.437Z"
+  },
+  {
+    "name": "French Admin Settings",
+    "url": "https://www.aveniraisolutions.ca/fr/admin/settings",
+    "type": "page",
+    "status": "✅ Live",
+    "httpStatus": 200,
+    "title": "Avenir AI Solutions",
+    "description": "Construisez plus intelligemment et rapidement avec l'IA. Essayez notre assistant.",
+    "timestamp": "2025-10-21T01:42:49.019Z"
+  },
+  {
+    "name": "English Admin Prospect Intelligence",
+    "url": "https://www.aveniraisolutions.ca/en/admin/prospect-intelligence",
+    "type": "page",
+    "status": "✅ Live",
+    "httpStatus": 200,
+    "title": "Avenir AI Solutions",
+    "description": "Build smarter, faster with AI. Try our assistant.",
+    "timestamp": "2025-10-21T01:42:50.482Z"
+  },
+  {
+    "name": "French Admin Prospect Intelligence",
+    "url": "https://www.aveniraisolutions.ca/fr/admin/prospect-intelligence",
+    "type": "page",
+    "status": "✅ Live",
+    "httpStatus": 200,
+    "title": "Avenir AI Solutions",
+    "description": "Construisez plus intelligemment et rapidement avec l'IA. Essayez notre assistant.",
+    "timestamp": "2025-10-21T01:42:51.880Z"
+  },
+  {
+    "name": "English Admin Insights",
+    "url": "https://www.aveniraisolutions.ca/en/dashboard/insights",
+    "type": "page",
+    "status": "✅ Live",
+    "httpStatus": 200,
+    "title": "Avenir AI Solutions",
+    "description": "Build smarter, faster with AI. Try our assistant.",
+    "timestamp": "2025-10-21T01:42:53.352Z"
+  },
+  {
+    "name": "French Admin Insights",
+    "url": "https://www.aveniraisolutions.ca/fr/dashboard/insights",
+    "type": "page",
+    "status": "✅ Live",
+    "httpStatus": 200,
+    "title": "Avenir AI Solutions",
+    "description": "Construisez plus intelligemment et rapidement avec l'IA. Essayez notre assistant.",
+    "timestamp": "2025-10-21T01:42:54.682Z"
+  },
+  {
+    "name": "English Admin Outreach",
+    "url": "https://www.aveniraisolutions.ca/en/dashboard/outreach",
+    "type": "page",
+    "status": "✅ Live",
+    "httpStatus": 200,
+    "title": "Avenir AI Solutions",
+    "description": "Build smarter, faster with AI. Try our assistant.",
+    "timestamp": "2025-10-21T01:42:56.165Z"
+  },
+  {
+    "name": "French Admin Outreach",
+    "url": "https://www.aveniraisolutions.ca/fr/dashboard/outreach",
+    "type": "page",
+    "status": "✅ Live",
+    "httpStatus": 200,
+    "title": "Avenir AI Solutions",
+    "description": "Construisez plus intelligemment et rapidement avec l'IA. Essayez notre assistant.",
+    "timestamp": "2025-10-21T01:42:57.515Z"
+  },
+  {
+    "name": "English Client Management",
+    "url": "https://www.aveniraisolutions.ca/en/dashboard/clients",
+    "type": "page",
+    "status": "✅ Live",
+    "httpStatus": 200,
+    "title": "Avenir AI Solutions",
+    "description": "Build smarter, faster with AI. Try our assistant.",
+    "timestamp": "2025-10-21T01:42:59.052Z"
+  },
+  {
+    "name": "French Client Management",
+    "url": "https://www.aveniraisolutions.ca/fr/dashboard/clients",
+    "type": "page",
+    "status": "✅ Live",
+    "httpStatus": 200,
+    "title": "Avenir AI Solutions",
+    "description": "Construisez plus intelligemment et rapidement avec l'IA. Essayez notre assistant.",
+    "timestamp": "2025-10-21T01:43:00.419Z"
+  },
+  {
+    "name": "Lead Submission API",
+    "url": "https://www.aveniraisolutions.ca/api/lead",
+    "type": "api",
+    "status": "⚠️ Not Found",
+    "httpStatus": 405,
+    "title": "API Endpoint",
+    "description": "API endpoint for lead submission api",
+    "timestamp": "2025-10-21T01:43:03.180Z"
+  },
+  {
+    "name": "Client Authentication API",
+    "url": "https://www.aveniraisolutions.ca/api/client/auth",
+    "type": "api",
+    "status": "⚠️ Not Found",
+    "httpStatus": 405,
+    "title": "API Endpoint",
+    "description": "API endpoint for client authentication api",
+    "timestamp": "2025-10-21T01:43:04.972Z"
+  },
+  {
+    "name": "Client Registration API",
+    "url": "https://www.aveniraisolutions.ca/api/client/register",
+    "type": "api",
+    "status": "⚠️ Not Found",
+    "httpStatus": 405,
+    "title": "API Endpoint",
+    "description": "API endpoint for client registration api",
+    "timestamp": "2025-10-21T01:43:06.832Z"
+  },
+  {
+    "name": "Admin Authentication API",
+    "url": "https://www.aveniraisolutions.ca/api/auth-dashboard",
+    "type": "api",
+    "status": "⚠️ Not Found",
+    "httpStatus": 405,
+    "title": "API Endpoint",
+    "description": "API endpoint for admin authentication api",
+    "timestamp": "2025-10-21T01:43:10.676Z"
+  },
+  {
+    "name": "Client Leads API",
+    "url": "https://www.aveniraisolutions.ca/api/client/leads",
+    "type": "api",
+    "status": "⚠️ Not Found",
+    "httpStatus": 400,
+    "title": "API Endpoint",
+    "description": "API endpoint for client leads api",
+    "timestamp": "2025-10-21T01:43:12.270Z"
+  },
+  {
+    "name": "Client Settings API",
+    "url": "https://www.aveniraisolutions.ca/api/client/settings",
+    "type": "api",
+    "status": "⚠️ Not Found",
+    "httpStatus": 400,
+    "title": "API Endpoint",
+    "description": "API endpoint for client settings api",
+    "timestamp": "2025-10-21T01:43:13.855Z"
+  },
+  {
+    "name": "Client Insights API",
+    "url": "https://www.aveniraisolutions.ca/api/client/insights",
+    "type": "api",
+    "status": "⚠️ Not Found",
+    "httpStatus": 400,
+    "title": "API Endpoint",
+    "description": "API endpoint for client insights api",
+    "timestamp": "2025-10-21T01:43:15.833Z"
+  },
+  {
+    "name": "Client Prospect Intelligence Config API",
+    "url": "https://www.aveniraisolutions.ca/api/client/prospect-intelligence/config",
+    "type": "api",
+    "status": "⚠️ Not Found",
+    "httpStatus": 400,
+    "title": "API Endpoint",
+    "description": "API endpoint for client prospect intelligence config api",
+    "timestamp": "2025-10-21T01:43:17.464Z"
+  },
+  {
+    "name": "Client Prospect Intelligence Prospects API",
+    "url": "https://www.aveniraisolutions.ca/api/client/prospect-intelligence/prospects",
+    "type": "api",
+    "status": "⚠️ Not Found",
+    "httpStatus": 400,
+    "title": "API Endpoint",
+    "description": "API endpoint for client prospect intelligence prospects api",
+    "timestamp": "2025-10-21T01:43:19.043Z"
+  },
+  {
+    "name": "Client Prospect Intelligence Scan API",
+    "url": "https://www.aveniraisolutions.ca/api/client/prospect-intelligence/scan",
+    "type": "api",
+    "status": "⚠️ Not Found",
+    "httpStatus": 405,
+    "title": "API Endpoint",
+    "description": "API endpoint for client prospect intelligence scan api",
+    "timestamp": "2025-10-21T01:43:20.839Z"
+  },
+  {
+    "name": "All Leads API",
+    "url": "https://www.aveniraisolutions.ca/api/leads",
+    "type": "api",
+    "status": "✅ Live",
+    "httpStatus": 200,
+    "title": "API Endpoint",
+    "description": "API endpoint for all leads api",
+    "timestamp": "2025-10-21T01:43:24.689Z"
+  },
+  {
+    "name": "All Clients API",
+    "url": "https://www.aveniraisolutions.ca/api/clients",
+    "type": "api",
+    "status": "✅ Live",
+    "httpStatus": 200,
+    "title": "API Endpoint",
+    "description": "API endpoint for all clients api",
+    "timestamp": "2025-10-21T01:43:26.832Z"
+  },
+  {
+    "name": "Admin Insights API",
+    "url": "https://www.aveniraisolutions.ca/api/insights",
+    "type": "api",
+    "status": "✅ Live",
+    "httpStatus": 200,
+    "title": "API Endpoint",
+    "description": "API endpoint for admin insights api",
+    "timestamp": "2025-10-21T01:43:28.470Z"
+  },
+  {
+    "name": "Lead Actions API",
+    "url": "https://www.aveniraisolutions.ca/api/lead-actions",
+    "type": "api",
+    "status": "✅ Live",
+    "httpStatus": 200,
+    "title": "API Endpoint",
+    "description": "API endpoint for lead actions api",
+    "timestamp": "2025-10-21T01:43:30.065Z"
+  },
+  {
+    "name": "Lead Notes API",
+    "url": "https://www.aveniraisolutions.ca/api/lead-notes",
+    "type": "api",
+    "status": "⚠️ Not Found",
+    "httpStatus": 400,
+    "title": "API Endpoint",
+    "description": "API endpoint for lead notes api",
+    "timestamp": "2025-10-21T01:43:31.659Z"
+  },
+  {
+    "name": "Prospect Intelligence Config API",
+    "url": "https://www.aveniraisolutions.ca/api/prospect-intelligence/config",
+    "type": "api",
+    "status": "✅ Live",
+    "httpStatus": 200,
+    "title": "API Endpoint",
+    "description": "API endpoint for prospect intelligence config api",
+    "timestamp": "2025-10-21T01:43:33.250Z"
+  },
+  {
+    "name": "Prospect Intelligence Prospects API",
+    "url": "https://www.aveniraisolutions.ca/api/prospect-intelligence/prospects",
+    "type": "api",
+    "status": "✅ Live",
+    "httpStatus": 200,
+    "title": "API Endpoint",
+    "description": "API endpoint for prospect intelligence prospects api",
+    "timestamp": "2025-10-21T01:43:34.834Z"
+  },
+  {
+    "name": "Prospect Intelligence Scan API",
+    "url": "https://www.aveniraisolutions.ca/api/prospect-intelligence/scan",
+    "type": "api",
+    "status": "✅ Live",
+    "httpStatus": 200,
+    "title": "API Endpoint",
+    "description": "API endpoint for prospect intelligence scan api",
+    "timestamp": "2025-10-21T01:43:36.417Z"
+  },
+  {
+    "name": "Prospect Intelligence Feedback API",
+    "url": "https://www.aveniraisolutions.ca/api/prospect-intelligence/feedback",
+    "type": "api",
+    "status": "✅ Live",
+    "httpStatus": 200,
+    "title": "API Endpoint",
+    "description": "API endpoint for prospect intelligence feedback api",
+    "timestamp": "2025-10-21T01:43:37.998Z"
+  },
+  {
+    "name": "Prospect Intelligence Proof API",
+    "url": "https://www.aveniraisolutions.ca/api/prospect-intelligence/proof",
+    "type": "api",
+    "status": "⚠️ Not Found",
+    "httpStatus": 400,
+    "title": "API Endpoint",
+    "description": "API endpoint for prospect intelligence proof api",
+    "timestamp": "2025-10-21T01:43:39.573Z"
+  },
+  {
+    "name": "Prospect Intelligence Proof Visuals API",
+    "url": "https://www.aveniraisolutions.ca/api/prospect-intelligence/proof-visuals",
+    "type": "api",
+    "status": "✅ Live",
+    "httpStatus": 200,
+    "title": "API Endpoint",
+    "description": "API endpoint for prospect intelligence proof visuals api",
+    "timestamp": "2025-10-21T01:43:41.161Z"
+  },
+  {
+    "name": "Prospect Intelligence Outreach API",
+    "url": "https://www.aveniraisolutions.ca/api/prospect-intelligence/outreach",
+    "type": "api",
+    "status": "⚠️ Not Found",
+    "httpStatus": 400,
+    "title": "API Endpoint",
+    "description": "API endpoint for prospect intelligence outreach api",
+    "timestamp": "2025-10-21T01:43:42.718Z"
+  },
+  {
+    "name": "Chat API",
+    "url": "https://www.aveniraisolutions.ca/api/chat",
+    "type": "api",
+    "status": "⚠️ Not Found",
+    "httpStatus": 405,
+    "title": "API Endpoint",
+    "description": "API endpoint for chat api",
+    "timestamp": "2025-10-21T01:43:44.778Z"
+  },
+  {
+    "name": "Translation API",
+    "url": "https://www.aveniraisolutions.ca/api/translate",
+    "type": "api",
+    "status": "⚠️ Not Found",
+    "httpStatus": 400,
+    "title": "API Endpoint",
+    "description": "API endpoint for translation api",
+    "timestamp": "2025-10-21T01:43:46.361Z"
+  },
+  {
+    "name": "Intent Translation API",
+    "url": "https://www.aveniraisolutions.ca/api/translate-intent",
+    "type": "api",
+    "status": "⚠️ Not Found",
+    "httpStatus": 404,
+    "title": "API Endpoint",
+    "description": "API endpoint for intent translation api",
+    "timestamp": "2025-10-21T01:43:47.966Z"
+  },
+  {
+    "name": "API Key Rotation API",
+    "url": "https://www.aveniraisolutions.ca/api/rotate-key",
+    "type": "api",
+    "status": "⚠️ Not Found",
+    "httpStatus": 405,
+    "title": "API Endpoint",
+    "description": "API endpoint for api key rotation api",
+    "timestamp": "2025-10-21T01:43:49.803Z"
+  },
+  {
+    "name": "Health Check API",
+    "url": "https://www.aveniraisolutions.ca/api/health",
+    "type": "api",
+    "status": "✅ Live",
+    "httpStatus": 200,
+    "title": "API Endpoint",
+    "description": "API endpoint for health check api",
+    "timestamp": "2025-10-21T01:43:51.392Z"
+  },
+  {
+    "name": "Failover Status API",
+    "url": "https://www.aveniraisolutions.ca/api/failover/status",
+    "type": "api",
+    "status": "✅ Live",
+    "httpStatus": 200,
+    "title": "API Endpoint",
+    "description": "API endpoint for failover status api",
+    "timestamp": "2025-10-21T01:43:52.981Z"
+  },
+  {
+    "name": "Intelligence Engine API",
+    "url": "https://www.aveniraisolutions.ca/api/intelligence-engine",
+    "type": "api",
+    "status": "✅ Live",
+    "httpStatus": 200,
+    "title": "API Endpoint",
+    "description": "API endpoint for intelligence engine api",
+    "timestamp": "2025-10-21T01:43:56.126Z"
+  },
+  {
+    "name": "Intelligence Engine Cron API",
+    "url": "https://www.aveniraisolutions.ca/api/intelligence-engine/cron",
+    "type": "api",
+    "status": "✅ Live",
+    "httpStatus": 200,
+    "title": "API Endpoint",
+    "description": "API endpoint for intelligence engine cron api",
+    "timestamp": "2025-10-21T01:43:58.891Z"
+  },
+  {
+    "name": "Growth Insights API",
+    "url": "https://www.aveniraisolutions.ca/api/growth-insights",
+    "type": "api",
+    "status": "✅ Live",
+    "httpStatus": 200,
+    "title": "API Endpoint",
+    "description": "API endpoint for growth insights api",
+    "timestamp": "2025-10-21T01:44:00.482Z"
+  },
+  {
+    "name": "Outreach API",
+    "url": "https://www.aveniraisolutions.ca/api/outreach",
+    "type": "api",
+    "status": "⚠️ Not Found",
+    "httpStatus": 400,
+    "title": "API Endpoint",
+    "description": "API endpoint for outreach api",
+    "timestamp": "2025-10-21T01:44:02.067Z"
+  },
+  {
+    "name": "Outreach Email Templates API",
+    "url": "https://www.aveniraisolutions.ca/api/outreach/email-templates",
+    "type": "api",
+    "status": "⚠️ Not Found",
+    "httpStatus": 400,
+    "title": "API Endpoint",
+    "description": "API endpoint for outreach email templates api",
+    "timestamp": "2025-10-21T01:44:03.656Z"
+  },
+  {
+    "name": "Feedback API",
+    "url": "https://www.aveniraisolutions.ca/api/feedback",
+    "type": "api",
+    "status": "✅ Live",
+    "httpStatus": 200,
+    "title": "API Endpoint",
+    "description": "API endpoint for feedback api",
+    "timestamp": "2025-10-21T01:44:05.244Z"
+  },
+  {
+    "name": "Prompt Optimization API",
+    "url": "https://www.aveniraisolutions.ca/api/prompt-optimization",
+    "type": "api",
+    "status": "⚠️ Not Found",
+    "httpStatus": 400,
+    "title": "API Endpoint",
+    "description": "API endpoint for prompt optimization api",
+    "timestamp": "2025-10-21T01:44:06.833Z"
+  },
+  {
+    "name": "Gmail Auth API",
+    "url": "https://www.aveniraisolutions.ca/api/gmail/auth",
+    "type": "api",
+    "status": "✅ Live",
+    "httpStatus": 200,
+    "title": "API Endpoint",
+    "description": "API endpoint for gmail auth api",
+    "timestamp": "2025-10-21T01:44:08.778Z"
+  },
+  {
+    "name": "Gmail Callback API",
+    "url": "https://www.aveniraisolutions.ca/api/gmail/callback",
+    "type": "api",
+    "status": "⚠️ Not Found",
+    "httpStatus": 400,
+    "title": "API Endpoint",
+    "description": "API endpoint for gmail callback api",
+    "timestamp": "2025-10-21T01:44:10.363Z"
+  },
+  {
+    "name": "Gmail Webhook API",
+    "url": "https://www.aveniraisolutions.ca/api/gmail-webhook",
+    "type": "api",
+    "status": "✅ Live",
+    "httpStatus": 200,
+    "title": "API Endpoint",
+    "description": "API endpoint for gmail webhook api",
+    "timestamp": "2025-10-21T01:44:11.956Z"
+  }
+]

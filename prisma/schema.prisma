@@ -58,6 +58,7 @@ model Client {
   leadMemory             LeadMemory[]
   growthBrain            GrowthBrain[]
   leadNotes              LeadNote[]
+  outreachCampaigns      OutreachCampaign[]
 
   @@index([apiKey])
   @@index([email])
@@ -234,6 +235,7 @@ model ProspectCandidate {
   // Relations
   outreachLogs         ProspectOutreachLog[]
   formTests            ProspectFormTest[]
+  outreachEmails       OutreachEmail[]
 
   @@index([automationNeedScore(sort: Desc)])
   @@index([contacted])
@@ -301,4 +303,87 @@ model ProspectFormTest {
 
   @@index([prospectId])
   @@map("prospect_form_tests")
+}
+
+// ============================================
+// OUTREACH_CAMPAIGNS TABLE - Outreach campaign management
+// ============================================
+model OutreachCampaign {
+  id                   String    @id @default(uuid()) @db.Uuid
+  name                 String
+  clientId             String?   @map("client_id") @db.Uuid
+  client               Client?   @relation(fields: [clientId], references: [id], onDelete: SetNull)
+  status               String    @default("draft") // draft, active, paused, completed
+  targetCriteria       Json?     @map("target_criteria")
+  emailTemplateId      String?   @map("email_template_id") @db.Uuid
+  followUpSchedule     Json?     @map("follow_up_schedule")
+  createdAt            DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt            DateTime  @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+  metadata             Json?
+
+  // Relations
+  outreachEmails       OutreachEmail[]
+
+  @@index([clientId])
+  @@index([status])
+  @@index([createdAt])
+  @@map("outreach_campaigns")
+}
+
+// ============================================
+// OUTREACH_EMAILS TABLE - Individual outreach emails
+// ============================================
+model OutreachEmail {
+  id                   String    @id @default(uuid()) @db.Uuid
+  campaignId           String?   @map("campaign_id") @db.Uuid
+  campaign             OutreachCampaign? @relation(fields: [campaignId], references: [id], onDelete: SetNull)
+  prospectId           String?   @map("prospect_id") @db.Uuid
+  prospect             ProspectCandidate? @relation(fields: [prospectId], references: [id], onDelete: SetNull)
+  prospectEmail        String    @map("prospect_email")
+  prospectName         String?   @map("prospect_name")
+  companyName          String?   @map("company_name")
+  templateId           String?   @map("template_id") @db.Uuid
+  subject              String?
+  content              String    @db.Text
+  status               String    @default("pending") // pending, approved, rejected, sent, delivered, opened, replied, bounced
+  sentAt               DateTime? @map("sent_at") @db.Timestamptz(6)
+  openedAt             DateTime? @map("opened_at") @db.Timestamptz(6)
+  repliedAt            DateTime? @map("replied_at") @db.Timestamptz(6)
+  threadId             String?   @map("thread_id")
+  gmailMessageId       String?   @map("gmail_message_id")
+  followUpSequence     Int       @default(1) @map("follow_up_sequence")
+  createdAt            DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt            DateTime  @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+  metadata             Json?
+
+  // Relations
+  outreachTracking     OutreachTracking[]
+
+  @@index([campaignId])
+  @@index([prospectId])
+  @@index([status])
+  @@index([sentAt])
+  @@index([createdAt])
+  @@map("outreach_emails")
+}
+
+// ============================================
+// OUTREACH_TRACKING TABLE - Email engagement tracking
+// ============================================
+model OutreachTracking {
+  id                   String    @id @default(uuid()) @db.Uuid
+  emailId              String    @map("email_id") @db.Uuid
+  email                OutreachEmail @relation(fields: [emailId], references: [id], onDelete: Cascade)
+  prospectId           String?   @map("prospect_id") @db.Uuid
+  campaignId           String?   @map("campaign_id") @db.Uuid
+  action               String    // sent, delivered, opened, clicked, replied, bounced, unsubscribed
+  timestamp            DateTime  @default(now()) @db.Timestamptz(6)
+  metadata             Json?
+
+  @@index([emailId])
+  @@index([prospectId])
+  @@index([campaignId])
+  @@index([action])
+  @@index([timestamp])
+  @@map("outreach_tracking")
 }

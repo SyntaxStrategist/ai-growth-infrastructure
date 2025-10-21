@@ -2,6 +2,8 @@
 
 import React, { useState, useEffect } from 'react';
 import { useTranslations } from 'next-intl';
+import OutreachApprovalQueue from './OutreachApprovalQueue';
+import OutreachPerformancePanel from './OutreachPerformancePanel';
 
 interface Campaign {
   id: string;
@@ -122,8 +124,8 @@ export default function OutreachCenter({ locale = 'en' }: OutreachCenterProps) {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">{t('title')}</h1>
-          <p className="text-gray-600">{t('subtitle')}</p>
+          <h1 className="text-2xl font-bold text-white">{t('title')}</h1>
+          <p className="text-white/60">{t('subtitle')}</p>
         </div>
         <button className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center">
           📧 {t('newCampaign')}
@@ -133,50 +135,50 @@ export default function OutreachCenter({ locale = 'en' }: OutreachCenterProps) {
       {/* Metrics Overview */}
       {metrics && (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          <div className="bg-white rounded-lg shadow p-6">
+          <div className="bg-white/5 rounded-lg border border-white/10 p-6">
             <div className="flex items-center">
-              <div className="p-2 bg-blue-100 rounded-lg">
+              <div className="p-2 bg-blue-500/20 rounded-lg">
                 <span className="text-2xl">📧</span>
               </div>
               <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">{t('metrics.emailsSent')}</p>
-                <p className="text-2xl font-bold text-gray-900">{metrics.total_emails_sent}</p>
+                <p className="text-sm font-medium text-white/60">{t('metrics.emailsSent')}</p>
+                <p className="text-2xl font-bold text-white">{metrics.total_emails_sent}</p>
               </div>
             </div>
           </div>
 
-          <div className="bg-white rounded-lg shadow p-6">
+          <div className="bg-white/5 rounded-lg border border-white/10 p-6">
             <div className="flex items-center">
-              <div className="p-2 bg-green-100 rounded-lg">
+              <div className="p-2 bg-green-500/20 rounded-lg">
                 <span className="text-2xl">👁️</span>
               </div>
               <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">{t('metrics.openRate')}</p>
-                <p className="text-2xl font-bold text-gray-900">{formatPercentage(metrics.average_open_rate)}</p>
+                <p className="text-sm font-medium text-white/60">{t('metrics.openRate')}</p>
+                <p className="text-2xl font-bold text-white">{formatPercentage(metrics.average_open_rate)}</p>
               </div>
             </div>
           </div>
 
-          <div className="bg-white rounded-lg shadow p-6">
+          <div className="bg-white/5 rounded-lg border border-white/10 p-6">
             <div className="flex items-center">
-              <div className="p-2 bg-purple-100 rounded-lg">
+              <div className="p-2 bg-purple-500/20 rounded-lg">
                 <span className="text-2xl">💬</span>
               </div>
               <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">{t('metrics.replyRate')}</p>
-                <p className="text-2xl font-bold text-gray-900">{formatPercentage(metrics.average_reply_rate)}</p>
+                <p className="text-sm font-medium text-white/60">{t('metrics.replyRate')}</p>
+                <p className="text-2xl font-bold text-white">{formatPercentage(metrics.average_reply_rate)}</p>
               </div>
             </div>
           </div>
 
-          <div className="bg-white rounded-lg shadow p-6">
+          <div className="bg-white/5 rounded-lg border border-white/10 p-6">
             <div className="flex items-center">
-              <div className="p-2 bg-orange-100 rounded-lg">
+              <div className="p-2 bg-orange-500/20 rounded-lg">
                 <span className="text-2xl">📈</span>
               </div>
               <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">{t('metrics.conversionRate')}</p>
-                <p className="text-2xl font-bold text-gray-900">{formatPercentage(metrics.average_conversion_rate)}</p>
+                <p className="text-sm font-medium text-white/60">{t('metrics.conversionRate')}</p>
+                <p className="text-2xl font-bold text-white">{formatPercentage(metrics.average_conversion_rate)}</p>
               </div>
             </div>
           </div>
@@ -185,12 +187,12 @@ export default function OutreachCenter({ locale = 'en' }: OutreachCenterProps) {
 
       {/* Main Content */}
       <div className="space-y-4">
-        <div className="grid w-full grid-cols-4 bg-gray-100 rounded-lg p-1">
+        <div className="grid w-full grid-cols-5 bg-white/5 rounded-lg p-1 border border-white/10">
           <button 
             className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
               activeTab === 'overview' 
-                ? 'bg-white text-gray-900 shadow-sm' 
-                : 'text-gray-600 hover:text-gray-900'
+                ? 'bg-white/10 text-white shadow-sm' 
+                : 'text-white/60 hover:text-white/80'
             }`}
             onClick={() => setActiveTab('overview')}
           >
@@ -198,9 +200,19 @@ export default function OutreachCenter({ locale = 'en' }: OutreachCenterProps) {
           </button>
           <button 
             className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+              activeTab === 'approval' 
+                ? 'bg-white/10 text-white shadow-sm' 
+                : 'text-white/60 hover:text-white/80'
+            }`}
+            onClick={() => setActiveTab('approval')}
+          >
+            {locale === 'fr' ? 'Approbation' : 'Approval'}
+          </button>
+          <button 
+            className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
               activeTab === 'campaigns' 
-                ? 'bg-white text-gray-900 shadow-sm' 
-                : 'text-gray-600 hover:text-gray-900'
+                ? 'bg-white/10 text-white shadow-sm' 
+                : 'text-white/60 hover:text-white/80'
             }`}
             onClick={() => setActiveTab('campaigns')}
           >
@@ -209,8 +221,8 @@ export default function OutreachCenter({ locale = 'en' }: OutreachCenterProps) {
           <button 
             className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
               activeTab === 'emails' 
-                ? 'bg-white text-gray-900 shadow-sm' 
-                : 'text-gray-600 hover:text-gray-900'
+                ? 'bg-white/10 text-white shadow-sm' 
+                : 'text-white/60 hover:text-white/80'
             }`}
             onClick={() => setActiveTab('emails')}
           >
@@ -219,14 +231,21 @@ export default function OutreachCenter({ locale = 'en' }: OutreachCenterProps) {
           <button 
             className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
               activeTab === 'analytics' 
-                ? 'bg-white text-gray-900 shadow-sm' 
-                : 'text-gray-600 hover:text-gray-900'
+                ? 'bg-white/10 text-white shadow-sm' 
+                : 'text-white/60 hover:text-white/80'
             }`}
             onClick={() => setActiveTab('analytics')}
           >
             {t('tabs.analytics')}
           </button>
         </div>
+
+        {activeTab === 'approval' && (
+          <div className="space-y-6">
+            <OutreachApprovalQueue locale={locale} />
+            <OutreachPerformancePanel locale={locale} />
+          </div>
+        )}
 
         {activeTab === 'overview' && (
           <div className="space-y-4">

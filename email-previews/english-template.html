@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="color-scheme" content="light">
+    <meta name="supported-color-schemes" content="light">
+    <title>TechCorp Solutions - AI Automation Opportunity</title>
+    <style>
+        /* Reset styles for email clients */
+        body, table, td, p, a, li, blockquote {
+            -webkit-text-size-adjust: 100%;
+            -ms-text-size-adjust: 100%;
+        }
+        table, td {
+            mso-table-lspace: 0pt;
+            mso-table-rspace: 0pt;
+        }
+        img {
+            -ms-interpolation-mode: bicubic;
+            border: 0;
+            height: auto;
+            line-height: 100%;
+            outline: none;
+            text-decoration: none;
+        }
+        
+        /* Main styles */
+        body {
+            margin: 0;
+            padding: 0;
+            width: 100% !important;
+            min-width: 100%;
+            height: 100%;
+            background-color: #f5f5f5;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            line-height: 1.6;
+            color: #333333;
+        }
+        
+        .email-container {
+            max-width: 600px;
+            margin: 0 auto;
+            background-color: #ffffff;
+        }
+        
+        .email-header {
+            background-color: #f8f9fa;
+            padding: 16px 20px;
+            border-bottom: 1px solid #e0e0e0;
+        }
+        
+        .email-body {
+            padding: 24px 20px;
+        }
+        
+        .logo-section {
+            text-align: center;
+            margin-bottom: 24px;
+        }
+        
+        .logo-image {
+            max-width: 120px;
+            height: auto;
+            margin-bottom: 12px;
+        }
+        
+        /* Gmail-compatible logo table */
+        .logo-table {
+            margin: 0 auto;
+        }
+        
+        .logo-text {
+            font-size: 28px;
+            font-weight: 700;
+            background: linear-gradient(135deg, #0A2540 0%, #00B8D9 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 8px;
+            display: inline-block;
+        }
+        
+        .logo-tagline {
+            font-size: 14px;
+            color: #666666;
+            font-style: italic;
+        }
+        
+        .content h2 {
+            color: #0A2540;
+            font-size: 20px;
+            margin-bottom: 16px;
+            font-weight: 600;
+        }
+        
+        .content p {
+            margin-bottom: 16px;
+            color: #333333;
+            font-size: 15px;
+        }
+        
+        .content ul {
+            margin: 16px 0;
+            padding-left: 20px;
+        }
+        
+        .content li {
+            margin-bottom: 8px;
+            color: #333333;
+            font-size: 15px;
+        }
+        
+        .cta-section {
+            text-align: center;
+            margin: 24px 0;
+        }
+        
+        .cta-button {
+            display: inline-block;
+            background: linear-gradient(135deg, #0A2540 0%, #00B8D9 100%);
+            color: #ffffff !important;
+            padding: 12px 24px;
+            text-decoration: none;
+            border-radius: 6px;
+            font-weight: 600;
+            font-size: 15px;
+            transition: all 0.2s ease;
+        }
+        
+        .cta-button:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(10, 37, 64, 0.3);
+        }
+        
+        .secondary-cta {
+            text-align: center;
+            margin-top: 16px;
+        }
+        
+        .secondary-cta-text {
+            font-size: 14px;
+            color: #666666;
+            margin-bottom: 8px;
+        }
+        
+        .secondary-cta-link {
+            color: #00B8D9;
+            text-decoration: none;
+            font-weight: 500;
+            font-size: 14px;
+        }
+        
+        .secondary-cta-link:hover {
+            text-decoration: underline;
+        }
+        
+        .signature {
+            margin-top: 32px;
+            padding-top: 20px;
+            border-top: 1px solid #e0e0e0;
+        }
+        
+        .signature-name {
+            font-weight: 600;
+            color: #0A2540;
+            font-size: 16px;
+        }
+        
+        .signature-title {
+            color: #00B8D9;
+            font-size: 14px;
+            margin: 4px 0;
+        }
+        
+        .signature-company {
+            color: #666666;
+            font-size: 14px;
+            margin-bottom: 8px;
+        }
+        
+        .signature-contact {
+            font-size: 14px;
+            color: #666666;
+        }
+        
+        .signature-contact a {
+            color: #00B8D9;
+            text-decoration: none;
+        }
+        
+        .email-footer {
+            background-color: #f8f9fa;
+            padding: 16px 20px;
+            text-align: center;
+            font-size: 12px;
+            color: #666666;
+            border-top: 1px solid #e0e0e0;
+        }
+        
+        .email-footer a {
+            color: #00B8D9;
+            text-decoration: none;
+        }
+        
+        /* Mobile responsive */
+        @media only screen and (max-width: 600px) {
+            .email-container {
+                width: 100% !important;
+            }
+            
+            .email-body {
+                padding: 20px 15px !important;
+            }
+            
+            .logo-text {
+                font-size: 24px !important;
+            }
+            
+            .logo-image {
+                max-width: 90px !important;
+            }
+            
+            /* Mobile logo table adjustments */
+            .logo-table img {
+                width: 60px !important;
+                max-width: 60px !important;
+            }
+            
+            .secondary-cta-text,
+            .secondary-cta-link {
+                font-size: 13px !important;
+            }
+            
+            .content h2 {
+                font-size: 18px !important;
+            }
+            
+            .content p,
+            .content li {
+                font-size: 14px !important;
+            }
+            
+            .cta-button {
+                padding: 10px 20px !important;
+                font-size: 14px !important;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="email-container">
+        <div class="email-header">
+            <div style="font-weight: 600; color: #0A2540; font-size: 14px;">Avenir AI Solutions &lt;contact@aveniraisolutions.ca&gt;</div>
+            <div style="color: #666666; margin-top: 4px; font-size: 13px;">to: john.smith@techcorp.com</div>
+            <div style="font-weight: 600; color: #333333; margin-top: 8px; font-size: 14px;">TechCorp Solutions - AI Automation Opportunity</div>
+        </div>
+        
+        <div class="email-body">
+            <div class="logo-section">
+                <table align="center" border="0" cellpadding="0" cellspacing="0" style="margin: 0 auto;">
+                    <tr>
+                        <td align="center">
+                            <img src="https://www.aveniraisolutions.ca/assets/logo.png" alt="Avenir AI Solutions" width="80" style="display:block;margin:0 auto 12px auto;border:0;outline:none;text-decoration:none;">
+                        </td>
+                    </tr>
+                </table>
+                <div class="logo-text">Avenir AI</div>
+                <div class="logo-tagline">Intelligent Growth Infrastructure</div>
+            </div>
+            
+            <div class="content">
+                <h2>Hi John Smith,</h2>
+                
+                <p>I noticed <strong>TechCorp Solutions</strong> is in the <strong>technology</strong> space and likely dealing with <strong>lead generation challenges, manual prospect research, low conversion rates</strong>.</p>
+                
+                <p>We've helped similar companies in your industry achieve:</p>
+                <ul>
+                    <li><strong>3x higher lead conversion rates</strong> through AI-powered prospect scoring</li>
+                    <li><strong>Automated prospect discovery</strong> that finds your ideal customers 24/7</li>
+                    <li><strong>Intelligent outreach</strong> that gets 3x higher response rates</li>
+                    <li><strong>Real-time lead analysis</strong> with intent, urgency, and confidence scoring</li>
+                </ul>
+                
+                <p>Our AI systems analyze every interaction in real-time, turning conversations into conversions and data into growth.</p>
+                
+                <p>Would you be interested in a 15-minute call to discuss how AI automation could help <strong>TechCorp Solutions</strong> generate more qualified leads and scale your growth?</p>
+                
+                <div class="cta-section">
+                    <a href="https://www.aveniraisolutions.ca/demo" class="cta-button">View Demo</a>
+                    <div class="secondary-cta">
+                        <div class="secondary-cta-text">Or</div>
+                        <a href="https://calendar.app.google/etRVjhWBqNaKc54o8" class="secondary-cta-link">schedule a quick 10-minute chat with me</a>
+                    </div>
+                </div>
+                
+                <p>I'd love to show you how we've helped companies like yours transform their lead generation process.</p>
+                
+                <div class="signature">
+                    <div class="signature-name">Michael Oni</div>
+                    <div class="signature-title">Founder & CEO</div>
+                    <div class="signature-company">Avenir AI Solutions</div>
+                    <div class="signature-contact">
+                        📧 <a href="mailto:contact@aveniraisolutions.ca">contact@aveniraisolutions.ca</a><br>
+                        🌐 <a href="https://aveniraisolutions.ca">aveniraisolutions.ca</a><br>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="email-footer">
+            <p>This email was sent by Avenir AI Solutions. If you no longer wish to receive these emails, you can <a href="https://aveniraisolutions.ca/unsubscribe">unsubscribe here</a>.</p>
+            <p style="margin-top: 8px; font-size: 11px; color: #999999;">
+            </p>
+        </div>
+    </div>
+</body>
+</html>
