@@ -87,6 +87,8 @@ const INDUSTRY_TRANSLATIONS: Record<string, string> = {
   'Medical': 'Médical',
   'Pharmaceutical': 'Pharmaceutique',
   'Biotech': 'Biotechnologie',
+  'Biotechnology': 'Biotechnologie',
+  'biotechnology': 'Biotechnologie',
   'Life Sciences': 'Sciences de la vie',
   'Medical Devices': 'Dispositifs médicaux',
   'Telemedicine': 'Télémédecine',
