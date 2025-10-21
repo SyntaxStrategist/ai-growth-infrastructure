@@ -3,7 +3,8 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { usePathname } from 'next/navigation';
-import { useTranslations } from 'next-intl';
+import { useTranslations, useLocale } from 'next-intl';
+import { formatIndustryField } from '../lib/industry-translation-utils';
 
 interface ProofData {
   success: boolean;
@@ -44,6 +45,10 @@ export default function ProspectProofModal({ isOpen, onClose, prospectId }: Pros
   const locale = pathname.startsWith('/fr') ? 'fr' : 'en';
   const isFrench = locale === 'fr';
   const t = useTranslations('proof');
+  
+  // Industry translation helper
+  const translateIndustryField = (industry: string | undefined) => 
+    formatIndustryField(industry, isFrench);
   
   const [proofData, setProofData] = useState<ProofData | null>(null);
   const [loading, setLoading] = useState(false);
@@ -155,7 +160,7 @@ export default function ProspectProofModal({ isOpen, onClose, prospectId }: Pros
                     
                     <div>
                       <p className="text-sm text-white/50">{t('industry')}</p>
-                      <p className="text-white font-medium">{proofData.prospect.industry}</p>
+                      <p className="text-white font-medium">{translateIndustryField(proofData.prospect.industry)}</p>
                     </div>
                     
                     <div>

@@ -5,6 +5,7 @@ import { motion } from 'framer-motion';
 import { useLocale } from 'next-intl';
 import { useRouter } from 'next/navigation';
 import { useSession } from './SessionProvider';
+import { formatIndustryField } from '../lib/industry-translation-utils';
 
 interface ProspectCandidate {
   id: string;
@@ -76,6 +77,10 @@ export default function ClientProspectIntelligence() {
   const [loading, setLoading] = useState(true);
   const [scanning, setScanning] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Industry translation helper
+  const translateIndustryField = (industry: string | undefined) => 
+    formatIndustryField(industry, isFrench);
 
   // Translations
   const t = {
@@ -361,7 +366,7 @@ export default function ClientProspectIntelligence() {
                     <p className="text-sm text-white/70">{prospect.website}</p>
                     <div className="flex items-center gap-4 mt-2">
                       <span className="text-xs bg-blue-500/20 text-blue-400 px-2 py-1 rounded">
-                        {prospect.industry || 'Unknown'}
+                        {translateIndustryField(prospect.industry)}
                       </span>
                       <span className="text-xs bg-green-500/20 text-green-400 px-2 py-1 rounded">
                         Score: {prospect.automation_need_score || 0}

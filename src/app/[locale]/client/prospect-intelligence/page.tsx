@@ -7,6 +7,7 @@ import { motion } from 'framer-motion';
 import { useSession } from '../../../../components/SessionProvider';
 import UniversalLanguageToggle from '../../../../components/UniversalLanguageToggle';
 import ProspectProofModal from '../../../../components/ProspectProofModal';
+import { formatIndustryField } from '../../../../lib/industry-translation-utils';
 
 interface ProspectCandidate {
   id: string;
@@ -304,26 +305,8 @@ export default function ClientProspectIntelligencePage() {
     router.push(`/${locale}/client/login`);
   };
 
-  const translateIndustry = (industry: string | undefined) => {
-    if (!industry) return 'N/A';
-    const industryTranslations: Record<string, string> = {
-      'technology': isFrench ? 'Technologie' : 'Technology',
-      'construction': isFrench ? 'Construction' : 'Construction',
-      'real_estate': isFrench ? 'Immobilier' : 'Real Estate',
-      'marketing': isFrench ? 'Marketing' : 'Marketing',
-      'consulting': isFrench ? 'Conseil' : 'Consulting',
-      'healthcare': isFrench ? 'Santé' : 'Healthcare',
-      'finance': isFrench ? 'Finance' : 'Finance',
-      'education': isFrench ? 'Éducation' : 'Education',
-      'retail': isFrench ? 'Commerce de détail' : 'Retail',
-      'manufacturing': isFrench ? 'Fabrication' : 'Manufacturing'
-    };
-    
-    if (isFrench && industryTranslations[industry]) {
-      return industryTranslations[industry];
-    }
-    return industry;
-  };
+  const translateIndustryField = (industry: string | undefined) => 
+    formatIndustryField(industry, isFrench);
 
   const formatDate = (dateString: string | undefined) => {
     if (!dateString) return 'N/A';
@@ -771,7 +754,7 @@ export default function ClientProspectIntelligencePage() {
                         </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="text-sm text-white/70">{translateIndustry(prospect.industry)}</div>
+                        <div className="text-sm text-white/70">{translateIndustryField(prospect.industry)}</div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="text-sm text-white/70">{prospect.region || 'N/A'}</div>
