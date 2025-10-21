@@ -179,16 +179,27 @@ export async function searchPdlProspects(
   }
 
   try {
-    // Build search query for PDL
+    // Map ICP industry to PDL taxonomy (more flexible matching)
+    const pdlIndustries = mapICPIndustryToPDL(industry);
+    
+    console.info(`[PDL] Mapped "${industry}" to PDL industries:`, pdlIndustries);
+    
+    // Build search query for PDL with flexible industry matching
     const searchParams = {
       query: JSON.stringify({
         bool: {
           must: [
             { term: { 'location.country': mapRegionToCountry(region) } },
-            { wildcard: { industry: `*${industry.toLowerCase()}*` } }
+            {
+              bool: {
+                should: pdlIndustries.map(pdlInd => ({
+                  term: { industry: pdlInd }
+                }))
+              }
+            }
           ],
           filter: [
-            { range: { employee_count: { gte: 1, lte: 500 } } }, // Small-medium businesses
+            { range: { employee_count: { gte: 1, lte: 1000 } } }, // Widened range for more results
             { exists: { field: 'website' } } // Must have website
           ]
         }
@@ -324,6 +335,71 @@ export async function enrichPdlContact(companyDomain: string): Promise<string[]>
 // ============================================
 // Helper Functions
 // ============================================
+
+/**
+ * Map ICP industries to PDL's industry taxonomy
+ * PDL uses LinkedIn's industry classification
+ */
+function mapICPIndustryToPDL(icpIndustry: string): string[] {
+  const industryMap: Record<string, string[]> = {
+    'Software Development': [
+      'Computer Software',
+      'Information Technology and Services',
+      'Internet',
+      'Computer & Network Security'
+    ],
+    'Digital Marketing': [
+      'Marketing and Advertising',
+      'Internet',
+      'Online Media',
+      'Digital Marketing'
+    ],
+    'E-commerce': [
+      'Internet',
+      'Retail',
+      'E-Learning',
+      'Consumer Services'
+    ],
+    'SaaS': [
+      'Computer Software',
+      'Information Technology and Services',
+      'Internet',
+      'Cloud Computing'
+    ],
+    'Technology Consulting': [
+      'Information Technology and Services',
+      'Management Consulting',
+      'Computer Software',
+      'Business Consulting'
+    ],
+    'AI/ML Companies': [
+      'Computer Software',
+      'Information Technology and Services',
+      'Artificial Intelligence',
+      'Machine Learning'
+    ],
+    'Marketing Technology': [
+      'Marketing and Advertising',
+      'Computer Software',
+      'Internet',
+      'Marketing Automation'
+    ],
+    'Business Intelligence': [
+      'Information Technology and Services',
+      'Computer Software',
+      'Data Analytics',
+      'Business Intelligence'
+    ],
+    'Data Analytics': [
+      'Information Technology and Services',
+      'Computer Software',
+      'Analytics',
+      'Big Data'
+    ]
+  };
+
+  return industryMap[icpIndustry] || [icpIndustry];
+}
 
 /**
  * Map region code to country name
