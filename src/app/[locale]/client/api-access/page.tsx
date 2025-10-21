@@ -88,7 +88,7 @@ export default function ApiAccess() {
             {/* Back to Dashboard Button */}
             <a
               href={`/${locale}/client/dashboard`}
-              className="px-4 py-2 rounded-lg bg-white/5 border border-white/10 text-white/70 hover:text-white hover:border-white/20 transition-all text-sm font-medium whitespace-nowrap"
+              className="px-4 py-2 rounded-lg bg-white/5 border border-white/10 text-white/70 hover:text-white hover:border-white/20 transition-all text-sm font-medium whitespace-nowrap -ml-20"
             >
               ← {t.backToDashboard}
             </a>
