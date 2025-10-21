@@ -9,12 +9,11 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { handleApiError } from '../../../../lib/error-handler';
-import { enqueueJob, getJobStatus, markJobAsProcessing, markJobAsCompleted, markJobAsFailed } from '../../../../lib/queue-manager';
-import { runDailyProspectQueue } from '../../../../lib/daily-prospect-queue';
+import { enqueueJob, getJobStatus } from '../../../../lib/queue-manager';
 
-// Executes the full prospect pipeline directly
+// Fast enqueue-only endpoint (no heavy processing)
 export const runtime = 'nodejs';
-export const maxDuration = 60; // 60 seconds (executes pipeline directly)
+export const maxDuration = 10; // 10 seconds (just for enqueuing)
 
 // Health check endpoint
 export async function HEAD(req: NextRequest) {
@@ -78,87 +77,41 @@ export async function POST(req: NextRequest) {
 
     const jobId = enqueueResult.jobId;
     console.log(`[DailyCron] ✅ Job enqueued: ${jobId}`);
-
-    // Mark job as processing
-    console.log('[DailyCron] 🔄 Marking job as processing...');
-    const marked = await markJobAsProcessing(jobId);
-    if (!marked) {
-      throw new Error('Failed to mark job as processing');
-    }
-
-    // Execute daily prospect queue directly (no HTTP fetch needed)
-    console.log('[DailyCron] 🚀 Executing daily prospect queue directly...');
-    console.log('[DailyCron] ============================================\n');
-    
-    const result = await runDailyProspectQueue();
-    
-    console.log('\n[DailyCron] ============================================');
-    console.log('[DailyCron] ✅ Daily prospect queue completed');
-    console.log('[DailyCron] Results:', {
-      prospectsDiscovered: result.prospectsDiscovered,
-      prospectsQueued: result.prospectsQueued,
-      emailsGenerated: result.emailsGenerated,
-      errors: result.errors.length
-    });
-
-    // Mark job as completed
-    await markJobAsCompleted(jobId, {
-      prospectsDiscovered: result.prospectsDiscovered,
-      prospectsScored: result.prospectsScored,
-      prospectsQueued: result.prospectsQueued,
-      emailsGenerated: result.emailsGenerated,
-      dailyLimit: result.dailyLimit,
-      errors: result.errors,
-      executionTime: result.executionTime
-    });
-
-    console.log('[DailyCron] ✅ Job marked as completed');
+    console.log('[DailyCron] 📝 Job will be processed by background worker');
+    console.log('[DailyCron] 🔍 Check status: GET /api/cron/daily-prospect-queue?jobId=' + jobId);
 
     const executionTime = Date.now() - startTime;
     
-    console.log('[DailyCron] ✅ Cron job completed successfully');
-    console.log('[DailyCron] Total execution time:', executionTime, 'ms');
+    console.log('[DailyCron] ✅ Cron job completed (enqueued)');
+    console.log('[DailyCron] Execution time:', executionTime, 'ms');
     console.log('[DailyCron] Job ID:', jobId);
     console.log('[DailyCron] ============================================');
 
     return NextResponse.json({
       success: true,
-      message: 'Daily prospect queue job completed successfully',
+      message: 'Daily prospect queue job enqueued successfully',
       jobId,
-      data: result,
+      statusUrl: `/api/cron/daily-prospect-queue?jobId=${jobId}`,
+      workerUrl: '/api/worker/daily-prospect-queue',
       meta: {
         executionTimeMs: executionTime,
         timestamp: new Date().toISOString(),
-        note: 'Executed directly (no HTTP fetch)'
+        note: 'Job enqueued - worker will process asynchronously'
       }
     });
 
   } catch (error) {
     const executionTime = Date.now() - startTime;
-    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-    
-    console.error('[DailyCron] ❌ Job execution failed after', executionTime, 'ms');
-    console.error('[DailyCron] Error:', errorMessage);
+    console.error('[DailyCron] ❌ Failed to enqueue job after', executionTime, 'ms');
+    console.error('[DailyCron] Error:', error);
     console.error('[DailyCron] Stack:', error instanceof Error ? error.stack : 'N/A');
-    
-    // Try to mark job as failed if we have a job ID
-    try {
-      // Extract jobId from scope if available
-      const failedJobId = (error as any).jobId;
-      if (failedJobId) {
-        await markJobAsFailed(failedJobId, errorMessage);
-        console.log('[DailyCron] ✅ Job marked as failed');
-      }
-    } catch (markError) {
-      console.error('[DailyCron] Failed to mark job as failed:', markError);
-    }
     
     if (handleApiError) {
       return handleApiError(error, 'DailyCron');
     } else {
       return NextResponse.json({
         success: false,
-        error: errorMessage,
+        error: error instanceof Error ? error.message : 'Unknown error',
         timestamp: new Date().toISOString()
       }, { status: 500 });
     }
@@ -213,54 +166,21 @@ export async function GET(req: NextRequest) {
 
     const newJobId = enqueueResult.jobId;
     console.log(`[DailyCron] ✅ Job enqueued: ${newJobId}`);
-
-    // Mark job as processing
-    console.log('[DailyCron] 🔄 Marking job as processing...');
-    const marked = await markJobAsProcessing(newJobId);
-    if (!marked) {
-      throw new Error('Failed to mark job as processing');
-    }
-
-    // Execute daily prospect queue directly (no HTTP fetch needed)
-    console.log('[DailyCron] 🚀 Executing daily prospect queue directly...');
-    console.log('[DailyCron] ============================================\n');
-    
-    const result = await runDailyProspectQueue();
-    
-    console.log('\n[DailyCron] ============================================');
-    console.log('[DailyCron] ✅ Daily prospect queue completed');
-    console.log('[DailyCron] Results:', {
-      prospectsDiscovered: result.prospectsDiscovered,
-      prospectsQueued: result.prospectsQueued,
-      emailsGenerated: result.emailsGenerated,
-      errors: result.errors.length
-    });
-
-    // Mark job as completed
-    await markJobAsCompleted(newJobId, {
-      prospectsDiscovered: result.prospectsDiscovered,
-      prospectsScored: result.prospectsScored,
-      prospectsQueued: result.prospectsQueued,
-      emailsGenerated: result.emailsGenerated,
-      dailyLimit: result.dailyLimit,
-      errors: result.errors,
-      executionTime: result.executionTime
-    });
-
-    console.log('[DailyCron] ✅ Job marked as completed');
+    console.log('[DailyCron] 📝 Job will be processed by background worker');
 
     console.log('[DailyCron] ✅ Manual trigger completed');
     console.log('[DailyCron] ============================================');
     
     return NextResponse.json({
       success: true,
-      message: 'Job completed successfully',
+      message: 'Job enqueued successfully',
       jobId: newJobId,
-      data: result,
+      statusUrl: `/api/cron/daily-prospect-queue?jobId=${newJobId}`,
+      workerUrl: '/api/worker/daily-prospect-queue',
       meta: {
         trigger: 'manual',
         timestamp: new Date().toISOString(),
-        note: 'Executed directly (no HTTP fetch)'
+        note: 'Job enqueued - trigger worker manually via POST to workerUrl'
       }
     });
   } catch (error) {
