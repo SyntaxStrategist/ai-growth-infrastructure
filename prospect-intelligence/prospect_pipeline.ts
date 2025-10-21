@@ -52,6 +52,8 @@ export async function runProspectPipeline(config: PipelineConfig): Promise<Prosp
   console.log('Min Automation Score:', config.minAutomationScore);
   console.log('Max Prospects:', config.maxProspectsPerRun);
   console.log('Test Mode:', config.testMode ? 'YES' : 'NO');
+  console.log('Use PDL:', config.usePdl !== false ? 'YES' : 'NO');
+  console.log('Scan Forms:', config.scanForms !== false ? 'YES' : 'NO');
   console.log('');
 
   try {
@@ -96,9 +98,14 @@ export async function runProspectPipeline(config: PipelineConfig): Promise<Prosp
               if (prospects.length === 0 && config.usePdl !== false && PdlAPI.isConfigured()) {
                 try {
                   console.log('📡 Trying PDL...');
+                  console.log(`[PDL] Search params: industry="${industry}", region="${region}"`);
+                  const targetCount = Math.ceil(config.maxProspectsPerRun / (config.industries.length * config.regions.length));
+                  console.log(`[PDL] Target count: ${targetCount}`);
+                  
                   await logIntegration('pdl', 'info', `Searching: ${industry} in ${region}`);
                   
-                  const pdlProspects = await PdlAPI.searchProspects(industry, region, Math.ceil(config.maxProspectsPerRun / (config.industries.length * config.regions.length)));
+                  const pdlProspects = await PdlAPI.searchProspects(industry, region, targetCount);
+                  console.log(`[PDL] Raw results returned: ${pdlProspects.length}`);
                   
                   prospects = pdlProspects.map(pp => ({
                     id: undefined,
@@ -137,8 +144,11 @@ export async function runProspectPipeline(config: PipelineConfig): Promise<Prosp
               // DATA SOURCE 2: Google Custom Search (fallback if PDL fails)
               if (prospects.length === 0) {
                 console.log('📡 Using Google Custom Search...');
+                console.log(`[Google] Search params: industry="${industry}", region="${region}"`);
                 await logIntegration('google', 'info', `Searching: ${industry} in ${region}`);
+                
                 prospects = await searchByIndustry(industry, region);
+                console.log(`[Google] Raw results returned: ${prospects.length}`);
                 dataSource = 'google';
                 console.log(`✅ Google: ${prospects.length} prospects`);
               }
