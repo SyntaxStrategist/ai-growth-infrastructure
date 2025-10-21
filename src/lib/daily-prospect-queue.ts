@@ -131,9 +131,16 @@ export async function runDailyProspectQueue(): Promise<DailyQueueResult> {
     console.log('3️⃣  FILTERING AND RANKING PROSPECTS');
     console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
 
-    // Filter prospects that haven't been contacted yet
-    const uncontactedProspects = pipelineResult.highPriorityProspects.filter(p => !p.contacted);
-    console.log(`📊 Uncontacted prospects: ${uncontactedProspects.length}`);
+    // Filter prospects that haven't been contacted yet AND have email addresses
+    const prospectsWithoutContact = pipelineResult.highPriorityProspects.filter(p => !p.contacted);
+    const prospectsWithoutEmail = prospectsWithoutContact.filter(p => !p.contact_email);
+    const uncontactedProspects = prospectsWithoutContact.filter(p => p.contact_email);
+    
+    console.log(`📊 Uncontacted prospects: ${prospectsWithoutContact.length}`);
+    if (prospectsWithoutEmail.length > 0) {
+      console.log(`⚠️  Filtered out ${prospectsWithoutEmail.length} prospects without email addresses`);
+    }
+    console.log(`📊 Uncontacted prospects with emails: ${uncontactedProspects.length}`);
 
     // Sort by combined score (automation + business fit)
     const rankedProspects = uncontactedProspects
@@ -259,7 +266,10 @@ export async function runDailyProspectQueue(): Promise<DailyQueueResult> {
 
     if (queueError) {
       console.error('❌ Failed to queue emails:', queueError);
-      result.errors.push('Failed to queue emails for approval');
+      console.error('   Error code:', queueError.code);
+      console.error('   Error message:', queueError.message);
+      console.error('   Error details:', queueError.details);
+      result.errors.push(`Failed to queue emails: ${queueError.message}`);
     } else {
       result.prospectsQueued = queuedEmails?.length || 0;
       console.log(`✅ Queued ${result.prospectsQueued} emails for approval`);
