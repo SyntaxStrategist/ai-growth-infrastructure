@@ -77,7 +77,7 @@ export default function ApiAccess() {
     <div className="min-h-screen bg-gradient-to-br from-[#0f172a] via-[#1e1b4b] to-[#0f172a] text-white">
       {/* Header with Logo and Language Toggle */}
       <header className="sticky top-0 z-50 bg-black/20 backdrop-blur-lg border-b border-white/10">
-        <div className="w-full px-6 py-4 flex items-center justify-between">
+        <div className="w-full px-6 py-4 flex items-center justify-between min-h-[80px]">
           {/* Logo - Left Side (24px from edge) */}
           <a href={`/${locale}`} className="inline-block">
             <AvenirLogo locale={locale} showText={true} />
@@ -88,14 +88,60 @@ export default function ApiAccess() {
             {/* Back to Dashboard Button */}
             <a
               href={`/${locale}/client/dashboard`}
-              className="px-4 py-2 rounded-lg bg-white/5 border border-white/10 text-white/70 hover:text-white hover:border-white/20 transition-all text-sm font-medium whitespace-nowrap -ml-[320px]"
+              className="px-4 py-2 rounded-lg bg-white/5 border border-white/10 text-white/70 hover:text-white hover:border-white/20 transition-all text-sm font-medium whitespace-nowrap -ml-[320px] w-[250px] text-center"
             >
               ← {t.backToDashboard}
             </a>
             
             {/* Language Toggle - Right Side (24px from edge) */}
-            <div className="relative z-50 translate-y-[-50px] translate-x-[155px]">
-              <UniversalLanguageToggle />
+            <div className="relative z-50">
+              <div className="flex items-center gap-3 bg-white/10 hover:bg-white/15 backdrop-blur-sm rounded-xl px-5 py-3 shadow-lg transition-all border border-white/20">
+                <button
+                  onClick={() => {
+                    const segments = window.location.pathname.split('/');
+                    if (segments[1] === 'en' || segments[1] === 'fr') {
+                      segments[1] = 'en';
+                    } else {
+                      segments.unshift('en');
+                    }
+                    window.location.href = '/' + segments.join('/');
+                  }}
+                  className={`font-semibold uppercase tracking-wider transition-all ${
+                    locale === 'en'
+                      ? 'text-purple-400 drop-shadow-[0_0_14px_rgba(192,132,252,0.8)]'
+                      : 'text-gray-400 opacity-50 hover:opacity-80'
+                  }`}
+                  style={{ fontSize: '18px' }}
+                  title="English"
+                  aria-label="Switch to English"
+                >
+                  EN
+                </button>
+                
+                <div className="w-px h-6 bg-white/30"></div>
+                
+                <button
+                  onClick={() => {
+                    const segments = window.location.pathname.split('/');
+                    if (segments[1] === 'en' || segments[1] === 'fr') {
+                      segments[1] = 'fr';
+                    } else {
+                      segments.unshift('fr');
+                    }
+                    window.location.href = '/' + segments.join('/');
+                  }}
+                  className={`font-semibold uppercase tracking-wider transition-all ${
+                    locale === 'fr'
+                      ? 'text-purple-400 drop-shadow-[0_0_14px_rgba(192,132,252,0.8)]'
+                      : 'text-gray-400 opacity-50 hover:opacity-80'
+                  }`}
+                  style={{ fontSize: '18px' }}
+                  title="Français"
+                  aria-label="Passer au français"
+                >
+                  FR
+                </button>
+              </div>
             </div>
           </div>
         </div>
