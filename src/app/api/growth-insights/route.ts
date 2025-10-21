@@ -98,9 +98,10 @@ export async function GET(req: NextRequest) {
       .order('created_at', { ascending: false })
       .limit(1);
 
-    if (internalClientId) {
-      console.log('[GrowthInsightsAPI] Filtering for specific client (internal UUID):', internalClientId);
-      query = query.eq('client_id', internalClientId);
+    if (publicClientId) {
+      // Query with PUBLIC client_id (not UUID) because that's what's stored in growth_brain
+      console.log('[GrowthInsightsAPI] Filtering for specific client (public ID):', publicClientId);
+      query = query.eq('client_id', publicClientId);
     } else {
       // For global insights, look for records where client_id IS NULL
       console.log('[GrowthInsightsAPI] Filtering for global insights (client_id IS NULL)');
@@ -138,8 +139,7 @@ export async function GET(req: NextRequest) {
     if (!data || data.length === 0) {
       console.log('[GrowthInsightsAPI] No insights found - growth_brain table is empty or no matching records');
       console.log('[GrowthInsightsAPI] Query filters:', {
-        public_client_id: publicClientId || 'N/A',
-        internal_client_id: internalClientId || 'IS NULL',
+        client_id_filter: publicClientId || 'IS NULL (global)',
         order: 'created_at DESC',
         limit: 1,
       });

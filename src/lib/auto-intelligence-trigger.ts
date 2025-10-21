@@ -25,10 +25,10 @@ export async function ensureGrowthInsightsForClient(clientId: string): Promise<b
       auth: { persistSession: false, autoRefreshToken: false },
     });
 
-    // First, resolve the public client_id to the internal UUID
+    // Validate that client exists
     const { data: client, error: clientError } = await supabase
       .from('clients')
-      .select('id')
+      .select('id, client_id')
       .eq('client_id', clientId)
       .single();
 
@@ -43,11 +43,11 @@ export async function ensureGrowthInsightsForClient(clientId: string): Promise<b
       internal: internalClientId,
     });
 
-    // Check if growth insights exist
+    // Check if growth insights exist (query with PUBLIC client_id, not UUID)
     const { data: existingInsights, error: insightsError } = await supabase
       .from('growth_brain')
       .select('id, created_at')
-      .eq('client_id', internalClientId)
+      .eq('client_id', clientId)
       .order('created_at', { ascending: false })
       .limit(1);
 
@@ -78,11 +78,11 @@ export async function ensureGrowthInsightsForClient(clientId: string): Promise<b
       console.log('[AutoIntelligence] ⚠️ No growth insights found, generating...');
     }
 
-    // Check if client has any leads
+    // Check if client has any leads (lead_memory stores PUBLIC client_id)
     const { data: leads, error: leadsError } = await supabase
       .from('lead_memory')
       .select('id')
-      .eq('client_id', internalClientId)
+      .eq('client_id', clientId)
       .limit(1);
 
     if (leadsError) {

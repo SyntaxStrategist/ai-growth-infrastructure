@@ -107,8 +107,13 @@ export async function GET(req: NextRequest) {
       );
     }
 
-    // Use batched query to get client data and leads with resolved UUID
-    const { client, leads: leadsQuery } = await getClientDataAndLeads(clientUuid, status, page, limit);
+    // Use batched query to get client data and leads
+    // Pass BOTH the UUID (for clients table) AND the public client_id (for lead_actions table)
+    console.log(`[ClientResolver] Querying with:`);
+    console.log(`[ClientResolver]   - Internal UUID: ${clientUuid} (for clients table)`);
+    console.log(`[ClientResolver]   - Public ID: ${clientId} (for lead_actions table)`);
+    
+    const { client, leads: leadsQuery } = await getClientDataAndLeads(clientUuid, clientId, status, page, limit);
     
     if (client.error || !client.data) {
       console.error('[ClientResolver] ❌ Client not found after resolution:', clientUuid);
@@ -146,8 +151,8 @@ export async function GET(req: NextRequest) {
       );
     }
 
-    // Transform the joined data
-    const leadsRaw = (leadActions || [])
+    // Transform the joined data and deduplicate by lead ID
+    const leadActionsFiltered = (leadActions || [])
       .filter(action => {
         const leadMemory = Array.isArray(action.lead_memory) ? action.lead_memory[0] : action.lead_memory;
         if (!leadMemory) return false;
@@ -161,16 +166,34 @@ export async function GET(req: NextRequest) {
           return leadMemory.deleted;
         }
         return true;
-      })
-      .map(action => {
-        const leadMemory = Array.isArray(action.lead_memory) ? action.lead_memory[0] : action.lead_memory;
-        return {
+      });
+    
+    // Deduplicate by lead_id (same lead can have multiple actions)
+    const leadsMap = new Map();
+    leadActionsFiltered.forEach(action => {
+      const leadMemory = Array.isArray(action.lead_memory) ? action.lead_memory[0] : action.lead_memory;
+      const leadId = leadMemory.id;
+      
+      // Keep the most recent action for each lead (by created_at or timestamp)
+      if (!leadsMap.has(leadId) || 
+          new Date(leadMemory.timestamp).getTime() > new Date(leadsMap.get(leadId).timestamp).getTime()) {
+        leadsMap.set(leadId, {
           ...leadMemory,
           client_id: action.client_id,
           action_tag: action.tag,
-        };
-      })
+        });
+      }
+    });
+    
+    // Convert map to array and sort
+    const leadsRaw = Array.from(leadsMap.values())
       .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+    
+    console.log('[ClientLeads] Deduplication:', {
+      raw_actions: leadActionsFiltered.length,
+      unique_leads: leadsRaw.length,
+      duplicates_removed: leadActionsFiltered.length - leadsRaw.length
+    });
     
     // Translate leads based on locale
     console.log('[ClientLeads] 🔄 Translating', leadsRaw.length, 'leads to locale:', locale.toUpperCase());

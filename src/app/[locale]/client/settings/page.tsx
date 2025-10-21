@@ -3,11 +3,15 @@
 import { useState, useEffect } from 'react';
 import { useLocale } from 'next-intl';
 import { motion } from 'framer-motion';
+import { useRouter } from 'next/navigation';
 import UniversalLanguageToggle from '../../../../components/UniversalLanguageToggle';
+import { getConnectionInfo } from '../../../../utils/connection-status';
+import { saveSession } from '../../../../utils/session';
 
 export default function ClientSettings() {
   const locale = useLocale();
   const isFrench = locale === 'fr';
+  const router = useRouter();
 
   const [clientId, setClientId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
@@ -34,6 +38,20 @@ export default function ClientSettings() {
     biggestChallenge: '',
   });
 
+  const [connectionData, setConnectionData] = useState<{
+    lastConnection: string | null;
+    createdAt: string | null;
+    apiKey: string;
+  }>({
+    lastConnection: null,
+    createdAt: null,
+    apiKey: '',
+  });
+
+  const [showApiKey, setShowApiKey] = useState(false);
+  const [copiedApiKey, setCopiedApiKey] = useState(false);
+  const [testingConnection, setTestingConnection] = useState(false);
+
   const t = {
     title: isFrench ? '⚙️ Paramètres' : '⚙️ Settings',
     subtitle: isFrench ? 'Personnalisez vos courriels automatiques' : 'Customize your automated emails',
@@ -48,6 +66,9 @@ export default function ClientSettings() {
     language: isFrench ? 'Langue' : 'Language',
     automation: isFrench ? 'Automatisation IA' : 'AI Automation',
     enableReplies: isFrench ? 'Activer les réponses personnalisées IA' : 'Enable AI Personalized Replies',
+    aiReplyDescription: isFrench 
+      ? 'Lorsqu\'activé, l\'IA enverra automatiquement des réponses personnalisées à vos leads en fonction de leur message, urgence et intention. Les leads seront toujours capturés même si cette option est désactivée.'
+      : 'When enabled, AI will automatically send personalized responses to your leads based on their message, urgency, and intent. Leads will still be captured even if this is disabled.',
     saveButton: isFrench ? '💾 Enregistrer les modifications' : '💾 Save Changes',
     previewButton: isFrench ? '👁️ Aperçu du courriel' : '👁️ Preview Email',
     previewTitle: isFrench ? 'Aperçu du courriel automatique' : 'Automated Email Preview',
@@ -68,6 +89,24 @@ export default function ClientSettings() {
     biggestChallengePlaceholder: isFrench ? 'Ex: Convertir les visiteurs en prospects' : 'E.g., Converting website visitors into leads',
     icpHelperText: isFrench ? 'Vous pouvez modifier ces informations à tout moment. Avenir AI utilise ces données pour personnaliser vos résultats de prospection.' : 'You can edit these anytime. Avenir AI uses this information to personalize your prospect intelligence results.',
     icpSuccessToast: isFrench ? '✅ Profil client idéal mis à jour avec succès' : '✅ ICP data updated successfully',
+    // Integration Status translations
+    integrationStatus: isFrench ? 'Statut de l\'intégration' : 'Integration Status',
+    formIntegration: isFrench ? '🔗 Intégration du Formulaire' : '🔗 Form Integration',
+    status: isFrench ? 'Statut' : 'Status',
+    lastLead: isFrench ? 'Dernier lead reçu' : 'Last lead received',
+    totalLeads: isFrench ? 'Total de leads reçus' : 'Total leads received',
+    apiKeyLabel: isFrench ? 'Clé API' : 'API Key',
+    copyApiKey: isFrench ? 'Copier' : 'Copy',
+    copied: isFrench ? 'Copié !' : 'Copied!',
+    showApiKey: isFrench ? 'Afficher' : 'Show',
+    hideApiKey: isFrench ? 'Masquer' : 'Hide',
+    integrationInstructions: isFrench ? '⚙️ Pour connecter votre formulaire' : '⚙️ To connect your form',
+    integrationStep1: isFrench ? 'Faites une requête POST vers:' : 'Make a POST request to:',
+    integrationStep2: isFrench ? 'Incluez l\'en-tête:' : 'Include the header:',
+    integrationStep3: isFrench ? 'Envoyez les données JSON:' : 'Send JSON data:',
+    testConnection: isFrench ? '🧪 Tester la Connexion' : '🧪 Test Connection',
+    testConnectionDesc: isFrench ? 'Envoyez un lead de test pour vérifier que tout fonctionne' : 'Send a test lead to verify everything works',
+    viewDocs: isFrench ? '📖 Voir la Documentation' : '📖 View Documentation',
   };
 
   const toneOptions = [
@@ -126,6 +165,14 @@ export default function ClientSettings() {
             mainBusinessGoal: icpData.main_business_goal || '',
             biggestChallenge: icpData.biggest_challenge || '',
           });
+
+          // Set connection data
+          setConnectionData({
+            lastConnection: data.data.last_connection || null,
+            createdAt: data.data.created_at || null,
+            apiKey: data.data.api_key || '',
+          });
+          
           console.log('[ClientSettings] ✅ Settings loaded:', data.data);
         }
       } catch (error) {
@@ -142,6 +189,118 @@ export default function ClientSettings() {
   const handleFieldChange = (field: string, value: any) => {
     setSettings(prev => ({ ...prev, [field]: value }));
     setHasUnsavedChanges(true);
+  };
+
+  // Copy API key to clipboard
+  const handleCopyApiKey = async () => {
+    try {
+      await navigator.clipboard.writeText(connectionData.apiKey);
+      setCopiedApiKey(true);
+      setTimeout(() => setCopiedApiKey(false), 2000);
+    } catch (error) {
+      console.error('[ClientSettings] Failed to copy API key:', error);
+    }
+  };
+
+  // Test connection by sending a test lead
+  const handleTestConnection = async () => {
+    if (!connectionData.apiKey || !clientId) {
+      console.error('[ClientSettings] No API key or client ID available');
+      return;
+    }
+
+    setTestingConnection(true);
+
+    try {
+      console.log('[ClientSettings] ============================================');
+      console.log('[ClientSettings] Sending test lead...');
+      
+      const res = await fetch('/api/client/test-lead', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          apiKey: connectionData.apiKey,
+          language: settings.language 
+        }),
+      });
+
+      const data = await res.json();
+
+      if (data.success) {
+        console.log('[ClientSettings] ✅ Test lead sent successfully');
+        console.log('[ClientSettings] Lead ID:', data.leadId);
+        
+        // Step 1: Refetch settings to get updated last_connection from database
+        console.log('[ClientSettings] Refetching settings for updated connection status...');
+        const settingsRes = await fetch(`/api/client/settings?clientId=${clientId}`);
+        const settingsData = await settingsRes.json();
+        
+        if (settingsData.success && settingsData.data) {
+          console.log('[ClientSettings] ✅ Fresh settings loaded');
+          console.log('[ClientSettings] Updated last_connection:', settingsData.data.last_connection);
+          
+          // Step 2: Update connection data state for immediate UI update
+          setConnectionData({
+            lastConnection: settingsData.data.last_connection,
+            createdAt: settingsData.data.created_at,
+            apiKey: settingsData.data.api_key,
+          });
+          
+          // Step 3: Update session in localStorage with fresh data
+          const sessionData = localStorage.getItem('client_session');
+          if (sessionData) {
+            const parsedSession = JSON.parse(sessionData);
+            const updatedSession = {
+              ...parsedSession,
+              lastConnection: settingsData.data.last_connection,
+            };
+            saveSession(updatedSession);
+            console.log('[ClientSettings] ✅ Session updated in localStorage');
+            
+            // Dispatch storage event to trigger SessionProvider refresh
+            window.dispatchEvent(new StorageEvent('storage', {
+              key: 'client_session',
+              newValue: JSON.stringify(updatedSession),
+              url: window.location.href,
+              storageArea: localStorage,
+            }));
+            console.log('[ClientSettings] ✅ Storage event dispatched');
+          }
+        }
+        
+        // Step 4: Show success message
+        setToastMessage(isFrench 
+          ? '✅ Lead de test envoyé ! Redirection vers le tableau de bord...'
+          : '✅ Test lead sent! Redirecting to dashboard...');
+        setShowToast(true);
+        
+        // Step 5: Navigate to dashboard after short delay (allow session update to propagate)
+        setTimeout(() => {
+          console.log('[ClientSettings] ============================================');
+          console.log('[ClientSettings] Navigating to dashboard...');
+          console.log('[ClientSettings] Updated session should now be available');
+          console.log('[ClientSettings] ============================================');
+          router.push(`/${locale}/client/dashboard`);
+        }, 1500);
+        
+      } else {
+        console.error('[ClientSettings] ❌ Test failed:', data.error);
+        setToastMessage(isFrench 
+          ? `❌ Échec du test: ${data.error}`
+          : `❌ Test failed: ${data.error}`);
+        setShowToast(true);
+        setTimeout(() => setShowToast(false), 5000);
+      }
+    } catch (error) {
+      console.error('[ClientSettings] Test connection error:', error);
+      setToastMessage(isFrench 
+        ? '❌ Erreur lors du test de connexion'
+        : '❌ Connection test error');
+      setShowToast(true);
+      setTimeout(() => setShowToast(false), 5000);
+    } finally {
+      setTestingConnection(false);
+    }
   };
 
   // Manual save function
@@ -305,6 +464,116 @@ ${settings.businessName}${tagline}`;
             {toastMessage}
           </motion.div>
         )}
+
+        {/* Integration Status Section */}
+        <div className="bg-white/5 backdrop-blur-sm rounded-xl p-6 mb-6 border border-white/10">
+          <h2 className="text-xl font-semibold mb-4 text-cyan-400">{t.formIntegration}</h2>
+          
+          {/* Connection Status */}
+          <div className="space-y-4 mb-6">
+            <div className="flex items-center justify-between p-4 bg-white/5 rounded-lg border border-white/10">
+              <div>
+                <p className="text-sm text-white/60 mb-1">{t.status}</p>
+                {(() => {
+                  const connInfo = getConnectionInfo(connectionData.lastConnection);
+                  return (
+                    <div className="flex items-center gap-2">
+                      <span className={`text-xl ${connInfo.icon}`}>{connInfo.icon}</span>
+                      <span className={`font-semibold ${connInfo.color}`}>
+                        {isFrench ? connInfo.statusTextFr : connInfo.statusText}
+                      </span>
+                    </div>
+                  );
+                })()}
+              </div>
+              <div className="text-right">
+                <p className="text-sm text-white/60 mb-1">{t.lastLead}</p>
+                <p className="text-sm text-white/90">
+                  {connectionData.lastConnection 
+                    ? getConnectionInfo(connectionData.lastConnection)[isFrench ? 'timeAgoFr' : 'timeAgo']
+                    : (isFrench ? 'Jamais' : 'Never')}
+                </p>
+              </div>
+            </div>
+
+            {/* API Key Display */}
+            <div>
+              <label className="block text-sm font-medium mb-2">{t.apiKeyLabel}</label>
+              <div className="flex gap-2">
+                <input
+                  type={showApiKey ? 'text' : 'password'}
+                  value={connectionData.apiKey}
+                  readOnly
+                  className="flex-1 px-4 py-3 rounded-md bg-white/5 border border-white/10 text-white font-mono text-sm focus:outline-none"
+                />
+                <button
+                  onClick={() => setShowApiKey(!showApiKey)}
+                  className="px-4 py-3 rounded-md bg-white/10 hover:bg-white/20 border border-white/10 text-white transition-all text-sm font-medium"
+                >
+                  {showApiKey ? t.hideApiKey : t.showApiKey}
+                </button>
+                <button
+                  onClick={handleCopyApiKey}
+                  className="px-4 py-3 rounded-md bg-blue-500/20 hover:bg-blue-500/30 border border-blue-500/40 text-blue-400 transition-all text-sm font-medium"
+                >
+                  {copiedApiKey ? t.copied : t.copyApiKey}
+                </button>
+              </div>
+            </div>
+          </div>
+
+          {/* Integration Instructions */}
+          <div className="p-4 bg-cyan-500/10 border border-cyan-500/20 rounded-lg mb-4">
+            <p className="text-sm font-medium text-cyan-300 mb-3">{t.integrationInstructions}</p>
+            
+            <div className="space-y-3 text-sm">
+              <div>
+                <p className="text-white/60 mb-1">{t.integrationStep1}</p>
+                <code className="block bg-black/30 p-2 rounded text-cyan-400 text-xs overflow-x-auto">
+                  POST https://www.aveniraisolutions.ca/api/lead
+                </code>
+              </div>
+              
+              <div>
+                <p className="text-white/60 mb-1">{t.integrationStep2}</p>
+                <code className="block bg-black/30 p-2 rounded text-cyan-400 text-xs overflow-x-auto">
+                  x-api-key: {connectionData.apiKey.substring(0, 8)}...
+                </code>
+              </div>
+              
+              <div>
+                <p className="text-white/60 mb-1">{t.integrationStep3}</p>
+                <code className="block bg-black/30 p-2 rounded text-cyan-400 text-xs overflow-x-auto whitespace-pre">
+{`{
+  "name": "Lead Name",
+  "email": "lead@example.com",
+  "message": "Lead message..."
+}`}
+                </code>
+              </div>
+            </div>
+          </div>
+
+          {/* Test Connection Button */}
+          <button
+            onClick={handleTestConnection}
+            disabled={testingConnection || !connectionData.apiKey}
+            className="w-full py-3 rounded-lg bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-600 hover:to-blue-600 text-white font-semibold transition-all transform hover:scale-[1.02] shadow-lg disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
+          >
+            {testingConnection ? (
+              <span className="flex items-center justify-center gap-2">
+                <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                {isFrench ? 'Test en cours...' : 'Testing...'}
+              </span>
+            ) : (
+              t.testConnection
+            )}
+          </button>
+          
+          <p className="text-xs text-white/40 text-center mt-2">
+            {t.testConnectionDesc}
+          </p>
+        </div>
 
         {/* Company Information Section */}
         <div className="bg-white/5 backdrop-blur-sm rounded-xl p-6 mb-6 border border-white/10">
@@ -478,15 +747,20 @@ ${settings.businessName}${tagline}`;
         <div className="bg-white/5 backdrop-blur-sm rounded-xl p-6 mb-6 border border-white/10">
           <h2 className="text-xl font-semibold mb-4 text-green-400">{t.automation}</h2>
           
-          <label className="flex items-center space-x-3 cursor-pointer">
-            <input
-              type="checkbox"
-              checked={settings.aiPersonalizedReply}
-              onChange={(e) => handleFieldChange('aiPersonalizedReply', e.target.checked)}
-              className="w-5 h-5 rounded border-white/20 bg-white/5 checked:bg-blue-500 focus:ring-2 focus:ring-blue-400/50"
-            />
-            <span className="text-white/80">{t.enableReplies}</span>
-          </label>
+          <div className="space-y-3">
+            <label className="flex items-start space-x-3 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={settings.aiPersonalizedReply}
+                onChange={(e) => handleFieldChange('aiPersonalizedReply', e.target.checked)}
+                className="w-5 h-5 rounded border-white/20 bg-white/5 checked:bg-blue-500 focus:ring-2 focus:ring-blue-400/50 mt-0.5"
+              />
+              <div>
+                <span className="text-white/90 font-medium">{t.enableReplies}</span>
+                <p className="text-sm text-white/50 mt-1">{t.aiReplyDescription}</p>
+              </div>
+            </label>
+          </div>
         </div>
 
         {/* Action Buttons */}

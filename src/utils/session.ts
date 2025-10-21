@@ -19,6 +19,8 @@ export type ClientData = {
   email: string;
   language: string;
   apiKey: string;
+  lastConnection?: string | null;
+  createdAt?: string;
 };
 
 export type SessionState = {

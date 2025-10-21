@@ -28,16 +28,19 @@ export async function batchSupabaseQueries(
 
 /**
  * Optimized function to get client data and leads in a single batch
- * Now expects resolved UUID instead of string client ID
+ * Now expects both the resolved UUID and original public client_id
  */
 export async function getClientDataAndLeads(
   clientUuid: string,
+  publicClientId: string,
   status: string = 'active',
   page: number = 1,
   limit: number = 5
 ) {
   try {
-    console.log(`[QueryBatching] 🔍 Getting client data and leads for UUID: ${clientUuid}`);
+    console.log(`[QueryBatching] 🔍 Getting client data and leads`);
+    console.log(`[QueryBatching] Internal UUID: ${clientUuid}`);
+    console.log(`[QueryBatching] Public client_id: ${publicClientId}`);
     
     // Batch the client lookup and leads query
     const [clientResult, leadsResult] = await Promise.all([
@@ -48,7 +51,7 @@ export async function getClientDataAndLeads(
         .eq('id', clientUuid)
         .single(),
       
-      // Leads query (we'll need to do this in two steps due to the join)
+      // Leads query - use PUBLIC client_id because that's what's stored in lead_actions
       supabase
         .from('lead_actions')
         .select(`
@@ -76,9 +79,19 @@ export async function getClientDataAndLeads(
             last_updated
           )
         `)
-        .eq('client_id', clientUuid)
+        .eq('client_id', publicClientId)
         .range((page - 1) * limit, page * limit - 1)
     ]);
+
+    console.log(`[QueryBatching] ✅ Client query result:`, {
+      found: !!clientResult.data,
+      error: clientResult.error?.message || 'none'
+    });
+    
+    console.log(`[QueryBatching] ✅ Leads query result:`, {
+      count: leadsResult.data?.length || 0,
+      error: leadsResult.error?.message || 'none'
+    });
 
     return {
       client: clientResult,
@@ -92,14 +105,17 @@ export async function getClientDataAndLeads(
 
 /**
  * Optimized function to get client data and all leads for stats
- * Now expects resolved UUID instead of string client ID
+ * Now expects both the resolved UUID and original public client_id
  */
 export async function getClientDataAndAllLeads(
   clientUuid: string,
+  publicClientId: string,
   status: string = 'active'
 ) {
   try {
-    console.log(`[QueryBatching] 🔍 Getting client data and all leads for UUID: ${clientUuid}`);
+    console.log(`[QueryBatching] 🔍 Getting client data and all leads`);
+    console.log(`[QueryBatching] Internal UUID: ${clientUuid}`);
+    console.log(`[QueryBatching] Public client_id: ${publicClientId}`);
     
     // Batch the client lookup and all leads query
     const [clientResult, allLeadsResult] = await Promise.all([
@@ -110,7 +126,7 @@ export async function getClientDataAndAllLeads(
         .eq('id', clientUuid)
         .single(),
       
-      // All leads query for stats
+      // All leads query for stats - use PUBLIC client_id
       supabase
         .from('lead_actions')
         .select(`
@@ -138,9 +154,14 @@ export async function getClientDataAndAllLeads(
             last_updated
           )
         `)
-        .eq('client_id', clientUuid)
+        .eq('client_id', publicClientId)
         .limit(1000) // Get all leads for stats calculation
     ]);
+
+    console.log(`[QueryBatching] ✅ All leads query result:`, {
+      count: allLeadsResult.data?.length || 0,
+      error: allLeadsResult.error?.message || 'none'
+    });
 
     return {
       client: clientResult,
@@ -154,14 +175,17 @@ export async function getClientDataAndAllLeads(
 
 /**
  * Optimized function to get leads insights with batching
- * Now expects resolved UUID instead of string client ID
+ * Now expects both the resolved UUID and original public client_id
  */
 export async function getLeadsInsightsBatch(
   clientUuid: string,
+  publicClientId: string,
   locale: string = 'en'
 ) {
   try {
-    console.log(`[QueryBatching] 🔍 Getting leads insights for UUID: ${clientUuid}`);
+    console.log(`[QueryBatching] 🔍 Getting leads insights`);
+    console.log(`[QueryBatching] Internal UUID: ${clientUuid}`);
+    console.log(`[QueryBatching] Public client_id: ${publicClientId}`);
     
     // Batch multiple queries for insights
     const [clientResult, leadsResult, actionsResult] = await Promise.all([
@@ -172,7 +196,7 @@ export async function getLeadsInsightsBatch(
         .eq('id', clientUuid)
         .single(),
       
-      // Leads with insights
+      // Leads with insights - use PUBLIC client_id
       supabase
         .from('lead_actions')
         .select(`
@@ -200,14 +224,14 @@ export async function getLeadsInsightsBatch(
             last_updated
           )
         `)
-        .eq('client_id', clientUuid)
+        .eq('client_id', publicClientId)
         .limit(100),
       
-      // Recent actions
+      // Recent actions - use PUBLIC client_id
       supabase
         .from('lead_actions')
         .select('*')
-        .eq('client_id', clientUuid)
+        .eq('client_id', publicClientId)
         .order('created_at', { ascending: false })
         .limit(10)
     ]);

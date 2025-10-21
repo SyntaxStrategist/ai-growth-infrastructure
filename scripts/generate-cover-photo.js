@@ -1,0 +1,242 @@
+// Generate Avenir AI Solutions Cover Photo
+// Size: 1920x1080 (social media standard)
+
+const fs = require('fs');
+const path = require('path');
+
+// Create HTML template for the cover photo
+const coverHTML = `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { 
+      width: 1920px; 
+      height: 1080px; 
+      overflow: hidden;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    }
+    .cover {
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(135deg, #0a0a0a 0%, #1a1a2e 50%, #0a0a0a 100%);
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+    }
+    
+    /* Animated gradient background */
+    .gradient-bg {
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(ellipse at 30% 50%, rgba(0, 191, 255, 0.15) 0%, transparent 50%),
+                  radial-gradient(ellipse at 70% 50%, rgba(139, 92, 246, 0.15) 0%, transparent 50%);
+      animation: pulse 8s ease-in-out infinite;
+    }
+    
+    @keyframes pulse {
+      0%, 100% { opacity: 0.6; }
+      50% { opacity: 1; }
+    }
+    
+    /* Grid pattern overlay */
+    .grid-overlay {
+      position: absolute;
+      inset: 0;
+      background-image: 
+        linear-gradient(rgba(59, 130, 246, 0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(59, 130, 246, 0.03) 1px, transparent 1px);
+      background-size: 50px 50px;
+      opacity: 0.5;
+    }
+    
+    /* Floating particles */
+    .particle {
+      position: absolute;
+      width: 2px;
+      height: 2px;
+      background: rgba(0, 191, 255, 0.6);
+      border-radius: 50%;
+      box-shadow: 0 0 10px rgba(0, 191, 255, 0.8);
+    }
+    
+    .particle:nth-child(1) { top: 20%; left: 15%; animation: float 6s ease-in-out infinite; }
+    .particle:nth-child(2) { top: 40%; left: 25%; animation: float 7s ease-in-out infinite 1s; }
+    .particle:nth-child(3) { top: 60%; left: 80%; animation: float 8s ease-in-out infinite 2s; }
+    .particle:nth-child(4) { top: 80%; left: 70%; animation: float 6.5s ease-in-out infinite 1.5s; }
+    .particle:nth-child(5) { top: 30%; left: 85%; animation: float 7.5s ease-in-out infinite 0.5s; }
+    
+    @keyframes float {
+      0%, 100% { transform: translateY(0) translateX(0); }
+      50% { transform: translateY(-30px) translateX(20px); }
+    }
+    
+    /* Content container */
+    .content {
+      position: relative;
+      z-index: 10;
+      text-align: center;
+      max-width: 1400px;
+      padding: 0 80px;
+    }
+    
+    /* Logo container */
+    .logo-container {
+      margin-bottom: 60px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 30px;
+    }
+    
+    .logo {
+      width: 120px;
+      height: 120px;
+      filter: drop-shadow(0 0 30px rgba(0, 191, 255, 0.5));
+    }
+    
+    .brand-text {
+      text-align: left;
+    }
+    
+    .brand-name {
+      font-size: 72px;
+      font-weight: 700;
+      background: linear-gradient(135deg, #00bfff 0%, #8b5cf6 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      letter-spacing: -1px;
+      margin-bottom: 5px;
+    }
+    
+    .brand-subtitle {
+      font-size: 28px;
+      color: rgba(255, 255, 255, 0.7);
+      font-weight: 300;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+    }
+    
+    /* Tagline */
+    .tagline {
+      font-size: 42px;
+      color: rgba(255, 255, 255, 0.95);
+      font-weight: 400;
+      line-height: 1.4;
+      margin-top: 50px;
+      text-shadow: 0 2px 20px rgba(0, 0, 0, 0.5);
+    }
+    
+    .tagline-highlight {
+      background: linear-gradient(135deg, #00bfff 0%, #8b5cf6 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      font-weight: 600;
+    }
+    
+    /* Decorative lines */
+    .line-decoration {
+      position: absolute;
+      height: 2px;
+      background: linear-gradient(90deg, transparent, rgba(0, 191, 255, 0.5), transparent);
+    }
+    
+    .line-top {
+      top: 15%;
+      left: 10%;
+      right: 10%;
+    }
+    
+    .line-bottom {
+      bottom: 15%;
+      left: 10%;
+      right: 10%;
+    }
+    
+    /* Tech badges */
+    .tech-badges {
+      position: absolute;
+      bottom: 50px;
+      right: 80px;
+      display: flex;
+      gap: 15px;
+    }
+    
+    .badge {
+      padding: 10px 20px;
+      background: rgba(0, 191, 255, 0.1);
+      border: 1px solid rgba(0, 191, 255, 0.3);
+      border-radius: 20px;
+      font-size: 14px;
+      color: rgba(255, 255, 255, 0.8);
+      font-weight: 500;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+    }
+  </style>
+</head>
+<body>
+  <div class="cover">
+    <!-- Animated gradient background -->
+    <div class="gradient-bg"></div>
+    
+    <!-- Grid overlay -->
+    <div class="grid-overlay"></div>
+    
+    <!-- Floating particles -->
+    <div class="particle"></div>
+    <div class="particle"></div>
+    <div class="particle"></div>
+    <div class="particle"></div>
+    <div class="particle"></div>
+    
+    <!-- Decorative lines -->
+    <div class="line-decoration line-top"></div>
+    <div class="line-decoration line-bottom"></div>
+    
+    <!-- Main content -->
+    <div class="content">
+      <div class="logo-container">
+        <img src="../public/assets/logos/logo-512x512.png" alt="Avenir AI" class="logo" />
+        <div class="brand-text">
+          <div class="brand-name">Avenir AI Solutions</div>
+          <div class="brand-subtitle">Growth Intelligence</div>
+        </div>
+      </div>
+      
+      <div class="tagline">
+        <span class="tagline-highlight">AI Growth Infrastructure</span><br>
+        for Modern Businesses
+      </div>
+    </div>
+    
+    <!-- Tech badges -->
+    <div class="tech-badges">
+      <div class="badge">Automation</div>
+      <div class="badge">Intelligence</div>
+      <div class="badge">Growth</div>
+    </div>
+  </div>
+</body>
+</html>
+`;
+
+// Save HTML file
+const outputPath = path.join(__dirname, '../temp/cover-template.html');
+fs.mkdirSync(path.dirname(outputPath), { recursive: true });
+fs.writeFileSync(outputPath, coverHTML);
+
+console.log('✅ Cover photo HTML template generated!');
+console.log(`📁 Location: ${outputPath}`);
+console.log('\n📋 Next steps:');
+console.log('1. Open the HTML file in a browser');
+console.log('2. Use browser dev tools to screenshot at 1920x1080');
+console.log('3. Or use Puppeteer to automate:');
+console.log('   node scripts/generate-cover-puppeteer.js');
+

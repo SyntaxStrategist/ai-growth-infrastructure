@@ -143,7 +143,8 @@ export default function ClientsPage() {
     }
   }
 
-  function handleCopyKey(key: string) {
+  function handleCopyKey(key: string | null) {
+    if (!key) return;
     navigator.clipboard.writeText(key);
     setCopiedKey(key);
     setTimeout(() => setCopiedKey(null), 2000);
@@ -389,22 +390,41 @@ export default function ClientsPage() {
                   <div>
                     <span className="text-white/50 text-xs block mb-1">{t.apiKey}</span>
                     <div className="flex items-center gap-2 flex-wrap">
-                      <code className="text-xs font-mono bg-white/10 px-2 py-1 rounded">
-                        {client.api_key.slice(0, 16)}...
-                      </code>
-                      <button
-                        onClick={() => handleCopyKey(client.api_key)}
-                        className="px-2 py-1 text-xs rounded bg-blue-500/20 border border-blue-500/40 text-blue-400 hover:bg-blue-500/30 transition-all"
-                      >
-                        {copiedKey === client.api_key ? t.copied : t.copy}
-                      </button>
-                      <button
-                        onClick={() => handleRotateKey(client.id)}
-                        disabled={rotatingKey === client.id}
-                        className="px-2 py-1 text-xs rounded bg-purple-500/20 border border-purple-500/40 text-purple-400 hover:bg-purple-500/30 transition-all disabled:opacity-50"
-                      >
-                        {rotatingKey === client.id ? t.rotating : t.rotate}
-                      </button>
+                      {client.api_key ? (
+                        <>
+                          <code className="text-xs font-mono bg-white/10 px-2 py-1 rounded">
+                            {client.api_key.slice(0, 16)}...
+                          </code>
+                          <button
+                            onClick={() => handleCopyKey(client.api_key)}
+                            className="px-2 py-1 text-xs rounded bg-blue-500/20 border border-blue-500/40 text-blue-400 hover:bg-blue-500/30 transition-all"
+                          >
+                            {copiedKey === client.api_key ? t.copied : t.copy}
+                          </button>
+                          <button
+                            onClick={() => handleRotateKey(client.id)}
+                            disabled={rotatingKey === client.id}
+                            className="px-2 py-1 text-xs rounded bg-purple-500/20 border border-purple-500/40 text-purple-400 hover:bg-purple-500/30 transition-all disabled:opacity-50"
+                          >
+                            {rotatingKey === client.id ? t.rotating : t.rotate}
+                          </button>
+                        </>
+                      ) : (
+                        <div className="flex items-center gap-2">
+                          <span className="text-xs text-red-400">
+                            {locale === 'fr' ? 'Clé API manquante' : 'Missing API Key'}
+                          </span>
+                          <button
+                            onClick={() => handleRotateKey(client.id)}
+                            disabled={rotatingKey === client.id}
+                            className="px-2 py-1 text-xs rounded bg-green-500/20 border border-green-500/40 text-green-400 hover:bg-green-500/30 transition-all disabled:opacity-50"
+                          >
+                            {rotatingKey === client.id 
+                              ? (locale === 'fr' ? 'Génération...' : 'Generating...') 
+                              : (locale === 'fr' ? 'Générer Clé' : 'Generate Key')}
+                          </button>
+                        </div>
+                      )}
                     </div>
                   </div>
                   <div>

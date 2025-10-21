@@ -107,6 +107,8 @@ export async function POST(req: NextRequest) {
         email: clientData.email,
         language: clientData.language,
         apiKey: clientData.api_key,
+        lastConnection: clientData.last_connection,
+        createdAt: clientData.created_at,
       },
     });
 

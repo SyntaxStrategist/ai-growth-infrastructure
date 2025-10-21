@@ -20,6 +20,7 @@ import { saveSession, clearSession, type ClientData } from '../../../../utils/se
 import { getLocalStorageItem, removeLocalStorageItem } from '../../../../lib/safe-localstorage';
 import FallbackUI, { LoadingFallback, ErrorFallback, OfflineFallback } from '../../../../components/FallbackUI';
 import { LeadNotes } from '../../../../components/dashboard';
+import { getConnectionInfo } from '../../../../utils/connection-status';
 
 // Dynamic imports to prevent hydration mismatches
 const PredictiveGrowthEngine = dynamic(() => import('../../../../components/PredictiveGrowthEngine'), { 
@@ -264,6 +265,16 @@ async function translateIntent(rawTopIntent: string, locale: string): Promise<st
       results: isFrench ? 'résultats' : 'results',
     },
   };
+
+  // Force session refresh on mount to catch any updates (e.g., from test connection)
+  useEffect(() => {
+    if (authenticated && client) {
+      console.log('[Dashboard] ============================================');
+      console.log('[Dashboard] Checking session data...');
+      console.log('[Dashboard] Last Connection:', client.lastConnection || 'never');
+      console.log('[Dashboard] ============================================');
+    }
+  }, [authenticated, client]);
 
   // Check for legacy client_id and handle auto-refresh if needed
   useEffect(() => {
@@ -942,7 +953,26 @@ async function translateIntent(rawTopIntent: string, locale: string): Promise<st
           <div>
             <h1 className="text-3xl font-bold mb-2">{t.dashboardTitle}</h1>
             <p className="text-white/60">{t.subtitle}</p>
-            <p className="text-white/50 text-sm mt-1">{client?.businessName}</p>
+            <div className="flex items-center gap-3 mt-2">
+              <p className="text-white/50 text-sm">{client?.businessName}</p>
+              {client && (() => {
+                const connInfo = getConnectionInfo(client.lastConnection || null);
+                return (
+                  <div 
+                    className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full border text-xs font-medium ${
+                      connInfo.status === 'connected' ? 'bg-green-500/10 border-green-500/30 text-green-400' :
+                      connInfo.status === 'warning' ? 'bg-yellow-500/10 border-yellow-500/30 text-yellow-400' :
+                      connInfo.status === 'disconnected' ? 'bg-red-500/10 border-red-500/30 text-red-400' :
+                      'bg-gray-500/10 border-gray-500/30 text-gray-400'
+                    }`}
+                    title={isFrench ? `Dernière connexion: ${connInfo.timeAgoFr}` : `Last connection: ${connInfo.timeAgo}`}
+                  >
+                    <span>{connInfo.icon}</span>
+                    <span>{isFrench ? connInfo.statusTextFr : connInfo.statusText}</span>
+                  </div>
+                );
+              })()}
+            </div>
           </div>
           <div className="flex items-center gap-3">
             <button
@@ -1416,7 +1446,7 @@ async function translateIntent(rawTopIntent: string, locale: string): Promise<st
               <div className="mt-4 pt-4 border-t border-white/5">
                 <LeadNotes 
                   leadId={lead.id} 
-                  clientId={client?.id}
+                  clientId={client?.clientId}
                   isFrench={isFrench} 
                   className="mt-2"
                 />

@@ -17,7 +17,7 @@ export async function GET(req: NextRequest) {
     
     const { data, error } = await supabase
       .from('clients')
-      .select('industry_category, primary_service, booking_link, custom_tagline, email_tone, followup_speed, ai_personalized_reply, language, business_name, icp_data')
+      .select('industry_category, primary_service, booking_link, custom_tagline, email_tone, followup_speed, ai_personalized_reply, language, business_name, icp_data, last_connection, created_at, api_key')
       .eq('client_id', clientId)
       .single();
     
