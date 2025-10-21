@@ -5,9 +5,9 @@ import { supabase } from "../../../../lib/supabase";
 import { handleApiError } from '../../../../lib/error-handler';
 
 // PATCH /api/lead-notes/[id] - Edit a note
-export async function PATCH(req: NextRequest, { params }: { params: { id: string } }) {
+export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
-    const noteId = params.id;
+    const { id: noteId } = await params;
     const { note, performed_by } = await req.json();
 
     console.log(`[LeadNotes] PATCH received - note_id: ${noteId}`);
@@ -91,9 +91,9 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
 }
 
 // DELETE /api/lead-notes/[id] - Delete a note
-export async function DELETE(req: NextRequest, { params }: { params: { id: string } }) {
+export async function DELETE(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
-    const noteId = params.id;
+    const { id: noteId } = await params;
 
     console.log(`[LeadNotes] DELETE received - note_id: ${noteId}`);
 
