@@ -66,7 +66,6 @@ export default function ClientProspectIntelligencePage() {
   const [toastMessage, setToastMessage] = useState('');
   const [showOnlyHighPriority, setShowOnlyHighPriority] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
-  const [generatingProof, setGeneratingProof] = useState(false);
   
   // Modal states
   const [proofModalOpen, setProofModalOpen] = useState(false);
@@ -113,7 +112,6 @@ export default function ClientProspectIntelligencePage() {
     scanButton: isFrench ? '🧠 Lancer un scan de prospects' : '🧠 Run Prospect Scan',
     scanning: isFrench ? 'Scan en cours...' : 'Scanning...',
     latestResults: isFrench ? 'Derniers Résultats' : 'Latest Results',
-    simulateFeedback: isFrench ? 'Simuler Feedback' : 'Simulate Feedback',
     refreshButton: isFrench ? '📊 Actualiser les statistiques' : '📊 Refresh Metrics',
     refreshing: isFrench ? 'Actualisation...' : 'Refreshing...',
     totalCrawled: isFrench ? 'Total Crawlé' : 'Total Crawled',
@@ -288,16 +286,6 @@ export default function ClientProspectIntelligencePage() {
     setRefreshing(false);
   };
 
-  const handleSimulateFeedback = async () => {
-    setGeneratingProof(true);
-    // Simulate proof generation
-    setTimeout(() => {
-      setGeneratingProof(false);
-      setToastMessage('Proof generated successfully!');
-      setShowToast(true);
-      setTimeout(() => setShowToast(false), 3000);
-    }, 2000);
-  };
 
   const handleLogout = () => {
     console.log('[ClientProspectIntelligence] Logging out user...');
@@ -605,17 +593,6 @@ export default function ClientProspectIntelligencePage() {
           <div className="flex justify-between items-center mb-4">
             <h2 className="text-xl font-semibold text-blue-400">{t.latestResults}</h2>
             <div className="flex gap-2">
-              <button
-                onClick={handleSimulateFeedback}
-                disabled={generatingProof}
-                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
-                  generatingProof
-                    ? 'bg-gray-500/50 text-gray-400 cursor-not-allowed'
-                    : 'bg-purple-500/20 border border-purple-400/50 text-purple-400 hover:bg-purple-500/30'
-                }`}
-              >
-                {t.simulateFeedback}
-              </button>
               <button
                 onClick={handleRefresh}
                 disabled={refreshing}
