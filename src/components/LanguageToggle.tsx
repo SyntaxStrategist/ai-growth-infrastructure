@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useLocale, useTranslations } from 'next-intl';
-import { useRouter, usePathname } from 'next/navigation';
+import { useRouter, usePathname } from '../i18n/routing';
 import { routing } from '../i18n/routing';
 
 export function LanguageToggle() {

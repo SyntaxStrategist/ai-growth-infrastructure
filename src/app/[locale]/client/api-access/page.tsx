@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { useRouter } from "next/navigation";
+import { useRouter } from "../../../../i18n/routing";
 import { useLocale } from 'next-intl';
 import AvenirLogo from '../../../../components/AvenirLogo';
 import { restoreSession, type ClientData } from '../../../../utils/session';
@@ -70,9 +70,9 @@ export default function ApiAccess() {
           <div className="flex items-center gap-3 bg-white/10 hover:bg-white/15 backdrop-blur-sm rounded-xl px-5 py-3 shadow-lg transition-all border border-white/20">
             <button
               onClick={() => {
-                const segments = window.location.pathname.split('/');
-                if (segments[1] === 'en' || segments[1] === 'fr') {
-                  segments[1] = 'en';
+                const segments = window.location.pathname.split('/').filter(s => s);
+                if (segments[0] === 'en' || segments[0] === 'fr') {
+                  segments[0] = 'en';
                 } else {
                   segments.unshift('en');
                 }
@@ -94,9 +94,9 @@ export default function ApiAccess() {
             
             <button
               onClick={() => {
-                const segments = window.location.pathname.split('/');
-                if (segments[1] === 'en' || segments[1] === 'fr') {
-                  segments[1] = 'fr';
+                const segments = window.location.pathname.split('/').filter(s => s);
+                if (segments[0] === 'en' || segments[0] === 'fr') {
+                  segments[0] = 'fr';
                 } else {
                   segments.unshift('fr');
                 }
@@ -145,9 +145,9 @@ export default function ApiAccess() {
               <div className="flex items-center gap-3 bg-white/10 hover:bg-white/15 backdrop-blur-sm rounded-xl px-5 py-3 shadow-lg transition-all border border-white/20">
                 <button
                   onClick={() => {
-                    const segments = window.location.pathname.split('/');
-                    if (segments[1] === 'en' || segments[1] === 'fr') {
-                      segments[1] = 'en';
+                    const segments = window.location.pathname.split('/').filter(s => s);
+                    if (segments[0] === 'en' || segments[0] === 'fr') {
+                      segments[0] = 'en';
                     } else {
                       segments.unshift('en');
                     }
@@ -169,9 +169,9 @@ export default function ApiAccess() {
                 
                 <button
                   onClick={() => {
-                    const segments = window.location.pathname.split('/');
-                    if (segments[1] === 'en' || segments[1] === 'fr') {
-                      segments[1] = 'fr';
+                    const segments = window.location.pathname.split('/').filter(s => s);
+                    if (segments[0] === 'en' || segments[0] === 'fr') {
+                      segments[0] = 'fr';
                     } else {
                       segments.unshift('fr');
                     }
