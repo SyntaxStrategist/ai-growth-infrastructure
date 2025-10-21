@@ -21,30 +21,27 @@ async function autoQueueHandler(req: NextRequest) {
     // Step 1: Find 1 new valid prospect that fits Avenir AI's ICP
     console.log('[AutoQueue] Step 1: Finding valid prospect...');
     
-    const { data: prospects, error: prospectError } = await withTimeout(
-      supabase
-        .from('prospect_candidates')
-        .select(`
-          id,
-          business_name,
-          website,
-          contact_email,
-          industry,
-          region,
-          language,
-          automation_need_score,
-          contacted,
-          is_test,
-          created_at
-        `)
-        .eq('contacted', false) // Not yet contacted
-        .eq('is_test', false) // Not test data
-        .gte('automation_need_score', 70) // High priority prospects
-        .in('industry', ['technology', 'construction', 'real estate', 'marketing', 'healthcare', 'finance']) // Avenir AI's target industries
-        .order('automation_need_score', { ascending: false }) // Highest score first
-        .limit(1),
-      8000
-    );
+    const { data: prospects, error: prospectError } = await supabase
+      .from('prospect_candidates')
+      .select(`
+        id,
+        business_name,
+        website,
+        contact_email,
+        industry,
+        region,
+        language,
+        automation_need_score,
+        contacted,
+        is_test,
+        created_at
+      `)
+      .eq('contacted', false) // Not yet contacted
+      .eq('is_test', false) // Not test data
+      .gte('automation_need_score', 70) // High priority prospects
+      .in('industry', ['technology', 'construction', 'real estate', 'marketing', 'healthcare', 'finance']) // Avenir AI's target industries
+      .order('automation_need_score', { ascending: false }) // Highest score first
+      .limit(1);
 
     if (prospectError) {
       console.error('[AutoQueue] ❌ Error fetching prospects:', prospectError);
@@ -88,7 +85,7 @@ async function autoQueueHandler(req: NextRequest) {
     // Prepare variables for the template
     const variables = {
       company_name: prospect.business_name,
-      contact_name: prospect.contact_email ? prospect.contact_email.split('@')[0].replace(/[._]/g, ' ').replace(/\b\w/g, l => l.toUpperCase()) : 'there',
+      contact_name: prospect.contact_email ? prospect.contact_email.split('@')[0].replace(/[._]/g, ' ').replace(/\b\w/g, (l: string) => l.toUpperCase()) : 'there',
       contact_email: prospect.contact_email || 'contact@' + prospect.website.replace(/^https?:\/\//, '').replace(/^www\./, ''),
       industry: prospect.industry || 'business',
       pain_points: getPainPointsForIndustry(prospect.industry)
@@ -102,9 +99,9 @@ async function autoQueueHandler(req: NextRequest) {
     // Replace variables in templates
     Object.entries(variables).forEach(([key, value]) => {
       const regex = new RegExp(`{{${key}}}`, 'g');
-      subject = subject.replace(regex, value);
-      html = html.replace(regex, value);
-      text = text.replace(regex, value);
+      subject = subject.replace(regex, String(value));
+      html = html.replace(regex, String(value));
+      text = text.replace(regex, String(value));
     });
 
     console.log('[AutoQueue] ✅ Email generated:', {
@@ -116,25 +113,22 @@ async function autoQueueHandler(req: NextRequest) {
     // Step 3: Insert email into outreach_emails table with status 'pending'
     console.log('[AutoQueue] Step 3: Inserting email into outreach_emails table...');
     
-    const { data: insertedEmail, error: insertError } = await withTimeout(
-      supabase
-        .from('outreach_emails')
-        .insert({
-          prospect_id: prospect.id,
-          prospect_email: variables.contact_email,
-          prospect_name: variables.contact_name,
-          company_name: prospect.business_name,
-          subject: subject,
-          content: html,
-          status: 'pending',
-          follow_up_sequence: 1,
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString()
-        })
-        .select()
-        .single(),
-      8000
-    );
+    const { data: insertedEmail, error: insertError } = await supabase
+      .from('outreach_emails')
+      .insert({
+        prospect_id: prospect.id,
+        prospect_email: variables.contact_email,
+        prospect_name: variables.contact_name,
+        company_name: prospect.business_name,
+        subject: subject,
+        content: html,
+        status: 'pending',
+        follow_up_sequence: 1,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      })
+      .select()
+      .single();
 
     if (insertError) {
       console.error('[AutoQueue] ❌ Error inserting email:', insertError);
@@ -157,13 +151,10 @@ async function autoQueueHandler(req: NextRequest) {
     // Step 4: Mark prospect as contacted to avoid duplicates
     console.log('[AutoQueue] Step 4: Marking prospect as contacted...');
     
-    const { error: updateError } = await withTimeout(
-      supabase
-        .from('prospect_candidates')
-        .update({ contacted: true })
-        .eq('id', prospect.id),
-      5000
-    );
+    const { error: updateError } = await supabase
+      .from('prospect_candidates')
+      .update({ contacted: true })
+      .eq('id', prospect.id);
 
     if (updateError) {
       console.error('[AutoQueue] ⚠️ Warning: Failed to mark prospect as contacted:', updateError);

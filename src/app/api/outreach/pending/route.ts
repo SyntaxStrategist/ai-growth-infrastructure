@@ -32,10 +32,18 @@ async function pendingHandler(req: NextRequest) {
     // Test basic database connectivity first
     console.log('[OutreachPending] Testing database connectivity...');
     try {
-      const connectivityTest = await withTimeout(
-        supabase.from('outreach_emails').select('id').limit(1),
-        5000
-      );
+      const { error: connectivityError } = await supabase.from('outreach_emails').select('id').limit(1);
+      if (connectivityError) {
+        console.error('[OutreachPending] ❌ Database connectivity test failed:', connectivityError);
+        return NextResponse.json(
+          { 
+            success: false, 
+            error: "Database connection failed",
+            details: connectivityError.message
+          },
+          { status: 503 }
+        );
+      }
       console.log('[OutreachPending] ✅ Database connectivity test passed');
     } catch (connectivityError) {
       console.error('[OutreachPending] ❌ Database connectivity test failed:', connectivityError);
@@ -54,28 +62,25 @@ async function pendingHandler(req: NextRequest) {
     const queryStart = Date.now();
     
     try {
-      const { data: pendingEmails, error } = await withTimeout(
-        supabase
-          .from('outreach_emails')
-          .select(`
-            id,
-            prospect_email,
-            prospect_name,
-            company_name,
-            subject,
-            content,
-            status,
-            follow_up_sequence,
-            created_at,
-            updated_at,
-            prospect_id,
-            campaign_id
-          `)
-          .eq('status', 'pending')
-          .order('created_at', { ascending: true })
-          .range(offset, offset + limit - 1),
-        8000
-      );
+      const { data: pendingEmails, error } = await supabase
+        .from('outreach_emails')
+        .select(`
+          id,
+          prospect_email,
+          prospect_name,
+          company_name,
+          subject,
+          content,
+          status,
+          follow_up_sequence,
+          created_at,
+          updated_at,
+          prospect_id,
+          campaign_id
+        `)
+        .eq('status', 'pending')
+        .order('created_at', { ascending: true })
+        .range(offset, offset + limit - 1);
       
       const queryDuration = Date.now() - queryStart;
       console.log('[OutreachPending] Query completed in', queryDuration, 'ms');
@@ -109,15 +114,12 @@ async function pendingHandler(req: NextRequest) {
 
       let approvedToday = 0;
       try {
-        const { data: todayApprovals, error: countError } = await withTimeout(
-          supabase
-            .from('outreach_emails')
-            .select('id')
-            .eq('status', 'approved')
-            .gte('created_at', today.toISOString())
-            .lt('created_at', tomorrow.toISOString()),
-          5000
-        );
+        const { data: todayApprovals, error: countError } = await supabase
+          .from('outreach_emails')
+          .select('id')
+          .eq('status', 'approved')
+          .gte('created_at', today.toISOString())
+          .lt('created_at', tomorrow.toISOString());
 
         if (countError) {
           console.error('[OutreachPending] ⚠️ Error counting today approvals (non-fatal):', countError);
