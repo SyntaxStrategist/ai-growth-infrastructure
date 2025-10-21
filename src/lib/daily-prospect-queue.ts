@@ -173,12 +173,19 @@ export async function runDailyProspectQueue(): Promise<DailyQueueResult> {
     // Create mock form test results for email generation
     const mockFormTests: FormTestResult[] = rankedProspects.map(prospect => ({
       prospect_id: prospect.id!,
-      has_autoresponder: false,
+      test_submitted_at: new Date(),
+      response_received_at: null,
       response_time_minutes: 0,
-      form_accessible: true,
-      test_successful: true,
-      test_message: 'Test message',
-      test_timestamp: new Date().toISOString()
+      has_autoresponder: false,
+      autoresponder_tone: 'none',
+      autoresponder_content: null,
+      score: prospect.automation_need_score || 0,
+      test_status: 'completed',
+      metadata: {
+        mock_test: true,
+        daily_queue: true,
+        test_timestamp: new Date().toISOString()
+      }
     }));
 
     // Generate outreach emails
