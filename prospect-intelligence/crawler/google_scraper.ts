@@ -29,10 +29,14 @@ export async function searchProspects(config: GoogleSearchConfig): Promise<Prosp
   const apiKey = process.env.GOOGLE_CUSTOM_SEARCH_API_KEY;
   const searchEngineId = process.env.GOOGLE_SEARCH_ENGINE_ID;
 
-  if (!apiKey || !searchEngineId || process.env.NODE_ENV === 'development') {
-    console.log('[GoogleScraper] ⚠️  Development mode - returning simulated results');
-    return getSimulatedProspects(region, language, maxResults);
+  if (!apiKey || !searchEngineId) {
+    console.error('[GoogleScraper] ❌ Missing required credentials');
+    console.error('[GoogleScraper] GOOGLE_CUSTOM_SEARCH_API_KEY:', apiKey ? 'SET' : 'MISSING');
+    console.error('[GoogleScraper] GOOGLE_SEARCH_ENGINE_ID:', searchEngineId ? 'SET' : 'MISSING');
+    throw new Error('Google Custom Search API not configured - set GOOGLE_CUSTOM_SEARCH_API_KEY and GOOGLE_SEARCH_ENGINE_ID');
   }
+
+  console.log('[GoogleScraper] ✅ Using Google Custom Search API (PRODUCTION)');
 
   try {
     // Production: Use Google Custom Search API
@@ -70,8 +74,9 @@ export async function searchProspects(config: GoogleSearchConfig): Promise<Prosp
 
   } catch (error) {
     console.error('[GoogleScraper] ❌ Error:', error);
-    // Fallback to simulated results
-    return getSimulatedProspects(region, language, maxResults);
+    console.error('[GoogleScraper] Query failed - no fallback to simulated data');
+    // Return empty array instead of simulated data
+    return [];
   }
 }
 

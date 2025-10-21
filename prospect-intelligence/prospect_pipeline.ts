@@ -88,49 +88,11 @@ export async function runProspectPipeline(config: PipelineConfig): Promise<Prosp
             let dataSource = 'unknown';
             
             try {
-              // DATA SOURCE 1: Apollo API
-              const apolloModule = await import('../src/lib/integrations/apollo_connector');
+              // DATA SOURCE 1: Apollo API - SKIPPED (free plan insufficient)
+              console.log('⏭️  Skipping Apollo API (free plan does not support company search)');
+              await logIntegration('apollo', 'info', 'Skipped - free plan limitation');
               
-              if (apolloModule.ApolloAPI.isConfigured()) {
-                try {
-                  console.log('📡 Trying Apollo...');
-                  await logIntegration('apollo', 'info', `Searching: ${industry} in ${region}`);
-                  
-                  const apolloProspects = await apolloModule.ApolloAPI.searchProspects(
-                    industry, 
-                    region, 
-                    Math.ceil(config.maxProspectsPerRun / (config.industries.length * config.regions.length))
-                  );
-                  
-                  prospects = apolloProspects.map(ap => ({
-                    id: undefined,
-                    business_name: ap.business_name,
-                    website: ap.website,
-                    contact_email: ap.contact_email || undefined,
-                    industry: ap.industry || industry,
-                    region: ap.region || region,
-                    language: region.includes('QC') || region === 'FR' ? 'fr' : 'en',
-                    form_url: ap.website ? `${ap.website}/contact` : undefined,
-                    last_tested: undefined,
-                    response_score: 0,
-                    automation_need_score: ap.automation_need_score,
-                    contacted: false,
-                    metadata: ap.metadata
-                  }));
-                  
-                  dataSource = 'apollo';
-                  console.log(`✅ Apollo: ${prospects.length} prospects`);
-                  await logIntegration('apollo', 'info', 'Success', { count: prospects.length });
-                  
-                } catch (apolloError) {
-                  console.warn('⚠️  Apollo failed');
-                  await logIntegration('apollo', 'warn', 'API failed', {
-                    error: apolloError instanceof Error ? apolloError.message : 'Unknown'
-                  });
-                }
-              }
-              
-              // DATA SOURCE 2: People Data Labs
+              // DATA SOURCE 1: People Data Labs
               if (prospects.length === 0 && config.usePdl !== false && PdlAPI.isConfigured()) {
                 try {
                   console.log('📡 Trying PDL...');
@@ -172,10 +134,10 @@ export async function runProspectPipeline(config: PipelineConfig): Promise<Prosp
                 }
               }
               
-              // DATA SOURCE 3: Google Scraper (final fallback)
+              // DATA SOURCE 2: Google Custom Search (fallback if PDL fails)
               if (prospects.length === 0) {
-                console.log('📡 Using Google fallback...');
-                await logIntegration('google', 'info', `Fallback: ${industry} in ${region}`);
+                console.log('📡 Using Google Custom Search...');
+                await logIntegration('google', 'info', `Searching: ${industry} in ${region}`);
                 prospects = await searchByIndustry(industry, region);
                 dataSource = 'google';
                 console.log(`✅ Google: ${prospects.length} prospects`);
@@ -206,6 +168,22 @@ export async function runProspectPipeline(config: PipelineConfig): Promise<Prosp
 
     // Deduplicate by website
     allProspects = deduplicateProspects(allProspects);
+    
+    // VALIDATION: Filter out simulated/test data in production
+    if (!config.testMode) {
+      const beforeValidation = allProspects.length;
+      allProspects = allProspects.filter(p => {
+        const isSimulated = p.metadata?.simulation_mode === true || 
+                           p.metadata?.source === 'simulated' ||
+                           p.website?.includes('.test');
+        return !isSimulated;
+      });
+      
+      const filtered = beforeValidation - allProspects.length;
+      if (filtered > 0) {
+        console.warn(`⚠️  Filtered out ${filtered} simulated prospects (production mode)`);
+      }
+    }
     
     // Limit to max prospects
     if (allProspects.length > config.maxProspectsPerRun) {
