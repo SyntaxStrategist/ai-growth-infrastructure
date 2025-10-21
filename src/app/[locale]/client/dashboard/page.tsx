@@ -19,6 +19,7 @@ import { useSession } from '../../../../components/SessionProvider';
 import { saveSession, clearSession, type ClientData } from '../../../../utils/session';
 import { getLocalStorageItem, removeLocalStorageItem } from '../../../../lib/safe-localstorage';
 import FallbackUI, { LoadingFallback, ErrorFallback, OfflineFallback } from '../../../../components/FallbackUI';
+import { LeadNotes } from '../../../../components/dashboard';
 
 // Dynamic imports to prevent hydration mismatches
 const PredictiveGrowthEngine = dynamic(() => import('../../../../components/PredictiveGrowthEngine'), { 
@@ -534,7 +535,7 @@ async function translateIntent(rawTopIntent: string, locale: string): Promise<st
     if (!client) return;
 
     try {
-      const res = await fetch(`/api/lead-actions?limit=5&clientId=${client.clientId}`);
+      const res = await fetch(`/api/lead-actions?limit=5&clientId=${client.clientId}&locale=${locale}`);
       const json = await res.json();
       if (json.success) {
         setRecentActions(json.data || []);
@@ -1409,6 +1410,16 @@ async function translateIntent(rawTopIntent: string, locale: string): Promise<st
                     </div>
                   </>
                 ) : null}
+              </div>
+
+              {/* Lead Notes Section */}
+              <div className="mt-4 pt-4 border-t border-white/5">
+                <LeadNotes 
+                  leadId={lead.id} 
+                  clientId={client?.id}
+                  isFrench={isFrench} 
+                  className="mt-2"
+                />
               </div>
             </motion.div>
           ))}

@@ -9,6 +9,7 @@ import { supabase } from "../../../lib/supabase";
 import type { LeadMemoryRecord } from "../../../lib/supabase";
 import type { LeadAction } from "../../api/lead-actions/route";
 import FallbackUI, { LoadingFallback, ErrorFallback, OfflineFallback } from "../../../components/FallbackUI";
+import { LeadNotes } from "../../../components/dashboard";
 
 // Safe locale detection fallback
 function getSafeLocale(): string {
@@ -478,7 +479,7 @@ export default function Dashboard() {
 
   async function fetchRecentActions() {
     try {
-      const res = await fetch('/api/lead-actions?limit=5');
+      const res = await fetch(`/api/lead-actions?limit=5&locale=${locale}`);
       const json = await res.json();
       if (json.success) {
         setRecentActions(json.data || []);
@@ -1368,6 +1369,16 @@ export default function Dashboard() {
                     )}
                   </>
                 )}
+              </div>
+
+              {/* Lead Notes Section */}
+              <div className="mt-4 pt-4 border-t border-white/5">
+                <LeadNotes 
+                  leadId={lead.id} 
+                  clientId={selectedClientId !== 'all' ? selectedClientId : undefined}
+                  isFrench={locale === 'fr'} 
+                  className="mt-2"
+                />
               </div>
             </motion.div>
           ))}

@@ -57,6 +57,7 @@ model Client {
   // Relations
   leadMemory             LeadMemory[]
   growthBrain            GrowthBrain[]
+  leadNotes              LeadNote[]
 
   @@index([apiKey])
   @@index([email])
@@ -109,6 +110,7 @@ model LeadMemory {
   
   // Relations
   leadActions          LeadAction[]
+  leadNotes            LeadNote[]
 
   @@index([timestamp])
   @@index([email])
@@ -152,6 +154,28 @@ model LeadAction {
   @@index([reversionReason])
   @@index([isTest])
   @@map("lead_actions")
+}
+
+// ============================================
+// LEAD_NOTES TABLE - Notes for leads
+// ============================================
+model LeadNote {
+  id                 String    @id @default(uuid()) @db.Uuid
+  leadId             String    @map("lead_id")
+  lead               LeadMemory @relation(fields: [leadId], references: [id], onDelete: Cascade)
+  clientId           String?   @map("client_id") @db.Uuid
+  client             Client?   @relation(fields: [clientId], references: [id], onDelete: SetNull)
+  note               String    @db.Text
+  performedBy        String    @default("admin") @map("performed_by")
+  createdAt          DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt          DateTime  @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+  isTest             Boolean   @default(false) @map("is_test")
+
+  @@index([leadId])
+  @@index([clientId])
+  @@index([createdAt])
+  @@index([isTest])
+  @@map("lead_notes")
 }
 
 // ============================================

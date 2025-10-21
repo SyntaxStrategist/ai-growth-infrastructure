@@ -19,14 +19,21 @@ export default function ActivityLog({ actions, locale }: ActivityLogProps) {
     tag: isFrench ? 'Étiqueté' : 'Tagged',
     reactivate: isFrench ? 'Réactivé' : 'Reactivated',
     noActivity: isFrench ? 'Aucune activité récente' : 'No recent activity',
+    performedBy: isFrench ? 'par' : 'by',
   };
 
-  const getActionLabel = (action: string) => {
-    if (action === 'delete') return t.delete;
-    if (action === 'archive') return t.archive;
-    if (action === 'tag') return t.tag;
-    if (action === 'reactivate') return t.reactivate;
-    return action;
+  const getActionLabel = (action: LeadAction) => {
+    // Use the translated action_label from API if available, otherwise fallback to client-side translation
+    if (action.action_label) {
+      return action.action_label;
+    }
+    
+    // Fallback to client-side translation for backward compatibility
+    if (action.action === 'delete') return t.delete;
+    if (action.action === 'archive') return t.archive;
+    if (action.action === 'tag') return t.tag;
+    if (action.action === 'reactivate') return t.reactivate;
+    return action.action;
   };
 
   const getActionIcon = (action: string) => {
@@ -77,19 +84,25 @@ export default function ActivityLog({ actions, locale }: ActivityLogProps) {
             <div className="flex items-center gap-3">
               <span className="text-lg">{getActionIcon(action.action)}</span>
               <div className={`px-2 py-1 rounded text-xs font-medium border ${getActionColor(action.action)}`}>
-                {getActionLabel(action.action)}
+                {getActionLabel(action)}
               </div>
               {action.tag && (
                 <span className="px-2 py-1 rounded text-xs font-medium bg-purple-500/20 border border-purple-500/40 text-purple-300">
                   {action.tag}
                 </span>
               )}
+              {action.performed_by && (
+                <span className="text-xs text-white/50">
+                  {t.performedBy} {action.performed_by}
+                </span>
+              )}
             </div>
             <div className="text-right">
               <p className="text-xs text-white/40">
-                {new Date(action.timestamp).toLocaleTimeString(isFrench ? 'fr-CA' : 'en-US', { 
+                {action.formatted_timestamp || new Date(action.timestamp).toLocaleTimeString(isFrench ? 'fr-CA' : 'en-US', { 
                   hour: '2-digit', 
-                  minute: '2-digit' 
+                  minute: '2-digit',
+                  hour12: !isFrench // 12-hour format for EN, 24-hour format for FR
                 })}
               </p>
             </div>

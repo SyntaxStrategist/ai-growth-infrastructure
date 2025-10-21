@@ -4,88 +4,40 @@ import { supabase } from "../../../lib/supabase";
 import { randomUUID } from "crypto";
 
 import { handleApiError } from '../../../lib/error-handler';
-// Translation mappings for action data
-const tagTranslations = {
-  // English to French
-  'Converted': 'Converti',
-  'Hot Lead': 'Lead chaud',
-  'Cold Lead': 'Lead froid',
-  'Warm Lead': 'Lead tiède',
-  'Follow Up': 'Suivi',
-  'Not Interested': 'Pas intéressé',
-  'Interested': 'Intéressé',
-  'Qualified': 'Qualifié',
-  'Unqualified': 'Non qualifié',
-  'Demo Scheduled': 'Démonstration programmée',
-  'Demo Completed': 'Démonstration terminée',
-  'Proposal Sent': 'Proposition envoyée',
-  'Negotiating': 'Négociation',
-  'Closed Won': 'Fermé gagné',
-  'Closed Lost': 'Fermé perdu',
-  // French to English
-  'Converti': 'Converted',
-  'Lead chaud': 'Hot Lead',
-  'Lead froid': 'Cold Lead',
-  'Lead tiède': 'Warm Lead',
-  'Suivi': 'Follow Up',
-  'Pas intéressé': 'Not Interested',
-  'Intéressé': 'Interested',
-  'Qualifié': 'Qualified',
-  'Non qualifié': 'Unqualified',
-  'Démonstration programmée': 'Demo Scheduled',
-  'Démonstration terminée': 'Demo Completed',
-  'Proposition envoyée': 'Proposal Sent',
-  'Négociation': 'Negotiating',
-  'Fermé gagné': 'Closed Won',
-  'Fermé perdu': 'Closed Lost',
-};
+import { 
+  detectLocaleFromRequest, 
+  normalizeLocale, 
+  translateActionLabel, 
+  translateTagLabel, 
+  translatePerformedBy, 
+  formatTimestamp,
+  type Locale 
+} from '../../../lib/translateActionLabel';
 
-// Helper function to detect if text is in French
-function isFrenchText(text: string): boolean {
-  const frenchIndicators = ['é', 'è', 'ê', 'ë', 'à', 'â', 'ä', 'ç', 'ù', 'û', 'ü', 'ô', 'ö', 'î', 'ï'];
-  const frenchWords = ['converti', 'démonstration', 'programmée', 'terminée', 'proposition', 'envoyée', 'négociation', 'fermé', 'gagné', 'perdu', 'intéressé', 'qualifié'];
-  
-  const lowerText = text.toLowerCase();
-  const hasFrenchChars = frenchIndicators.some(char => lowerText.includes(char));
-  const hasFrenchWords = frenchWords.some(word => lowerText.includes(word));
-  
-  return hasFrenchChars || hasFrenchWords;
-}
-
-// Translation function for action tags
-function translateTag(value: string, targetLocale: string): string {
-  if (!value) return value;
-  
-  const isValueFrench = isFrenchText(value);
-  const isTargetFrench = targetLocale === 'fr';
-  
-  if (isTargetFrench && !isValueFrench) {
-    // We need French, but value is in English - translate to French
-    const translated = tagTranslations[value as keyof typeof tagTranslations] || value;
-    if (translated !== value) {
-      console.log(`[LeadActions] Translating tag from EN → FR: "${value}" → "${translated}"`);
-    }
-    return translated;
-  } else if (!isTargetFrench && isValueFrench) {
-    // We need English, but value is in French - translate to English
-    const translated = tagTranslations[value as keyof typeof tagTranslations] || value;
-    if (translated !== value) {
-      console.log(`[LeadActions] Translating tag from FR → EN: "${value}" → "${translated}"`);
-    }
-    return translated;
-  }
-  
-  return value;
-}
-
-// Main translation function for action data
-function translateActionData(data: any[], locale: string): any[] {
+/**
+ * Main translation function for action data
+ * Translates action labels, tags, performed_by, and timestamps based on locale
+ */
+function translateActionData(data: any[], locale: Locale): any[] {
   return data.map((action: any) => {
     const translatedAction = { ...action };
     
+    // Translate action type
+    translatedAction.action_label = translateActionLabel(action.action, locale);
+    
     // Translate tag field
     if (action.tag) {
-      translatedAction.tag = translateTag(action.tag, locale);
+      translatedAction.tag = translateTagLabel(action.tag, locale);
+    }
+    
+    // Translate performed_by field
+    if (action.performed_by) {
+      translatedAction.performed_by = translatePerformedBy(action.performed_by, locale);
+    }
+    
+    // Format timestamp based on locale
+    if (action.timestamp) {
+      translatedAction.formatted_timestamp = formatTimestamp(action.timestamp, locale);
     }
     
     return translatedAction;
@@ -96,9 +48,11 @@ export interface LeadAction {
   id: string;
   lead_id: string;
   action: string;
+  action_label?: string; // Translated action label
   tag: string | null;
   performed_by: string;
   timestamp: string;
+  formatted_timestamp?: string; // Locale-formatted timestamp
 }
 
 // POST /api/lead-actions - Log a lead action (delete, archive, tag)
@@ -436,12 +390,16 @@ export async function GET(req: NextRequest) {
     const url = new URL(req.url);
     const limit = parseInt(url.searchParams.get('limit') || '5', 10);
     const clientId = url.searchParams.get('clientId');
-    const locale = url.searchParams.get('locale') || 'en';
+    
+    // Detect locale from URL path or query parameter
+    const detectedLocale = detectLocaleFromRequest(req.url, url.searchParams);
+    const locale = normalizeLocale(detectedLocale);
     
     console.log('[LeadActions] Query params:', {
       limit,
       clientId: clientId || 'all (admin)',
       locale,
+      detectedLocale,
       order: 'timestamp DESC',
     });
 
@@ -528,9 +486,20 @@ export async function GET(req: NextRequest) {
     }
 
     // Apply locale-aware translation to action data
-    console.log(`[LeadActions] Locale detected: ${locale}`);
+    console.log(`[LeadActions] Applying locale-aware translation for: ${locale}`);
     const translatedData = translateActionData(data, locale);
-    console.log('[LeadActions] ✅ Translation applied successfully');
+    console.log('[LeadActions] ✅ Locale-aware translation applied successfully');
+    
+    if (translatedData.length > 0) {
+      console.log('[LeadActions] Sample translated action:', {
+        action: translatedData[0].action,
+        action_label: translatedData[0].action_label,
+        tag: translatedData[0].tag,
+        performed_by: translatedData[0].performed_by,
+        formatted_timestamp: translatedData[0].formatted_timestamp,
+        locale,
+      });
+    }
 
     console.log('[LeadActions] ============================================');
     return NextResponse.json({ success: true, data: translatedData });
