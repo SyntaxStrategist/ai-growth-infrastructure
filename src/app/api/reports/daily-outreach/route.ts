@@ -109,7 +109,7 @@ export async function POST(req: NextRequest) {
         openedAt: email.opened_at,
         repliedAt: email.replied_at,
         createdAt: email.created_at,
-        prospect: email.prospect
+        prospect: Array.isArray(email.prospect) && email.prospect.length > 0 ? email.prospect[0] : undefined
       })) || []
     };
 
