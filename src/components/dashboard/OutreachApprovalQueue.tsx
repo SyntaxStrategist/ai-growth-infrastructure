@@ -353,24 +353,27 @@ export default function OutreachApprovalQueue({ locale }: OutreachApprovalQueueP
           <motion.div
             initial={{ scale: 0.9, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
-            className="bg-black border border-white/10 rounded-lg max-w-4xl w-full max-h-[90vh] overflow-hidden shadow-[0_0_30px_rgba(59,130,246,0.3)]"
+            className="bg-black border border-white/10 rounded-lg max-w-4xl w-full max-h-[90vh] flex flex-col shadow-[0_0_30px_rgba(59,130,246,0.3)]"
           >
-            <div className="p-6 border-b border-white/10">
+            {/* Header - Fixed */}
+            <div className="p-6 border-b border-white/10 flex-shrink-0">
               <div className="flex items-center justify-between">
                 <h3 className="text-lg font-bold text-white">
                   {isFrench ? 'Aperçu de l\'email' : 'Email Preview'}
                 </h3>
                 <button
                   onClick={() => setPreviewEmail(null)}
-                  className="text-white/60 hover:text-white transition-colors"
+                  className="text-white/60 hover:text-white transition-colors p-1 rounded hover:bg-white/10"
                 >
                   ✕
                 </button>
               </div>
             </div>
-            <div className="p-6 overflow-y-auto max-h-[calc(90vh-120px)]">
+            
+            {/* Content - Scrollable */}
+            <div className="flex-1 overflow-y-auto p-6">
               <div className="space-y-4 mb-6">
-                <div className="grid grid-cols-2 gap-4 text-sm">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
                   <div>
                     <span className="text-white/60">{isFrench ? 'À:' : 'To:'}</span>
                     <span className="text-white ml-2">{previewEmail.prospect_email}</span>
@@ -383,29 +386,57 @@ export default function OutreachApprovalQueue({ locale }: OutreachApprovalQueueP
               </div>
               <div className="border border-white/10 rounded-lg p-4 bg-white/5">
                 <div 
-                  className="prose prose-invert max-w-none"
+                  className="prose prose-invert max-w-none prose-headings:text-white prose-p:text-white/90 prose-strong:text-white prose-a:text-blue-400 prose-ul:text-white/90 prose-li:text-white/90"
                   dangerouslySetInnerHTML={{ __html: previewEmail.content }}
                 />
               </div>
             </div>
-            <div className="p-6 border-t border-white/10">
-              <div className="flex items-center justify-end gap-3">
-                <button
-                  onClick={() => setPreviewEmail(null)}
-                  className="px-4 py-2 rounded-lg bg-white/5 border border-white/10 hover:bg-white/10 transition-all"
-                >
-                  {isFrench ? 'Fermer' : 'Close'}
-                </button>
-                <button
-                  onClick={() => {
-                    handleApproveReject(previewEmail.id, 'approve');
-                    setPreviewEmail(null);
-                  }}
-                  disabled={processing === previewEmail.id || dailyLimits.remaining <= 0}
-                  className="px-4 py-2 rounded-lg bg-green-600 hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
-                >
-                  {isFrench ? 'Approuver' : 'Approve'}
-                </button>
+            
+            {/* Footer - Fixed with action buttons */}
+            <div className="p-6 border-t border-white/10 flex-shrink-0 bg-black/50 backdrop-blur-sm">
+              <div className="flex items-center justify-between gap-3">
+                <div className="flex items-center gap-3">
+                  <button
+                    onClick={() => {
+                      handleApproveReject(previewEmail.id, 'reject');
+                      setPreviewEmail(null);
+                    }}
+                    disabled={processing === previewEmail.id}
+                    className="px-4 py-2 rounded-lg bg-red-600 hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all text-white font-medium"
+                  >
+                    {processing === previewEmail.id ? (
+                      <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                    ) : (
+                      <>
+                        🗑️ <span className="ml-1">{isFrench ? 'Rejeter' : 'Reject'}</span>
+                      </>
+                    )}
+                  </button>
+                </div>
+                <div className="flex items-center gap-3">
+                  <button
+                    onClick={() => setPreviewEmail(null)}
+                    className="px-4 py-2 rounded-lg bg-white/5 border border-white/10 hover:bg-white/10 transition-all text-white"
+                  >
+                    {isFrench ? 'Fermer' : 'Close'}
+                  </button>
+                  <button
+                    onClick={() => {
+                      handleApproveReject(previewEmail.id, 'approve');
+                      setPreviewEmail(null);
+                    }}
+                    disabled={processing === previewEmail.id || dailyLimits.remaining <= 0}
+                    className="px-4 py-2 rounded-lg bg-green-600 hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all text-white font-medium"
+                  >
+                    {processing === previewEmail.id ? (
+                      <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                    ) : (
+                      <>
+                        ✅ <span className="ml-1">{isFrench ? 'Approuver' : 'Approve'}</span>
+                      </>
+                    )}
+                  </button>
+                </div>
               </div>
             </div>
           </motion.div>
