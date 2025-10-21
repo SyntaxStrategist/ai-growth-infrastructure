@@ -6,12 +6,7 @@ import { useRouter } from "next/navigation";
 import { useLocale } from 'next-intl';
 import AvenirLogo from '../../../../components/AvenirLogo';
 import UniversalLanguageToggle from '../../../../components/UniversalLanguageToggle';
-
-type ClientData = {
-  clientId: string;
-  businessName: string;
-  apiKey: string;
-};
+import { restoreSession, type ClientData } from '../../../../utils/session';
 
 export default function ApiAccess() {
   const locale = useLocale();
@@ -38,16 +33,13 @@ export default function ApiAccess() {
     zapierIntegration: isFrench ? 'Intégration Zapier' : 'Zapier Integration',
     backToDashboard: isFrench ? 'Retour au tableau de bord' : 'Back to Dashboard',
     notAuthenticated: isFrench ? 'Veuillez vous connecter' : 'Please log in',
+    apiKeyMissing: isFrench ? 'Clé API non disponible' : 'API Key not available',
   };
 
   useEffect(() => {
-    const savedClient = localStorage.getItem('client_session');
-    if (savedClient) {
-      try {
-        setClient(JSON.parse(savedClient));
-      } catch {
-        router.push(`/${locale}/client/dashboard`);
-      }
+    const session = restoreSession();
+    if (session.isAuthenticated && session.client) {
+      setClient(session.client);
     } else {
       router.push(`/${locale}/client/dashboard`);
     }
@@ -143,7 +135,7 @@ export default function ApiAccess() {
           <h3 className="text-xl font-bold mb-4 bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">{t.apiKey}</h3>
           <div className="flex items-center gap-3 flex-wrap mb-4">
             <code className="flex-1 px-4 py-3 rounded-lg bg-black/40 border border-white/10 text-purple-400 font-mono text-sm min-w-[200px]">
-              {showKey ? client.apiKey : '•'.repeat(40)}
+              {showKey ? (client.apiKey || t.apiKeyMissing) : '•'.repeat(40)}
             </code>
             <button
               onClick={() => setShowKey(!showKey)}
@@ -152,8 +144,9 @@ export default function ApiAccess() {
               {showKey ? t.hide : t.show}
             </button>
             <button
-              onClick={() => copyToClipboard(client.apiKey)}
+              onClick={() => copyToClipboard(client.apiKey || t.apiKeyMissing)}
               className="px-4 py-3 rounded-lg bg-blue-500/20 border border-blue-500/40 text-blue-400 hover:bg-blue-500/30 transition-all font-medium shadow-lg hover:shadow-blue-500/30"
+              disabled={!client.apiKey}
             >
               {copied ? t.copied : t.copy}
             </button>
@@ -195,7 +188,7 @@ export default function ApiAccess() {
                 <p><strong>2.</strong> Choisissez votre déclencheur (ex: nouveau formulaire Google Forms, nouveau contact HubSpot)</p>
                 <p><strong>3.</strong> Ajoutez une action: <code className="px-2 py-1 bg-black/30 rounded text-blue-400">Webhooks by Zapier → POST</code></p>
                 <p><strong>4.</strong> URL: <code className="px-2 py-1 bg-black/30 rounded text-blue-400">https://aveniraisolutions.ca/api/lead</code></p>
-                <p><strong>5.</strong> En-têtes: <code className="px-2 py-1 bg-black/30 rounded text-purple-400">x-api-key: {client.apiKey.substring(0, 20)}...</code></p>
+                <p><strong>5.</strong> En-têtes: <code className="px-2 py-1 bg-black/30 rounded text-purple-400">x-api-key: {client.apiKey ? client.apiKey.substring(0, 20) + '...' : 'YOUR_API_KEY'}</code></p>
                 <p><strong>6.</strong> Corps de requête: Mappez les champs name, email, message</p>
                 <p><strong>7.</strong> Testez et activez votre Zap !</p>
               </>
@@ -205,7 +198,7 @@ export default function ApiAccess() {
                 <p><strong>2.</strong> Choose your trigger (e.g., new Google Form submission, new HubSpot contact)</p>
                 <p><strong>3.</strong> Add an action: <code className="px-2 py-1 bg-black/30 rounded text-blue-400">Webhooks by Zapier → POST</code></p>
                 <p><strong>4.</strong> URL: <code className="px-2 py-1 bg-black/30 rounded text-blue-400">https://aveniraisolutions.ca/api/lead</code></p>
-                <p><strong>5.</strong> Headers: <code className="px-2 py-1 bg-black/30 rounded text-purple-400">x-api-key: {client.apiKey.substring(0, 20)}...</code></p>
+                <p><strong>5.</strong> Headers: <code className="px-2 py-1 bg-black/30 rounded text-purple-400">x-api-key: {client.apiKey ? client.apiKey.substring(0, 20) + '...' : 'YOUR_API_KEY'}</code></p>
                 <p><strong>6.</strong> Request Body: Map the fields name, email, message</p>
                 <p><strong>7.</strong> Test and turn on your Zap!</p>
               </>
