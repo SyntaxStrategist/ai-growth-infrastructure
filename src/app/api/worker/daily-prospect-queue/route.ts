@@ -31,17 +31,49 @@ export async function POST(req: NextRequest) {
   console.log('[Worker] ============================================');
 
   try {
-    // Get next pending job
-    console.log('[Worker] 🔍 Checking for pending jobs...');
-    const job = await getNextPendingJob('daily_prospect_queue');
+    // Check if specific job ID was provided in headers
+    const specificJobId = req.headers.get('X-Job-Id');
+    
+    let job;
+    if (specificJobId) {
+      console.log(`[Worker] 🎯 Processing specific job: ${specificJobId}`);
+      // Get the specific job by ID
+      const { createClient } = await import('@supabase/supabase-js');
+      const supabase = createClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.SUPABASE_SERVICE_ROLE_KEY!
+      );
+      
+      const { data: jobData, error } = await supabase
+        .from('queue_jobs')
+        .select('*')
+        .eq('id', specificJobId)
+        .eq('status', 'pending')
+        .single();
+      
+      if (error || !jobData) {
+        console.log(`[Worker] ❌ Specific job not found or not pending: ${specificJobId}`);
+        return NextResponse.json({
+          success: false,
+          error: 'Specific job not found or not pending',
+          jobId: specificJobId
+        }, { status: 404 });
+      }
+      
+      job = jobData;
+    } else {
+      // Get next pending job (FIFO)
+      console.log('[Worker] 🔍 Checking for pending jobs...');
+      job = await getNextPendingJob('daily_prospect_queue');
 
-    if (!job) {
-      console.log('[Worker] ℹ️  No pending jobs found');
-      return NextResponse.json({
-        success: true,
-        message: 'No pending jobs to process',
-        timestamp: new Date().toISOString()
-      });
+      if (!job) {
+        console.log('[Worker] ℹ️  No pending jobs found');
+        return NextResponse.json({
+          success: true,
+          message: 'No pending jobs to process',
+          timestamp: new Date().toISOString()
+        });
+      }
     }
 
     console.log(`[Worker] ✅ Found job: ${job.id}`);

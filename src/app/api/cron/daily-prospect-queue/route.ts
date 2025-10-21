@@ -78,40 +78,45 @@ export async function POST(req: NextRequest) {
     const jobId = enqueueResult.jobId;
     console.log(`[DailyCron] ✅ Job enqueued: ${jobId}`);
 
-    // Trigger the worker endpoint asynchronously (fire and forget)
+    // Trigger the worker endpoint synchronously (reliable processing)
     const workerUrl = `${process.env.NEXT_PUBLIC_SUPABASE_URL?.replace('supabase.co', '') || 'https://www.aveniraisolutions.ca'}/api/worker/daily-prospect-queue`;
     
-    console.log('[DailyCron] 🚀 Triggering background worker...');
+    console.log('[DailyCron] 🚀 Triggering worker synchronously...');
     
-    // Fire and forget - don't wait for worker to complete
-    fetch(workerUrl, {
+    // Synchronous call - wait for worker to complete
+    const workerResponse = await fetch(workerUrl, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         'X-Triggered-By': 'cron',
         'X-Job-Id': jobId
       }
-    }).catch(err => {
-      console.error('[DailyCron] ⚠️ Failed to trigger worker (non-blocking):', err.message);
     });
+
+    if (!workerResponse.ok) {
+      throw new Error(`Worker failed: ${workerResponse.status} ${workerResponse.statusText}`);
+    }
+
+    const workerResult = await workerResponse.json();
+    console.log('[DailyCron] ✅ Worker completed:', workerResult);
 
     const executionTime = Date.now() - startTime;
     
-    console.log('[DailyCron] ✅ Cron job completed (job enqueued)');
+    console.log('[DailyCron] ✅ Cron job completed (worker processed)');
     console.log('[DailyCron] Execution time:', executionTime, 'ms');
     console.log('[DailyCron] Job ID:', jobId);
-    console.log('[DailyCron] Worker will process in background (max 5 minutes)');
+    console.log('[DailyCron] Worker result:', workerResult);
     console.log('[DailyCron] ============================================');
 
     return NextResponse.json({
       success: true,
-      message: 'Daily prospect queue job enqueued successfully',
+      message: 'Daily prospect queue job completed successfully',
       jobId,
-      workerUrl: '/api/worker/daily-prospect-queue',
+      data: workerResult.data,
       meta: {
         executionTimeMs: executionTime,
         timestamp: new Date().toISOString(),
-        note: 'Background worker will process this job (check worker logs for progress)'
+        note: 'Worker processed job synchronously'
       }
     });
 
@@ -182,32 +187,38 @@ export async function GET(req: NextRequest) {
     const newJobId = enqueueResult.jobId;
     console.log(`[DailyCron] ✅ Job enqueued: ${newJobId}`);
 
-    // Trigger worker
+    // Trigger worker synchronously
     const workerUrl = `${process.env.NEXT_PUBLIC_SUPABASE_URL?.replace('supabase.co', '') || 'https://www.aveniraisolutions.ca'}/api/worker/daily-prospect-queue`;
     
-    console.log('[DailyCron] 🚀 Triggering background worker...');
-    fetch(workerUrl, {
+    console.log('[DailyCron] 🚀 Triggering worker synchronously...');
+    const workerResponse = await fetch(workerUrl, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         'X-Triggered-By': 'manual',
         'X-Job-Id': newJobId
       }
-    }).catch(err => {
-      console.error('[DailyCron] ⚠️ Failed to trigger worker:', err.message);
     });
+
+    if (!workerResponse.ok) {
+      throw new Error(`Worker failed: ${workerResponse.status} ${workerResponse.statusText}`);
+    }
+
+    const workerResult = await workerResponse.json();
+    console.log('[DailyCron] ✅ Worker completed:', workerResult);
 
     console.log('[DailyCron] ✅ Manual trigger completed');
     console.log('[DailyCron] ============================================');
     
     return NextResponse.json({
       success: true,
-      message: 'Job enqueued successfully',
+      message: 'Job completed successfully',
       jobId: newJobId,
-      statusUrl: `/api/cron/daily-prospect-queue?jobId=${newJobId}`,
+      data: workerResult.data,
       meta: {
         trigger: 'manual',
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
+        note: 'Worker processed job synchronously'
       }
     });
   } catch (error) {
