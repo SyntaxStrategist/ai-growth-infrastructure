@@ -131,16 +131,15 @@ export async function runDailyProspectQueue(): Promise<DailyQueueResult> {
     console.log('3️⃣  FILTERING AND RANKING PROSPECTS');
     console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
 
-    // Filter prospects that haven't been contacted yet AND have email addresses
-    const prospectsWithoutContact = pipelineResult.highPriorityProspects.filter(p => !p.contacted);
-    const prospectsWithoutEmail = prospectsWithoutContact.filter(p => !p.contact_email);
-    const uncontactedProspects = prospectsWithoutContact.filter(p => p.contact_email);
+    // Filter prospects that haven't been contacted yet
+    // NEW: Include ALL prospects, even without emails (Outreach Center will handle manual input)
+    const uncontactedProspects = pipelineResult.highPriorityProspects.filter(p => !p.contacted);
+    const prospectsWithoutEmail = uncontactedProspects.filter(p => !p.contact_email);
+    const prospectsWithEmail = uncontactedProspects.filter(p => p.contact_email);
     
-    console.log(`📊 Uncontacted prospects: ${prospectsWithoutContact.length}`);
-    if (prospectsWithoutEmail.length > 0) {
-      console.log(`⚠️  Filtered out ${prospectsWithoutEmail.length} prospects without email addresses`);
-    }
-    console.log(`📊 Uncontacted prospects with emails: ${uncontactedProspects.length}`);
+    console.log(`📊 Uncontacted prospects: ${uncontactedProspects.length}`);
+    console.log(`   - With email: ${prospectsWithEmail.length}`);
+    console.log(`   - Missing email (manual input needed): ${prospectsWithoutEmail.length}`);
 
     // Sort by combined score (automation + business fit)
     const rankedProspects = uncontactedProspects
@@ -245,16 +244,17 @@ export async function runDailyProspectQueue(): Promise<DailyQueueResult> {
       emailsToQueue.push({
         campaign_id: campaign?.id || null,
         prospect_id: prospect.id,
-        prospect_email: prospect.contact_email,
+        prospect_email: prospect.contact_email || null,
         prospect_name: extractContactName(prospect),
         company_name: prospect.business_name,
+        website: prospect.website,
         template_id: null, // Using generated template
         subject: template.subject,
         content: template.body,
         status: 'pending',
+        missing_email: !prospect.contact_email, // Flag for manual input
         created_at: new Date().toISOString()
-        // Note: metadata column removed - doesn't exist in table schema
-        // Scores stored in prospects table and can be joined if needed
+        // Note: Scores stored in prospects table and can be joined if needed
       });
     }
 

@@ -69,6 +69,9 @@ async function pendingHandler(req: NextRequest) {
           prospect_email,
           prospect_name,
           company_name,
+          website,
+          sender_email,
+          missing_email,
           subject,
           content,
           status,
@@ -76,7 +79,15 @@ async function pendingHandler(req: NextRequest) {
           created_at,
           updated_at,
           prospect_id,
-          campaign_id
+          campaign_id,
+          prospect:prospect_candidates(
+            id,
+            business_name,
+            website,
+            industry,
+            language,
+            automation_need_score
+          )
         `)
         .eq('status', 'pending')
         .order('created_at', { ascending: true })

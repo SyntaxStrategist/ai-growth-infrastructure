@@ -339,9 +339,10 @@ model OutreachEmail {
   campaign             OutreachCampaign? @relation(fields: [campaignId], references: [id], onDelete: SetNull)
   prospectId           String?   @map("prospect_id") @db.Uuid
   prospect             ProspectCandidate? @relation(fields: [prospectId], references: [id], onDelete: SetNull)
-  prospectEmail        String    @map("prospect_email")
+  prospectEmail        String?   @map("prospect_email")
   prospectName         String?   @map("prospect_name")
   companyName          String?   @map("company_name")
+  website              String?
   templateId           String?   @map("template_id") @db.Uuid
   subject              String?
   content              String    @db.Text
@@ -352,6 +353,8 @@ model OutreachEmail {
   threadId             String?   @map("thread_id")
   gmailMessageId       String?   @map("gmail_message_id")
   followUpSequence     Int       @default(1) @map("follow_up_sequence")
+  senderEmail          String?   @map("sender_email")
+  missingEmail         Boolean   @default(false) @map("missing_email")
   createdAt            DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
   updatedAt            DateTime  @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
   metadata             Json?
@@ -364,6 +367,7 @@ model OutreachEmail {
   @@index([status])
   @@index([sentAt])
   @@index([createdAt])
+  @@index([missingEmail])
   @@map("outreach_emails")
 }
 

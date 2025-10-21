@@ -5,13 +5,16 @@ import { motion } from 'framer-motion';
 
 interface PendingEmail {
   id: string;
-  prospect_email: string;
+  prospect_email: string | null;
   prospect_name?: string;
   company_name?: string;
+  website?: string;
   subject?: string;
   content: string;
   status: string;
   follow_up_sequence: number;
+  sender_email?: string | null;
+  missing_email: boolean;
   created_at: string;
   updated_at: string;
   metadata?: any;
@@ -21,6 +24,7 @@ interface PendingEmail {
     industry?: string;
     language: string;
     automation_need_score: number;
+    website?: string;
   };
   campaign?: {
     id: string;
@@ -234,6 +238,12 @@ export default function OutreachApprovalQueue({ locale, onEmailApproved }: Outre
                   {isFrench ? 'Entreprise' : 'Company'}
                 </th>
                 <th className="px-6 py-4 text-left text-xs font-medium text-white/60 uppercase tracking-wider">
+                  {isFrench ? 'Site Web' : 'Website'}
+                </th>
+                <th className="px-6 py-4 text-left text-xs font-medium text-white/60 uppercase tracking-wider">
+                  {isFrench ? 'Courriel Expéditeur' : 'Sender Email'}
+                </th>
+                <th className="px-6 py-4 text-left text-xs font-medium text-white/60 uppercase tracking-wider">
                   {isFrench ? 'Langue' : 'Language'}
                 </th>
                 <th className="px-6 py-4 text-left text-xs font-medium text-white/60 uppercase tracking-wider">
@@ -257,15 +267,28 @@ export default function OutreachApprovalQueue({ locale, onEmailApproved }: Outre
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.3, delay: index * 0.05 }}
-                  className="hover:bg-white/5 transition-colors"
+                  className={`hover:bg-white/5 transition-colors ${email.missing_email ? 'bg-yellow-500/5' : ''}`}
                 >
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <div>
-                      <div className="text-sm font-medium text-white">
-                        {email.prospect_name || email.prospect_email}
-                      </div>
-                      <div className="text-sm text-white/60">
-                        {email.prospect_email}
+                    <div className="flex items-center gap-2">
+                      {email.missing_email && (
+                        <span className="text-yellow-400" title={isFrench ? 'Email manquant' : 'Missing email'}>
+                          ⚠️
+                        </span>
+                      )}
+                      <div>
+                        <div className="text-sm font-medium text-white">
+                          {email.prospect_name || email.prospect_email || (isFrench ? 'Nom inconnu' : 'Unknown')}
+                        </div>
+                        {email.prospect_email ? (
+                          <div className="text-sm text-white/60">
+                            {email.prospect_email}
+                          </div>
+                        ) : (
+                          <div className="text-sm text-yellow-400/80 italic">
+                            {isFrench ? 'Email requis' : 'Email required'}
+                          </div>
+                        )}
                       </div>
                     </div>
                   </td>
@@ -278,6 +301,29 @@ export default function OutreachApprovalQueue({ locale, onEmailApproved }: Outre
                         {email.prospect.industry}
                       </div>
                     )}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    {email.website || email.prospect?.website ? (
+                      <a
+                        href={email.website || email.prospect?.website}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-sm text-blue-400 hover:text-blue-300 underline transition-colors"
+                      >
+                        🔗 {isFrench ? 'Visiter' : 'Visit'}
+                      </a>
+                    ) : (
+                      <span className="text-sm text-white/40">N/A</span>
+                    )}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <div className="text-sm text-white/60">
+                      {email.sender_email || (
+                        <span className="italic text-white/40">
+                          {isFrench ? 'À sélectionner' : 'To be selected'}
+                        </span>
+                      )}
+                    </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="flex items-center gap-2">
@@ -307,8 +353,9 @@ export default function OutreachApprovalQueue({ locale, onEmailApproved }: Outre
                     <div className="flex items-center gap-2">
                       <button
                         onClick={() => handleApproveReject(email.id, 'approve')}
-                        disabled={processing === email.id || dailyLimits.remaining <= 0}
+                        disabled={processing === email.id || dailyLimits.remaining <= 0 || email.missing_email}
                         className="inline-flex items-center px-3 py-1 rounded-md text-xs font-medium bg-green-500/20 border border-green-500/40 text-green-400 hover:bg-green-500/30 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                        title={email.missing_email ? (isFrench ? 'Ajouter l\'email d\'abord' : 'Add email first') : ''}
                       >
                         {processing === email.id ? (
                           <div className="w-4 h-4 border-2 border-green-400/30 border-t-green-400 rounded-full animate-spin"></div>
