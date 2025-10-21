@@ -245,17 +245,9 @@ export async function runDailyProspectQueue(): Promise<DailyQueueResult> {
         subject: template.subject,
         content: template.body,
         status: 'pending',
-        created_at: new Date().toISOString(),
-        metadata: {
-          automation_score: prospect.automation_need_score,
-          business_fit_score: prospect.metadata?.business_fit_score,
-          combined_score: prospect.combinedScore,
-          industry: prospect.industry,
-          region: prospect.region,
-          language: template.language,
-          daily_queue: true,
-          queued_at: new Date().toISOString()
-        }
+        created_at: new Date().toISOString()
+        // Note: metadata column removed - doesn't exist in table schema
+        // Scores stored in prospects table and can be joined if needed
       });
     }
 
@@ -308,11 +300,9 @@ export async function runDailyProspectQueue(): Promise<DailyQueueResult> {
         campaign_id: email.campaign_id,
         action: 'email_queued_for_approval',
         metadata: {
-          automation_score: email.metadata?.automation_score,
-          business_fit_score: email.metadata?.business_fit_score,
-          combined_score: email.metadata?.combined_score,
           daily_queue: true,
-          queued_at: email.metadata?.queued_at
+          queued_at: new Date().toISOString(),
+          campaign_name: campaign?.name || 'Daily Queue'
         }
       }));
 
