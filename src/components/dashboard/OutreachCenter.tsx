@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { useTranslations } from 'next-intl';
 import OutreachApprovalQueue from './OutreachApprovalQueue';
 import OutreachPerformancePanel from './OutreachPerformancePanel';
+import OutreachSentEmails from './OutreachSentEmails';
 
 interface Campaign {
   id: string;
@@ -50,6 +51,7 @@ export default function OutreachCenter({ locale = 'en' }: OutreachCenterProps) {
   const [metrics, setMetrics] = useState<Metrics | null>(null);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('overview');
+  const [sentEmailsRefreshKey, setSentEmailsRefreshKey] = useState(0);
 
   useEffect(() => {
     loadOutreachData();
@@ -124,6 +126,11 @@ export default function OutreachCenter({ locale = 'en' }: OutreachCenterProps) {
 
   const formatPercentage = (value: number) => {
     return `${(value * 100).toFixed(1)}%`;
+  };
+
+  const handleEmailApproved = () => {
+    // Trigger refresh of sent emails by updating the key
+    setSentEmailsRefreshKey(prev => prev + 1);
   };
 
   if (loading) {
@@ -202,7 +209,7 @@ export default function OutreachCenter({ locale = 'en' }: OutreachCenterProps) {
 
       {/* Main Content */}
       <div className="space-y-4">
-        <div className="grid w-full grid-cols-5 bg-white/5 rounded-lg p-1 border border-white/10">
+        <div className="grid w-full grid-cols-6 bg-white/5 rounded-lg p-1 border border-white/10">
           <button 
             className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
               activeTab === 'overview' 
@@ -222,6 +229,16 @@ export default function OutreachCenter({ locale = 'en' }: OutreachCenterProps) {
             onClick={() => setActiveTab('approval')}
           >
             {locale === 'fr' ? 'Approbation' : 'Approval'}
+          </button>
+          <button 
+            className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+              activeTab === 'sent' 
+                ? 'bg-white/10 text-white shadow-sm' 
+                : 'text-white/60 hover:text-white/80'
+            }`}
+            onClick={() => setActiveTab('sent')}
+          >
+            {locale === 'fr' ? 'Courriels envoyés' : 'Sent Emails'}
           </button>
           <button 
             className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
@@ -257,8 +274,14 @@ export default function OutreachCenter({ locale = 'en' }: OutreachCenterProps) {
 
         {activeTab === 'approval' && (
           <div className="space-y-6">
-            <OutreachApprovalQueue locale={locale} />
+            <OutreachApprovalQueue locale={locale} onEmailApproved={handleEmailApproved} />
             <OutreachPerformancePanel locale={locale} />
+          </div>
+        )}
+
+        {activeTab === 'sent' && (
+          <div className="space-y-6">
+            <OutreachSentEmails key={sentEmailsRefreshKey} locale={locale} />
           </div>
         )}
 

@@ -37,9 +37,10 @@ interface DailyLimits {
 
 interface OutreachApprovalQueueProps {
   locale: string;
+  onEmailApproved?: () => void; // Callback to refresh sent emails
 }
 
-export default function OutreachApprovalQueue({ locale }: OutreachApprovalQueueProps) {
+export default function OutreachApprovalQueue({ locale, onEmailApproved }: OutreachApprovalQueueProps) {
   const [pendingEmails, setPendingEmails] = useState<PendingEmail[]>([]);
   const [dailyLimits, setDailyLimits] = useState<DailyLimits>({ limit: 50, approvedToday: 0, remaining: 50 });
   const [loading, setLoading] = useState(true);
@@ -130,6 +131,11 @@ export default function OutreachApprovalQueue({ locale }: OutreachApprovalQueueP
         // Update local state
         setPendingEmails(prev => prev.filter(email => email.id !== emailId));
         setDailyLimits(data.data);
+        
+        // Notify parent component to refresh sent emails
+        if (action === 'approve' && onEmailApproved) {
+          onEmailApproved();
+        }
       } else {
         showToast(data.error || `Failed to ${action} email`, 'error');
       }
