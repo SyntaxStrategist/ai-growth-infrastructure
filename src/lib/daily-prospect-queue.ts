@@ -98,14 +98,15 @@ export async function runDailyProspectQueue(): Promise<DailyQueueResult> {
     console.log(`   Min ICP Score: ${icpCriteria.minICPScore}`);
 
     // Run prospect discovery pipeline
+    // OPTIMIZED: Reduced scope to stay within 60s timeout
     const pipelineResult = await runProspectPipeline({
       industries: icpCriteria.industries,
       regions: icpCriteria.regions,
       minAutomationScore: icpCriteria.minICPScore,
-      maxProspectsPerRun: Math.min(remainingQuota * 2, 100), // Get 2x quota to ensure we have enough after filtering
+      maxProspectsPerRun: Math.min(remainingQuota * 2, 50), // Reduced from 100 to 50 for faster execution
       testMode: false, // Production mode
       usePdl: true,
-      scanForms: true
+      scanForms: false // Disabled: saves 50-100s (run separately if needed)
     });
 
     result.prospectsDiscovered = pipelineResult.totalCrawled;
