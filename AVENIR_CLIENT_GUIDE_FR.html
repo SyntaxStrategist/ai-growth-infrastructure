@@ -1,0 +1,766 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Avenir AI - Guide Client Complet</title>
+    <style>
+        @page {
+            size: A4;
+            margin: 20mm;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #1f2937;
+            background: white;
+        }
+        
+        .cover {
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            page-break-after: always;
+            padding: 40px;
+        }
+        
+        .cover img {
+            width: 200px;
+            height: auto;
+            margin-bottom: 40px;
+            filter: brightness(0) invert(1);
+        }
+        
+        .cover h1 {
+            font-size: 48px;
+            font-weight: bold;
+            margin-bottom: 20px;
+            letter-spacing: -1px;
+        }
+        
+        .cover p {
+            font-size: 20px;
+            opacity: 0.9;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        
+        .cover .version {
+            position: absolute;
+            bottom: 40px;
+            font-size: 14px;
+            opacity: 0.7;
+        }
+        
+        .header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 30px;
+            padding: 20px 0;
+            border-bottom: 3px solid #667eea;
+        }
+        
+        .header img {
+            width: 60px;
+            height: auto;
+            margin-right: 20px;
+        }
+        
+        .header h1 {
+            font-size: 32px;
+            color: #667eea;
+        }
+        
+        h1 {
+            font-size: 32px;
+            color: #1f2937;
+            margin: 40px 0 20px 0;
+            page-break-after: avoid;
+        }
+        
+        h2 {
+            font-size: 26px;
+            color: #667eea;
+            margin: 35px 0 15px 0;
+            page-break-after: avoid;
+            border-left: 4px solid #667eea;
+            padding-left: 15px;
+        }
+        
+        h3 {
+            font-size: 20px;
+            color: #4338ca;
+            margin: 25px 0 12px 0;
+            page-break-after: avoid;
+        }
+        
+        h4 {
+            font-size: 16px;
+            color: #6b7280;
+            margin: 20px 0 10px 0;
+            page-break-after: avoid;
+            font-weight: 600;
+        }
+        
+        p {
+            margin: 10px 0;
+            text-align: justify;
+        }
+        
+        ul, ol {
+            margin: 15px 0 15px 30px;
+        }
+        
+        li {
+            margin: 8px 0;
+        }
+        
+        strong {
+            color: #1f2937;
+            font-weight: 600;
+        }
+        
+        code {
+            background: #f3f4f6;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+            color: #dc2626;
+        }
+        
+        .toc {
+            background: #f9fafb;
+            padding: 30px;
+            border-radius: 10px;
+            margin: 30px 0;
+            page-break-inside: avoid;
+        }
+        
+        .toc h2 {
+            border: none;
+            margin-bottom: 20px;
+        }
+        
+        .toc ul {
+            list-style: none;
+            margin-left: 0;
+        }
+        
+        .toc li {
+            margin: 10px 0;
+            padding-left: 20px;
+        }
+        
+        .toc a {
+            color: #667eea;
+            text-decoration: none;
+            font-weight: 500;
+        }
+        
+        .note {
+            background: #fef3c7;
+            border-left: 4px solid #f59e0b;
+            padding: 15px 20px;
+            margin: 20px 0;
+            border-radius: 5px;
+            page-break-inside: avoid;
+        }
+        
+        .tip {
+            background: #dbeafe;
+            border-left: 4px solid #3b82f6;
+            padding: 15px 20px;
+            margin: 20px 0;
+            border-radius: 5px;
+            page-break-inside: avoid;
+        }
+        
+        .warning {
+            background: #fee2e2;
+            border-left: 4px solid #ef4444;
+            padding: 15px 20px;
+            margin: 20px 0;
+            border-radius: 5px;
+            page-break-inside: avoid;
+        }
+        
+        .success {
+            background: #d1fae5;
+            border-left: 4px solid #10b981;
+            padding: 15px 20px;
+            margin: 20px 0;
+            border-radius: 5px;
+            page-break-inside: avoid;
+        }
+        
+        .metric-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 15px 0;
+            page-break-inside: avoid;
+        }
+        
+        .metric-card h4 {
+            color: white;
+            margin-top: 0;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            page-break-inside: avoid;
+        }
+        
+        th {
+            background: #667eea;
+            color: white;
+            padding: 12px;
+            text-align: left;
+            font-weight: 600;
+        }
+        
+        td {
+            padding: 12px;
+            border-bottom: 1px solid #e5e7eb;
+        }
+        
+        tr:nth-child(even) {
+            background: #f9fafb;
+        }
+        
+        .page-break {
+            page-break-before: always;
+        }
+        
+        .footer {
+            margin-top: 60px;
+            padding-top: 20px;
+            border-top: 2px solid #e5e7eb;
+            text-align: center;
+            color: #6b7280;
+            font-size: 14px;
+        }
+        
+        .emoji {
+            font-size: 1.2em;
+        }
+        
+        hr {
+            border: none;
+            border-top: 2px solid #e5e7eb;
+            margin: 40px 0;
+        }
+    </style>
+</head>
+<body>
+
+<!-- Page de Couverture -->
+<div class="cover">
+    <img src="data:image/png;base64,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" alt="Logo Avenir AI">
+    <h1>Guide Client Complet</h1>
+    <p>Votre guide complet pour maximiser l'intelligence des prospects et la découverte de clients potentiels avec Avenir AI</p>
+    <div class="version">Version 1.0 | Octobre 2025</div>
+</div>
+
+<!-- Contenu Principal -->
+<div class="header">
+    <img src="data:image/png;base64,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" alt="Avenir AI">
+    <h1>Guide Client Avenir AI</h1>
+</div>
+
+<div class="success">
+    <strong>🎉 Bienvenue chez Avenir AI!</strong><br>
+    Merci d'avoir choisi Avenir AI. Ce guide complet vous aidera à maîtriser chaque fonctionnalité de votre plateforme d'intelligence des prospects alimentée par l'IA.
+</div>
+
+<!-- Table des Matières -->
+<div class="toc">
+    <h2>📋 Table des Matières</h2>
+    <ul>
+        <li><strong>1.</strong> Démarrage</li>
+        <li><strong>2.</strong> Aperçu du Tableau de Bord</li>
+        <li><strong>3.</strong> Analyses des Prospects</li>
+        <li><strong>4.</strong> Intelligence des Candidats</li>
+        <li><strong>5.</strong> Paramètres et Configuration</li>
+        <li><strong>6.</strong> Personnalisation des Courriels</li>
+        <li><strong>7.</strong> Meilleures Pratiques</li>
+        <li><strong>8.</strong> Dépannage</li>
+        <li><strong>9.</strong> FAQ</li>
+    </ul>
+</div>
+
+<div class="page-break"></div>
+
+<!-- Section 1: Démarrage -->
+<h2>1. Démarrage</h2>
+
+<h3>Configuration Initiale</h3>
+
+<p>Lorsque vous accédez pour la première fois à votre tableau de bord Avenir AI, suivez ces étapes essentielles:</p>
+
+<div class="tip">
+    <strong>💡 Conseil de Démarrage Rapide:</strong> Complétez les trois étapes de configuration dans vos 15 premières minutes pour assurer une performance optimale.
+</div>
+
+<ol>
+    <li><strong>Compléter Votre Profil</strong>
+        <ul>
+            <li>Naviguez vers Paramètres (<span class="emoji">⚙️</span>)</li>
+            <li>Remplissez les informations de votre entreprise</li>
+            <li>Configurez votre Profil Client Idéal (ICP)</li>
+        </ul>
+    </li>
+    <li><strong>Tester Votre Connexion</strong>
+        <ul>
+            <li>Utilisez le bouton "🧪 Tester la Connexion" dans Paramètres</li>
+            <li>Vérifiez que les prospects sont correctement reçus</li>
+            <li>Consultez l'état de votre intégration</li>
+        </ul>
+    </li>
+    <li><strong>Personnaliser Vos Préférences de Courriel</strong>
+        <ul>
+            <li>Sélectionnez le ton de courriel préféré</li>
+            <li>Ajoutez votre lien de réservation (Calendly, etc.)</li>
+            <li>Prévisualisez vos courriels automatisés</li>
+        </ul>
+    </li>
+</ol>
+
+<h3>Navigation</h3>
+
+<p>Votre tableau de bord comporte quatre sections principales:</p>
+
+<table>
+    <tr>
+        <th>Section</th>
+        <th>Objectif</th>
+        <th>Fonctionnalités Clés</th>
+    </tr>
+    <tr>
+        <td><strong>📊 Tableau de Bord</strong></td>
+        <td>Aperçu des prospects récents</td>
+        <td>Métriques clés, activité récente</td>
+    </tr>
+    <tr>
+        <td><strong>💡 Analyses</strong></td>
+        <td>Analytique approfondie</td>
+        <td>Intention, urgence, tendances</td>
+    </tr>
+    <tr>
+        <td><strong>🎯 Intelligence des Candidats</strong></td>
+        <td>Découverte alimentée par l'IA</td>
+        <td>Correspondance ICP, analyse d'adéquation</td>
+    </tr>
+    <tr>
+        <td><strong>⚙️ Paramètres</strong></td>
+        <td>Configuration</td>
+        <td>Profil, courriel, intégration</td>
+    </tr>
+</table>
+
+<div class="page-break"></div>
+
+<!-- Section 2: Aperçu du Tableau de Bord -->
+<h2>2. Aperçu du Tableau de Bord</h2>
+
+<h3>Métriques Clés</h3>
+
+<div class="metric-card">
+    <h4>📈 Total de Prospects</h4>
+    <p>Nombre de tous les prospects reçus via vos formulaires. Mis à jour en temps réel à l'arrivée de nouveaux prospects.</p>
+</div>
+
+<div class="metric-card">
+    <h4>✨ Confiance Moyenne</h4>
+    <p>Score calculé par l'IA (0-100%) indiquant la qualité du prospect. Des scores plus élevés signifient une plus grande probabilité de conversion.</p>
+</div>
+
+<div class="metric-card">
+    <h4>⏱️ Activité Récente</h4>
+    <p>Derniers prospects avec vue rapide du nom, courriel et score de confiance.</p>
+</div>
+
+<h3>Comprendre les Cartes de Prospects</h3>
+
+<p>Chaque carte de prospect affiche les informations suivantes:</p>
+
+<ul>
+    <li><strong>Nom et Courriel</strong> - Informations de contact</li>
+    <li><strong>Score de Confiance</strong> - Évaluation IA de la qualité du prospect (0-100%)</li>
+    <li><strong>Intention</strong> - Ce que le prospect recherche (ex: "Partenariat", "Demande de Service")</li>
+    <li><strong>Urgence</strong> - Niveau de priorité: Haute 🔴, Moyenne 🟡, ou Basse 🟢</li>
+    <li><strong>Aperçu du Message</strong> - Premières lignes de leur message</li>
+</ul>
+
+<div class="page-break"></div>
+
+<!-- Section 3: Analyses des Prospects -->
+<h2>3. Analyses des Prospects</h2>
+
+<h3>Distribution des Intentions</h3>
+
+<p>Montre ce que vos prospects recherchent:</p>
+
+<ul>
+    <li><strong>Demandes de Service</strong> - Clients recherchant vos services</li>
+    <li><strong>Partenariats</strong> - Opportunités de collaboration potentielles</li>
+    <li><strong>Demandes d'Information</strong> - Demandes générales</li>
+    <li><strong>Intentions Personnalisées</strong> - Spécifiques à votre industrie</li>
+</ul>
+
+<div class="tip">
+    <strong>💡 Conseil Pro:</strong> Utilisez la distribution des intentions pour adapter votre stratégie de suivi. Si la plupart des prospects sont des demandes de service, concentrez-vous sur la présentation des avantages de vos services.
+</div>
+
+<h3>Répartition de l'Urgence</h3>
+
+<table>
+    <tr>
+        <th>Niveau</th>
+        <th>Icône</th>
+        <th>Temps de Réponse</th>
+        <th>Action</th>
+    </tr>
+    <tr>
+        <td><strong>Urgence Élevée</strong></td>
+        <td>🔴</td>
+        <td>Sous quelques heures</td>
+        <td>Suivi immédiat</td>
+    </tr>
+    <tr>
+        <td><strong>Urgence Moyenne</strong></td>
+        <td>🟡</td>
+        <td>1-2 jours</td>
+        <td>Suivi prioritaire</td>
+    </tr>
+    <tr>
+        <td><strong>Urgence Faible</strong></td>
+        <td>🟢</td>
+        <td>3-5 jours</td>
+        <td>Chronologie standard</td>
+    </tr>
+</table>
+
+<h3>Score de Confiance</h3>
+
+<p>Notre IA attribue un score de confiance basé sur:</p>
+
+<ol>
+    <li><strong>Qualité du Message</strong> - Les demandes claires et détaillées obtiennent des scores plus élevés</li>
+    <li><strong>Clarté de l'Intention</strong> - Les demandes spécifiques obtiennent des scores plus élevés</li>
+    <li><strong>Informations de Contact</strong> - Les informations complètes obtiennent des scores plus élevés</li>
+    <li><strong>Indicateurs d'Urgence</strong> - Les demandes urgentes peuvent obtenir des scores plus élevés</li>
+</ol>
+
+<div class="note">
+    <strong>Interprétation du Score:</strong><br>
+    • <strong>90-100%:</strong> Excellent - Forte probabilité de conversion<br>
+    • <strong>70-89%:</strong> Bon - Prospect à fort potentiel<br>
+    • <strong>50-69%:</strong> Passable - Nécessite qualification<br>
+    • <strong>Moins de 50%:</strong> Faible - Peut nécessiter du développement
+</div>
+
+<div class="page-break"></div>
+
+<!-- Section 4: Intelligence des Candidats -->
+<h2>4. Intelligence des Candidats</h2>
+
+<h3>Qu'est-ce que l'Intelligence des Candidats?</h3>
+
+<p>Avenir AI découvre et analyse automatiquement les clients potentiels dans votre industrie, en les notant selon leur correspondance avec votre Profil Client Idéal (ICP).</p>
+
+<div class="success">
+    <strong>✅ Avantage Clé:</strong> Économisez des heures de recherche manuelle. Notre IA trouve et qualifie les candidats automatiquement pendant que vous vous concentrez sur la conclusion d'affaires.
+</div>
+
+<h3>Score d'Adéquation ICP</h3>
+
+<p>Chaque candidat reçoit un <strong>Score d'Adéquation ICP</strong> (0-100):</p>
+
+<table>
+    <tr>
+        <th>Plage de Score</th>
+        <th>Qualité</th>
+        <th>Recommandation</th>
+    </tr>
+    <tr>
+        <td><strong>90-100</strong></td>
+        <td>Excellente Correspondance</td>
+        <td>Candidats prioritaires</td>
+    </tr>
+    <tr>
+        <td><strong>70-89</strong></td>
+        <td>Bonne Correspondance</td>
+        <td>Fort potentiel</td>
+    </tr>
+    <tr>
+        <td><strong>50-69</strong></td>
+        <td>Correspondance Passable</td>
+        <td>Peut nécessiter qualification</td>
+    </tr>
+    <tr>
+        <td><strong>Moins de 50</strong></td>
+        <td>Faible Correspondance</td>
+        <td>En dehors du profil idéal</td>
+    </tr>
+</table>
+
+<div class="tip">
+    <strong>💡 Meilleure Pratique:</strong> Concentrez-vous sur les candidats avec des scores 70+ pour les meilleurs taux de conversion. Utilisez le filtre "Afficher Seulement Forte Adéquation" pour l'efficacité.
+</div>
+
+<div class="page-break"></div>
+
+<!-- Section 5: Paramètres et Configuration -->
+<h2>5. Paramètres et Configuration</h2>
+
+<h3>Informations de l'Entreprise</h3>
+
+<ul>
+    <li><strong>Catégorie d'Industrie</strong> - Votre secteur d'activité principal</li>
+    <li><strong>Service Principal</strong> - Votre offre de service principale</li>
+    <li><strong>Lien de Réservation</strong> - Votre lien Calendly, Acuity ou autre planification</li>
+</ul>
+
+<h3>Profil Client Idéal (ICP)</h3>
+
+<p>Définir votre ICP aide Avenir AI à trouver les meilleurs candidats:</p>
+
+<ol>
+    <li><strong>Type de Client Cible</strong> - Soyez spécifique pour une meilleure correspondance</li>
+    <li><strong>Taille Moyenne des Contrats</strong> - Valeur typique du contrat (optionnel)</li>
+    <li><strong>Objectif Commercial Principal</strong> - Ce que vous essayez d'accomplir</li>
+    <li><strong>Défi Principal Actuel</strong> - Votre principal obstacle</li>
+</ol>
+
+<div class="warning">
+    <strong>⚠️ Important:</strong> Plus votre ICP est détaillé, meilleure sera la qualité des candidats que vous recevrez. Mettez à jour votre ICP au fur et à mesure que votre entreprise évolue.
+</div>
+
+<h3>Préférences de Courriel</h3>
+
+<p>Choisissez parmi <strong>4 tons de courriel distincts</strong>:</p>
+
+<table>
+    <tr>
+        <th>Ton</th>
+        <th>Idéal Pour</th>
+        <th>Style</th>
+    </tr>
+    <tr>
+        <td><strong>Professionnel</strong></td>
+        <td>B2B, Corporatif</td>
+        <td>Orienté affaires, poli</td>
+    </tr>
+    <tr>
+        <td><strong>Amical</strong></td>
+        <td>Entreprises locales, Consommateurs</td>
+        <td>Chaleureux, accessible</td>
+    </tr>
+    <tr>
+        <td><strong>Formel</strong></td>
+        <td>Juridique, Financier</td>
+        <td>Traditionnel, respectueux</td>
+    </tr>
+    <tr>
+        <td><strong>Énergique</strong></td>
+        <td>Créatif, Startups</td>
+        <td>Enthousiaste, dynamique</td>
+    </tr>
+</table>
+
+<div class="page-break"></div>
+
+<!-- Section 6: Personnalisation des Courriels -->
+<h2>6. Personnalisation des Courriels</h2>
+
+<h3>Exemple de Ton Professionnel</h3>
+
+<div style="background: #f9fafb; padding: 20px; border-radius: 8px; border-left: 4px solid #667eea; margin: 20px 0;">
+    <p style="margin: 0;"><em>"Merci pour votre demande. Nous avons examiné votre message et serions heureux de discuter de comment nos services peuvent soutenir vos objectifs commerciaux."</em></p>
+</div>
+
+<h3>Exemple de Ton Amical</h3>
+
+<div style="background: #f9fafb; padding: 20px; border-radius: 8px; border-left: 4px solid #10b981; margin: 20px 0;">
+    <p style="margin: 0;"><em>"Merci beaucoup de nous avoir contactés! Nous sommes ravis d'avoir de vos nouvelles et aimerions vous aider avec votre projet."</em></p>
+</div>
+
+<h3>Composants du Courriel</h3>
+
+<p>Chaque courriel automatisé inclut:</p>
+
+<ul>
+    <li>✅ Salutation personnalisée avec le nom du prospect</li>
+    <li>✅ Accusé de réception de leur message</li>
+    <li>✅ Contexte du service et expertise</li>
+    <li>✅ Référence au résumé IA</li>
+    <li>✅ Prochaines étapes claires</li>
+    <li>✅ Lien de réservation (si configuré)</li>
+    <li>✅ Marque "Propulsé par Avenir AI 🧠"</li>
+</ul>
+
+<div class="tip">
+    <strong>💡 Toujours Prévisualiser:</strong> Avant de finaliser les paramètres, cliquez sur "👁️ Aperçu du courriel" pour voir comment votre courriel apparaîtra.
+</div>
+
+<div class="page-break"></div>
+
+<!-- Section 7: Meilleures Pratiques -->
+<h2>7. Meilleures Pratiques</h2>
+
+<h3>Maximiser la Conversion des Prospects</h3>
+
+<ol>
+    <li><strong>Répondre Rapidement</strong> - Réglez la vitesse de suivi sur "Instantané" pour de meilleurs résultats</li>
+    <li><strong>Personnaliser le Suivi</strong> - Révisez les aperçus IA avant de répondre</li>
+    <li><strong>Compléter le Profil ICP</strong> - ICP détaillé = meilleures correspondances de candidats</li>
+    <li><strong>Vérifications Régulières du Tableau de Bord</strong> - Consultez au moins deux fois par jour</li>
+    <li><strong>Optimiser le Ton du Courriel</strong> - Testez différents tons avec des tests A/B</li>
+</ol>
+
+<div class="success">
+    <strong>✅ Formule de Succès:</strong> Réponse Rapide + Personnalisation + ICP Solide = Taux de Conversion Plus Élevés
+</div>
+
+<h3>Liste de Vérification du Flux de Travail Quotidien</h3>
+
+<table>
+    <tr>
+        <th>Moment</th>
+        <th>Tâche</th>
+        <th>Durée</th>
+    </tr>
+    <tr>
+        <td>Matin</td>
+        <td>☕ Consulter le tableau de bord pour les prospects de nuit</td>
+        <td>5 min</td>
+    </tr>
+    <tr>
+        <td>Matin</td>
+        <td>🔥 Répondre aux prospects à haute urgence</td>
+        <td>15 min</td>
+    </tr>
+    <tr>
+        <td>Midi</td>
+        <td>📊 Réviser les scores de confiance et aperçus IA</td>
+        <td>10 min</td>
+    </tr>
+    <tr>
+        <td>Après-midi</td>
+        <td>📧 Suivi sur les prospects prioritaires</td>
+        <td>20 min</td>
+    </tr>
+    <tr>
+        <td>Hebdomadaire</td>
+        <td>🎯 Réviser les nouveaux candidats</td>
+        <td>30 min</td>
+    </tr>
+    <tr>
+        <td>Mensuel</td>
+        <td>⚙️ Optimiser les paramètres selon les résultats</td>
+        <td>1 heure</td>
+    </tr>
+</table>
+
+<div class="page-break"></div>
+
+<!-- Section 8: Dépannage -->
+<h2>8. Dépannage</h2>
+
+<h3>Problèmes Courants</h3>
+
+<div class="warning">
+    <strong>Problème:</strong> Ne reçois pas de prospects<br><br>
+    <strong>Solutions:</strong>
+    <ul style="margin: 10px 0 0 20px;">
+        <li>Vérifiez l'État d'Intégration dans Paramètres</li>
+        <li>Vérifiez que la clé API est correcte</li>
+        <li>Exécutez "Tester la Connexion" pour vérifier la configuration</li>
+        <li>Contactez le support si le test échoue</li>
+    </ul>
+</div>
+
+<div class="warning">
+    <strong>Problème:</strong> Les scores de confiance semblent faibles<br><br>
+    <strong>Solutions:</strong>
+    <ul style="margin: 10px 0 0 20px;">
+        <li>Révisez les champs de votre formulaire - assurez une collecte de messages détaillée</li>
+        <li>Ajoutez des questions contextuelles à votre formulaire</li>
+        <li>Les scores faibles indiquent que les prospects nécessitent qualification (pas toujours mauvais)</li>
+    </ul>
+</div>
+
+<div class="warning">
+    <strong>Problème:</strong> Les candidats ne correspondent pas à mon entreprise<br><br>
+    <strong>Solutions:</strong>
+    <ul style="margin: 10px 0 0 20px;">
+        <li>Révisez et mettez à jour votre ICP dans Paramètres</li>
+        <li>Soyez plus spécifique dans "Type de Client Cible"</li>
+        <li>Le système apprend avec le temps - donnez-lui 1-2 semaines pour s'améliorer</li>
+    </ul>
+</div>
+
+<div class="page-break"></div>
+
+<!-- Section 9: FAQ -->
+<h2>9. Foire Aux Questions</h2>
+
+<h3>Questions Générales</h3>
+
+<p><strong>Q: Qu'est-ce qu'Avenir AI?</strong></p>
+<p><strong>R:</strong> Avenir AI est une plateforme intelligente qui combine la gestion des prospects avec la découverte de candidats alimentée par l'IA. Elle vous aide à capturer, analyser et convertir des prospects tout en trouvant automatiquement de nouveaux clients potentiels.</p>
+
+<p><strong>Q: Comment fonctionne l'IA?</strong></p>
+<p><strong>R:</strong> Notre IA utilise un traitement avancé du langage naturel (GPT-4o-mini) pour analyser les messages des prospects, détecter l'intention et l'urgence, calculer les scores de confiance et faire correspondre les candidats à votre profil d'entreprise.</p>
+
+<p><strong>Q: Mes données sont-elles sécurisées?</strong></p>
+<p><strong>R:</strong> Oui. Toutes les données sont cryptées, stockées en toute sécurité dans une infrastructure de niveau entreprise et isolées par client.</p>
+
+<h3>Gestion des Prospects</h3>
+
+<p><strong>Q: À quelle vitesse les prospects sont-ils traités?</strong></p>
+<p><strong>R:</strong> Les prospects sont traités en temps réel. De la soumission du formulaire à l'affichage du tableau de bord prend moins de 5 secondes.</p>
+
+<p><strong>Q: Puis-je désactiver les courriels automatisés?</strong></p>
+<p><strong>R:</strong> Oui! Dans Paramètres, désactivez "Activer les Réponses Personnalisées IA". Les prospects seront toujours capturés mais aucun courriel automatisé ne sera envoyé.</p>
+
+<h3>Intelligence des Candidats</h3>
+
+<p><strong>Q: À quelle fréquence de nouveaux candidats sont-ils ajoutés?</strong></p>
+<p><strong>R:</strong> De nouveaux candidats sont découverts et ajoutés hebdomadairement. Le système scanne continuellement les entreprises correspondant à votre ICP.</p>
+
+<p><strong>Q: Que signifie le Score d'Adéquation ICP?</strong></p>
+<p><strong>R:</strong> C'est un score de 0-100 indiquant dans quelle mesure un candidat correspond à votre profil client idéal. Des scores plus élevés signifient un meilleur alignement avec vos critères.</p>
+
+<hr>
+
+<!-- Pied de Page -->
+<div class="footer">
+    <p><strong>Besoin d'Aide?</strong></p>
+    <p>Courriel: contact@aveniraisolutions.ca | Site Web: https://www.aveniraisolutions.ca</p>
+    <p style="margin-top: 20px; opacity: 0.7;">
+        <strong>Propulsé par Avenir AI 🧠</strong><br>
+        Version 1.0 | Octobre 2025
+    </p>
+</div>
+
+</body>
+</html>
+

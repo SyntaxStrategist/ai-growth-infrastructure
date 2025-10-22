@@ -109,6 +109,10 @@ export default function ClientSettings() {
     testConnection: isFrench ? '🧪 Tester la Connexion' : '🧪 Test Connection',
     testConnectionDesc: isFrench ? 'Envoyez un lead de test pour vérifier que tout fonctionne' : 'Send a test lead to verify everything works',
     viewDocs: isFrench ? '📖 Voir la Documentation' : '📖 View Documentation',
+    // Client Guide translations
+    clientGuide: isFrench ? 'Guide Client' : 'Client Guide',
+    clientGuideDescription: isFrench ? 'Téléchargez votre guide complet pour maximiser l\'intelligence des prospects et la découverte de clients potentiels avec Avenir AI.' : 'Download your complete guide to maximize lead intelligence and prospect discovery with Avenir AI.',
+    downloadGuide: isFrench ? '📥 Télécharger le Guide' : '📥 Download Guide',
   };
 
   const toneOptions = [
@@ -800,6 +804,22 @@ export default function ClientSettings() {
             {isFrench ? '⚠️ Modifications non enregistrées' : '⚠️ Unsaved changes'}
           </div>
         )}
+
+        {/* Client Guide Section */}
+        <div className="bg-gradient-to-r from-blue-500/10 to-purple-500/10 rounded-xl p-6 border border-blue-500/20">
+          <h2 className="text-xl font-semibold mb-4 text-blue-400">{t.clientGuide}</h2>
+          <p className="text-white/70 mb-6">{t.clientGuideDescription}</p>
+          
+          <div className="flex justify-center">
+            <a
+              href={`/client-guides/AVENIR_CLIENT_GUIDE_${locale.toUpperCase()}.pdf`}
+              download={`Avenir_AI_Client_Guide_${locale.toUpperCase()}.pdf`}
+              className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white font-semibold rounded-lg transition-all transform hover:scale-[1.02] shadow-lg"
+            >
+              {t.downloadGuide}
+            </a>
+          </div>
+        </div>
 
         {/* Email Preview Modal */}
         {showPreview && (
