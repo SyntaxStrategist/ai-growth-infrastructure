@@ -36,17 +36,22 @@ export async function analyzeClientLeads(
   try {
     console.log(`[Engine] ============================================`);
     console.log(`[Engine] Analyzing leads for client: ${clientId || 'global'}`);
-    console.log(`[Engine] Period: ${periodStart.toISOString()} to ${periodEnd.toISOString()}`);
+    if (clientId) {
+      console.log(`[Engine] Mode: Client-specific (ALL active leads, no time limit)`);
+    } else {
+      console.log(`[Engine] Mode: Global analysis`);
+      console.log(`[Engine] Period: ${periodStart.toISOString()} to ${periodEnd.toISOString()}`);
+    }
     console.log(`[Engine] ============================================`);
     
     let leads: any[] = [];
     
     if (clientId) {
-      // For client-specific analysis, join through lead_actions
-      console.log('[Engine] Client mode: fetching leads via lead_actions join');
+      // For client-specific analysis, fetch ALL their active leads (no time window)
+      console.log('[Engine] Client mode: fetching ALL active leads for client');
       console.log('[Engine] Query: SELECT lead_memory.* FROM lead_actions JOIN lead_memory');
       console.log('[Engine] WHERE: lead_actions.client_id =', clientId);
-      console.log('[Engine] AND: lead_memory.timestamp BETWEEN', periodStart.toISOString(), 'AND', periodEnd.toISOString());
+      console.log('[Engine] Note: No timestamp filter - analyzing all active leads');
       
       // Step 1: Get all lead_ids for this client
       const { data: leadActions, error: actionsError } = await db
@@ -65,13 +70,11 @@ export async function analyzeClientLeads(
       if (leadIds.length === 0) {
         console.log('[Engine] No lead_actions found for client - trying fallback: direct client_id query');
         
-        // Fallback: Query lead_memory directly by client_id
+        // Fallback: Query lead_memory directly by client_id (no timestamp filter)
         const { data: fallbackData, error: fallbackError } = await db
           .from('lead_memory')
           .select('*')
-          .eq('client_id', clientId)
-          .gte('timestamp', periodStart.toISOString())
-          .lte('timestamp', periodEnd.toISOString());
+          .eq('client_id', clientId);
         
         if (fallbackError) {
           console.error('[Engine] ❌ Error in fallback query:', fallbackError);
@@ -85,13 +88,11 @@ export async function analyzeClientLeads(
           console.log('[Engine] ⚠️  Found leads via fallback - lead_actions may be missing for this client');
         }
       } else {
-        // Step 2: Get full lead data for those IDs within the time period
+        // Step 2: Get full lead data for those IDs (ALL leads, no time filter)
         const { data: leadData, error: leadError } = await db
           .from('lead_memory')
           .select('*')
-          .in('id', leadIds)
-          .gte('timestamp', periodStart.toISOString())
-          .lte('timestamp', periodEnd.toISOString());
+          .in('id', leadIds);
         
         if (leadError) {
           console.error('[Engine] ❌ Error fetching lead_memory:', leadError);
@@ -99,7 +100,7 @@ export async function analyzeClientLeads(
         }
         
         leads = leadData || [];
-        console.log('[Engine] Filtered to', leads.length, 'leads in time period');
+        console.log('[Engine] Fetched', leads.length, 'total leads (all-time)');
       }
     } else {
       // For global analysis, query all leads directly
@@ -190,29 +191,35 @@ export async function analyzeClientLeads(
   // Calculate urgency trend (week-over-week)
   const highUrgencyRatio = allLeads.length > 0 ? (urgencyDist.high / allLeads.length) : 0;
   
-  // Fetch previous period for comparison
-  const prevPeriodStart = new Date(periodStart);
-  prevPeriodStart.setDate(prevPeriodStart.getDate() - 7);
-  const prevPeriodEnd = new Date(periodEnd);
-  prevPeriodEnd.setDate(prevPeriodEnd.getDate() - 7);
-
-  let prevQuery = supabase
-    .from('lead_memory')
-    .select('urgency')
-    .gte('timestamp', prevPeriodStart.toISOString())
-    .lte('timestamp', prevPeriodEnd.toISOString());
-
-  if (clientId) {
-    prevQuery = prevQuery.eq('client_id', clientId);
-  }
-
-  const { data: prevLeads } = await prevQuery;
-  const prevHighUrgency = (prevLeads || []).filter(l => normalizeUrgency(l.urgency) === 'high').length;
-  const prevHighRatio = prevLeads && prevLeads.length > 0 ? prevHighUrgency / prevLeads.length : 0;
+  let urgencyTrendPercentage = 0;
   
-  const urgencyTrendPercentage = prevHighRatio > 0 
-    ? ((highUrgencyRatio - prevHighRatio) / prevHighRatio) * 100 
-    : 0;
+  // Only calculate trend for global analysis (time-based comparison makes sense)
+  // For client-specific analysis, skip trend since we're analyzing all-time data
+  if (!clientId) {
+    // Fetch previous period for comparison (global mode only)
+    const prevPeriodStart = new Date(periodStart);
+    prevPeriodStart.setDate(prevPeriodStart.getDate() - 7);
+    const prevPeriodEnd = new Date(periodEnd);
+    prevPeriodEnd.setDate(prevPeriodEnd.getDate() - 7);
+
+    const prevQuery = supabase
+      .from('lead_memory')
+      .select('urgency')
+      .gte('timestamp', prevPeriodStart.toISOString())
+      .lte('timestamp', prevPeriodEnd.toISOString());
+
+    const { data: prevLeads } = await prevQuery;
+    const prevHighUrgency = (prevLeads || []).filter(l => normalizeUrgency(l.urgency) === 'high').length;
+    const prevHighRatio = prevLeads && prevLeads.length > 0 ? prevHighUrgency / prevLeads.length : 0;
+    
+    urgencyTrendPercentage = prevHighRatio > 0 
+      ? ((highUrgencyRatio - prevHighRatio) / prevHighRatio) * 100 
+      : 0;
+    
+    console.log('[Engine] Urgency trend (global):', urgencyTrendPercentage.toFixed(1) + '%');
+  } else {
+    console.log('[Engine] Urgency trend (client mode): Skipped (analyzing all-time data)');
+  }
 
   // 3. Tone Distribution & Sentiment
   const toneCounts: Record<string, number> = {};
@@ -644,8 +651,8 @@ export async function runSimulationAnalysis(clientId: string): Promise<{ process
     console.log('[Engine] -------- Client Simulation Analysis --------');
     console.log('[Engine] Analyzing client_id:', clientId);
     
-    // First, resolve the client_id to the actual UUID if needed
-    console.log('[Engine] Resolving client_id to UUID...');
+    // Verify the client exists
+    console.log('[Engine] Validating client_id:', clientId);
     const { data: clientData, error: clientError } = await supabaseAdmin
       .from('clients')
       .select('id, client_id')
@@ -658,10 +665,10 @@ export async function runSimulationAnalysis(clientId: string): Promise<{ process
       throw new Error(`Client not found: ${clientId}`);
     }
     
-    const clientUuid = clientData.id;
-    console.log('[Engine] ✅ Found client UUID:', clientUuid, 'for client_id:', clientId);
+    console.log('[Engine] ✅ Client validated:', clientId, '(internal UUID:', clientData.id + ')');
     
-    const clientInsights = await analyzeClientLeads(clientUuid, weekAgo, now, supabaseAdmin);
+    // Pass the PUBLIC client_id to analyzeClientLeads (not the internal UUID)
+    const clientInsights = await analyzeClientLeads(clientId, weekAgo, now, supabaseAdmin);
     
     console.log('[Engine] Client insights generated:', {
       client_id: clientInsights.client_id,
@@ -860,7 +867,7 @@ export async function runWeeklyAnalysis(): Promise<{ processed: number; errors: 
         console.log('[Engine] ============================================');
         
         try {
-          // Use client_id (the UUID) for analysis, not the database id
+          // Use public client_id for analysis (matches what's stored in lead_actions)
           const clientInsights = await analyzeClientLeads(client.client_id, weekAgo, now, supabaseAdmin);
           
           console.log('[Engine] ============================================');
