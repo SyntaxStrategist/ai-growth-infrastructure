@@ -71,6 +71,11 @@ export default function ClientProspectIntelligencePage() {
   const [proofModalOpen, setProofModalOpen] = useState(false);
   const [selectedProspect, setSelectedProspect] = useState<ProspectCandidate | null>(null);
   
+  // Delete confirmation state
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+  const [prospectToDelete, setProspectToDelete] = useState<ProspectCandidate | null>(null);
+  const [deleting, setDeleting] = useState(false);
+  
   // Metrics state
   const [metrics, setMetrics] = useState({
     totalCrawled: 0,
@@ -114,27 +119,24 @@ export default function ClientProspectIntelligencePage() {
     latestResults: isFrench ? 'Derniers Résultats' : 'Latest Results',
     refreshButton: isFrench ? '📊 Actualiser les statistiques' : '📊 Refresh Metrics',
     refreshing: isFrench ? 'Actualisation...' : 'Refreshing...',
-    totalCrawled: isFrench ? 'Total Crawlé' : 'Total Crawled',
-    totalTested: isFrench ? 'Total Testé' : 'Total Tested',
-    totalScored: isFrench ? 'Total Scoré' : 'Total Scored',
-    totalContacted: isFrench ? 'Total Contacté' : 'Total Contacted',
+    totalCrawled: isFrench ? 'Total Trouvés' : 'Total Found',
+    totalTested: isFrench ? 'Sites Testés' : 'Sites Tested',
+    totalScored: isFrench ? 'Analysés ICP' : 'ICP Analyzed',
+    totalContacted: isFrench ? 'Contactés' : 'Contacted',
     errors: isFrench ? 'Erreurs' : 'Errors',
     prospectCandidates: isFrench ? 'Candidats Prospects' : 'Prospect Candidates',
-    showOnlyHighPriority: isFrench ? 'Afficher seulement haute priorité' : 'Show Only High Priority',
+    showOnlyHighPriority: isFrench ? 'Afficher seulement forte adéquation (70+)' : 'Show Only Strong Matches (70+)',
     businessName: isFrench ? 'Nom de l\'Entreprise' : 'Business Name',
     industry: isFrench ? 'Industrie' : 'Industry',
     region: isFrench ? 'Région' : 'Region',
-    score: isFrench ? 'Score' : 'Score',
-    status: isFrench ? 'Statut' : 'Status',
+    score: isFrench ? 'Adéquation ICP' : 'ICP Match',
     website: isFrench ? 'Site Web' : 'Website',
     actions: isFrench ? 'Actions' : 'Actions',
     testDataLabel: isFrench ? 'Test' : 'Test',
-    highPriorityBadge: isFrench ? 'Haute Priorité' : 'High Priority',
-    contacted: isFrench ? 'Contacté' : 'Contacted',
-    notContacted: isFrench ? 'Non Contacté' : 'Not Contacted',
+    highPriorityBadge: isFrench ? 'Forte Adéquation' : 'Strong Match',
     viewProof: isFrench ? '📊 Voir preuve' : '📊 View Proof',
     noProspects: isFrench ? 'Aucun prospect trouvé' : 'No prospects found',
-    noHighPriorityFound: isFrench ? 'Aucun prospect haute priorité trouvé' : 'No high priority prospects found',
+    noHighPriorityFound: isFrench ? 'Aucun prospect avec forte adéquation ICP trouvé' : 'No strong ICP matches found',
     urgent: isFrench ? 'Urgent' : 'Urgent',
     high: isFrench ? 'Élevé' : 'High',
     medium: isFrench ? 'Moyen' : 'Medium',
@@ -142,7 +144,16 @@ export default function ClientProspectIntelligencePage() {
     previous: isFrench ? 'Précédent' : 'Previous',
     next: isFrench ? 'Suivant' : 'Next',
     page: isFrench ? 'Page' : 'Page',
-    of: isFrench ? 'de' : 'of'
+    of: isFrench ? 'de' : 'of',
+    delete: isFrench ? 'Supprimer' : 'Delete',
+    deleteConfirmTitle: isFrench ? 'Confirmer la suppression' : 'Confirm Deletion',
+    deleteConfirmMessage: isFrench ? 'Êtes-vous sûr de vouloir supprimer ce prospect ?' : 'Are you sure you want to delete this prospect?',
+    deleteWarning: isFrench ? '⚠️ Cette action ne peut pas être annulée. Ce prospect sera définitivement supprimé.' : '⚠️ This action cannot be undone. This prospect will be permanently deleted.',
+    cancel: isFrench ? 'Annuler' : 'Cancel',
+    confirmDelete: isFrench ? 'Oui, supprimer' : 'Yes, Delete',
+    deleting: isFrench ? 'Suppression...' : 'Deleting...',
+    deleteSuccess: isFrench ? '✅ Prospect supprimé avec succès' : '✅ Prospect deleted successfully',
+    deleteError: isFrench ? '❌ Échec de la suppression' : '❌ Delete failed'
   };
 
   // Single useEffect to fetch data when client context is ready
@@ -198,19 +209,24 @@ export default function ClientProspectIntelligencePage() {
       setError(null);
 
       console.log('[ClientProspectIntelligence] Loading prospects for client:', session.client?.clientId);
+      console.log('[ClientProspectIntelligence] Locale:', locale);
       
-      const response = await fetch(`/api/client/prospect-intelligence/prospects?clientId=${session.client?.clientId}`);
+      const response = await fetch(`/api/client/prospect-intelligence/prospects?clientId=${session.client?.clientId}&locale=${locale}`);
       const json = await response.json();
 
       if (json.success) {
         setProspects(json.data || []);
         
-        // Calculate metrics from prospects
-        const highPriorityCount = (json.data || []).filter((p: ProspectCandidate) => (p.automation_need_score || 0) >= 70).length;
+        // Calculate metrics from prospects using ICP fit scores
+        const highPriorityCount = (json.data || []).filter((p: ProspectCandidate) => {
+          const fitScore = p.metadata?.business_fit_score;
+          return (fitScore || 0) >= 70;
+        }).length;
+        
         setMetrics({
           totalCrawled: (json.data || []).length,
           totalTested: (json.data || []).filter((p: ProspectCandidate) => p.last_tested).length,
-          totalScored: (json.data || []).filter((p: ProspectCandidate) => p.automation_need_score).length,
+          totalScored: (json.data || []).filter((p: ProspectCandidate) => p.metadata?.business_fit_score !== undefined).length,
           totalContacted: (json.data || []).filter((p: ProspectCandidate) => p.contacted).length,
           highPriorityCount
         });
@@ -286,6 +302,67 @@ export default function ClientProspectIntelligencePage() {
     setRefreshing(false);
   };
 
+  const handleDeleteProspect = async () => {
+    if (!prospectToDelete || !session.client) return;
+    
+    try {
+      setDeleting(true);
+      
+      console.log('[ClientProspectIntelligence] Deleting prospect:', prospectToDelete.id);
+      
+      const response = await fetch('/api/client/prospect-intelligence/prospects', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          prospectId: prospectToDelete.id,
+          clientId: session.client.clientId
+        }),
+      });
+      
+      const data = await response.json();
+      
+      if (data.success) {
+        // Instantly update state to remove prospect (no page reload)
+        setProspects(prev => prev.filter(p => p.id !== prospectToDelete.id));
+        
+        // Recalculate metrics using ICP fit scores
+        const updatedProspects = prospects.filter(p => p.id !== prospectToDelete.id);
+        const highPriorityCount = updatedProspects.filter(p => {
+          const fitScore = p.metadata?.business_fit_score;
+          return (fitScore || 0) >= 70;
+        }).length;
+        
+        setMetrics({
+          totalCrawled: updatedProspects.length,
+          totalTested: updatedProspects.filter(p => p.last_tested).length,
+          totalScored: updatedProspects.filter(p => p.metadata?.business_fit_score !== undefined).length,
+          totalContacted: updatedProspects.filter(p => p.contacted).length,
+          highPriorityCount
+        });
+        
+        // Show success message
+        setToastMessage(t.deleteSuccess);
+        setShowToast(true);
+        setTimeout(() => setShowToast(false), 3000);
+        
+        console.log('[ClientProspectIntelligence] ✅ Prospect deleted successfully');
+      } else {
+        console.error('[ClientProspectIntelligence] ❌ Delete failed:', data.error);
+        setToastMessage(t.deleteError);
+        setShowToast(true);
+        setTimeout(() => setShowToast(false), 3000);
+      }
+    } catch (err) {
+      console.error('[ClientProspectIntelligence] ❌ Delete error:', err);
+      setToastMessage(t.deleteError);
+      setShowToast(true);
+      setTimeout(() => setShowToast(false), 3000);
+    } finally {
+      setDeleting(false);
+      setDeleteConfirmOpen(false);
+      setProspectToDelete(null);
+    }
+  };
 
   const handleLogout = () => {
     console.log('[ClientProspectIntelligence] Logging out user...');
@@ -306,20 +383,25 @@ export default function ClientProspectIntelligencePage() {
     });
   };
 
+  // Extract ICP fit score from metadata
+  const getIcpFitScore = (prospect: ProspectCandidate): number | undefined => {
+    return prospect.metadata?.business_fit_score;
+  };
+
   const getScoreColor = (score: number | undefined) => {
     if (!score) return 'text-gray-400';
-    if (score >= 85) return 'text-red-400';
-    if (score >= 70) return 'text-orange-400';
+    if (score >= 85) return 'text-green-400'; // High ICP match = good (green)
+    if (score >= 70) return 'text-blue-400';
     if (score >= 50) return 'text-yellow-400';
-    return 'text-green-400';
+    return 'text-gray-400';
   };
 
   const getScoreLabel = (score: number | undefined) => {
     if (!score) return 'N/A';
-    if (score >= 85) return t.urgent;
-    if (score >= 70) return t.high;
-    if (score >= 50) return t.medium;
-    return t.low;
+    if (score >= 85) return isFrench ? 'Excellent' : 'Excellent';
+    if (score >= 70) return isFrench ? 'Bon' : 'Good';
+    if (score >= 50) return isFrench ? 'Moyen' : 'Fair';
+    return isFrench ? 'Faible' : 'Low';
   };
 
   const isHighPriority = (score: number | undefined) => {
@@ -330,7 +412,7 @@ export default function ClientProspectIntelligencePage() {
   let filteredProspects = (prospects || []);
 
   if (showOnlyHighPriority) {
-    filteredProspects = filteredProspects.filter(p => isHighPriority(p.automation_need_score));
+    filteredProspects = filteredProspects.filter(p => isHighPriority(getIcpFitScore(p)));
   }
 
   // Pagination
@@ -702,9 +784,6 @@ export default function ClientProspectIntelligencePage() {
                       {t.score}
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-white/70 uppercase tracking-wider">
-                      {t.status}
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-white/70 uppercase tracking-wider">
                       {t.website}
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-white/70 uppercase tracking-wider">
@@ -723,8 +802,8 @@ export default function ClientProspectIntelligencePage() {
                               {t.testDataLabel}
                             </span>
                           )}
-                          {isHighPriority(prospect.automation_need_score) && (
-                            <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold bg-orange-500/20 text-orange-400 border border-orange-500/40">
+                          {isHighPriority(getIcpFitScore(prospect)) && (
+                            <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold bg-green-500/20 text-green-400 border border-green-500/40">
                               {t.highPriorityBadge}
                             </span>
                           )}
@@ -737,23 +816,12 @@ export default function ClientProspectIntelligencePage() {
                         <div className="text-sm text-white/70">{prospect.region || 'N/A'}</div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <div className={`text-sm font-semibold ${getScoreColor(prospect.automation_need_score)}`}>
-                          {prospect.automation_need_score || 'N/A'}/100
+                        <div className={`text-sm font-semibold ${getScoreColor(getIcpFitScore(prospect))}`}>
+                          {getIcpFitScore(prospect) !== undefined ? `${getIcpFitScore(prospect)}/100` : (isFrench ? 'Analyse...' : 'Analyzing...')}
                         </div>
                         <div className="text-xs text-white/50">
-                          {getScoreLabel(prospect.automation_need_score)}
+                          {getScoreLabel(getIcpFitScore(prospect))}
                         </div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <span
-                          className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-                            prospect.contacted
-                              ? 'bg-green-500/20 text-green-400'
-                              : 'bg-yellow-500/20 text-yellow-400'
-                          }`}
-                        >
-                          {prospect.contacted ? t.contacted : t.notContacted}
-                        </span>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="flex flex-col gap-1">
@@ -798,7 +866,15 @@ export default function ClientProspectIntelligencePage() {
                           >
                             {t.viewProof}
                           </button>
-                          {/* Outreach temporarily hidden on client dashboard */}
+                          <button
+                            onClick={() => {
+                              setProspectToDelete(prospect);
+                              setDeleteConfirmOpen(true);
+                            }}
+                            className="px-3 py-1 text-xs bg-red-500/20 border border-red-400/50 text-red-400 rounded hover:bg-red-500/30 transition-colors"
+                          >
+                            🗑️ {t.delete}
+                          </button>
                         </div>
                       </td>
                     </tr>
@@ -841,9 +917,66 @@ export default function ClientProspectIntelligencePage() {
       {proofModalOpen && selectedProspect && (
         <ProspectProofModal
           prospectId={selectedProspect.id}
+          clientId={session.client?.clientId}
+          isClientView={true}
           isOpen={proofModalOpen}
           onClose={() => setProofModalOpen(false)}
         />
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {deleteConfirmOpen && prospectToDelete && (
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="bg-gradient-to-br from-gray-800 to-gray-900 rounded-xl p-6 max-w-md w-full border border-red-500/30 shadow-2xl"
+          >
+            <h3 className="text-2xl font-bold mb-4 text-red-400">{t.deleteConfirmTitle}</h3>
+            
+            <div className="mb-6">
+              <p className="text-white/90 mb-4">{t.deleteConfirmMessage}</p>
+              <div className="bg-red-500/10 border border-red-500/30 rounded-lg p-4 mb-4">
+                <p className="text-sm font-semibold text-white mb-2">
+                  {prospectToDelete.business_name}
+                </p>
+                <p className="text-xs text-white/60">
+                  {prospectToDelete.website}
+                </p>
+              </div>
+              <p className="text-sm text-red-300 bg-red-500/10 border border-red-500/20 rounded-lg p-3">
+                {t.deleteWarning}
+              </p>
+            </div>
+
+            <div className="flex gap-3">
+              <button
+                onClick={() => {
+                  setDeleteConfirmOpen(false);
+                  setProspectToDelete(null);
+                }}
+                disabled={deleting}
+                className="flex-1 py-3 rounded-lg bg-white/10 hover:bg-white/20 text-white font-semibold transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {t.cancel}
+              </button>
+              <button
+                onClick={handleDeleteProspect}
+                disabled={deleting}
+                className="flex-1 py-3 rounded-lg bg-red-500 hover:bg-red-600 text-white font-semibold transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {deleting ? (
+                  <span className="flex items-center justify-center gap-2">
+                    <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                    {t.deleting}
+                  </span>
+                ) : (
+                  t.confirmDelete
+                )}
+              </button>
+            </div>
+          </motion.div>
+        </div>
       )}
 
     </div>

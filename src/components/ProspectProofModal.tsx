@@ -38,9 +38,11 @@ interface ProspectProofModalProps {
   isOpen: boolean;
   onClose: () => void;
   prospectId: string;
+  clientId?: string; // Optional: for client-specific ICP analysis
+  isClientView?: boolean; // True if viewing from client dashboard (emphasize ICP fit)
 }
 
-export default function ProspectProofModal({ isOpen, onClose, prospectId }: ProspectProofModalProps) {
+export default function ProspectProofModal({ isOpen, onClose, prospectId, clientId, isClientView = false }: ProspectProofModalProps) {
   const pathname = usePathname?.() || '';
   const locale = pathname.startsWith('/fr') ? 'fr' : 'en';
   const isFrench = locale === 'fr';
@@ -54,7 +56,7 @@ export default function ProspectProofModal({ isOpen, onClose, prospectId }: Pros
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [showMetadata, setShowMetadata] = useState(false);
-  const [showScoreBreakdown, setShowScoreBreakdown] = useState(true);
+  const [showScoreBreakdown, setShowScoreBreakdown] = useState(!isClientView); // Collapsed by default for clients
 
   useEffect(() => {
     if (isOpen && prospectId) {
@@ -74,8 +76,11 @@ export default function ProspectProofModal({ isOpen, onClose, prospectId }: Pros
     setError(null);
 
     try {
-      console.log('[ProofModal] Fetching proof from API... Locale:', locale);
-      const response = await fetch(`/api/prospect-intelligence/proof?id=${prospectId}&locale=${locale}`);
+      console.log('[ProofModal] Fetching proof from API... Locale:', locale, 'Client:', clientId || 'none');
+      const url = clientId 
+        ? `/api/prospect-intelligence/proof?id=${prospectId}&locale=${locale}&clientId=${clientId}`
+        : `/api/prospect-intelligence/proof?id=${prospectId}&locale=${locale}`;
+      const response = await fetch(url);
       const data = await response.json();
 
       if (!response.ok || !data.success) {
@@ -192,7 +197,8 @@ export default function ProspectProofModal({ isOpen, onClose, prospectId }: Pros
                   </div>
                 </div>
 
-                {/* Form Detection */}
+                {/* Form Detection - Admin Only */}
+                {!isClientView && (
                 <div className="bg-white/5 rounded-lg p-6">
                   <h3 className="text-lg font-semibold text-white mb-4">{t('formDetection')}</h3>
                   
@@ -234,24 +240,27 @@ export default function ProspectProofModal({ isOpen, onClose, prospectId }: Pros
                     </p>
                   )}
                 </div>
+                )}
 
-                {/* Screenshot */}
-                {proofData.proof.screenshot_url ? (
-                  <div className="bg-white/5 rounded-lg p-6">
-                    <h3 className="text-lg font-semibold text-white mb-4">{t('screenshot')}</h3>
-                    <img
-                      src={proofData.proof.screenshot_url}
-                      alt={t('screenshot')}
-                      className="w-full rounded-lg border border-white/10"
-                    />
-                  </div>
-                ) : (
-                  <div className="bg-white/5 rounded-lg p-6">
-                    <h3 className="text-lg font-semibold text-white mb-4">{t('screenshot')}</h3>
-                    <div className="bg-white/5 rounded-lg p-12 text-center">
-                      <p className="text-white/50">📷 {t('noScreenshot')}</p>
+                {/* Screenshot - Admin Only */}
+                {!isClientView && (
+                  proofData.proof.screenshot_url ? (
+                    <div className="bg-white/5 rounded-lg p-6">
+                      <h3 className="text-lg font-semibold text-white mb-4">{t('screenshot')}</h3>
+                      <img
+                        src={proofData.proof.screenshot_url}
+                        alt={t('screenshot')}
+                        className="w-full rounded-lg border border-white/10"
+                      />
                     </div>
-                  </div>
+                  ) : (
+                    <div className="bg-white/5 rounded-lg p-6">
+                      <h3 className="text-lg font-semibold text-white mb-4">{t('screenshot')}</h3>
+                      <div className="bg-white/5 rounded-lg p-12 text-center">
+                        <p className="text-white/50">📷 {t('noScreenshot')}</p>
+                      </div>
+                    </div>
+                  )
                 )}
 
                 {/* Contact Paths */}
@@ -284,18 +293,18 @@ export default function ProspectProofModal({ isOpen, onClose, prospectId }: Pros
                   console.log('🎯 Business Fit Score rendered for:', proofData.prospect.business_name, fitScore || 'N/A');
                   
                   return (
-                    <div className="bg-white/5 rounded-lg p-6 border-l-4 border-purple-400">
-                      <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
-                        🎯 {t('businessFitAnalysis')}
+                    <div className={`rounded-lg p-6 ${isClientView ? 'bg-gradient-to-br from-green-500/10 to-blue-500/10 border-2 border-green-500/30' : 'bg-white/5 border-l-4 border-purple-400'}`}>
+                      <h3 className={`text-lg font-semibold mb-4 flex items-center gap-2 ${isClientView ? 'text-green-300 text-xl' : 'text-white'}`}>
+                        🎯 {isClientView ? (isFrench ? 'Correspondance avec Votre ICP' : 'Match with Your ICP') : t('businessFitAnalysis')}
                       </h3>
                       
                       <div className="space-y-3">
                         {/* Score */}
                         <div className="flex items-baseline gap-3">
-                          <span className="text-sm text-white/70">
-                            🎯 {t('businessFitScore')}:
+                          <span className={`text-sm ${isClientView ? 'text-white/80 font-medium' : 'text-white/70'}`}>
+                            {isClientView ? (isFrench ? '📊 Score :' : '📊 Score:') : `🎯 ${t('businessFitScore')}:`}
                           </span>
-                          <span className="text-2xl font-bold text-purple-300">
+                          <span className={`font-bold ${isClientView ? 'text-3xl text-green-300' : 'text-2xl text-purple-300'}`}>
                             {fitScore !== undefined ? `${fitScore} / 100` : '—'}
                           </span>
                         </div>
@@ -314,8 +323,14 @@ export default function ProspectProofModal({ isOpen, onClose, prospectId }: Pros
                         
                         {/* Footer note */}
                         {fitScore !== undefined && (
-                          <p className="text-xs text-purple-300/50 italic mt-2">
-                            💡 {t('fitScoreNote')}
+                          <p className={`text-xs italic mt-2 ${isClientView ? 'text-green-300/60' : 'text-purple-300/50'}`}>
+                            💡 {isClientView ? (
+                              isFrench 
+                                ? 'Ce score mesure l\'adéquation entre ce prospect et votre profil client idéal.'
+                                : 'This score measures how well this prospect matches your ideal client profile.'
+                            ) : (
+                              t('fitScoreNote')
+                            )}
                           </p>
                         )}
                       </div>
@@ -323,7 +338,8 @@ export default function ProspectProofModal({ isOpen, onClose, prospectId }: Pros
                   );
                 })()}
 
-                {/* Scoring Breakdown */}
+                {/* Scoring Breakdown - Admin Only */}
+                {!isClientView && (
                 <div className="bg-white/5 rounded-lg p-6">
                   <button
                     onClick={() => setShowScoreBreakdown(!showScoreBreakdown)}
@@ -456,11 +472,19 @@ export default function ProspectProofModal({ isOpen, onClose, prospectId }: Pros
                               {/* Summary Rows */}
                               <tr className="border-t-2 border-white/20">
                                 <td className="py-3 px-3 text-white font-semibold">
-                                  {isFrench ? 'Score d\'Automatisation' : 'Automation Need Score'}
+                                  {isClientView ? (
+                                    isFrench ? 'Score d\'Automatisation Avenir' : 'Avenir Automation Score'
+                                  ) : (
+                                    isFrench ? 'Score d\'Automatisation' : 'Automation Need Score'
+                                  )}
                                 </td>
                                 <td className="py-3 px-3"></td>
                                 <td className="py-3 px-3 text-white/50 text-xs">
-                                  {isFrench ? 'Calculé par l\'IA' : 'AI Calculated'}
+                                  {isClientView ? (
+                                    isFrench ? 'Usage interne' : 'Internal use'
+                                  ) : (
+                                    isFrench ? 'Calculé par l\'IA' : 'AI Calculated'
+                                  )}
                                 </td>
                                 <td className="py-3 px-3 text-right font-mono text-lg font-bold text-purple-400">
                                   {proofData.prospect.automation_need_score}/100
@@ -509,8 +533,10 @@ export default function ProspectProofModal({ isOpen, onClose, prospectId }: Pros
                     );
                   })()}
                 </div>
+                )}
 
-                {/* Metadata Debug */}
+                {/* Metadata Debug - Admin Only */}
+                {!isClientView && (
                 <div className="bg-white/5 rounded-lg p-6">
                   <button
                     onClick={() => setShowMetadata(!showMetadata)}
@@ -528,6 +554,7 @@ export default function ProspectProofModal({ isOpen, onClose, prospectId }: Pros
                     </pre>
                   )}
                 </div>
+                )}
               </div>
             )}
           </div>

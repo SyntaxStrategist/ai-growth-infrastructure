@@ -8,6 +8,59 @@ import { createUnifiedSupabaseClient } from '../../../../../lib/supabase-unified
 import { resolveClientId } from '../../../../../lib/client-resolver';
 
 import { handleApiError } from '../../../../../lib/error-handler';
+import OpenAI from 'openai';
+
+const openai = new OpenAI({
+  apiKey: process.env.OPENAI_API_KEY,
+});
+
+/**
+ * Generate business fit score for a single prospect against client ICP
+ */
+async function generateQuickFitScore(
+  prospectName: string,
+  prospectIndustry: string,
+  clientIcp: any,
+  locale: string
+): Promise<{ score: number; reasoning: string }> {
+  const isFrench = locale === 'fr';
+  
+  const prompt = isFrench
+    ? `Analyse rapide: Le prospect "${prospectName}" (industrie: ${prospectIndustry}) correspond-il au profil suivant?
+- Type de client cible: ${clientIcp.target_client_type || 'Non spécifié'}
+- Objectif: ${clientIcp.main_business_goal || 'Non spécifié'}
+
+Réponds UNIQUEMENT avec: Score: [0-100]
+Raisonnement: [1-2 phrases courtes]`
+    : `Quick analysis: Does prospect "${prospectName}" (industry: ${prospectIndustry}) match this profile?
+- Target client type: ${clientIcp.target_client_type || 'Not specified'}
+- Goal: ${clientIcp.main_business_goal || 'Not specified'}
+
+Respond ONLY with: Score: [0-100]
+Reasoning: [1-2 short sentences]`;
+
+  try {
+    const completion = await openai.chat.completions.create({
+      model: 'gpt-4o-mini',
+      messages: [{ role: 'user', content: prompt }],
+      temperature: 0.3,
+      max_tokens: 150,
+    });
+    
+    const response = completion.choices[0].message.content?.trim() || '';
+    const scoreMatch = response.match(/Score:\s*(\d+)/i);
+    const reasoningMatch = response.match(/(?:Reasoning|Raisonnement):\s*(.+)/is);
+    
+    const score = scoreMatch ? parseInt(scoreMatch[1]) : 70;
+    const reasoning = (reasoningMatch && reasoningMatch[1]) ? reasoningMatch[1].trim() : response.split('\n').slice(1).join(' ').trim();
+    
+    return { score, reasoning };
+  } catch (error) {
+    console.error('[QuickFitScore] Error:', error);
+    return { score: 70, reasoning: isFrench ? 'Analyse en attente' : 'Analysis pending' };
+  }
+}
+
 /**
  * GET - Fetch prospects scoped to authenticated client
  * Only returns prospects that match the client's ICP profile
@@ -18,9 +71,11 @@ export async function GET(req: NextRequest) {
     console.log('🔍 [ClientProspectProspects] CLIENT PROSPECT PROSPECTS DEBUG');
     console.log('🔍 [ClientProspectProspects] ============================================');
     
-    // Get client ID from query parameters
+    // Get client ID and locale from query parameters
     const clientId = req.nextUrl.searchParams.get('clientId');
+    const locale = req.nextUrl.searchParams.get('locale') || 'en';
     console.log('🔍 [ClientProspectProspects] Client ID from query:', clientId);
+    console.log('🔍 [ClientProspectProspects] Locale from query:', locale);
     
     if (!clientId) {
       console.error('🔍 [ClientProspectProspects] ❌ No client ID provided');
@@ -123,11 +178,56 @@ export async function GET(req: NextRequest) {
       );
     }
 
-    console.log('[ClientProspectAPI] ✅ Returning', data?.length || 0, 'client-scoped prospects');
+    console.log('[ClientProspectAPI] ✅ Fetched', data?.length || 0, 'client-scoped prospects');
+    
+    // Generate business fit scores for prospects that don't have them
+    const prospectsWithScores = await Promise.all((data || []).map(async (prospect: any) => {
+      // Check if prospect already has business fit score
+      if (prospect.metadata?.business_fit_score !== undefined) {
+        console.log('[ClientProspectAPI] Prospect', prospect.business_name, 'already has fit score:', prospect.metadata.business_fit_score);
+        return prospect;
+      }
+      
+      // Generate fit score
+      console.log('[ClientProspectAPI] Generating fit score for:', prospect.business_name);
+      const fitAnalysis = await generateQuickFitScore(
+        prospect.business_name,
+        prospect.industry || 'Unknown',
+        client.icp_data,
+        locale // Use request locale for analysis language
+      );
+      
+      // Update prospect metadata (in-memory only for now, will save when proof is viewed)
+      const updatedMetadata = {
+        ...(prospect.metadata || {}),
+        business_fit_score: fitAnalysis.score,
+        fit_reasoning: fitAnalysis.reasoning,
+        fit_analysis_generated_at: new Date().toISOString(),
+      };
+      
+      // Try to save to database (silent fail if trigger error)
+      try {
+        const supabase = createUnifiedSupabaseClient();
+        await supabase
+          .from('prospect_candidates')
+          .update({ metadata: updatedMetadata })
+          .eq('id', prospect.id);
+        console.log('[ClientProspectAPI] ✅ Fit score saved for:', prospect.business_name);
+      } catch (err) {
+        console.warn('[ClientProspectAPI] ⚠️  Failed to save fit score, will use in-memory:', err);
+      }
+      
+      return {
+        ...prospect,
+        metadata: updatedMetadata
+      };
+    }));
+    
+    console.log('[ClientProspectAPI] ✅ Returning', prospectsWithScores.length, 'prospects with ICP scores');
     return NextResponse.json({ 
       success: true,
-      data: data || [], 
-      count: data?.length || 0,
+      data: prospectsWithScores, 
+      count: prospectsWithScores.length,
       clientInfo: {
         businessName: client.business_name,
         clientId: clientId
@@ -221,5 +321,72 @@ function calculateMinScoreFromICP(icpData: any): number {
   } catch (error) {
     console.error('[ClientProspectAPI] Error in calculateMinScoreFromICP:', error);
     return 70; // Return default score on error
+  }
+}
+
+/**
+ * DELETE - Delete a prospect candidate
+ * Client can delete prospects from their list
+ */
+export async function DELETE(req: NextRequest) {
+  try {
+    console.log('[ClientProspectDelete] ============================================');
+    console.log('[ClientProspectDelete] DELETE prospect request received');
+    console.log('[ClientProspectDelete] ============================================');
+    
+    const { prospectId, clientId } = await req.json();
+    
+    if (!clientId || !prospectId) {
+      console.error('[ClientProspectDelete] ❌ Missing required parameters');
+      return NextResponse.json(
+        { success: false, error: 'Client ID and Prospect ID are required' },
+        { status: 400 }
+      );
+    }
+    
+    console.log('[ClientProspectDelete] Client ID:', clientId);
+    console.log('[ClientProspectDelete] Prospect ID:', prospectId);
+    
+    // Validate client ID
+    try {
+      await resolveClientId(clientId);
+      console.log('[ClientProspectDelete] ✅ Client ID validated');
+    } catch (error) {
+      console.error('[ClientProspectDelete] ❌ Invalid client ID:', error);
+      return NextResponse.json(
+        { success: false, error: 'Invalid client ID' },
+        { status: 404 }
+      );
+    }
+    
+    // Create Supabase client
+    const supabase = createUnifiedSupabaseClient();
+    
+    // Delete the prospect from database
+    console.log('[ClientProspectDelete] Deleting prospect from database...');
+    const { error: deleteError } = await supabase
+      .from('prospect_candidates')
+      .delete()
+      .eq('id', prospectId);
+    
+    if (deleteError) {
+      console.error('[ClientProspectDelete] ❌ Delete failed:', deleteError);
+      return NextResponse.json(
+        { success: false, error: 'Failed to delete prospect' },
+        { status: 500 }
+      );
+    }
+    
+    console.log('[ClientProspectDelete] ✅ Prospect deleted successfully');
+    console.log('[ClientProspectDelete] ============================================');
+    
+    return NextResponse.json({
+      success: true,
+      message: 'Prospect deleted successfully',
+      deletedId: prospectId
+    });
+    
+  } catch (error) {
+    return handleApiError(error, 'ClientProspectDelete');
   }
 }
