@@ -49,7 +49,7 @@ Reasoning: [1-2 short sentences]`;
     
     const response = completion.choices[0].message.content?.trim() || '';
     const scoreMatch = response.match(/Score:\s*(\d+)/i);
-    const reasoningMatch = response.match(/(?:Reasoning|Raisonnement):\s*(.+)/is);
+    const reasoningMatch = response.match(/(?:Reasoning|Raisonnement):\s*([\s\S]+)/i);
     
     const score = scoreMatch ? parseInt(scoreMatch[1]) : 70;
     const reasoning = (reasoningMatch && reasoningMatch[1]) ? reasoningMatch[1].trim() : response.split('\n').slice(1).join(' ').trim();

@@ -124,12 +124,8 @@ export default function ClientSettings() {
     { value: 'Same day', label: isFrench ? 'Le jour même' : 'Same day' },
   ];
 
-  const businessGoalOptions = [
-    { value: 'Generate more qualified leads', label: isFrench ? 'Générer plus de prospects qualifiés' : 'Generate more qualified leads' },
-    { value: 'Improve follow-ups and conversions', label: isFrench ? 'Améliorer les suivis et conversions' : 'Improve follow-ups and conversions' },
-    { value: 'Nurture existing clients', label: isFrench ? 'Fidéliser les clients existants' : 'Nurture existing clients' },
-    { value: 'Save time with automation', label: isFrench ? 'Gagner du temps avec l\'automatisation' : 'Save time with automation' },
-  ];
+  // Business goal is now a free text field to support any industry
+  // Previously had dropdown options but changed to text input for flexibility
 
   // Load current settings
   useEffect(() => {
@@ -661,18 +657,13 @@ export default function ClientSettings() {
             {/* Main Business Goal */}
             <div>
               <label className="block text-sm font-medium mb-2">{t.mainBusinessGoal}</label>
-              <select
+              <input
+                type="text"
                 value={settings.mainBusinessGoal}
                 onChange={(e) => handleFieldChange('mainBusinessGoal', e.target.value)}
-                className="w-full px-4 py-3 rounded-md bg-white/5 border border-white/10 text-white focus:border-green-400/50 focus:outline-none transition-all"
-              >
-                <option value="">{isFrench ? 'Sélectionnez un objectif...' : 'Select a goal...'}</option>
-                {businessGoalOptions.map((option) => (
-                  <option key={option.value} value={option.value} className="bg-gray-800">
-                    {option.label}
-                  </option>
-                ))}
-              </select>
+                className="w-full px-4 py-3 rounded-md bg-white/5 border border-white/10 text-white placeholder:text-white/40 focus:border-green-400/50 focus:outline-none transition-all"
+                placeholder={isFrench ? 'Ex: Augmenter les revenus de 30%' : 'E.g., Increase revenue by 30%'}
+              />
             </div>
 
             {/* Biggest Challenge */}
