@@ -285,11 +285,26 @@ export async function POST(req: NextRequest) {
     console.log('[LeadActions] Logging action to lead_actions table...');
     console.log('[LeadActions] ============================================');
     
+    // Fetch lead data to get client_id for proper activity log filtering
+    const { data: leadForAction, error: fetchLeadError } = await supabase
+      .from('lead_memory')
+      .select('client_id')
+      .eq('id', lead_id)
+      .single();
+    
+    if (fetchLeadError) {
+      console.warn('[LeadActions] ⚠️  Could not fetch lead client_id:', fetchLeadError.message);
+    }
+    
+    const leadClientId = leadForAction?.client_id || null;
+    console.log('[LeadActions] Lead client_id:', leadClientId || 'null (global lead)');
+    
     const actionId = randomUUID();
     const isConversion = tag === 'Converted' || tag === 'Converti';
     const logRecord: any = {
       id: actionId,
       lead_id,
+      client_id: leadClientId,
       action,
       tag: tag || null,
       performed_by: performed_by || 'admin',
@@ -306,6 +321,7 @@ export async function POST(req: NextRequest) {
     console.log('[LeadActions] Action log record to insert:', {
       id: logRecord.id,
       lead_id: logRecord.lead_id,
+      client_id: logRecord.client_id || 'null',
       action: logRecord.action,
       tag: logRecord.tag || 'null',
       performed_by: logRecord.performed_by,
