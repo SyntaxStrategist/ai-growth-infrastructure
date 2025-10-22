@@ -693,7 +693,7 @@ export async function upsertLeadWithHistory(params: {
               .insert({
                 lead_id: existingLead.id,
                 client_id: params.client_id,
-                action: 'created',
+                action_type: 'created',
                 performed_by: 'system',
                 timestamp: now,
                 is_test: params.is_test || false
@@ -823,7 +823,7 @@ export async function upsertLeadWithHistory(params: {
             .insert({
               lead_id: id,
               client_id: params.client_id,
-              action: 'created',
+              action_type: 'created',
               performed_by: 'system',
               timestamp: now,
               is_test: params.is_test || false

@@ -22,8 +22,11 @@ function translateActionData(data: any[], locale: Locale): any[] {
   return data.map((action: any) => {
     const translatedAction = { ...action };
     
+    // Map database column action_type to frontend property action
+    translatedAction.action = action.action_type || action.action;
+    
     // Translate action type
-    translatedAction.action_label = translateActionLabel(action.action, locale);
+    translatedAction.action_label = translateActionLabel(translatedAction.action, locale);
     
     // Translate tag field
     if (action.tag) {
@@ -305,7 +308,7 @@ export async function POST(req: NextRequest) {
       id: actionId,
       lead_id,
       client_id: leadClientId,
-      action,
+      action_type: action,  // ✅ Correct column name is action_type
       tag: tag || null,
       performed_by: performed_by || 'admin',
       conversion_outcome: isConversion || null,
@@ -322,7 +325,7 @@ export async function POST(req: NextRequest) {
       id: logRecord.id,
       lead_id: logRecord.lead_id,
       client_id: logRecord.client_id || 'null',
-      action: logRecord.action,
+      action_type: logRecord.action_type,
       tag: logRecord.tag || 'null',
       performed_by: logRecord.performed_by,
       conversion_outcome: logRecord.conversion_outcome,
