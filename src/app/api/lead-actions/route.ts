@@ -405,12 +405,12 @@ export async function GET(req: NextRequest) {
 
     const queryStart = Date.now();
     
-    // If clientId provided, need to resolve to internal UUID first
+    // If clientId provided, verify it exists first
     let query;
     if (clientId) {
-      console.log('[LeadActions] Resolving public client_id:', clientId);
+      console.log('[LeadActions] Validating public client_id:', clientId);
       
-      // First, resolve the public client_id to internal UUID
+      // Verify the public client_id exists
       const { data: clientData, error: clientError } = await supabase
         .from('clients')
         .select('id')
@@ -425,14 +425,14 @@ export async function GET(req: NextRequest) {
         );
       }
       
-      const clientUuid = clientData.id;
-      console.log('[LeadActions] Resolved → internal UUID:', clientUuid);
+      console.log('[LeadActions] ✅ Client validated:', clientId);
       
-      // Build query with internal UUID filtering
+      // Query lead_actions using the PUBLIC client_id (not the internal UUID)
+      // lead_actions.client_id stores the public client_id, not the internal UUID
       query = supabase
         .from('lead_actions')
         .select('*')
-        .eq('client_id', clientUuid)
+        .eq('client_id', clientId)
         .order('timestamp', { ascending: false })
         .limit(limit);
     } else {

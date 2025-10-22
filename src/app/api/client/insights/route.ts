@@ -26,24 +26,24 @@ export async function GET(req: NextRequest) {
       );
     }
 
-    // Resolve client ID to UUID using universal resolver
-    let clientUuid: string;
+    // Verify client exists by resolving (but don't use the UUID for lead_actions query)
     try {
-      clientUuid = await resolveClientId(clientId);
-      console.log(`[ClientInsights] ✅ Resolved client ID: "${clientId}" → "${clientUuid}"`);
+      await resolveClientId(clientId);
+      console.log(`[ClientInsights] ✅ Client ID validated: "${clientId}"`);
     } catch (error) {
-      console.error('[ClientInsights] ❌ Failed to resolve client ID:', error);
+      console.error('[ClientInsights] ❌ Client not found:', error);
       return NextResponse.json(
-        { success: false, error: `Failed to resolve client ID: ${error instanceof Error ? error.message : 'Unknown error'}` },
+        { success: false, error: `Client not found: ${error instanceof Error ? error.message : 'Unknown error'}` },
         { status: 404 }
       );
     }
     
-    // Join with lead_actions to get client-specific leads using the internal UUID
+    // Query lead_actions using the PUBLIC client_id (not the internal UUID)
+    // lead_actions.client_id stores the public client_id, not the internal UUID
     const { data: leadActionsData, error: leadActionsError } = await supabase
       .from('lead_actions')
       .select('lead_id')
-      .eq('client_id', clientUuid);
+      .eq('client_id', clientId);
     
     if (leadActionsError) {
       console.error('[ClientInsights] ❌ Error fetching lead_actions:', leadActionsError);
