@@ -439,14 +439,17 @@ export async function GET(req: NextRequest) {
       
       // Query lead_actions using the PUBLIC client_id (not the internal UUID)
       // lead_actions.client_id stores the public client_id, not the internal UUID
+      // Filter out automatic 'insert' and 'created' events - show only manual actions
       query = supabase
         .from('lead_actions')
         .select('*')
         .eq('client_id', clientId)
+        .neq('action_type', 'insert')
+        .neq('action_type', 'created')
         .order('timestamp', { ascending: false })
         .limit(limit);
     } else {
-      // Admin mode - get all actions
+      // Admin mode - get all actions including automatic ones
       query = supabase
         .from('lead_actions')
         .select('*')
