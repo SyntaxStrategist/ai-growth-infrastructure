@@ -336,27 +336,31 @@ export async function DELETE(req: NextRequest) {
     
     const { prospectId, clientId } = await req.json();
     
-    if (!clientId || !prospectId) {
-      console.error('[ClientProspectDelete] ❌ Missing required parameters');
+    if (!prospectId) {
+      console.error('[ClientProspectDelete] ❌ Missing required parameter: prospectId');
       return NextResponse.json(
-        { success: false, error: 'Client ID and Prospect ID are required' },
+        { success: false, error: 'Prospect ID is required' },
         { status: 400 }
       );
     }
     
-    console.log('[ClientProspectDelete] Client ID:', clientId);
+    console.log('[ClientProspectDelete] Client ID:', clientId || 'null (admin delete)');
     console.log('[ClientProspectDelete] Prospect ID:', prospectId);
     
-    // Validate client ID
-    try {
-      await resolveClientId(clientId);
-      console.log('[ClientProspectDelete] ✅ Client ID validated');
-    } catch (error) {
-      console.error('[ClientProspectDelete] ❌ Invalid client ID:', error);
-      return NextResponse.json(
-        { success: false, error: 'Invalid client ID' },
-        { status: 404 }
-      );
+    // Validate client ID (only if provided - admin can delete without clientId)
+    if (clientId) {
+      try {
+        await resolveClientId(clientId);
+        console.log('[ClientProspectDelete] ✅ Client ID validated');
+      } catch (error) {
+        console.error('[ClientProspectDelete] ❌ Invalid client ID:', error);
+        return NextResponse.json(
+          { success: false, error: 'Invalid client ID' },
+          { status: 404 }
+        );
+      }
+    } else {
+      console.log('[ClientProspectDelete] ⚠️ Admin delete - no client validation');
     }
     
     // Create Supabase client

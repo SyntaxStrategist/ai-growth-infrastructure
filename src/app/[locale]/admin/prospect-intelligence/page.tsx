@@ -73,6 +73,11 @@ export default function ProspectIntelligencePage() {
   const [emailPreviewModalOpen, setEmailPreviewModalOpen] = useState(false);
   const [selectedProspect, setSelectedProspect] = useState<ProspectCandidate | null>(null);
   
+  // Delete confirmation state
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+  const [prospectToDelete, setProspectToDelete] = useState<ProspectCandidate | null>(null);
+  const [deleting, setDeleting] = useState(false);
+  
   // Metrics state
   const [metrics, setMetrics] = useState({
     totalCrawled: 0,
@@ -156,6 +161,15 @@ export default function ProspectIntelligencePage() {
     actions: isFrench ? 'Actions' : 'Actions',
     hideTestProspects: isFrench ? 'Masquer les prospects de test' : 'Hide Test Prospects',
     testDataLabel: isFrench ? '🧪 Données de test' : '🧪 Test Data',
+    delete: isFrench ? 'Supprimer' : 'Delete',
+    deleteConfirmTitle: isFrench ? 'Confirmer la suppression' : 'Confirm Deletion',
+    deleteConfirmMessage: isFrench ? 'Êtes-vous sûr de vouloir supprimer ce prospect ?' : 'Are you sure you want to delete this prospect?',
+    deleteWarning: isFrench ? '⚠️ Cette action ne peut pas être annulée. Ce prospect sera définitivement supprimé.' : '⚠️ This action cannot be undone. This prospect will be permanently deleted.',
+    cancel: isFrench ? 'Annuler' : 'Cancel',
+    confirmDelete: isFrench ? 'Oui, supprimer' : 'Yes, Delete',
+    deleting: isFrench ? 'Suppression...' : 'Deleting...',
+    deleteSuccess: isFrench ? '✅ Prospect supprimé avec succès' : '✅ Prospect deleted successfully',
+    deleteError: isFrench ? '❌ Échec de la suppression' : '❌ Delete failed',
   };
 
   // Enhanced industry translation using the comprehensive helper
@@ -466,6 +480,57 @@ export default function ProspectIntelligencePage() {
     console.log('[ProspectDashboard] Opening proof modal for:', prospect.business_name);
     setSelectedProspect(prospect);
     setProofModalOpen(true);
+  };
+
+  const handleDeleteProspect = async () => {
+    if (!prospectToDelete) return;
+    
+    try {
+      setDeleting(true);
+      
+      console.log('[AdminProspectIntelligence] Deleting prospect:', prospectToDelete.id);
+      
+      const response = await fetch('/api/client/prospect-intelligence/prospects', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          prospectId: prospectToDelete.id,
+          clientId: null // Admin can delete any prospect
+        }),
+      });
+      
+      const data = await response.json();
+      
+      if (data.success) {
+        // Instantly update state to remove prospect (no page reload)
+        setProspects(prev => prev.filter(p => p.id !== prospectToDelete.id));
+        
+        // Recalculate metrics
+        setMetrics(prev => ({
+          ...prev,
+          totalCrawled: Math.max(0, prev.totalCrawled - 1),
+          highPriorityCount: prospectToDelete.automation_need_score && prospectToDelete.automation_need_score >= 70 
+            ? Math.max(0, prev.highPriorityCount - 1) 
+            : prev.highPriorityCount
+        }));
+        
+        setToastMessage(t.deleteSuccess);
+        setShowToast(true);
+        setDeleteConfirmOpen(false);
+        setProspectToDelete(null);
+        
+        setTimeout(() => setShowToast(false), 3000);
+      } else {
+        throw new Error(data.message || 'Delete failed');
+      }
+    } catch (err) {
+      console.error('[AdminProspectIntelligence] Delete error:', err);
+      setToastMessage(t.deleteError);
+      setShowToast(true);
+      setTimeout(() => setShowToast(false), 3000);
+    } finally {
+      setDeleting(false);
+    }
   };
 
   const handleSimulateFeedback = async () => {
@@ -1096,6 +1161,16 @@ export default function ProspectIntelligencePage() {
                           >
                             {t.viewProof}
                           </button>
+                          <button
+                            onClick={() => {
+                              setProspectToDelete(prospect);
+                              setDeleteConfirmOpen(true);
+                            }}
+                            className="px-3 py-1 rounded text-xs font-semibold bg-red-500/20 text-red-400 hover:bg-red-500/30 border border-red-400/50 transition-all"
+                            title={t.delete}
+                          >
+                            🗑️ {t.delete}
+                          </button>
                         </div>
                       </td>
                     </tr>
@@ -1218,6 +1293,16 @@ export default function ProspectIntelligencePage() {
                         >
                           {t.viewProof}
                         </button>
+                        <button
+                          onClick={() => {
+                            setProspectToDelete(prospect);
+                            setDeleteConfirmOpen(true);
+                          }}
+                          className="px-3 py-2 rounded text-xs font-semibold bg-red-500/20 text-red-400 hover:bg-red-500/30 border border-red-400/50 transition-all min-h-[44px] min-w-[44px] flex items-center justify-center"
+                          title={t.delete}
+                        >
+                          🗑️ {t.delete}
+                        </button>
                       </div>
                     </motion.div>
                   ))}
@@ -1283,6 +1368,61 @@ export default function ProspectIntelligencePage() {
             onSendError={handleEmailSendError}
           />
         </>
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {deleteConfirmOpen && prospectToDelete && (
+        <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="bg-gradient-to-br from-gray-900 to-gray-800 rounded-xl p-6 max-w-md w-full border border-red-500/30 shadow-2xl"
+          >
+            <h3 className="text-xl font-bold text-white mb-4">{t.deleteConfirmTitle}</h3>
+            
+            <div className="space-y-4 mb-6">
+              <p className="text-white/80">
+                {t.deleteConfirmMessage}
+              </p>
+              
+              <div className="bg-white/5 rounded-lg p-4 border border-white/10">
+                <p className="text-white font-semibold">{prospectToDelete.business_name}</p>
+                <p className="text-white/60 text-sm">{prospectToDelete.website}</p>
+              </div>
+              
+              <div className="bg-red-500/10 border border-red-500/30 rounded-lg p-3">
+                <p className="text-red-400 text-sm">{t.deleteWarning}</p>
+              </div>
+            </div>
+
+            <div className="flex gap-3">
+              <button
+                onClick={() => {
+                  setDeleteConfirmOpen(false);
+                  setProspectToDelete(null);
+                }}
+                disabled={deleting}
+                className="flex-1 py-3 rounded-lg bg-white/10 hover:bg-white/20 text-white font-semibold transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {t.cancel}
+              </button>
+              <button
+                onClick={handleDeleteProspect}
+                disabled={deleting}
+                className="flex-1 py-3 rounded-lg bg-red-500 hover:bg-red-600 text-white font-semibold transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {deleting ? (
+                  <span className="flex items-center justify-center gap-2">
+                    <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                    {t.deleting}
+                  </span>
+                ) : (
+                  t.confirmDelete
+                )}
+              </button>
+            </div>
+          </motion.div>
+        </div>
       )}
     </div>
   );
