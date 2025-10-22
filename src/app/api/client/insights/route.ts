@@ -44,7 +44,9 @@ function normalizeIntent(intent: string): string {
   
   // Common French to English mappings
   const intentMap: Record<string, string> = {
-    'partenariat b2b': 'B2b partnership',
+    'partenariat b2b': 'B2B partnership',
+    'partenariat B2B': 'B2B partnership',
+    'Partenariat B2B': 'B2B partnership',
     'partenariat': 'Partnership',
     'demande de renseignements': 'Information request',
     'demande d\'information': 'Information request',

@@ -1323,11 +1323,15 @@ async function translateIntent(rawTopIntent: string, locale: string): Promise<st
                 </div>
                 <div>
                   <span className="text-white/50 text-xs block mb-1">{t.intent}</span>
-                  <p className="text-blue-300 font-medium">{lead.intent}</p>
+                  <p className="text-blue-300 font-medium">
+                    {lead.intent ? lead.intent.charAt(0).toUpperCase() + lead.intent.slice(1) : 'N/A'}
+                  </p>
                 </div>
                 <div>
                   <span className="text-white/50 text-xs block mb-1">{t.tone}</span>
-                  <p>{lead.tone}</p>
+                  <p>
+                    {lead.tone ? lead.tone.charAt(0).toUpperCase() + lead.tone.slice(1) : 'N/A'}
+                  </p>
                 </div>
                 <div>
                   <span className="text-white/50 text-xs block mb-1">{t.urgency}</span>

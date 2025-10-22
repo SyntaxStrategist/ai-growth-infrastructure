@@ -130,9 +130,30 @@ michaeloni@Michaels-MacBook ai-growth-infrastructure %
 OSError: [Errno 48] Address already in use
 ```
 
-**Solution:** The server is already running!
-- Check if you have another Terminal window open
-- Or use a different port: `python3 -m http.server 8001`
+**Debug Steps:**
+
+**Step 1: Check what's using port 8000**
+```bash
+lsof -ti:8000
+```
+This shows what process is using the port.
+
+**Step 2: Kill the process using port 8000**
+```bash
+lsof -ti:8000 | xargs kill -9
+```
+This frees up port 8000.
+
+**Step 3: Try starting the server again**
+```bash
+python3 -m http.server 8000
+```
+
+**Alternative Solution:** Use a different port
+```bash
+python3 -m http.server 8001
+```
+Then use: `http://localhost:8001/DEMO_CONTACT_FORM_EN.html`
 
 ---
 
