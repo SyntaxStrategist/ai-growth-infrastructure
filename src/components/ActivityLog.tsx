@@ -19,7 +19,6 @@ export default function ActivityLog({ actions, locale }: ActivityLogProps) {
     tag: isFrench ? 'Étiqueté' : 'Tagged',
     reactivate: isFrench ? 'Réactivé' : 'Reactivated',
     noActivity: isFrench ? 'Aucune activité récente' : 'No recent activity',
-    performedBy: isFrench ? 'par' : 'by',
   };
 
   const getActionLabel = (action: LeadAction) => {
@@ -89,11 +88,6 @@ export default function ActivityLog({ actions, locale }: ActivityLogProps) {
               {action.tag && (
                 <span className="px-2 py-1 rounded text-xs font-medium bg-purple-500/20 border border-purple-500/40 text-purple-300">
                   {action.tag}
-                </span>
-              )}
-              {action.performed_by && (
-                <span className="text-xs text-white/50">
-                  {t.performedBy} {action.performed_by}
                 </span>
               )}
             </div>

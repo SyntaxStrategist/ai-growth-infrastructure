@@ -9,7 +9,6 @@ import {
   normalizeLocale, 
   translateActionLabel, 
   translateTagLabel, 
-  translatePerformedBy, 
   formatTimestamp,
   type Locale 
 } from '../../../lib/translateActionLabel';
@@ -33,11 +32,6 @@ function translateActionData(data: any[], locale: Locale): any[] {
       translatedAction.tag = translateTagLabel(action.tag, locale);
     }
     
-    // Translate performed_by field
-    if (action.performed_by) {
-      translatedAction.performed_by = translatePerformedBy(action.performed_by, locale);
-    }
-    
     // Format timestamp based on locale
     if (action.timestamp) {
       translatedAction.formatted_timestamp = formatTimestamp(action.timestamp, locale);
@@ -53,7 +47,6 @@ export interface LeadAction {
   action: string;
   action_label?: string; // Translated action label
   tag: string | null;
-  performed_by: string;
   timestamp: string;
   formatted_timestamp?: string; // Locale-formatted timestamp
 }
@@ -308,9 +301,8 @@ export async function POST(req: NextRequest) {
       id: actionId,
       lead_id,
       client_id: leadClientId,
-      action_type: action,  // ✅ Correct column name is action_type
+      action_type: action,
       tag: tag || null,
-      performed_by: performed_by || 'admin',
       conversion_outcome: isConversion || null,
     };
     
@@ -327,7 +319,6 @@ export async function POST(req: NextRequest) {
       client_id: logRecord.client_id || 'null',
       action_type: logRecord.action_type,
       tag: logRecord.tag || 'null',
-      performed_by: logRecord.performed_by,
       conversion_outcome: logRecord.conversion_outcome,
       reversion_reason: logRecord.reversion_reason || 'null',
       timestamp: 'AUTO (NOW())',
