@@ -23,6 +23,29 @@ type LeadPayload = {
 const spreadsheetId = "1Zlkx2lDsLIz594ALHOCQNs7byMAaAXcj_wyZSp67GEA"; // provided by user
 const sheetRange = "Sheet1!A:D"; // [Name, Email, Message, Timestamp]
 
+// CORS helper function - allows localhost for testing and demos
+function getCorsHeaders(origin?: string | null): HeadersInit {
+	const allowedOrigins = [
+		'https://www.aveniraisolutions.ca',
+		'https://aveniraisolutions.ca',
+		'http://localhost:3000',
+		'http://localhost:8000',
+		'http://localhost:8001',
+		'http://127.0.0.1:8000',
+		'http://127.0.0.1:3000',
+	];
+	
+	const originToUse = origin && allowedOrigins.includes(origin) ? origin : allowedOrigins[0];
+	
+	return {
+		'Access-Control-Allow-Origin': originToUse,
+		'Access-Control-Allow-Methods': 'POST, OPTIONS',
+		'Access-Control-Allow-Headers': 'Content-Type, x-api-key',
+		'Access-Control-Max-Age': '86400', // 24 hours
+		'Content-Type': 'application/json',
+	};
+}
+
 async function sleep(ms: number) {
 	return new Promise((resolve) => setTimeout(resolve, ms));
 }
@@ -98,14 +121,27 @@ async function retry<T>(fn: () => Promise<T>, opts?: { maxAttempts?: number; bas
 	throw lastErr instanceof Error ? lastErr : new Error("Operation failed after retries");
 }
 
+// Handle CORS preflight requests
+export async function OPTIONS(req: NextRequest) {
+	const origin = req.headers.get('origin');
+	console.log('[Lead API] OPTIONS preflight request from origin:', origin);
+	return new Response(null, {
+		status: 204,
+		headers: getCorsHeaders(origin)
+	});
+}
+
 export async function POST(req: NextRequest) {
+	// Get origin for CORS headers
+	const requestOrigin = req.headers.get('origin');
+	
 	try {
 		console.log('[Lead API] ============================================');
 		console.log('[Lead API] POST /api/lead triggered');
 		console.log('[Lead API] ============================================');
 		
 		// Get request origin/referer for domain detection
-		const origin = req.headers.get('origin') || '';
+		const origin = requestOrigin || '';
 		const referer = req.headers.get('referer') || '';
 		const host = req.headers.get('host') || '';
 		
@@ -133,7 +169,7 @@ export async function POST(req: NextRequest) {
 				console.log('[E2E-Test] [LeadAPI] ❌ Invalid API key — rejected');
 				return new Response(
 					JSON.stringify({ success: false, error: "Unauthorized: Invalid API key" }),
-					{ status: 401, headers: { "Content-Type": "application/json" } }
+					{ status: 401, headers: getCorsHeaders(requestOrigin) }
 				);
 			}
 			
@@ -195,7 +231,7 @@ export async function POST(req: NextRequest) {
 			console.error('[Lead API] ❌ Invalid or missing JSON body');
 			return new Response(
 				JSON.stringify({ success: false, error: "Invalid JSON body" }),
-				{ status: 400, headers: { "Content-Type": "application/json" } }
+				{ status: 400, headers: getCorsHeaders(requestOrigin) }
 			);
 		}
 
@@ -217,7 +253,7 @@ export async function POST(req: NextRequest) {
 			console.error('[Lead API] ❌ Missing required fields');
 			return new Response(
 				JSON.stringify({ success: false, error: "'name', 'email', and 'message' are required" }),
-				{ status: 400, headers: { "Content-Type": "application/json" } }
+				{ status: 400, headers: getCorsHeaders(requestOrigin) }
 			);
 		}
 
@@ -227,7 +263,7 @@ export async function POST(req: NextRequest) {
 			console.error('[Lead API] ❌ Invalid email format:', email);
 			return new Response(
 				JSON.stringify({ success: false, error: "Please provide a valid email" }),
-				{ status: 400, headers: { "Content-Type": "application/json" } }
+				{ status: 400, headers: getCorsHeaders(requestOrigin) }
 			);
 		}
 		
@@ -432,13 +468,13 @@ export async function POST(req: NextRequest) {
 						message: 'Lead processed successfully (development mode)',
 						note: 'Gmail and Sheets skipped in development'
 					}),
-					{ status: 200, headers: { "Content-Type": "application/json" } }
+					{ status: 200, headers: getCorsHeaders(requestOrigin) }
 				);
 			} catch (devError) {
 				console.error('[Lead API] ❌ Development mode error:', devError);
 				return new Response(
 					JSON.stringify({ success: false, error: devError instanceof Error ? devError.message : 'Processing failed' }),
-					{ status: 500, headers: { "Content-Type": "application/json" } }
+					{ status: 500, headers: getCorsHeaders(requestOrigin) }
 				);
 			}
 		}
@@ -740,18 +776,18 @@ export async function POST(req: NextRequest) {
 		
 		return new Response(
 			JSON.stringify({ success: true, storage: savedVia, action: "inserted" }),
-			{ status: 200, headers: { "Content-Type": "application/json" } }
+			{ status: 200, headers: getCorsHeaders(requestOrigin) }
 		);
 	} catch (sheetsError) {
 			const msg = sheetsError instanceof Error ? sheetsError.message : "Failed to append to Google Sheet";
 			console.error('[Lead API] ❌ Google Sheets error:', msg);
 			return new Response(
 				JSON.stringify({ success: false, error: msg }),
-				{ status: 500, headers: { "Content-Type": "application/json" } }
+				{ status: 500, headers: getCorsHeaders(requestOrigin) }
 		);
 	}
 } catch (error) {
-	return handleApiError(error, 'Lead API');
+	return handleApiError(error, 'Lead API', requestOrigin);
 }
 }
 

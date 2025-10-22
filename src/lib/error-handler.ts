@@ -6,9 +6,10 @@ import { NextResponse } from 'next/server';
  * 
  * @param err - The error object (unknown type for flexibility)
  * @param context - Context string to identify where the error occurred
+ * @param origin - Optional origin for CORS headers
  * @returns NextResponse with standardized error format
  */
-export function handleApiError(err: unknown, context: string): NextResponse {
+export function handleApiError(err: unknown, context: string, origin?: string | null): NextResponse {
   // Extract error information
   const errorMessage = err instanceof Error ? err.message : 'Unknown error occurred';
   const errorType = err instanceof Error ? err.constructor.name : typeof err;
@@ -36,6 +37,19 @@ export function handleApiError(err: unknown, context: string): NextResponse {
   console.error('Full Error Object:', err);
   console.error('='.repeat(60));
   
+  // CORS headers for localhost and production
+  const allowedOrigins = [
+    'https://www.aveniraisolutions.ca',
+    'https://aveniraisolutions.ca',
+    'http://localhost:3000',
+    'http://localhost:8000',
+    'http://localhost:8001',
+    'http://127.0.0.1:8000',
+    'http://127.0.0.1:3000',
+  ];
+  
+  const corsOrigin = origin && allowedOrigins.includes(origin) ? origin : allowedOrigins[0];
+  
   // Return consistent JSON response
   return NextResponse.json(
     { 
@@ -45,7 +59,10 @@ export function handleApiError(err: unknown, context: string): NextResponse {
     { 
       status: 500,
       headers: { 
-        'Content-Type': 'application/json' 
+        'Content-Type': 'application/json',
+        'Access-Control-Allow-Origin': corsOrigin,
+        'Access-Control-Allow-Methods': 'POST, OPTIONS',
+        'Access-Control-Allow-Headers': 'Content-Type, x-api-key',
       }
     }
   );
