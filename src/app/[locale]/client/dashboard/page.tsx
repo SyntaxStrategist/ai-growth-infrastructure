@@ -71,7 +71,6 @@ export default function ClientDashboard() {
   const [password, setPassword] = useState('');
   const [loginError, setLoginError] = useState('');
   const [loading, setLoading] = useState(false);
-  const [leads, setLeads] = useState<Lead[]>([]);
   const [recentActions, setRecentActions] = useState<LeadAction[]>([]);
   const [filter, setFilter] = useState({ urgency: 'all', language: 'all', minConfidence: 0 });
   const [tagFilter, setTagFilter] = useState<string>('all');
@@ -668,9 +667,10 @@ async function translateIntent(rawTopIntent: string, locale: string): Promise<st
   }
 
   async function handleDeleteLead(leadId: string) {
+    const originalLeads = [...allLeads];
+    
     try {
-      const originalLeads = [...leads];
-      setLeads(leads.filter(l => l.id !== leadId));
+      setAllLeads(allLeads.filter(l => l.id !== leadId));
       setConfirmDelete(null);
 
       const res = await fetch('/api/lead-actions', {
@@ -685,17 +685,22 @@ async function translateIntent(rawTopIntent: string, locale: string): Promise<st
         showToast(isFrench ? 'Lead supprimé' : 'Lead deleted');
         fetchRecentActions();
       } else {
-        setLeads(originalLeads);
+        setAllLeads(originalLeads);
         showToast(isFrench ? 'Erreur lors de la suppression' : 'Delete failed');
       }
     } catch (err) {
       console.error('[ClientDashboard] Delete error:', err);
+      setAllLeads(originalLeads);
       showToast(isFrench ? 'Erreur lors de la suppression' : 'Delete failed');
     }
   }
 
   async function handleReactivate(leadId: string) {
+    const originalLeads = [...allLeads];
+    
     try {
+      setAllLeads(allLeads.filter(l => l.id !== leadId));
+      
       const res = await fetch('/api/lead-actions', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -705,14 +710,15 @@ async function translateIntent(rawTopIntent: string, locale: string): Promise<st
       const json = await res.json();
 
       if (json.success) {
-        setLeads(leads.filter(l => l.id !== leadId));
         showToast(isFrench ? 'Lead réactivé' : 'Lead reactivated');
         fetchRecentActions();
       } else {
+        setAllLeads(originalLeads);
         showToast(isFrench ? 'Erreur lors de la réactivation' : 'Reactivate failed');
       }
     } catch (err) {
       console.error('[ClientDashboard] Reactivate error:', err);
+      setAllLeads(originalLeads);
       showToast(isFrench ? 'Erreur lors de la réactivation' : 'Reactivate failed');
     }
   }
@@ -754,7 +760,7 @@ async function translateIntent(rawTopIntent: string, locale: string): Promise<st
     clearSessionContext();
     
     // Reset component state
-    setLeads([]);
+    setAllLeads([]);
     
     console.log('[AuthFix] Logout completed, redirecting to login...');
     console.log('[AuthFix] ============================================');

@@ -289,7 +289,7 @@ export async function GET(req: NextRequest) {
       }
     }, {
       headers: {
-        'Cache-Control': 'public, max-age=60, s-maxage=60', // Cache for 1 minute
+        'Cache-Control': 'private, no-cache, no-store, must-revalidate', // No caching for real-time updates
         'Content-Type': 'application/json'
       }
     });
