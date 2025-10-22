@@ -276,59 +276,251 @@ ${closing}`;
 }
 
 /**
- * Build HTML email for personalized response
+ * Get header gradient based on tone
+ */
+function getHeaderGradient(tone: string): string {
+  switch (tone) {
+    case 'Professional':
+      return 'linear-gradient(135deg, #1e3a8a 0%, #3730a3 100%)';
+    case 'Friendly':
+      return 'linear-gradient(135deg, #059669 0%, #047857 100%)';
+    case 'Formal':
+      return '#1f2937';
+    case 'Energetic':
+      return 'linear-gradient(135deg, #ea580c 0%, #dc2626 100%)';
+    default:
+      return 'linear-gradient(135deg, #1e3a8a 0%, #3730a3 100%)';
+  }
+}
+
+/**
+ * Get primary color based on tone
+ */
+function getPrimaryColor(tone: string): string {
+  switch (tone) {
+    case 'Professional':
+      return '#1e3a8a';
+    case 'Friendly':
+      return '#059669';
+    case 'Formal':
+      return '#1f2937';
+    case 'Energetic':
+      return '#ea580c';
+    default:
+      return '#1e3a8a';
+  }
+}
+
+/**
+ * Get expertise box gradient based on tone
+ */
+function getExpertiseGradient(tone: string): string {
+  switch (tone) {
+    case 'Professional':
+      return 'linear-gradient(135deg, #eff6ff, #dbeafe)';
+    case 'Friendly':
+      return 'linear-gradient(135deg, #d1fae5, #a7f3d0)';
+    case 'Formal':
+      return '#f9fafb';
+    case 'Energetic':
+      return 'linear-gradient(135deg, #fed7aa, #fdba74)';
+    default:
+      return 'linear-gradient(135deg, #eff6ff, #dbeafe)';
+  }
+}
+
+/**
+ * Get expertise text color based on tone
+ */
+function getExpertiseColor(tone: string): string {
+  switch (tone) {
+    case 'Professional':
+      return '#1e40af';
+    case 'Friendly':
+      return '#065f46';
+    case 'Formal':
+      return '#4b5563';
+    case 'Energetic':
+      return '#7c2d12';
+    default:
+      return '#1e40af';
+  }
+}
+
+/**
+ * Build HTML email for personalized response with premium design
  */
 export function buildPersonalizedHtmlEmail(params: EmailPersonalization): string {
   const {
+    leadName,
     leadEmail,
+    urgency,
     client,
     locale,
   } = params;
   
-  const emailBody = buildPersonalizedEmail(params);
+  const tone = client.email_tone || 'Professional';
+  const speed = client.followup_speed || 'Instant';
+  const businessName = client.business_name;
+  const tagline = client.custom_tagline || '';
+  const industry = client.industry_category;
+  const service = client.primary_service;
+  const bookingLink = client.booking_link;
   const isFrench = locale === 'fr';
-  const subject = isFrench 
-    ? `Merci d'avoir contacté ${client.business_name}`
-    : `Thanks for contacting ${client.business_name}`;
   
-  // Build HTML with client branding
-  const html = `
-<!DOCTYPE html>
+  // Get tone-specific styling
+  const headerGradient = getHeaderGradient(tone);
+  const primaryColor = getPrimaryColor(tone);
+  const expertiseGradient = getExpertiseGradient(tone);
+  const expertiseColor = getExpertiseColor(tone);
+  
+  // Content blocks
+  const greeting = getGreeting(tone, leadName, locale);
+  const acknowledgment = getAcknowledgment(tone, businessName, industry, service, locale);
+  const aiAnalysis = getAIAnalysis(tone, locale);
+  const urgencyNote = getUrgencyReassurance(urgency, tone, locale);
+  const followupTiming = getFollowupTiming(speed, locale);
+  const closing = getClosing(tone, businessName, tagline, locale);
+  
+  // Subject line
+  const subject = isFrench 
+    ? `Merci d'avoir contacté ${businessName}`
+    : `Thanks for contacting ${businessName}`;
+  
+  // Expertise box content
+  const expertiseLabel = isFrench ? 'Notre expertise :' : 'Our Expertise:';
+  const expertiseText = industry && service
+    ? (isFrench 
+      ? `Spécialistes en ${industry} avec expertise en ${service}.`
+      : `${industry} specialists with expertise in ${service}.`)
+    : (isFrench ? 'Experts en construction et rénovation.' : 'Construction and renovation experts.');
+  
+  // Urgency indicator (only if high urgency)
+  const isHighUrgency = urgency?.toLowerCase() === 'high' || urgency?.toLowerCase() === 'élevée';
+  const urgencyBox = isHighUrgency ? `
+    <table width="100%" cellpadding="0" cellspacing="0" style="margin: 0 0 16px 0;">
+      <tr>
+        <td style="background: linear-gradient(135deg, #fef3c7, #fde68a); border-left: 4px solid #f59e0b; padding: 12px 16px; border-radius: 6px;">
+          <p style="margin: 0; font-size: 13px; color: #92400e; font-weight: 500;">
+            ⚡ <strong>${isFrench ? 'Priorité :' : 'Priority:'}</strong> ${isFrench 
+              ? 'Nous avons noté le caractère urgent de votre demande.'
+              : "We've noted the urgent nature of your request."}
+          </p>
+        </td>
+      </tr>
+    </table>` : '';
+  
+  // Booking CTA (only if booking link exists)
+  const bookingCTA = bookingLink ? `
+    <table width="100%" cellpadding="0" cellspacing="0" style="margin: 0 0 20px 0;">
+      <tr>
+        <td align="center" style="padding: 18px; background: #f9fafb; border-radius: 8px;">
+          <p style="margin: 0 0 10px 0; font-size: 12px; color: #6b7280;">
+            ${isFrench ? 'Ou réservez un créneau :' : 'Or schedule a time:'}
+          </p>
+          <a href="${bookingLink}" style="display: inline-block; padding: 11px 24px; background: ${headerGradient}; color: white; text-decoration: none; border-radius: 7px; font-weight: 600; font-size: 13px; box-shadow: 0 4px 10px rgba(30, 58, 138, 0.3);">
+            📅 ${isFrench ? 'Réserver un appel' : 'Book a Call'}
+          </a>
+        </td>
+      </tr>
+    </table>` : '';
+  
+  // Build premium HTML template
+  const html = `<!DOCTYPE html>
 <html>
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <style>
-    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #333; }
-    .container { max-width: 600px; margin: 0 auto; padding: 20px; }
-    .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 30px; text-align: center; border-radius: 10px 10px 0 0; }
-    .content { background: #f9fafb; padding: 30px; border-radius: 0 0 10px 10px; }
-    .tagline { font-style: italic; color: #666; margin-top: 20px; padding-top: 20px; border-top: 1px solid #e5e7eb; }
-    .footer { text-align: center; margin-top: 30px; color: #6b7280; font-size: 14px; }
-  </style>
 </head>
-<body>
-  <div class="container">
-    <div class="header">
-      <h1 style="margin: 0; font-size: 24px;">${client.business_name}</h1>
-    </div>
-    <div class="content">
-      <p style="white-space: pre-line; margin: 0;">${emailBody.replace(/\n/g, '<br>')}</p>
-      <div class="tagline">
-        <em>${client.custom_tagline}</em>
-      </div>
-    </div>
-    <div class="footer">
-      <p>This is an automated response powered by AI</p>
-      <p>${client.email}</p>
-    </div>
-  </div>
+<body style="margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background: #ffffff;">
+    <tr>
+      <td style="padding: 0;">
+        <!-- Header with gradient -->
+        <table width="100%" cellpadding="0" cellspacing="0">
+          <tr>
+            <td style="background: ${headerGradient}; padding: 36px 28px; text-align: center; ${tone === 'Formal' ? 'border-bottom: 3px solid #d4af37;' : ''}">
+              <h1 style="margin: 0; font-size: 24px; font-weight: ${tone === 'Formal' ? '300' : '700'}; color: #ffffff; letter-spacing: ${tone === 'Formal' ? '2px' : '-0.5px'}; ${tone === 'Formal' ? 'text-transform: uppercase;' : ''}">
+                ${businessName}${tone === 'Energetic' ? ' 🚀' : ''}
+              </h1>
+              <p style="margin: 8px 0 0 0; color: ${tone === 'Formal' ? '#d4af37' : 'rgba(255,255,255,0.85)'}; font-size: ${tone === 'Formal' ? '11px' : '12px'}; font-weight: ${tone === 'Formal' ? '500' : '400'}; ${tone === 'Formal' ? 'letter-spacing: 1.5px; text-transform: uppercase;' : ''}">
+                ${tagline || (isFrench ? 'Votre partenaire de confiance' : 'Your trusted partner')}
+              </p>
+            </td>
+          </tr>
+        </table>
+        
+        <!-- Content -->
+        <table width="100%" cellpadding="0" cellspacing="0">
+          <tr>
+            <td style="padding: 32px 24px;">
+              <!-- Greeting -->
+              <p style="margin: 0 0 20px 0; font-size: ${tone === 'Energetic' ? '17px' : '16px'}; color: #1f2937; font-weight: ${tone === 'Energetic' ? '700' : '500'};">
+                ${greeting}
+              </p>
+              
+              <!-- Main acknowledgment -->
+              <p style="margin: 0 0 16px 0; font-size: ${tone === 'Energetic' ? '15px' : '14px'}; line-height: 1.7; color: #374151; ${tone === 'Energetic' ? 'font-weight: 500;' : ''}">
+                ${acknowledgment}
+              </p>
+              
+              <!-- Expertise box -->
+              <table width="100%" cellpadding="0" cellspacing="0" style="margin: 0 0 16px 0;">
+                <tr>
+                  <td style="background: ${expertiseGradient}; border-left: 4px solid ${primaryColor}; ${tone === 'Formal' ? 'border: 1px solid #e5e7eb;' : ''} padding: 16px; border-radius: 6px;">
+                    <p style="margin: 0; font-size: 13px; color: ${expertiseColor}; line-height: 1.6;">
+                      <strong>${tone === 'Energetic' ? '🔧' : '🏗️'} ${expertiseLabel}</strong> ${expertiseText}
+                    </p>
+                  </td>
+                </tr>
+              </table>
+              
+              <!-- AI analysis mention -->
+              <p style="margin: 0 0 16px 0; font-size: 14px; line-height: 1.7; color: #374151;">
+                ${aiAnalysis}
+              </p>
+              
+              <!-- Urgency indicator (conditional) -->
+              ${urgencyBox}
+              
+              <!-- Follow-up timing -->
+              <p style="margin: 0 0 20px 0; font-size: 14px; line-height: 1.7; color: #374151;">
+                ${followupTiming}
+              </p>
+              
+              <!-- Booking CTA (conditional) -->
+              ${bookingCTA}
+              
+              <!-- Closing -->
+              <p style="margin: 0; font-size: 14px; line-height: 1.7; color: #374151;">
+                ${closing.replace(/\n/g, '<br>')}
+              </p>
+            </td>
+          </tr>
+        </table>
+        
+        <!-- Footer with Avenir AI branding -->
+        <table width="100%" cellpadding="0" cellspacing="0">
+          <tr>
+            <td style="background: #f9fafb; padding: 18px 24px; text-align: center; border-top: 1px solid #e5e7eb;">
+              <p style="margin: 0; font-size: 11px; color: #9ca3af;">
+                ${isFrench ? 'Propulsé par Avenir AI 🧠' : 'Powered by Avenir AI 🧠'}
+              </p>
+              <p style="margin: 6px 0 0 0; font-size: 12px;">
+                <a href="mailto:${client.email}" style="color: #6b7280; text-decoration: none;">${client.email}</a>
+              </p>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
 </body>
 </html>`;
   
   // Build email message for Gmail API
   const message = [
-    `From: ${client.email}`,
+    `From: ${client.business_name} <${client.email}>`,
     `To: ${leadEmail}`,
     `Subject: ${subject}`,
     `Content-Type: text/html; charset=UTF-8`,

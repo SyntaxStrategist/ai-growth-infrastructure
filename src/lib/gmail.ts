@@ -162,7 +162,9 @@ export function buildHtmlEmail(opts: { to: string; from: string; subject: string
   const greeting = isFrench ? `Merci, <span class="gradient">${name}</span> — nous avons reçu votre demande` : `Thanks, <span class="gradient">${name}</span> — we got your request`;
   const bodyText = isFrench ? `Un stratège Avenir vous contactera sous peu. En attendant, voici un résumé IA de vos objectifs :` : `An Avenir strategist will reach out shortly. Meanwhile, here's an AI summary of your goals:`;
   const aiSummaryLabel = isFrench ? `Résumé IA` : `AI Summary`;
+  const bookCallLabel = isFrench ? `Réserver un Appel` : `Book a Call`;
   const footerText = isFrench ? `Si ce n'était pas vous, veuillez ignorer cet e-mail.` : `If this wasn't you, please ignore this email.`;
+  const poweredByText = isFrench ? `Propulsé par Avenir AI 🧠` : `Powered by Avenir AI 🧠`;
 
   const html = `<!DOCTYPE html><html><head><meta charset="UTF-8" />
   <meta name="color-scheme" content="dark light"><meta name="supported-color-schemes" content="dark light">
@@ -174,6 +176,10 @@ export function buildHtmlEmail(opts: { to: string; from: string; subject: string
     .card { border:1px solid rgba(255,255,255,0.14); border-radius:12px; padding:16px; background:linear-gradient(135deg, rgba(139,92,246,0.08), rgba(6,182,212,0.08)); }
     .muted { color:#bdbdbd; font-size:14px; }
     .gradient { background: linear-gradient(135deg, #8b5cf6, #06b6d4); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+    .cta-button { display:inline-block; padding:12px 24px; margin:20px 0; background:linear-gradient(135deg, #8b5cf6, #06b6d4); color:#fff; text-decoration:none; border-radius:8px; font-weight:600; font-size:16px; transition:opacity 0.2s; }
+    .cta-button:hover { opacity:0.9; }
+    .powered-by { margin-top:32px; padding-top:20px; border-top:1px solid rgba(139,92,246,0.25); text-align:center; font-size:13px; color:#a0a0a0; }
+    .powered-by-highlight { display:inline-block; padding:6px 12px; border-radius:6px; background:linear-gradient(135deg, rgba(139,92,246,0.15), rgba(6,182,212,0.15)); border:1px solid rgba(139,92,246,0.3); color:#d0d0d0; font-weight:500; }
     a { color:#06b6d4; }
   </style></head><body>
   <div class="container">
@@ -181,7 +187,13 @@ export function buildHtmlEmail(opts: { to: string; from: string; subject: string
     <h1 class="h1">${greeting}</h1>
     <p class="muted">${bodyText}</p>
     <div class="card"><strong>${aiSummaryLabel}</strong><div style="margin-top:6px; white-space:pre-wrap;">${escapeHtml(aiSummary || "(unavailable)")}</div></div>
+    <div style="text-align:center; margin:24px 0;">
+      <a href="https://calendar.app.google/D8jVdpaxAC62PV6m9" class="cta-button">${bookCallLabel}</a>
+    </div>
     <p class="muted" style="margin-top:16px;">${footerText}</p>
+    <div class="powered-by">
+      <span class="powered-by-highlight">${poweredByText}</span>
+    </div>
   </div></body></html>`;
 
   // Encode subject line for proper UTF-8 handling
