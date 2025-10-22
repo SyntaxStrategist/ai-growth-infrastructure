@@ -37,11 +37,11 @@ export async function POST(req: NextRequest) {
 
     // If client_id provided, validate it exists and matches the lead's client
     if (client_id) {
-      // Fetch client data to get the public client_id
+      // Query by public client_id (not internal UUID)
       const { data: clientData, error: clientError } = await supabase
         .from('clients')
         .select('id, client_id')
-        .eq('id', client_id)
+        .eq('client_id', client_id)
         .single();
 
       if (clientError || !clientData) {
@@ -52,13 +52,11 @@ export async function POST(req: NextRequest) {
         );
       }
 
-      // Verify the lead belongs to this client (use public client_id for comparison)
-      const publicClientId = clientData.client_id;
-      if (leadData.client_id !== publicClientId) {
+      // Verify the lead belongs to this client
+      if (leadData.client_id !== client_id) {
         console.error('[LeadNotes] Lead does not belong to client:', { 
           lead_id, 
-          client_uuid: client_id, 
-          client_public_id: publicClientId,
+          client_public_id: client_id,
           lead_client_id: leadData.client_id 
         });
         return NextResponse.json(
@@ -68,8 +66,7 @@ export async function POST(req: NextRequest) {
       }
       
       console.log('[LeadNotes] ✅ Client ownership verified (POST):', {
-        client_uuid: client_id,
-        public_client_id: publicClientId,
+        public_client_id: client_id,
         lead_client_id: leadData.client_id
       });
     }
@@ -191,11 +188,11 @@ export async function GET(req: NextRequest) {
 
     // If client_id provided, validate it and verify the lead belongs to this client
     if (client_id) {
-      // Fetch client data to get the public client_id
+      // Query by public client_id (not internal UUID)
       const { data: clientData, error: clientError } = await supabase
         .from('clients')
         .select('id, client_id')
-        .eq('id', client_id)
+        .eq('client_id', client_id)
         .single();
 
       if (clientError || !clientData) {
@@ -206,13 +203,11 @@ export async function GET(req: NextRequest) {
         );
       }
 
-      // Verify the lead belongs to this client (use public client_id for comparison)
-      const publicClientId = clientData.client_id;
-      if (leadData.client_id !== publicClientId) {
+      // Verify the lead belongs to this client
+      if (leadData.client_id !== client_id) {
         console.error('[LeadNotes] Lead does not belong to client:', { 
           lead_id, 
-          client_uuid: client_id, 
-          client_public_id: publicClientId,
+          client_public_id: client_id,
           lead_client_id: leadData.client_id 
         });
         return NextResponse.json(
@@ -222,8 +217,7 @@ export async function GET(req: NextRequest) {
       }
       
       console.log('[LeadNotes] ✅ Client ownership verified:', {
-        client_uuid: client_id,
-        public_client_id: publicClientId,
+        public_client_id: client_id,
         lead_client_id: leadData.client_id
       });
     }
