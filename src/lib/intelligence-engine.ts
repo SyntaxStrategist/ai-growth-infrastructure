@@ -392,25 +392,29 @@ export async function storeGrowthInsights(
       console.error('[Engine] Full object:', JSON.stringify(insights, null, 2));
     }
     
-    console.log('[Engine] Executing INSERT into growth_brain...');
+    console.log('[Engine] Executing UPSERT into growth_brain...');
+    console.log('[Engine] Strategy: Update if client_id exists, insert if new');
     
-    const insertStart = Date.now();
+    const upsertStart = Date.now();
     const { data, error } = await db
       .from('growth_brain')
-      .insert(insights)
+      .upsert(insights, {
+        onConflict: 'client_id',
+        ignoreDuplicates: false
+      })
       .select()
       .single();
-    const insertDuration = Date.now() - insertStart;
+    const upsertDuration = Date.now() - upsertStart;
 
     console.log('[Engine] ============================================');
-    console.log('[Engine] INSERT Result (took', insertDuration, 'ms):');
+    console.log('[Engine] UPSERT Result (took', upsertDuration, 'ms):');
     console.log('[Engine] ============================================');
     console.log('[Engine] Success:', !error);
     console.log('[Engine] Data returned:', data ? 'YES' : 'NO');
     console.log('[Engine] Error:', error ? 'YES' : 'NO');
     
     if (error) {
-      console.error('[Engine] ❌ INSERT FAILED');
+      console.error('[Engine] ❌ UPSERT FAILED');
       console.error('[Engine] ============================================');
       console.error('[Engine] PostgreSQL Error Code:', error.code);
       console.error('[Engine] Error Message:', error.message);
@@ -420,15 +424,15 @@ export async function storeGrowthInsights(
       console.error('[Engine] Full Supabase error object:');
       console.error(JSON.stringify(error, null, 2));
       console.error('[Engine] ============================================');
-      console.error('[Engine] Data that failed to insert:');
+      console.error('[Engine] Data that failed to upsert:');
       console.error(JSON.stringify(insights, null, 2));
       console.error('[Engine] ============================================');
       throw error;
     }
 
-    console.log('[Engine] ✅ Growth insights stored successfully');
-    console.log('[Engine] Inserted record ID:', data?.id);
-    console.log('[Engine] Inserted record analyzed_at:', data?.analyzed_at);
+    console.log('[Engine] ✅ Growth insights upserted successfully');
+    console.log('[Engine] Upserted record ID:', data?.id);
+    console.log('[Engine] Upserted record analyzed_at:', data?.analyzed_at);
     console.log('[Engine] ============================================');
     return data as GrowthBrainRecord;
   } catch (err: any) {
