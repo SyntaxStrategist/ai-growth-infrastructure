@@ -774,21 +774,39 @@ async function translateIntent(rawTopIntent: string, locale: string): Promise<st
     router.push(`/${locale}${path}`);
   };
 
-  // Client-side pagination logic
-  const totalPages = Math.ceil(allLeads.length / leadsPerPage);
+  // Client-side filtering and pagination logic
+  const filteredLeads = useMemo(() => {
+    return allLeads.filter(lead => {
+      // Apply urgency filter
+      if (filter.urgency !== 'all' && lead.urgency !== filter.urgency) return false;
+      
+      // Apply language filter
+      if (filter.language !== 'all' && lead.language !== filter.language) return false;
+      
+      // Apply confidence filter
+      if (lead.confidence_score < filter.minConfidence) return false;
+      
+      // Apply tag filter
+      if (tagFilter !== 'all' && lead.current_tag !== tagFilter) return false;
+      
+      return true;
+    });
+  }, [allLeads, filter, tagFilter]);
+  
+  const totalPages = Math.ceil(filteredLeads.length / leadsPerPage);
   const startIndex = (currentPage - 1) * leadsPerPage;
   const endIndex = startIndex + leadsPerPage;
-  const currentLeads = useMemo(() => allLeads.slice(startIndex, endIndex), [allLeads, startIndex, endIndex]);
+  const currentLeads = useMemo(() => filteredLeads.slice(startIndex, endIndex), [filteredLeads, startIndex, endIndex]);
   
   // Update pagination state for client-side pagination
   useEffect(() => {
     setPagination({
-      totalLeads: allLeads.length,
+      totalLeads: filteredLeads.length,
       totalPages: totalPages,
       hasNextPage: currentPage < totalPages,
       hasPrevPage: currentPage > 1
     });
-  }, [allLeads.length, totalPages, currentPage]);
+  }, [filteredLeads.length, totalPages, currentPage]);
 
   // Memoized pagination handlers for better performance
   const goToPage = useCallback((page: number) => {
