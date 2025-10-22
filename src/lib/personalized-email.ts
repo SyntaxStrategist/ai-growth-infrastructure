@@ -506,9 +506,6 @@ export function buildPersonalizedHtmlEmail(params: EmailPersonalization): string
               <p style="margin: 0; font-size: 11px; color: #9ca3af;">
                 ${isFrench ? 'Propulsé par Avenir AI 🧠' : 'Powered by Avenir AI 🧠'}
               </p>
-              <p style="margin: 6px 0 0 0; font-size: 12px;">
-                <a href="mailto:${client.email}" style="color: #6b7280; text-decoration: none;">${client.email}</a>
-              </p>
             </td>
           </tr>
         </table>

@@ -65,8 +65,9 @@ export default function ClientInsightsPage() {
       setError(null);
       
       console.log('[ClientInsights] Fetching insights for client:', session.client.clientId);
+      console.log('[ClientInsights] Display locale:', locale, '(all leads included, translated for display)');
       
-      const res = await fetch(`/api/client/insights?clientId=${session.client.clientId}`);
+      const res = await fetch(`/api/client/insights?clientId=${session.client.clientId}&locale=${locale}`);
       const json = await res.json();
       
       if (json.success) {

@@ -3,9 +3,108 @@ import { supabase } from '../../../../lib/supabase';
 import { resolveClientId, validateClientId } from '../../../../lib/client-resolver';
 
 import { handleApiError } from '../../../../lib/error-handler';
+
+// Normalization functions to handle bilingual data
+function normalizeUrgency(urgency: string): 'High' | 'Medium' | 'Low' {
+  const normalized = urgency.toLowerCase().trim();
+  if (normalized === 'high' || normalized === 'élevée' || normalized === 'elevée') {
+    return 'High';
+  } else if (normalized === 'medium' || normalized === 'moyenne') {
+    return 'Medium';
+  }
+  return 'Low'; // Default to Low for 'low', 'faible', etc.
+}
+
+function normalizeTone(tone: string): string {
+  const normalized = tone.toLowerCase().trim();
+  
+  // Map French tones to English equivalents
+  const toneMap: Record<string, string> = {
+    'formel': 'Formal',
+    'formal': 'Formal',
+    'urgent': 'Urgent',
+    'urgente': 'Urgent',
+    'casual': 'Casual',
+    'décontracté': 'Casual',
+    'decontracte': 'Casual',
+    'professionnel': 'Professional',
+    'professional': 'Professional',
+    'amical': 'Friendly',
+    'friendly': 'Friendly',
+    'neutre': 'Neutral',
+    'neutral': 'Neutral',
+  };
+  
+  // Return mapped value with first letter capitalized, or capitalize original
+  return toneMap[normalized] || tone.charAt(0).toUpperCase() + tone.slice(1).toLowerCase();
+}
+
+function normalizeIntent(intent: string): string {
+  const trimmed = intent.trim();
+  
+  // Common French to English mappings
+  const intentMap: Record<string, string> = {
+    'partenariat b2b': 'B2b partnership',
+    'partenariat': 'Partnership',
+    'demande de renseignements': 'Information request',
+    'demande d\'information': 'Information request',
+    'devis': 'Quote request',
+    'quote': 'Quote request',
+  };
+  
+  const normalized = trimmed.toLowerCase();
+  if (intentMap[normalized]) {
+    return intentMap[normalized];
+  }
+  
+  // Capitalize first letter of original
+  return trimmed.charAt(0).toUpperCase() + trimmed.slice(1);
+}
+
+// Translation functions for display
+function translateUrgency(urgency: 'High' | 'Medium' | 'Low', locale: string): string {
+  if (locale === 'fr') {
+    const translations: Record<string, string> = {
+      'High': 'Élevée',
+      'Medium': 'Moyenne',
+      'Low': 'Faible',
+    };
+    return translations[urgency] || urgency;
+  }
+  return urgency;
+}
+
+function translateTone(tone: string, locale: string): string {
+  if (locale === 'fr') {
+    const translations: Record<string, string> = {
+      'Formal': 'Formel',
+      'Urgent': 'Urgent',
+      'Casual': 'Décontracté',
+      'Professional': 'Professionnel',
+      'Friendly': 'Amical',
+      'Neutral': 'Neutre',
+    };
+    return translations[tone] || tone;
+  }
+  return tone;
+}
+
+function translateIntent(intent: string, locale: string): string {
+  if (locale === 'fr') {
+    const translations: Record<string, string> = {
+      'B2b partnership': 'Partenariat B2B',
+      'Partnership': 'Partenariat',
+      'Information request': 'Demande d\'information',
+      'Quote request': 'Devis',
+    };
+    return translations[intent] || intent;
+  }
+  return intent;
+}
 export async function GET(req: NextRequest) {
   try {
     const clientId = req.nextUrl.searchParams.get('clientId');
+    const locale = req.nextUrl.searchParams.get('locale'); // Optional: 'en' or 'fr'
     
     if (!clientId) {
       return NextResponse.json(
@@ -15,6 +114,7 @@ export async function GET(req: NextRequest) {
     }
     
     console.log('[ClientInsights] Fetching insights for client:', clientId);
+    console.log('[ClientInsights] Locale filter:', locale || 'none (all languages)');
     
     // Validate client ID format
     const validation = validateClientId(clientId);
@@ -72,12 +172,15 @@ export async function GET(req: NextRequest) {
       });
     }
     
-    // Fetch leads data from lead_memory table using the resolved lead IDs
+    // Fetch ALL leads data from lead_memory table using the resolved lead IDs
+    // No language filter - we want all leads, then normalize/translate for display
     const { data: leads, error } = await supabase
       .from('lead_memory')
       .select('*')
       .in('id', leadIds)
       .eq('deleted', false);
+    
+    console.log('[ClientInsights] Fetched all leads (no language filter), will normalize and translate for locale:', locale || 'none');
     
     if (error) {
       console.error('[ClientInsights] ❌ Fetch error:', error);
@@ -90,30 +193,56 @@ export async function GET(req: NextRequest) {
     // Calculate insights from client's leads
     const total = leads.length;
     const avgConfidence = leads.length > 0 
-      ? leads.reduce((sum, lead) => sum + (lead.confidenceScore || 0), 0) / leads.length 
+      ? leads.reduce((sum, lead) => sum + (lead.confidence_score || 0), 0) / leads.length 
       : 0;
     
-    // Intent distribution
+    // Normalize data first (consolidate bilingual values), then translate for display
+    
+    // Intent distribution - normalize to English, then translate
+    const normalizedIntentCounts: Record<string, number> = {};
+    leads.forEach(lead => {
+      const rawIntent = lead.intent || 'Unknown';
+      const normalized = normalizeIntent(rawIntent);
+      normalizedIntentCounts[normalized] = (normalizedIntentCounts[normalized] || 0) + 1;
+    });
+    
+    // Translate intents for display based on locale
     const intentCounts: Record<string, number> = {};
-    leads.forEach(lead => {
-      const intent = lead.intent || 'Unknown';
-      intentCounts[intent] = (intentCounts[intent] || 0) + 1;
+    Object.entries(normalizedIntentCounts).forEach(([intent, count]) => {
+      const translated = locale ? translateIntent(intent, locale) : intent;
+      intentCounts[translated] = count;
     });
     
-    // Urgency breakdown
-    const urgencyCounts = { high: 0, medium: 0, low: 0 };
+    // Urgency breakdown - normalize first
+    const normalizedUrgencyCounts = { high: 0, medium: 0, low: 0 };
     leads.forEach(lead => {
-      const urgency = lead.urgency || 'Low';
-      if (urgency === 'High' || urgency === 'Élevée') urgencyCounts.high++;
-      else if (urgency === 'Medium' || urgency === 'Moyenne') urgencyCounts.medium++;
-      else urgencyCounts.low++;
+      const rawUrgency = lead.urgency || 'Low';
+      const normalized = normalizeUrgency(rawUrgency);
+      if (normalized === 'High') normalizedUrgencyCounts.high++;
+      else if (normalized === 'Medium') normalizedUrgencyCounts.medium++;
+      else normalizedUrgencyCounts.low++;
     });
     
-    // Tone analysis
+    // Translate urgency labels for display
+    const urgencyCounts = {
+      high: normalizedUrgencyCounts.high,
+      medium: normalizedUrgencyCounts.medium,
+      low: normalizedUrgencyCounts.low
+    };
+    
+    // Tone analysis - normalize to English, then translate
+    const normalizedToneCounts: Record<string, number> = {};
+    leads.forEach(lead => {
+      const rawTone = lead.tone || 'neutral';
+      const normalized = normalizeTone(rawTone);
+      normalizedToneCounts[normalized] = (normalizedToneCounts[normalized] || 0) + 1;
+    });
+    
+    // Translate tones for display based on locale
     const toneCounts: Record<string, number> = {};
-    leads.forEach(lead => {
-      const tone = lead.tone || 'neutral';
-      toneCounts[tone] = (toneCounts[tone] || 0) + 1;
+    Object.entries(normalizedToneCounts).forEach(([tone, count]) => {
+      const translated = locale ? translateTone(tone, locale) : tone;
+      toneCounts[translated] = count;
     });
     
     // Daily counts (last 30 days)
@@ -139,7 +268,7 @@ export async function GET(req: NextRequest) {
     
     const insights = {
       total,
-      avgConfidence: Math.round(avgConfidence * 100) / 100,
+      avgConfidence: Math.round(avgConfidence * 100), // Convert decimal to percentage (0.5 → 50)
       intentCounts,
       urgencyCounts,
       toneCounts,
@@ -148,6 +277,10 @@ export async function GET(req: NextRequest) {
     };
     
     console.log('[ClientInsights] ✅ Insights calculated successfully');
+    console.log('[ClientInsights] Total leads (all languages):', total);
+    console.log('[ClientInsights] Average confidence:', insights.avgConfidence + '%');
+    console.log('[ClientInsights] Display locale:', locale || 'en (default)');
+    console.log('[ClientInsights] Normalized and translated data for display');
     return NextResponse.json({ success: true, data: insights });
     
   } catch (error) {

@@ -7,6 +7,8 @@ import { useRouter } from 'next/navigation';
 import UniversalLanguageToggle from '../../../../components/UniversalLanguageToggle';
 import { getConnectionInfo } from '../../../../utils/connection-status';
 import { saveSession } from '../../../../utils/session';
+import { buildPersonalizedHtmlEmail } from '../../../../lib/personalized-email';
+import type { ClientRecord } from '../../../../lib/supabase';
 
 export default function ClientSettings() {
   const locale = useLocale();
@@ -375,51 +377,60 @@ export default function ClientSettings() {
     }
   };
 
-  // Generate email preview
+  // Generate email preview using the actual tone-based template
   const generatePreview = () => {
     const leadName = isFrench ? 'Marie Exemple' : 'John Example';
-    const greeting = settings.emailTone === 'Friendly' 
-      ? (isFrench ? `Bonjour ${leadName} !` : `Hi ${leadName}!`)
-      : (isFrench ? `Bonjour ${leadName},` : `Hello ${leadName},`);
-
-    const acknowledgment = isFrench
-      ? `Merci d'avoir contacté ${settings.businessName}. Nous avons bien reçu votre message.`
-      : `Thanks for reaching out to ${settings.businessName}! We've received your message.`;
-
-    const context = settings.industryCategory && settings.primaryService
-      ? (isFrench 
-          ? ` En tant que spécialistes en ${settings.industryCategory} avec une expertise en ${settings.primaryService}, nous sommes ravis de vous aider.`
-          : ` As specialists in ${settings.industryCategory} with expertise in ${settings.primaryService}, we're excited to help you.`)
-      : '';
-
-    const aiMention = isFrench
-      ? `Notre intelligence artificielle a analysé votre demande afin de mieux répondre à vos besoins.`
-      : `Our AI has analyzed your inquiry to better address your needs.`;
-
-    const timing = settings.followupSpeed === 'Instant'
-      ? (isFrench ? `Un membre de notre équipe vous contactera dans les plus brefs délais.` : `A member of our team will contact you shortly.`)
-      : (isFrench ? `Nous vous recontacterons ${settings.followupSpeed === 'Within 1 hour' ? 'dans l\'heure' : 'le jour même'}.` : `We will get back to you ${settings.followupSpeed.toLowerCase()}.`);
-
-    const booking = settings.bookingLink
-      ? (isFrench ? `\n\nVous pouvez également réserver un créneau directement: ${settings.bookingLink}` : `\n\nYou can also book a time directly: ${settings.bookingLink}`)
-      : '';
-
-    const closing = settings.emailTone === 'Formal'
-      ? (isFrench ? 'Cordialement,' : 'Sincerely,')
-      : (isFrench ? 'À très bientôt!' : 'Talk soon!');
-
-    const tagline = settings.customTagline ? `\n${settings.customTagline}` : '';
-
-    return `${greeting}
-
-${acknowledgment}${context}
-
-${aiMention}
-
-${timing}${booking}
-
-${closing}
-${settings.businessName}${tagline}`;
+    const leadEmail = isFrench ? 'marie@exemple.com' : 'john@example.com';
+    const leadMessage = isFrench 
+      ? 'Je souhaite obtenir plus d\'informations sur vos services.'
+      : 'I would like to learn more about your services.';
+    const aiSummary = isFrench
+      ? 'Demande d\'information sur les services. Le prospect semble intéressé par une collaboration.'
+      : 'Inquiry about services. The prospect seems interested in a collaboration.';
+    
+    // Build mock client record from settings
+    const mockClient: Partial<ClientRecord> = {
+      business_name: settings.businessName || 'Your Business',
+      email: 'contact@yourbusiness.com',
+      industry_category: settings.industryCategory,
+      primary_service: settings.primaryService,
+      booking_link: settings.bookingLink || undefined,
+      custom_tagline: settings.customTagline || undefined,
+      email_tone: settings.emailTone,
+      followup_speed: settings.followupSpeed,
+      language: locale, // Use current page locale, not saved language preference
+    };
+    
+    // Build the HTML email using the actual template
+    const base64Email = buildPersonalizedHtmlEmail({
+      leadName,
+      leadEmail,
+      leadMessage,
+      aiSummary,
+      urgency: 'High', // Show urgency box in preview
+      locale: locale, // Use current page locale, not settings.language
+      client: mockClient as ClientRecord,
+    });
+    
+    // Decode base64 to get HTML with proper UTF-8 handling
+    const base64Normalized = base64Email.replace(/-/g, '+').replace(/_/g, '/');
+    
+    // Decode base64 to binary string
+    const binaryString = atob(base64Normalized);
+    
+    // Convert binary string to Uint8Array
+    const bytes = new Uint8Array(binaryString.length);
+    for (let i = 0; i < binaryString.length; i++) {
+      bytes[i] = binaryString.charCodeAt(i);
+    }
+    
+    // Decode as UTF-8
+    const decoder = new TextDecoder('utf-8');
+    const htmlEmail = decoder.decode(bytes);
+    
+    // Extract HTML content (skip email headers)
+    const htmlMatch = htmlEmail.match(/<!DOCTYPE html>[\s\S]*/);
+    return htmlMatch ? htmlMatch[0] : htmlEmail;
   };
 
   if (loading) {
@@ -809,10 +820,14 @@ ${settings.businessName}${tagline}`;
             >
               <h3 className="text-2xl font-bold mb-4 text-blue-400">{t.previewTitle}</h3>
               
-              <div className="bg-white/5 rounded-lg p-6 mb-6 border border-white/10 max-h-[60vh] overflow-y-auto">
-                <pre className="text-white/90 whitespace-pre-wrap font-sans text-sm leading-relaxed">
-                  {generatePreview()}
-                </pre>
+              <div className="bg-white rounded-lg mb-6 max-h-[70vh] overflow-y-auto">
+                <iframe
+                  srcDoc={generatePreview()}
+                  className="w-full min-h-[600px] border-none rounded-lg"
+                  title="Email Preview"
+                  sandbox="allow-same-origin"
+                  style={{ background: 'white' }}
+                />
               </div>
 
               <button
