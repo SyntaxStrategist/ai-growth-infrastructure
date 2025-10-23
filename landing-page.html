@@ -336,6 +336,151 @@
             line-height: 1.6;
         }
         
+        /* Success Predictor Section */
+        .success-predictor-section {
+            padding: 80px 0;
+            background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+        }
+
+        .predictor-container {
+            background: white;
+            border: 2px solid #0284c7;
+            border-radius: 16px;
+            padding: 50px 40px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.15);
+            margin-top: 40px;
+        }
+
+        .success-results {
+            background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
+            border-radius: 12px;
+            padding: 40px;
+            margin-top: 30px;
+            border: 2px solid #10b981;
+        }
+
+        .success-header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .success-header h3 {
+            font-size: 28px;
+            font-weight: 800;
+            color: #065f46;
+            margin-bottom: 8px;
+        }
+
+        .success-header p {
+            font-size: 16px;
+            color: #047857;
+        }
+
+        .success-score {
+            display: flex;
+            align-items: center;
+            gap: 40px;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+        }
+
+        .score-circle {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            border-radius: 50%;
+            width: 120px;
+            height: 120px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            box-shadow: 0 8px 20px rgba(16, 185, 129, 0.3);
+        }
+
+        .score-value {
+            font-size: 36px;
+            font-weight: 800;
+            line-height: 1;
+        }
+
+        .score-label {
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .score-details {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .detail-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 0;
+            border-bottom: 1px solid rgba(6, 95, 70, 0.1);
+        }
+
+        .detail-label {
+            font-weight: 600;
+            color: #065f46;
+        }
+
+        .detail-value {
+            font-weight: 700;
+            color: #047857;
+            font-size: 18px;
+        }
+
+        .recommendations {
+            background: white;
+            border-radius: 8px;
+            padding: 24px;
+            margin: 20px 0;
+        }
+
+        .recommendations h4 {
+            font-size: 18px;
+            font-weight: 700;
+            color: #065f46;
+            margin-bottom: 16px;
+        }
+
+        .recommendations ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .recommendations li {
+            padding: 8px 0;
+            color: #047857;
+            font-size: 15px;
+            display: flex;
+            align-items: center;
+            font-weight: 500;
+        }
+
+        .recommendations li:before {
+            content: "✅";
+            margin-right: 12px;
+            font-size: 16px;
+        }
+
+        .success-cta {
+            text-align: center;
+            margin-top: 30px;
+        }
+
+        .success-cta .btn {
+            font-size: 18px;
+            padding: 18px 40px;
+        }
+
         /* ROI Calculator Section */
         .calculator-section {
             padding: 80px 0;
@@ -664,6 +809,22 @@
                 heroSubtitle: "Stop wasting time on unqualified leads. Our AI automatically analyzes every contact form submission, scores leads by urgency and intent, and prioritizes your hottest prospects.",
                 btnBook: "📅 Book a Call",
                 btnDemo: "🎯 View Demo",
+                predictorTitle: "🎯 Predict Your Success Rate",
+                predictorSubtitle: "See your success probability in 5 minutes - no one else offers this",
+                businessType: "Your Business Type",
+                teamSize: "Team Size",
+                leadVolume: "Current Lead Volume",
+                dealValue: "Average Deal Value",
+                responseTime: "Current Response Time",
+                techAdoption: "Technology Adoption",
+                successTitle: "🎯 Your Success Prediction",
+                successSubtitle: "Based on your profile and our conversion intelligence database",
+                successRate: "Success Rate",
+                predictedROI: "Predicted ROI:",
+                timeline: "Timeline:",
+                riskLevel: "Success Confidence:",
+                recommendations: "🚀 Personalized Recommendations",
+                bookDemo: "📅 Book Demo - See How We'll Achieve This",
                 problemTitle: "The Problem with Traditional Lead Management",
                 problemSubtitle: "Most construction and real estate businesses struggle with the same issues when it comes to lead prioritization.",
                 problem1: "❌ Wasted Time on Cold Leads",
@@ -715,6 +876,22 @@
                 heroSubtitle: "Arrêtez de perdre du temps sur des prospects non qualifiés. Notre IA analyse automatiquement chaque soumission de formulaire de contact, note les prospects par urgence et intention, et priorise vos prospects les plus chauds.",
                 btnBook: "📅 Réserver un Appel",
                 btnDemo: "🎯 Voir la Démo",
+                predictorTitle: "🎯 Prédisez Votre Taux de Succès",
+                predictorSubtitle: "Voyez votre probabilité de succès en 5 minutes - personne d'autre n'offre cela",
+                businessType: "Votre Type d'Entreprise",
+                teamSize: "Taille de l'Équipe",
+                leadVolume: "Volume de Prospects Actuel",
+                dealValue: "Valeur Moyenne du Contrat",
+                responseTime: "Temps de Réponse Actuel",
+                techAdoption: "Adoption Technologique",
+                successTitle: "🎯 Votre Prédiction de Succès",
+                successSubtitle: "Basé sur votre profil et notre base de données d'intelligence de conversion",
+                successRate: "Taux de Succès",
+                predictedROI: "ROI Prédit:",
+                timeline: "Échéancier:",
+                riskLevel: "Confiance de Succès:",
+                recommendations: "🚀 Recommandations Personnalisées",
+                bookDemo: "📅 Réserver une Démo - Voyez Comment Nous Allons Atteindre Cela",
                 problemTitle: "Le Problème avec la Gestion Traditionnelle des Prospects",
                 problemSubtitle: "La plupart des entreprises de construction et d'immobilier luttent avec les mêmes problèmes en matière de priorisation des prospects.",
                 problem1: "❌ Temps Perdu sur les Prospects Froids",
@@ -853,10 +1030,37 @@
             // Update dropdown options
             updateDropdownOptions('responseTime', lang);
             updateDropdownOptions('industry', lang);
+            updateDropdownOptions('businessType', lang);
+            updateDropdownOptions('teamSize', lang);
+            updateDropdownOptions('leadVolume', lang);
+            updateDropdownOptions('dealValue', lang);
+            updateDropdownOptions('responseTime', lang);
+            updateDropdownOptions('techAdoption', lang);
             
             // Update testimonial
             document.querySelector('.testimonial-text').textContent = t.testimonial;
             document.querySelector('.testimonial-author').textContent = t.testimonialAuthor;
+            
+            // Update Success Predictor section
+            document.getElementById('predictorTitle').textContent = t.predictorTitle;
+            document.getElementById('predictorSubtitle').textContent = t.predictorSubtitle;
+            document.getElementById('businessTypeLabel').textContent = t.businessType;
+            document.getElementById('teamSizeLabel').textContent = t.teamSize;
+            document.getElementById('leadVolumeLabel').textContent = t.leadVolume;
+            document.getElementById('dealValueLabel').textContent = t.dealValue;
+            document.getElementById('responseTimeLabel').textContent = t.responseTime;
+            document.getElementById('techAdoptionLabel').textContent = t.techAdoption;
+            document.getElementById('successTitle').textContent = t.successTitle;
+            document.getElementById('successSubtitle').textContent = t.successSubtitle;
+            document.getElementById('successRateLabel').textContent = t.successRate;
+            document.getElementById('predictedROILabel').textContent = t.predictedROI;
+            document.getElementById('timelineLabel').textContent = t.timeline;
+            document.getElementById('riskLevelLabel').textContent = t.riskLevel;
+            document.getElementById('recommendationsTitle').textContent = t.recommendations;
+            document.getElementById('bookDemoBtn').textContent = t.bookDemo;
+            
+            // Recalculate success to update recommendations in the correct language
+            calculateSuccess();
             
             // Update CTA section
             document.querySelector('.cta-section h2').textContent = t.ctaTitle;
@@ -887,6 +1091,226 @@
                     option.textContent = text;
                 }
             });
+        }
+
+        // Success Predictor Data
+        const successFactors = {
+            businessType: {
+                construction: { baseScore: 85, multiplier: 1.0 },
+                realestate: { baseScore: 82, multiplier: 1.0 },
+                homeservices: { baseScore: 88, multiplier: 1.0 },
+                legal: { baseScore: 75, multiplier: 1.0 },
+                healthcare: { baseScore: 80, multiplier: 1.0 },
+                professional: { baseScore: 78, multiplier: 1.0 },
+                technology: { baseScore: 70, multiplier: 1.0 },
+                other: { baseScore: 80, multiplier: 1.0 }
+            },
+            teamSize: {
+                '1-2': { score: 70, roi: '2.5x', timeline: '14 days' },
+                '3-5': { score: 80, roi: '3.0x', timeline: '10 days' },
+                '6-10': { score: 87, roi: '3.2x', timeline: '7 days' },
+                '11-20': { score: 90, roi: '3.5x', timeline: '5 days' },
+                '20+': { score: 85, roi: '3.0x', timeline: '10 days' }
+            },
+            leadVolume: {
+                '1-10': { impact: -5, risk: 'High' },
+                '11-25': { impact: 0, risk: 'Medium' },
+                '26-50': { impact: 5, risk: 'Low' },
+                '51-100': { impact: 8, risk: 'Low' },
+                '100+': { impact: 10, risk: 'Low' }
+            },
+            dealValue: {
+                '1000-5000': { impact: -3, roi: '2.8x' },
+                '5000-15000': { impact: 0, roi: '3.2x' },
+                '15000-50000': { impact: 5, roi: '3.5x' },
+                '50000+': { impact: 8, roi: '4.0x' }
+            },
+            responseTime: {
+                '15min': { impact: 10, risk: 'Low' },
+                '1hour': { impact: 5, risk: 'Low' },
+                '4hours': { impact: 0, risk: 'Medium' },
+                '12hours': { impact: -5, risk: 'High' },
+                '24hours': { impact: -10, risk: 'High' }
+            },
+            techAdoption: {
+                'low': { impact: -8, risk: 'High' },
+                'medium': { impact: 0, risk: 'Medium' },
+                'high': { impact: 8, risk: 'Low' }
+            }
+        };
+
+        function calculateSuccess() {
+            const businessType = document.getElementById('businessType').value;
+            const teamSize = document.getElementById('teamSize').value;
+            const leadVolume = document.getElementById('leadVolume').value;
+            const dealValue = document.getElementById('dealValue').value;
+            const responseTime = document.getElementById('responseTime').value;
+            const techAdoption = document.getElementById('techAdoption').value;
+
+            // Get base scores
+            const businessScore = successFactors.businessType[businessType].baseScore;
+            const teamData = successFactors.teamSize[teamSize];
+            const volumeData = successFactors.leadVolume[leadVolume];
+            const dealData = successFactors.dealValue[dealValue];
+            const responseData = successFactors.responseTime[responseTime];
+            const techData = successFactors.techAdoption[techAdoption];
+
+            // Calculate success score
+            let successScore = businessScore;
+            successScore += volumeData.impact;
+            successScore += dealData.impact;
+            successScore += responseData.impact;
+            successScore += techData.impact;
+
+            // Ensure score is between 60-95
+            successScore = Math.max(60, Math.min(95, successScore));
+
+            // Calculate ROI and timeline
+            const roi = dealData.roi || teamData.roi;
+            let timeline = teamData.timeline;
+            
+            // Translate timeline to French if needed
+            if (isFrench) {
+                timeline = timeline.replace('days', 'jours');
+            }
+
+            // Determine success confidence level
+            let successConfidence = 'Excellent';
+            if (responseData.risk === 'High' || techData.risk === 'High') {
+                successConfidence = 'Good';
+            } else if (responseData.risk === 'Low' && techData.risk === 'Low' && volumeData.risk === 'Low') {
+                successConfidence = 'Exceptional';
+            }
+            
+            // Translate success confidence to French if needed
+            if (isFrench) {
+                if (successConfidence === 'Excellent') successConfidence = 'Excellente';
+                if (successConfidence === 'Good') successConfidence = 'Bonne';
+                if (successConfidence === 'Exceptional') successConfidence = 'Exceptionnelle';
+            }
+
+            // Generate recommendations
+            const recommendations = generateRecommendations(businessType, teamSize, leadVolume, responseTime, techAdoption);
+
+            // Update UI
+            document.getElementById('successScore').textContent = Math.round(successScore) + '%';
+            document.getElementById('predictedROI').textContent = roi;
+            document.getElementById('timeline').textContent = timeline;
+            document.getElementById('riskLevel').textContent = successConfidence;
+
+            // Update recommendations
+            const recommendationsList = document.getElementById('recommendationsList');
+            recommendationsList.innerHTML = '';
+            console.log('[Success] Recommendations:', recommendations);
+            console.log('[Success] Recommendations length:', recommendations.length);
+            
+            // Add a test recommendation to see if the section works
+            if (recommendations.length === 0) {
+                recommendations.push('Test recommendation - section is working');
+            }
+            
+            recommendations.forEach(rec => {
+                const li = document.createElement('li');
+                li.textContent = rec;
+                recommendationsList.appendChild(li);
+            });
+
+            // Show results
+            document.getElementById('successResults').style.display = 'block';
+            console.log('[Success] Results section display:', document.getElementById('successResults').style.display);
+            console.log('[Success] Recommendations section exists:', document.querySelector('.recommendations'));
+            console.log('[Success] Recommendations list exists:', document.getElementById('recommendationsList'));
+        }
+
+        function generateRecommendations(businessType, teamSize, leadVolume, responseTime, techAdoption) {
+            const recommendations = [];
+            console.log('[Recommendations] Global isFrench:', isFrench);
+
+            // Business type specific
+            if (businessType === 'construction') {
+                if (isFrench) {
+                    recommendations.push('📊 Obtenez un scoring instantané des prospects dans votre tableau de bord - voyez quels projets valent la peine');
+                    recommendations.push('🤖 Emails de suivi automatisés envoyés dans les 5 minutes suivant l\'enquête');
+                } else {
+                    recommendations.push('📊 Get instant lead scoring in your dashboard - see which projects are worth pursuing');
+                    recommendations.push('🤖 Automated follow-up emails sent within 5 minutes of inquiry');
+                }
+            } else if (businessType === 'realestate') {
+                if (isFrench) {
+                    recommendations.push('🏠 Modèles d\'emails spécifiques aux propriétés qui correspondent à l\'intention d\'achat');
+                    recommendations.push('🎯 Tableau de bord montrant les acheteurs à forte intention classés par urgence');
+                } else {
+                    recommendations.push('🏠 Property-specific email templates that match buyer intent');
+                    recommendations.push('🎯 Dashboard shows high-intent buyers ranked by urgency');
+                }
+            }
+
+            // Team size specific
+            if (teamSize === '1-2') {
+                if (isFrench) {
+                    recommendations.push('⚡ Tableau de bord simple montrant seulement vos prospects les plus prioritaires');
+                    recommendations.push('📱 Notifications mobiles pour les prospects chauds uniquement');
+                } else {
+                    recommendations.push('⚡ Simple dashboard showing only your highest-priority leads');
+                    recommendations.push('📱 Mobile notifications for hot leads only');
+                }
+            } else if (teamSize === '6-10') {
+                if (isFrench) {
+                    recommendations.push('📊 Tableau de bord partagé montrant tous les prospects de l\'équipe avec scoring IA');
+                    recommendations.push('🎯 Priorisation des prospects pour que tout le monde se concentre sur les prospects les plus chauds');
+                } else {
+                    recommendations.push('📊 Shared dashboard showing all team leads with AI scoring');
+                    recommendations.push('🎯 Lead prioritization so everyone focuses on the hottest prospects');
+                }
+            }
+
+            // Response time specific
+            if (responseTime === '24hours' || responseTime === '12hours') {
+                if (isFrench) {
+                    recommendations.push('⚡ Notifications instantanées quand les prospects chauds soumettent des formulaires');
+                    recommendations.push('🤖 Réponses automatiques envoyées en moins de 60 secondes');
+                } else {
+                    recommendations.push('⚡ Instant notifications when hot leads submit forms');
+                    recommendations.push('🤖 Auto-responses sent in under 60 seconds');
+                }
+            }
+
+            // Technology adoption specific
+            if (techAdoption === 'low') {
+                if (isFrench) {
+                    recommendations.push('🎓 Formation étape par étape avec votre gestionnaire de succès dédié');
+                    recommendations.push('📞 Support téléphonique pour la configuration et l\'optimisation');
+                } else {
+                    recommendations.push('🎓 Step-by-step training with your dedicated success manager');
+                    recommendations.push('📞 Phone support for setup and optimization');
+                }
+            } else if (techAdoption === 'high') {
+                if (isFrench) {
+                    recommendations.push('🚀 Automatisation IA complète avec analyse instantanée des prospects');
+                    recommendations.push('📊 Tableau de bord en temps réel avec scoring des prospects et insights de conversion');
+                } else {
+                    recommendations.push('🚀 Full AI automation with instant lead analysis');
+                    recommendations.push('📊 Real-time dashboard with lead scoring and conversion insights');
+                }
+            }
+
+            return recommendations;
+        }
+
+        function bookDemoWithPrediction() {
+            const successScore = document.getElementById('successScore').textContent;
+            const roi = document.getElementById('predictedROI').textContent;
+            const timeline = document.getElementById('timeline').textContent;
+            
+            // Store prediction data in localStorage for demo
+            localStorage.setItem('successPrediction', JSON.stringify({
+                score: successScore,
+                roi: roi,
+                timeline: timeline,
+                timestamp: new Date().toISOString()
+            }));
+            
+            window.location.href = 'https://calendar.app.google/XLKtqbHLLfSvWzdZ9';
         }
 
         function calculateROI() {
@@ -943,6 +1367,7 @@
         // Calculate on page load
         window.addEventListener('DOMContentLoaded', function() {
             calculateROI();
+            calculateSuccess(); // Initialize success predictor
         });
     </script>
 </head>
@@ -1039,6 +1464,142 @@
                     <div class="solution-icon">⚡</div>
                     <h3>Instant Prioritization</h3>
                     <p>Hot prospects are automatically flagged and prioritized. Your team only calls leads that are ready to buy, saving hours of wasted effort.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Success Predictor Section -->
+    <section class="success-predictor-section">
+        <div class="container">
+            <h2 class="section-title" id="predictorTitle">🎯 Predict Your Success Rate</h2>
+            <p class="section-subtitle" id="predictorSubtitle">See your success probability in 5 minutes - no one else offers this</p>
+            
+            <div class="predictor-container">
+                <div class="predictor-form">
+                    <div class="input-grid">
+                        <div class="input-field">
+                            <label>
+                                🏢 <span id="businessTypeLabel">Your Business Type</span>
+                            </label>
+                            <select id="businessType" onchange="calculateSuccess()">
+                                <option value="construction" data-en="Construction" data-fr="Construction">Construction</option>
+                                <option value="realestate" data-en="Real Estate" data-fr="Immobilier">Real Estate</option>
+                                <option value="homeservices" data-en="Home Services" data-fr="Services Résidentiels">Home Services</option>
+                                <option value="legal" data-en="Legal Services" data-fr="Services Juridiques">Legal Services</option>
+                                <option value="healthcare" data-en="Healthcare" data-fr="Santé">Healthcare</option>
+                                <option value="professional" data-en="Professional Services" data-fr="Services Professionnels">Professional Services</option>
+                                <option value="technology" data-en="Technology" data-fr="Technologie">Technology</option>
+                                <option value="other" data-en="Other" data-fr="Autre">Other</option>
+                            </select>
+                        </div>
+
+                        <div class="input-field">
+                            <label>
+                                👥 <span id="teamSizeLabel">Team Size</span>
+                            </label>
+                            <select id="teamSize" onchange="calculateSuccess()">
+                                <option value="1-2" data-en="1-2 people" data-fr="1-2 personnes">1-2 people</option>
+                                <option value="3-5" data-en="3-5 people" data-fr="3-5 personnes">3-5 people</option>
+                                <option value="6-10" data-en="6-10 people" data-fr="6-10 personnes" selected>6-10 people</option>
+                                <option value="11-20" data-en="11-20 people" data-fr="11-20 personnes">11-20 people</option>
+                                <option value="20+" data-en="20+ people" data-fr="20+ personnes">20+ people</option>
+                            </select>
+                        </div>
+
+                        <div class="input-field">
+                            <label>
+                                📊 <span id="leadVolumeLabel">Current Lead Volume</span>
+                            </label>
+                            <select id="leadVolume" onchange="calculateSuccess()">
+                                <option value="1-10" data-en="1-10 leads/month" data-fr="1-10 prospects/mois">1-10 leads/month</option>
+                                <option value="11-25" data-en="11-25 leads/month" data-fr="11-25 prospects/mois">11-25 leads/month</option>
+                                <option value="26-50" data-en="26-50 leads/month" data-fr="26-50 prospects/mois" selected>26-50 leads/month</option>
+                                <option value="51-100" data-en="51-100 leads/month" data-fr="51-100 prospects/mois">51-100 leads/month</option>
+                                <option value="100+" data-en="100+ leads/month" data-fr="100+ prospects/mois">100+ leads/month</option>
+                            </select>
+                        </div>
+
+                        <div class="input-field">
+                            <label>
+                                💰 <span id="dealValueLabel">Average Deal Value</span>
+                            </label>
+                            <select id="dealValue" onchange="calculateSuccess()">
+                                <option value="1000-5000" data-en="$1,000 - $5,000" data-fr="1 000$ - 5 000$">$1,000 - $5,000</option>
+                                <option value="5000-15000" data-en="$5,000 - $15,000" data-fr="5 000$ - 15 000$" selected>$5,000 - $15,000</option>
+                                <option value="15000-50000" data-en="$15,000 - $50,000" data-fr="15 000$ - 50 000$">$15,000 - $50,000</option>
+                                <option value="50000+" data-en="$50,000+" data-fr="50 000$+">$50,000+</option>
+                            </select>
+                        </div>
+
+                        <div class="input-field">
+                            <label>
+                                ⏱️ <span id="responseTimeLabel">Current Response Time</span>
+                            </label>
+                            <select id="responseTime" onchange="calculateSuccess()">
+                                <option value="15min" data-en="Under 15 minutes" data-fr="Moins de 15 minutes">Under 15 minutes</option>
+                                <option value="1hour" data-en="1 hour" data-fr="1 heure">1 hour</option>
+                                <option value="4hours" data-en="4 hours" data-fr="4 heures" selected>4 hours</option>
+                                <option value="12hours" data-en="12 hours" data-fr="12 heures">12 hours</option>
+                                <option value="24hours" data-en="24+ hours" data-fr="24+ heures">24+ hours</option>
+                            </select>
+                        </div>
+
+                        <div class="input-field">
+                            <label>
+                                🎯 <span id="techAdoptionLabel">Technology Adoption</span>
+                            </label>
+                            <select id="techAdoption" onchange="calculateSuccess()">
+                                <option value="low" data-en="Low (basic tools)" data-fr="Faible (outils de base)">Low (basic tools)</option>
+                                <option value="medium" data-en="Medium (some automation)" data-fr="Moyen (quelque automatisation)" selected>Medium (some automation)</option>
+                                <option value="high" data-en="High (advanced systems)" data-fr="Élevé (systèmes avancés)">High (advanced systems)</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Success Prediction Results -->
+                <div class="success-results" id="successResults" style="display: none;">
+                    <div class="success-header">
+                        <h3 id="successTitle">🎯 Your Success Prediction</h3>
+                        <p id="successSubtitle">Based on your profile and our conversion intelligence database</p>
+                    </div>
+
+                    <div class="success-score">
+                        <div class="score-circle">
+                            <div class="score-value" id="successScore">87%</div>
+                            <div class="score-label" id="successRateLabel">Success Rate</div>
+                        </div>
+                        <div class="score-details">
+                            <div class="detail-item">
+                                <span class="detail-label" id="predictedROILabel">Predicted ROI:</span>
+                                <span class="detail-value" id="predictedROI">3.2x</span>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-label" id="timelineLabel">Timeline:</span>
+                                <span class="detail-value" id="timeline">45 days</span>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-label" id="riskLevelLabel">Success Confidence:</span>
+                                <span class="detail-value" id="riskLevel">High</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="recommendations">
+                        <h4 id="recommendationsTitle">🚀 Personalized Recommendations</h4>
+                        <ul id="recommendationsList">
+                            <li>Start with lead scoring focus for maximum impact</li>
+                            <li>Enable automated follow-ups for your team size</li>
+                            <li>Set up industry-specific email templates</li>
+                        </ul>
+                    </div>
+
+                    <div class="success-cta">
+                        <button class="btn btn-primary" id="bookDemoBtn" onclick="bookDemoWithPrediction()">
+                            📅 Book Demo - See How We'll Achieve This
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>

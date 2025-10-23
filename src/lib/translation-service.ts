@@ -12,6 +12,7 @@
  * - Consistent translations across users
  * - Comprehensive error handling and fallbacks
  * - Usage tracking and performance metrics
+ * - French gender agreement for urgency values
  */
 
 import { createClient } from '@supabase/supabase-js';
@@ -54,6 +55,35 @@ const CONFIG = {
   MAX_RETRIES: 3,
   MIN_CONFIDENCE: 0.8,
 } as const;
+
+// French gender agreement for urgency values
+const URGENCY_GENDER_AGREEMENT: Record<string, string> = {
+  'high': 'Élevée',      // Feminine form
+  'élevé': 'Élevée',     // Fix masculine to feminine
+  'élevée': 'Élevée',    // Already correct
+  'medium': 'Moyenne',   // Feminine form
+  'moyenne': 'Moyenne',  // Already correct
+  'moyen': 'Moyenne',    // Fix masculine to feminine
+  'low': 'Faible',       // Feminine form
+  'faible': 'Faible',    // Already correct
+};
+
+/**
+ * Apply French gender agreement for urgency values
+ */
+function applyUrgencyGenderAgreement(text: string, targetLanguage: string): string {
+  if (targetLanguage !== 'fr') return text;
+  
+  const normalizedText = text.toLowerCase().trim();
+  const correctedValue = URGENCY_GENDER_AGREEMENT[normalizedText];
+  
+  if (correctedValue && correctedValue !== text) {
+    console.log(`🔧 [GenderAgreement] Fixed urgency: "${text}" → "${correctedValue}"`);
+    return correctedValue;
+  }
+  
+  return text;
+}
 
 /**
  * Layer 1: Dictionary Lookup with Fuzzy Matching
@@ -480,30 +510,36 @@ export async function translateText(
     const dictionaryResult = await lookupInDictionary(normalizedText, targetLanguage);
     if (dictionaryResult) {
       console.log(`🎯 [TranslationService] Dictionary served in ${dictionaryResult.processingTime}ms`);
-      return dictionaryResult.translated;
+      const result = dictionaryResult.translated;
+      // Apply gender agreement for urgency values
+      return applyUrgencyGenderAgreement(result, targetLanguage);
     }
 
     // Layer 2: Cache Lookup
     const cacheResult = await lookupInCache(normalizedText, targetLanguage, options.forceRefresh);
     if (cacheResult) {
       console.log(`🎯 [TranslationService] Cache served in ${cacheResult.processingTime}ms`);
-      return cacheResult.translated;
+      const result = cacheResult.translated;
+      // Apply gender agreement for urgency values
+      return applyUrgencyGenderAgreement(result, targetLanguage);
     }
 
     // Layer 3: AI Translation
     const aiResult = await translateWithAI(normalizedText, targetLanguage, options.context);
     if (aiResult) {
       console.log(`🎯 [TranslationService] AI served in ${aiResult.processingTime}ms`);
-      return aiResult.translated;
+      const result = aiResult.translated;
+      // Apply gender agreement for urgency values
+      return applyUrgencyGenderAgreement(result, targetLanguage);
     }
 
-    // Fallback: Return original text
+    // Fallback: Return original text with gender agreement
     console.warn(`⚠️ [TranslationService] All layers failed, returning original text`);
-    return normalizedText;
+    return applyUrgencyGenderAgreement(normalizedText, targetLanguage);
 
   } catch (error) {
     console.error('💥 [TranslationService] Translation pipeline failed:', error);
-    return normalizedText;
+    return applyUrgencyGenderAgreement(normalizedText, targetLanguage);
   } finally {
     const totalTime = Date.now() - startTime;
     console.log(`⏱️ [TranslationService] Total pipeline time: ${totalTime}ms`);

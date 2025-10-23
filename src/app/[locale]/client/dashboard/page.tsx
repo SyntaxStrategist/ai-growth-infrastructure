@@ -777,8 +777,23 @@ async function translateIntent(rawTopIntent: string, locale: string): Promise<st
   // Client-side filtering and pagination logic
   const filteredLeads = useMemo(() => {
     return allLeads.filter(lead => {
-      // Apply urgency filter
-      if (filter.urgency !== 'all' && lead.urgency !== filter.urgency) return false;
+      // Apply urgency filter with bilingual support
+      if (filter.urgency !== 'all') {
+        // Create urgency mapping for both languages
+        const urgencyMap: Record<string, string[]> = {
+          'Élevée': ['High', 'Élevée'],
+          'Moyenne': ['Medium', 'Moyenne', 'Moyen'], // Handle truncated French
+          'Faible': ['Low', 'Faible'],
+          'High': ['High', 'Élevée'],
+          'Medium': ['Medium', 'Moyenne', 'Moyen'], // Handle truncated French
+          'Low': ['Low', 'Faible']
+        };
+        
+        const validUrgencies = urgencyMap[filter.urgency] || [filter.urgency];
+        const isUrgencyMatch = validUrgencies.includes(lead.urgency);
+        
+        if (!isUrgencyMatch) return false;
+      }
       
       // Apply language filter
       if (filter.language !== 'all' && lead.language !== filter.language) return false;
@@ -1152,9 +1167,9 @@ async function translateIntent(rawTopIntent: string, locale: string): Promise<st
             className="px-3 py-2 rounded-md bg-white/5 border border-white/10 text-sm hover:border-blue-400/40 transition-all"
           >
             <option value="all">{t.filters.all} {t.filters.urgency}</option>
-            <option value="High">{t.filters.high}</option>
-            <option value="Medium">{t.filters.medium}</option>
-            <option value="Low">{t.filters.low}</option>
+            <option value={isFrench ? "Élevée" : "High"}>{t.filters.high}</option>
+            <option value={isFrench ? "Moyenne" : "Medium"}>{t.filters.medium}</option>
+            <option value={isFrench ? "Faible" : "Low"}>{t.filters.low}</option>
           </select>
 
           <select

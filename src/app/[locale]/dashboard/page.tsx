@@ -443,7 +443,22 @@ export default function Dashboard() {
     if (activeTab === 'archived' && isConverted) return false;
     
     const urgency = lead.translated_ai?.urgency || lead.urgency;
-    if (filter.urgency !== 'all' && urgency !== filter.urgency) return false;
+    if (filter.urgency !== 'all') {
+      // Create urgency mapping for both languages
+      const urgencyMap: Record<string, string[]> = {
+        'Élevée': ['High', 'Élevée'],
+        'Moyenne': ['Medium', 'Moyenne', 'Moyen'], // Handle truncated French
+        'Faible': ['Low', 'Faible'],
+        'High': ['High', 'Élevée'],
+        'Medium': ['Medium', 'Moyenne', 'Moyen'], // Handle truncated French
+        'Low': ['Low', 'Faible']
+      };
+      
+      const validUrgencies = urgencyMap[filter.urgency] || [filter.urgency];
+      const isUrgencyMatch = validUrgencies.includes(urgency);
+      
+      if (!isUrgencyMatch) return false;
+    }
     if (filter.language !== 'all' && lead.language !== filter.language) return false;
     if ((lead.confidence_score || 0) < filter.minConfidence) return false;
     if (tagFilter !== 'all' && lead.current_tag !== tagFilter) return false;
@@ -1122,9 +1137,9 @@ export default function Dashboard() {
             className="px-3 py-2 rounded-md bg-white/5 border border-white/10 text-sm hover:border-blue-400/40 transition-all"
           >
             <option value="all">{t('dashboard.filters.all')} {t('dashboard.filters.urgency')}</option>
-            <option value="High">{t('dashboard.filters.high')}</option>
-            <option value="Medium">{t('dashboard.filters.medium')}</option>
-            <option value="Low">{t('dashboard.filters.low')}</option>
+            <option value={locale === 'fr' ? "Élevée" : "High"}>{t('dashboard.filters.high')}</option>
+            <option value={locale === 'fr' ? "Moyenne" : "Medium"}>{t('dashboard.filters.medium')}</option>
+            <option value={locale === 'fr' ? "Faible" : "Low"}>{t('dashboard.filters.low')}</option>
           </select>
 
           <select

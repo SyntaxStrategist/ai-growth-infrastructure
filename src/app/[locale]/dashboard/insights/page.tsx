@@ -3,6 +3,12 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { useLocale } from 'next-intl';
+import dynamic from 'next/dynamic';
+
+// Dynamic import for language toggle
+const UniversalLanguageToggle = dynamic(() => import('../../../../components/UniversalLanguageToggle'), {
+  ssr: true,
+});
 
 type InsightsData = {
   total: number;
@@ -45,6 +51,24 @@ export default function InsightsPage() {
     authSuccess: locale === 'fr' ? 'Authentifié ✓' : 'Authenticated ✓',
   };
 
+  // Simple translation mappings
+  const toneTranslations: Record<string, string> = {
+    'formal': 'Formel',
+    'urgent': 'Urgent',
+    'casual': 'Décontracté',
+    'professional': 'Professionnel',
+    'friendly': 'Amical',
+    'neutral': 'Neutre'
+  };
+
+  const intentTranslations: Record<string, string> = {
+    'B2B partnership': 'Partenariat B2B',
+    'consultation': 'Consultation',
+    'verification of form integration': 'Vérification de l\'intégration du formulaire',
+    'undefined': 'Non défini',
+    'B2B partnership for framing and drywall services': 'Partenariat B2B pour services de charpente et cloison sèche'
+  };
+
   useEffect(() => {
     const adminAuth = localStorage.getItem('admin_auth');
     if (adminAuth === 'true') {
@@ -54,6 +78,7 @@ export default function InsightsPage() {
       setLoading(false);
     }
   }, []);
+
 
   async function fetchInsights() {
     try {
@@ -218,6 +243,7 @@ export default function InsightsPage() {
               </p>
             </div>
             <div className="flex items-center gap-3">
+              <UniversalLanguageToggle />
               <a
                 href={`/${locale}/dashboard`}
                 className="px-4 py-2 rounded-lg bg-white/5 border border-white/10 hover:bg-white/10 transition-all text-sm"
@@ -287,7 +313,9 @@ export default function InsightsPage() {
               {topIntents.map(([intent, count], idx) => (
                 <div key={intent}>
                   <div className="flex items-center justify-between mb-2">
-                    <span className="text-sm text-white/70">{intent}</span>
+                    <span className="text-sm text-white/70">
+                      {locale === 'fr' ? (intentTranslations[intent] || intent) : intent.charAt(0).toUpperCase() + intent.slice(1)}
+                    </span>
                     <span className="text-sm font-mono text-white/50">{count}</span>
                   </div>
                   <div className="h-3 bg-white/10 rounded-full overflow-hidden">
@@ -355,7 +383,9 @@ export default function InsightsPage() {
               {topTones.map(([tone, count], idx) => (
                 <div key={tone}>
                   <div className="flex items-center justify-between mb-2">
-                    <span className="text-sm text-white/70">{tone}</span>
+                    <span className="text-sm text-white/70">
+                      {locale === 'fr' ? (toneTranslations[tone] || tone) : tone.charAt(0).toUpperCase() + tone.slice(1)}
+                    </span>
                     <span className="text-sm font-mono text-white/50">{count}</span>
                   </div>
                   <div className="h-3 bg-white/10 rounded-full overflow-hidden">
