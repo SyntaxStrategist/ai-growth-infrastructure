@@ -1,0 +1,700 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ROI Calculator Preview - Avenir AI Solutions</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            line-height: 1.6;
+            color: #1e293b;
+            background: #f8fafc;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+            padding: 40px 20px;
+        }
+        
+        .preview-banner {
+            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+            color: white;
+            padding: 20px;
+            text-align: center;
+            margin-bottom: 40px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px -1px rgba(245, 158, 11, 0.3);
+        }
+        
+        .preview-banner h1 {
+            font-size: 24px;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+        
+        .preview-banner p {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+        
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+        
+        .language-toggle {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .language-toggle button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            border-radius: 8px;
+            padding: 10px 24px;
+            color: white;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 6px -1px rgba(102, 126, 234, 0.3);
+        }
+        
+        .language-toggle button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 15px -3px rgba(102, 126, 234, 0.4);
+        }
+        
+        .calculator-section {
+            background: white;
+            border-radius: 16px;
+            padding: 50px 40px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.15);
+            border: 1px solid rgba(0, 0, 0, 0.05);
+        }
+        
+        .section-header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+        
+        .section-header h2 {
+            font-size: 36px;
+            font-weight: 800;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 12px;
+            line-height: 1.2;
+        }
+        
+        .section-header p {
+            font-size: 18px;
+            color: #64748b;
+        }
+        
+        .input-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 24px;
+            margin-bottom: 40px;
+        }
+        
+        .input-field {
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .input-field label {
+            font-size: 14px;
+            font-weight: 600;
+            color: #1e293b;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        
+        .input-field input,
+        .input-field select {
+            padding: 14px 16px;
+            border: 2px solid #e2e8f0;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            color: #1e293b;
+            transition: all 0.2s ease;
+            font-family: 'Inter', sans-serif;
+        }
+        
+        .input-field input:focus,
+        .input-field select:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+        
+        .input-field input[type="number"] {
+            -moz-appearance: textfield;
+        }
+        
+        .input-field input[type="number"]::-webkit-inner-spin-button,
+        .input-field input[type="number"]::-webkit-outer-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+        
+        .helper-text {
+            font-size: 12px;
+            color: #64748b;
+            margin-top: 4px;
+        }
+        
+        .results-container {
+            background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+            border: 2px solid #0284c7;
+            border-radius: 12px;
+            padding: 40px;
+            margin: 40px 0;
+        }
+        
+        .results-header {
+            text-align: center;
+            margin-bottom: 32px;
+        }
+        
+        .results-header h3 {
+            font-size: 28px;
+            font-weight: 800;
+            color: #0c4a6e;
+            margin-bottom: 8px;
+        }
+        
+        .results-header p {
+            font-size: 16px;
+            color: #0369a1;
+        }
+        
+        .results-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 32px;
+        }
+        
+        .result-card {
+            background: white;
+            padding: 24px;
+            border-radius: 12px;
+            text-align: center;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            border: 1px solid #e0f2fe;
+        }
+        
+        .result-icon {
+            font-size: 32px;
+            margin-bottom: 12px;
+        }
+        
+        .result-value {
+            font-size: 36px;
+            font-weight: 800;
+            color: #dc2626;
+            margin-bottom: 8px;
+            line-height: 1;
+        }
+        
+        .result-label {
+            font-size: 14px;
+            color: #475569;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .solution-box {
+            background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
+            border-left: 4px solid #10b981;
+            padding: 24px 28px;
+            border-radius: 12px;
+            margin: 32px 0;
+        }
+        
+        .solution-box h4 {
+            font-size: 18px;
+            font-weight: 700;
+            color: #065f46;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .benefit-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+        
+        .benefit-list li {
+            padding: 10px 0;
+            color: #047857;
+            font-size: 15px;
+            display: flex;
+            align-items: center;
+            font-weight: 500;
+        }
+        
+        .checkmark {
+            font-size: 20px;
+            margin-right: 12px;
+            flex-shrink: 0;
+        }
+        
+        .cta-section {
+            text-align: center;
+            margin-top: 40px;
+        }
+        
+        .cta-button {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 18px 40px;
+            border-radius: 12px;
+            font-weight: 700;
+            font-size: 18px;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: white;
+            border: none;
+            cursor: pointer;
+            box-shadow: 0 10px 15px -3px rgba(16, 185, 129, 0.3);
+        }
+        
+        .cta-button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 20px 25px -5px rgba(16, 185, 129, 0.4);
+        }
+        
+        .disclaimer {
+            text-align: center;
+            margin-top: 32px;
+            padding: 20px;
+            background: #f8fafc;
+            border-radius: 8px;
+            border: 1px solid #e2e8f0;
+        }
+        
+        .disclaimer p {
+            font-size: 13px;
+            color: #64748b;
+            line-height: 1.6;
+        }
+        
+        @media (max-width: 768px) {
+            .calculator-section {
+                padding: 30px 20px;
+            }
+            
+            .section-header h2 {
+                font-size: 28px;
+            }
+            
+            .input-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .results-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .result-value {
+                font-size: 28px;
+            }
+        }
+        
+        .slider-container {
+            margin-top: 12px;
+        }
+        
+        input[type="range"] {
+            width: 100%;
+            height: 6px;
+            border-radius: 5px;
+            background: #e2e8f0;
+            outline: none;
+            -webkit-appearance: none;
+        }
+        
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            cursor: pointer;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+        
+        input[type="range"]::-moz-range-thumb {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            cursor: pointer;
+            border: none;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+    </style>
+</head>
+<body>
+    <!-- Preview Banner -->
+    <div class="preview-banner">
+        <h1>🎯 ROI Calculator Preview</h1>
+        <p>This is a preview of the interactive calculator. Test it below to see how it works!</p>
+    </div>
+
+    <div class="container">
+        <!-- Language Toggle -->
+        <div class="language-toggle">
+            <button onclick="toggleLanguage()" id="langToggle">🌍 Switch to French</button>
+        </div>
+
+        <!-- Calculator Section -->
+        <div class="calculator-section">
+            <div class="section-header">
+                <h2 id="mainTitle">How Much Revenue Are You Losing to Slow Lead Response?</h2>
+                <p id="mainSubtitle">Calculate your real losses in 60 seconds</p>
+            </div>
+
+            <div class="input-grid">
+                <div class="input-field">
+                    <label for="leadsPerMonth">
+                        📊 <span id="label1">Leads Per Month</span>
+                    </label>
+                    <input 
+                        type="number" 
+                        id="leadsPerMonth" 
+                        value="50" 
+                        min="1" 
+                        max="1000"
+                        oninput="calculateROI()"
+                    >
+                    <span class="helper-text" id="help1">Contact form submissions</span>
+                </div>
+
+                <div class="input-field">
+                    <label for="avgDealValue">
+                        💰 <span id="label2">Average Deal Value</span>
+                    </label>
+                    <input 
+                        type="number" 
+                        id="avgDealValue" 
+                        value="5000" 
+                        min="100" 
+                        max="1000000"
+                        oninput="calculateROI()"
+                    >
+                    <span class="helper-text" id="help2">Per closed deal</span>
+                </div>
+
+                <div class="input-field">
+                    <label for="responseTime">
+                        ⏱️ <span id="label3">Current Response Time</span>
+                    </label>
+                    <select id="responseTime" onchange="calculateROI()">
+                        <option value="0.25" data-en="15 minutes" data-fr="15 minutes">15 minutes</option>
+                        <option value="1" data-en="1 hour" data-fr="1 heure">1 hour</option>
+                        <option value="4" data-en="4 hours" data-fr="4 heures" selected>4 hours</option>
+                        <option value="12" data-en="12 hours" data-fr="12 heures">12 hours</option>
+                        <option value="24" data-en="24 hours" data-fr="24 heures">24 hours</option>
+                        <option value="48" data-en="2+ days" data-fr="2+ jours">2+ days</option>
+                    </select>
+                    <span class="helper-text" id="help3">Time to first contact</span>
+                </div>
+
+                <div class="input-field">
+                    <label for="industry">
+                        🏢 <span id="label4">Your Industry</span>
+                    </label>
+                    <select id="industry" onchange="calculateROI()">
+                        <option value="construction" data-en="Construction" data-fr="Construction">Construction</option>
+                        <option value="realestate" data-en="Real Estate" data-fr="Immobilier">Real Estate</option>
+                        <option value="homeservices" data-en="Home Services" data-fr="Services Résidentiels">Home Services</option>
+                        <option value="legal" data-en="Legal Services" data-fr="Services Juridiques">Legal Services</option>
+                        <option value="healthcare" data-en="Healthcare" data-fr="Santé">Healthcare</option>
+                        <option value="professional" data-en="Professional Services" data-fr="Services Professionnels">Professional Services</option>
+                        <option value="technology" data-en="Technology" data-fr="Technologie">Technology</option>
+                        <option value="other" data-en="Other" data-fr="Autre">Other</option>
+                    </select>
+                    <span class="helper-text" id="help4">For accurate calculations</span>
+                </div>
+            </div>
+
+            <!-- Results Container -->
+            <div class="results-container" id="results">
+                <div class="results-header">
+                    <h3 id="resultsTitle">📉 Your Current Situation</h3>
+                    <p id="resultsSubtitle">Based on industry benchmarks</p>
+                </div>
+
+                <div class="results-grid">
+                    <div class="result-card">
+                        <div class="result-icon">💸</div>
+                        <div class="result-value" id="lostDeals">0</div>
+                        <div class="result-label" id="lostDealsLabel">Deals Lost/Month</div>
+                    </div>
+
+                    <div class="result-card">
+                        <div class="result-icon">💰</div>
+                        <div class="result-value" id="lostRevenue">$0</div>
+                        <div class="result-label" id="lostRevenueLabel">Lost/Year</div>
+                    </div>
+
+                    <div class="result-card">
+                        <div class="result-icon">⏰</div>
+                        <div class="result-value" id="wastedTime">0</div>
+                        <div class="result-label" id="wastedTimeLabel">Hours Wasted/Month</div>
+                    </div>
+
+                    <div class="result-card">
+                        <div class="result-icon">📉</div>
+                        <div class="result-value" id="conversionRate">0%</div>
+                        <div class="result-label" id="conversionRateLabel">Conversion Rate</div>
+                    </div>
+                </div>
+
+                <!-- Solution Box -->
+                <div class="solution-box">
+                    <h4 id="solutionTitle">✅ With Avenir AI: Respond in Under 60 Seconds</h4>
+                    <ul class="benefit-list">
+                        <li>
+                            <span class="checkmark">✅</span>
+                            <span id="benefit1">Capture deals while competitors wait</span>
+                        </li>
+                        <li>
+                            <span class="checkmark">✅</span>
+                            <span id="benefit2">Automatic AI analysis of every lead</span>
+                        </li>
+                        <li>
+                            <span class="checkmark">✅</span>
+                            <span id="benefit3">Bilingual support (English + French)</span>
+                        </li>
+                        <li>
+                            <span class="checkmark">✅</span>
+                            <span id="benefit4">Priority scoring so you call the hottest leads first</span>
+                        </li>
+                    </ul>
+                </div>
+
+                <!-- CTA Section -->
+                <div class="cta-section">
+                    <button class="cta-button" onclick="handleCTA()">
+                        <span id="ctaText">📅 Book a Free Demo - Stop Losing Deals</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Disclaimer -->
+            <div class="disclaimer">
+                <p id="disclaimer">
+                    * Calculations based on industry-standard conversion rates and response time impact studies. 
+                    Harvard Business Review reports that companies responding within 1 hour are 7x more likely to qualify leads. 
+                    Actual results vary by industry, lead quality, and follow-up process.
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentLang = 'en';
+
+        const translations = {
+            en: {
+                mainTitle: "How Much Revenue Are You Losing to Slow Lead Response?",
+                mainSubtitle: "Calculate your real losses in 60 seconds",
+                label1: "Leads Per Month",
+                label2: "Average Deal Value",
+                label3: "Current Response Time",
+                label4: "Your Industry",
+                help1: "Contact form submissions",
+                help2: "Per closed deal",
+                help3: "Time to first contact",
+                help4: "For accurate calculations",
+                resultsTitle: "📉 Your Current Situation",
+                resultsSubtitle: "Based on industry benchmarks",
+                lostDealsLabel: "Deals Lost/Month",
+                lostRevenueLabel: "Lost/Year",
+                wastedTimeLabel: "Hours Wasted/Month",
+                conversionRateLabel: "Conversion Rate",
+                solutionTitle: "✅ With Avenir AI: Respond in Under 60 Seconds",
+                benefit1: "Capture deals while competitors wait",
+                benefit2: "Automatic AI analysis of every lead",
+                benefit3: "Bilingual support (English + French)",
+                benefit4: "Priority scoring so you call the hottest leads first",
+                ctaText: "📅 Book a Free Demo - Stop Losing Deals",
+                disclaimer: "* Calculations based on industry-standard conversion rates and response time impact studies. Harvard Business Review reports that companies responding within 1 hour are 7x more likely to qualify leads. Actual results vary by industry, lead quality, and follow-up process.",
+                langToggle: "🌍 Switch to French"
+            },
+            fr: {
+                mainTitle: "Combien de Revenus Perdez-Vous à Cause d'une Réponse Lente?",
+                mainSubtitle: "Calculez vos pertes réelles en 60 secondes",
+                label1: "Prospects Par Mois",
+                label2: "Valeur Moyenne du Contrat",
+                label3: "Temps de Réponse Actuel",
+                label4: "Votre Industrie",
+                help1: "Soumissions de formulaire",
+                help2: "Par contrat conclu",
+                help3: "Temps jusqu'au premier contact",
+                help4: "Pour des calculs précis",
+                resultsTitle: "📉 Votre Situation Actuelle",
+                resultsSubtitle: "Basé sur les normes de l'industrie",
+                lostDealsLabel: "Contrats Perdus/Mois",
+                lostRevenueLabel: "Perdu/Année",
+                wastedTimeLabel: "Heures Perdues/Mois",
+                conversionRateLabel: "Taux de Conversion",
+                solutionTitle: "✅ Avec Avenir AI: Répondez en Moins de 60 Secondes",
+                benefit1: "Capturez des contrats pendant que vos concurrents attendent",
+                benefit2: "Analyse IA automatique de chaque prospect",
+                benefit3: "Support bilingue (Anglais + Français)",
+                benefit4: "Notation de priorité pour appeler les meilleurs prospects en premier",
+                ctaText: "📅 Réserver une Démo Gratuite - Arrêtez de Perdre des Contrats",
+                disclaimer: "* Calculs basés sur les taux de conversion standard de l'industrie et les études d'impact du temps de réponse. Harvard Business Review rapporte que les entreprises qui répondent en moins d'1 heure sont 7x plus susceptibles de qualifier les prospects. Les résultats réels varient selon l'industrie, la qualité des prospects et le processus de suivi.",
+                langToggle: "🌍 Passer à l'anglais"
+            }
+        };
+
+        // Industry-specific data
+        const industryData = {
+            construction: { baseConversion: 0.15, urgencyMultiplier: 1.5, avgTimePerLead: 45 },
+            realestate: { baseConversion: 0.12, urgencyMultiplier: 1.6, avgTimePerLead: 40 },
+            homeservices: { baseConversion: 0.18, urgencyMultiplier: 1.4, avgTimePerLead: 35 },
+            legal: { baseConversion: 0.10, urgencyMultiplier: 1.3, avgTimePerLead: 60 },
+            healthcare: { baseConversion: 0.14, urgencyMultiplier: 1.5, avgTimePerLead: 50 },
+            professional: { baseConversion: 0.12, urgencyMultiplier: 1.3, avgTimePerLead: 45 },
+            technology: { baseConversion: 0.08, urgencyMultiplier: 1.2, avgTimePerLead: 30 },
+            other: { baseConversion: 0.12, urgencyMultiplier: 1.3, avgTimePerLead: 40 }
+        };
+
+        // Response time impact on conversion
+        const responseTimeImpact = {
+            0.25: 1.0,    // 15 minutes (baseline)
+            1: 0.85,      // 1 hour
+            4: 0.60,      // 4 hours
+            12: 0.35,     // 12 hours
+            24: 0.20,     // 24 hours
+            48: 0.10      // 2+ days
+        };
+
+        function calculateROI() {
+            const leadsPerMonth = parseFloat(document.getElementById('leadsPerMonth').value) || 0;
+            const avgDealValue = parseFloat(document.getElementById('avgDealValue').value) || 0;
+            const responseTime = parseFloat(document.getElementById('responseTime').value);
+            const industry = document.getElementById('industry').value;
+
+            const data = industryData[industry];
+            const responseImpact = responseTimeImpact[responseTime];
+
+            // Calculate current conversion rate
+            const currentConversion = data.baseConversion * responseImpact;
+            
+            // Calculate optimal conversion (with fast response)
+            const optimalConversion = data.baseConversion * 1.0;
+
+            // Calculate deals won vs lost
+            const currentDealsWon = leadsPerMonth * currentConversion;
+            const optimalDealsWon = leadsPerMonth * optimalConversion;
+            const dealsLost = optimalDealsWon - currentDealsWon;
+
+            // Calculate revenue impact
+            const monthlyRevenueLost = dealsLost * avgDealValue;
+            const yearlyRevenueLost = monthlyRevenueLost * 12;
+
+            // Calculate time wasted
+            const timeWastedPerLead = data.avgTimePerLead / 60; // convert to hours
+            const totalTimeWasted = dealsLost * timeWastedPerLead;
+
+            // Update UI
+            document.getElementById('lostDeals').textContent = Math.round(dealsLost);
+            document.getElementById('lostRevenue').textContent = '$' + formatNumber(Math.round(yearlyRevenueLost));
+            document.getElementById('wastedTime').textContent = Math.round(totalTimeWasted);
+            document.getElementById('conversionRate').textContent = (currentConversion * 100).toFixed(1) + '%';
+        }
+
+        function formatNumber(num) {
+            return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+        }
+
+        function toggleLanguage() {
+            currentLang = currentLang === 'en' ? 'fr' : 'en';
+            const t = translations[currentLang];
+
+            // Update all text
+            document.getElementById('mainTitle').textContent = t.mainTitle;
+            document.getElementById('mainSubtitle').textContent = t.mainSubtitle;
+            document.getElementById('label1').textContent = t.label1;
+            document.getElementById('label2').textContent = t.label2;
+            document.getElementById('label3').textContent = t.label3;
+            document.getElementById('label4').textContent = t.label4;
+            document.getElementById('help1').textContent = t.help1;
+            document.getElementById('help2').textContent = t.help2;
+            document.getElementById('help3').textContent = t.help3;
+            document.getElementById('help4').textContent = t.help4;
+            document.getElementById('resultsTitle').textContent = t.resultsTitle;
+            document.getElementById('resultsSubtitle').textContent = t.resultsSubtitle;
+            document.getElementById('lostDealsLabel').textContent = t.lostDealsLabel;
+            document.getElementById('lostRevenueLabel').textContent = t.lostRevenueLabel;
+            document.getElementById('wastedTimeLabel').textContent = t.wastedTimeLabel;
+            document.getElementById('conversionRateLabel').textContent = t.conversionRateLabel;
+            document.getElementById('solutionTitle').textContent = t.solutionTitle;
+            document.getElementById('benefit1').textContent = t.benefit1;
+            document.getElementById('benefit2').textContent = t.benefit2;
+            document.getElementById('benefit3').textContent = t.benefit3;
+            document.getElementById('benefit4').textContent = t.benefit4;
+            document.getElementById('ctaText').textContent = t.ctaText;
+            document.getElementById('disclaimer').textContent = t.disclaimer;
+            document.getElementById('langToggle').textContent = t.langToggle;
+
+            // Update dropdown options
+            updateDropdownOptions('responseTime', currentLang);
+            updateDropdownOptions('industry', currentLang);
+        }
+
+        function updateDropdownOptions(selectId, lang) {
+            const select = document.getElementById(selectId);
+            const options = select.querySelectorAll('option');
+            
+            options.forEach(option => {
+                const text = option.getAttribute('data-' + lang);
+                if (text) {
+                    option.textContent = text;
+                }
+            });
+        }
+
+        function handleCTA() {
+            const leadsPerMonth = document.getElementById('leadsPerMonth').value;
+            const avgDealValue = document.getElementById('avgDealValue').value;
+            const industry = document.getElementById('industry').value;
+            
+            // In production, this would open calendar or capture as lead
+            alert(`Great! In production, this would:\n\n1. Open your calendar booking link\n2. Pre-fill lead data (${leadsPerMonth} leads/mo, $${avgDealValue} avg deal, ${industry})\n3. Track conversion from calculator → demo booking`);
+        }
+
+        // Calculate on page load
+        calculateROI();
+    </script>
+</body>
+</html>
+

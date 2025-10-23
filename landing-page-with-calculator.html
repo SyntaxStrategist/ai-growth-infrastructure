@@ -1,0 +1,1230 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI-Powered Lead Intelligence | Avenir AI Solutions</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            line-height: 1.6;
+            color: #1e293b;
+            background: #f8fafc;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+        
+        /* Header */
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 20px 0;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+        
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .logo {
+            color: white;
+            font-size: 24px;
+            font-weight: 700;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            letter-spacing: -0.5px;
+        }
+        
+        .logo img {
+            height: 36px;
+            width: auto;
+            filter: brightness(0) invert(1);
+        }
+        
+        .nav-links {
+            display: flex;
+            gap: 30px;
+            list-style: none;
+            align-items: center;
+        }
+        
+        .language-toggle {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 6px;
+            padding: 6px 12px;
+            color: white;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            margin-left: 20px;
+        }
+        
+        .language-toggle:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: translateY(-1px);
+        }
+        
+        .nav-links a {
+            color: white;
+            text-decoration: none;
+            font-weight: 500;
+            font-size: 15px;
+            padding: 8px 16px;
+            border-radius: 6px;
+            transition: all 0.2s ease;
+        }
+        
+        .nav-links a:hover {
+            background: rgba(255, 255, 255, 0.1);
+            transform: translateY(-1px);
+        }
+        
+        /* Hero Section */
+        .hero {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 80px 0;
+            text-align: center;
+            color: white;
+        }
+        
+        .hero h1 {
+            font-size: 48px;
+            font-weight: 800;
+            margin-bottom: 20px;
+            line-height: 1.2;
+        }
+        
+        .hero p {
+            font-size: 20px;
+            margin-bottom: 40px;
+            opacity: 0.9;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        
+        .video-section {
+            margin: 50px 0;
+            text-align: center;
+        }
+        
+        .video-container {
+            position: relative;
+            max-width: 800px;
+            margin: 0 auto;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+            background: #000;
+        }
+        
+        .video-player {
+            width: 100%;
+            height: 450px;
+            border: none;
+            outline: none;
+        }
+        
+        .video-thumbnail {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: opacity 0.3s ease;
+        }
+        
+        .video-thumbnail:hover {
+            opacity: 0.9;
+        }
+        
+        .play-button {
+            width: 80px;
+            height: 80px;
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 32px;
+            color: #667eea;
+            transition: all 0.3s ease;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+        }
+        
+        .play-button:hover {
+            transform: scale(1.1);
+            background: white;
+        }
+        
+        .video-title {
+            color: white;
+            font-size: 18px;
+            font-weight: 600;
+            margin-top: 20px;
+            opacity: 0.9;
+        }
+        
+        @media (max-width: 768px) {
+            .video-player {
+                height: 250px;
+            }
+            
+            .play-button {
+                width: 60px;
+                height: 60px;
+                font-size: 24px;
+            }
+        }
+        
+        .cta-buttons {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+        
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 16px 32px;
+            border-radius: 10px;
+            font-weight: 700;
+            font-size: 16px;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: white;
+            border: 2px solid #059669;
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 15px -3px rgba(16, 185, 129, 0.3);
+        }
+        
+        .btn-secondary {
+            background: transparent;
+            color: white;
+            border: 2px solid white;
+        }
+        
+        .btn-secondary:hover {
+            background: white;
+            color: #667eea;
+        }
+        
+        /* Problem Section */
+        .problem-section {
+            padding: 80px 0;
+            background: white;
+        }
+        
+        .section-title {
+            text-align: center;
+            font-size: 36px;
+            font-weight: 700;
+            margin-bottom: 20px;
+            color: #1e293b;
+        }
+        
+        .section-subtitle {
+            text-align: center;
+            font-size: 18px;
+            color: #64748b;
+            margin-bottom: 60px;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        
+        .problem-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+            margin-top: 60px;
+        }
+        
+        .problem-card {
+            background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+            border-left: 4px solid #f59e0b;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px -1px rgba(245, 158, 11, 0.1);
+        }
+        
+        .problem-card h3 {
+            font-size: 20px;
+            font-weight: 700;
+            color: #92400e;
+            margin-bottom: 15px;
+        }
+        
+        .problem-card p {
+            color: #78350f;
+            line-height: 1.6;
+        }
+        
+        /* Solution Section */
+        .solution-section {
+            padding: 80px 0;
+            background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+        }
+        
+        .solution-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+            margin-top: 60px;
+        }
+        
+        .solution-card {
+            background: white;
+            padding: 40px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            border: 2px solid #0284c7;
+        }
+        
+        .solution-icon {
+            font-size: 48px;
+            margin-bottom: 20px;
+        }
+        
+        .solution-card h3 {
+            font-size: 24px;
+            font-weight: 700;
+            color: #1e293b;
+            margin-bottom: 15px;
+        }
+        
+        .solution-card p {
+            color: #64748b;
+            line-height: 1.6;
+        }
+        
+        /* ROI Calculator Section */
+        .calculator-section {
+            padding: 80px 0;
+            background: white;
+        }
+        
+        .calculator-container {
+            background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+            border: 2px solid #0284c7;
+            border-radius: 16px;
+            padding: 50px 40px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.15);
+        }
+        
+        .input-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 24px;
+            margin-bottom: 40px;
+        }
+        
+        .input-field {
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .input-field label {
+            font-size: 14px;
+            font-weight: 600;
+            color: #1e293b;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        
+        .input-field input,
+        .input-field select {
+            padding: 14px 16px;
+            border: 2px solid #e2e8f0;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            color: #1e293b;
+            transition: all 0.2s ease;
+            font-family: 'Inter', sans-serif;
+            background: white;
+        }
+        
+        .input-field input:focus,
+        .input-field select:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+        
+        .input-field input[type="number"] {
+            -moz-appearance: textfield;
+        }
+        
+        .input-field input[type="number"]::-webkit-inner-spin-button,
+        .input-field input[type="number"]::-webkit-outer-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+        
+        .helper-text {
+            font-size: 12px;
+            color: #64748b;
+            margin-top: 4px;
+        }
+        
+        .results-container {
+            background: white;
+            border-radius: 12px;
+            padding: 40px;
+            margin: 40px 0 0 0;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+        
+        .results-header {
+            text-align: center;
+            margin-bottom: 32px;
+        }
+        
+        .results-header h3 {
+            font-size: 28px;
+            font-weight: 800;
+            color: #0c4a6e;
+            margin-bottom: 8px;
+        }
+        
+        .results-header p {
+            font-size: 16px;
+            color: #0369a1;
+        }
+        
+        .results-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 32px;
+        }
+        
+        .result-card {
+            background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+            padding: 24px;
+            border-radius: 12px;
+            text-align: center;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            border: 2px solid #f59e0b;
+        }
+        
+        .result-icon {
+            font-size: 32px;
+            margin-bottom: 12px;
+        }
+        
+        .result-value {
+            font-size: 36px;
+            font-weight: 800;
+            color: #dc2626;
+            margin-bottom: 8px;
+            line-height: 1;
+        }
+        
+        .result-label {
+            font-size: 14px;
+            color: #92400e;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .solution-box {
+            background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
+            border-left: 4px solid #10b981;
+            padding: 24px 28px;
+            border-radius: 12px;
+            margin: 32px 0;
+        }
+        
+        .solution-box h4 {
+            font-size: 18px;
+            font-weight: 700;
+            color: #065f46;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .benefit-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+        
+        .benefit-list li {
+            padding: 10px 0;
+            color: #047857;
+            font-size: 15px;
+            display: flex;
+            align-items: center;
+            font-weight: 500;
+        }
+        
+        .checkmark {
+            font-size: 20px;
+            margin-right: 12px;
+            flex-shrink: 0;
+        }
+        
+        .calculator-cta {
+            text-align: center;
+            margin-top: 40px;
+        }
+        
+        .calculator-cta .btn {
+            font-size: 18px;
+            padding: 18px 40px;
+        }
+        
+        /* Testimonial Section */
+        .testimonial-section {
+            padding: 80px 0;
+            background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
+        }
+        
+        .testimonial {
+            max-width: 800px;
+            margin: 0 auto;
+            text-align: center;
+            background: white;
+            padding: 40px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px -1px rgba(16, 185, 129, 0.1);
+        }
+        
+        .testimonial-text {
+            font-size: 20px;
+            font-style: italic;
+            color: #065f46;
+            margin-bottom: 20px;
+            line-height: 1.6;
+        }
+        
+        .testimonial-author {
+            font-size: 16px;
+            color: #047857;
+            font-weight: 700;
+        }
+        
+        /* CTA Section */
+        .cta-section {
+            padding: 80px 0;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            text-align: center;
+            color: white;
+        }
+        
+        .cta-section h2 {
+            font-size: 36px;
+            font-weight: 700;
+            margin-bottom: 20px;
+        }
+        
+        .cta-section p {
+            font-size: 18px;
+            margin-bottom: 40px;
+            opacity: 0.9;
+        }
+        
+        /* Footer */
+        .footer {
+            background: #1e293b;
+            padding: 40px 0;
+            text-align: center;
+            color: #cbd5e1;
+        }
+        
+        .footer-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+        
+        .footer-links {
+            display: flex;
+            gap: 30px;
+            list-style: none;
+        }
+        
+        .footer-links a {
+            color: #cbd5e1;
+            text-decoration: none;
+            transition: color 0.2s;
+        }
+        
+        .footer-links a:hover {
+            color: white;
+        }
+        
+        .footer-branding {
+            color: #667eea;
+            font-weight: 700;
+            font-size: 16px;
+        }
+        
+        @media (max-width: 768px) {
+            .hero h1 {
+                font-size: 36px;
+            }
+            
+            .hero p {
+                font-size: 18px;
+            }
+            
+            .cta-buttons {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            .btn {
+                width: 100%;
+                max-width: 300px;
+            }
+            
+            .nav-links {
+                display: none;
+            }
+            
+            .footer-content {
+                flex-direction: column;
+                text-align: center;
+            }
+            
+            .calculator-container {
+                padding: 30px 20px;
+            }
+            
+            .input-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .results-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .result-value {
+                font-size: 28px;
+            }
+        }
+    </style>
+    <script>
+        let isFrench = false;
+        
+        const translations = {
+            en: {
+                navHome: "Home",
+                navDemo: "Demo", 
+                navBook: "Book Call",
+                heroTitle: "Transform Your Lead Process with AI",
+                heroSubtitle: "Stop wasting time on unqualified leads. Our AI automatically analyzes every contact form submission, scores leads by urgency and intent, and prioritizes your hottest prospects.",
+                btnBook: "📅 Book a Call",
+                btnDemo: "🎯 View Demo",
+                problemTitle: "The Problem with Traditional Lead Management",
+                problemSubtitle: "Most construction and real estate businesses struggle with the same issues when it comes to lead prioritization.",
+                problem1: "❌ Wasted Time on Cold Leads",
+                problem1Text: "Sales teams spend hours calling unqualified prospects who aren't ready to buy, while hot leads go cold waiting for follow-up.",
+                problem2: "❌ No Lead Scoring System", 
+                problem2Text: "There's no way to know which leads are worth your time. Every lead looks the same, leading to poor prioritization and missed opportunities.",
+                problem3: "❌ Manual Process Inefficiency",
+                problem3Text: "Manually reviewing every lead submission is time-consuming and inconsistent. Important signals get missed, and follow-up timing is often wrong.",
+                solutionTitle: "How Avenir AI Solves This",
+                solutionSubtitle: "Our AI-powered system automatically analyzes every lead in real-time, giving you instant insights to prioritize your sales efforts.",
+                solution1: "Real-Time Analysis",
+                solution1Text: "Every contact form submission is instantly analyzed for urgency, intent, and quality. No more guessing which leads are worth your time.",
+                solution2: "Intelligent Scoring",
+                solution2Text: "Our AI scores each lead based on multiple factors: urgency level, purchase intent, budget indicators, and timeline signals.",
+                solution3: "Instant Prioritization", 
+                solution3Text: "Hot prospects are automatically flagged and prioritized. Your team only calls leads that are ready to buy, saving hours of wasted effort.",
+                calcTitle: "How Much Revenue Are You Losing?",
+                calcSubtitle: "Calculate your real losses in 60 seconds",
+                calcLabel1: "Leads Per Month",
+                calcLabel2: "Average Deal Value",
+                calcLabel3: "Current Response Time",
+                calcLabel4: "Your Industry",
+                calcHelp1: "Contact form submissions",
+                calcHelp2: "Per closed deal",
+                calcHelp3: "Time to first contact",
+                calcHelp4: "For accurate calculations",
+                calcResultsTitle: "📉 Your Current Situation",
+                calcResultsSubtitle: "Based on industry benchmarks",
+                calcLostDeals: "Deals Lost/Month",
+                calcLostRevenue: "Lost/Year",
+                calcWastedTime: "Hours Wasted/Month",
+                calcConversionRate: "Conversion Rate",
+                calcSolutionTitle: "✅ With Avenir AI: Respond in Under 60 Seconds",
+                calcBenefit1: "Capture deals while competitors wait",
+                calcBenefit2: "Automatic AI analysis of every lead",
+                calcBenefit3: "Bilingual support (English + French)",
+                calcBenefit4: "Priority scoring so you call the hottest leads first",
+                calcCTA: "📅 Book a Free Demo - Stop Losing Deals",
+                testimonial: "This AI saved our sales team 15+ hours per week. We only call leads that are actually ready to buy now. Our conversion rate increased by 300%.",
+                testimonialAuthor: "— Construction Company Owner, Toronto",
+                ctaTitle: "Ready to Transform Your Lead Process?",
+                ctaSubtitle: "See how Avenir AI can help your business close more deals with less effort."
+            },
+            fr: {
+                navHome: "Accueil",
+                navDemo: "Démo",
+                navBook: "Réserver",
+                heroTitle: "Transformez Votre Processus de Prospects avec l'IA",
+                heroSubtitle: "Arrêtez de perdre du temps sur des prospects non qualifiés. Notre IA analyse automatiquement chaque soumission de formulaire de contact, note les prospects par urgence et intention, et priorise vos prospects les plus chauds.",
+                btnBook: "📅 Réserver un Appel",
+                btnDemo: "🎯 Voir la Démo",
+                problemTitle: "Le Problème avec la Gestion Traditionnelle des Prospects",
+                problemSubtitle: "La plupart des entreprises de construction et d'immobilier luttent avec les mêmes problèmes en matière de priorisation des prospects.",
+                problem1: "❌ Temps Perdu sur les Prospects Froids",
+                problem1Text: "Les équipes commerciales passent des heures à appeler des prospects non qualifiés qui ne sont pas prêts à acheter, pendant que les prospects chauds refroidissent en attendant un suivi.",
+                problem2: "❌ Aucun Système de Notation",
+                problem2Text: "Il n'y a aucun moyen de savoir quels prospects valent votre temps. Chaque prospect semble identique, menant à une mauvaise priorisation et des opportunités manquées.",
+                problem3: "❌ Inefficacité du Processus Manuel",
+                problem3Text: "Examiner manuellement chaque soumission de prospect prend du temps et est incohérent. Des signaux importants sont manqués, et le timing du suivi est souvent mauvais.",
+                solutionTitle: "Comment Avenir AI Résout Ceci",
+                solutionSubtitle: "Notre système alimenté par l'IA analyse automatiquement chaque prospect en temps réel, vous donnant des insights instantanés pour prioriser vos efforts commerciaux.",
+                solution1: "Analyse en Temps Réel",
+                solution1Text: "Chaque soumission de formulaire de contact est instantanément analysée pour l'urgence, l'intention et la qualité. Plus de devinettes sur quels prospects valent votre temps.",
+                solution2: "Notation Intelligente",
+                solution2Text: "Notre IA note chaque prospect basé sur plusieurs facteurs : niveau d'urgence, intention d'achat, indicateurs de budget, et signaux de calendrier.",
+                solution3: "Priorisation Instantanée",
+                solution3Text: "Les prospects chauds sont automatiquement signalés et priorisés. Votre équipe n'appelle que les prospects prêts à acheter, économisant des heures d'effort gaspillé.",
+                calcTitle: "Combien de Revenus Perdez-Vous?",
+                calcSubtitle: "Calculez vos pertes réelles en 60 secondes",
+                calcLabel1: "Prospects Par Mois",
+                calcLabel2: "Valeur Moyenne du Contrat",
+                calcLabel3: "Temps de Réponse Actuel",
+                calcLabel4: "Votre Industrie",
+                calcHelp1: "Soumissions de formulaire",
+                calcHelp2: "Par contrat conclu",
+                calcHelp3: "Temps jusqu'au premier contact",
+                calcHelp4: "Pour des calculs précis",
+                calcResultsTitle: "📉 Votre Situation Actuelle",
+                calcResultsSubtitle: "Basé sur les normes de l'industrie",
+                calcLostDeals: "Contrats Perdus/Mois",
+                calcLostRevenue: "Perdu/Année",
+                calcWastedTime: "Heures Perdues/Mois",
+                calcConversionRate: "Taux de Conversion",
+                calcSolutionTitle: "✅ Avec Avenir AI: Répondez en Moins de 60 Secondes",
+                calcBenefit1: "Capturez des contrats pendant que vos concurrents attendent",
+                calcBenefit2: "Analyse IA automatique de chaque prospect",
+                calcBenefit3: "Support bilingue (Anglais + Français)",
+                calcBenefit4: "Notation de priorité pour appeler les meilleurs prospects en premier",
+                calcCTA: "📅 Réserver une Démo Gratuite - Arrêtez de Perdre des Contrats",
+                testimonial: "Cette IA a fait économiser 15+ heures par semaine à notre équipe commerciale. Nous n'appelons que les prospects qui sont vraiment prêts à acheter maintenant. Notre taux de conversion a augmenté de 300%.",
+                testimonialAuthor: "— Propriétaire d'Entreprise de Construction, Toronto",
+                ctaTitle: "Prêt à Transformer Votre Processus de Prospects ?",
+                ctaSubtitle: "Voyez comment Avenir AI peut aider votre entreprise à conclure plus de contrats avec moins d'effort."
+            }
+        };
+
+        // Industry-specific data
+        const industryData = {
+            construction: { baseConversion: 0.15, urgencyMultiplier: 1.5, avgTimePerLead: 45 },
+            realestate: { baseConversion: 0.12, urgencyMultiplier: 1.6, avgTimePerLead: 40 },
+            homeservices: { baseConversion: 0.18, urgencyMultiplier: 1.4, avgTimePerLead: 35 },
+            legal: { baseConversion: 0.10, urgencyMultiplier: 1.3, avgTimePerLead: 60 },
+            healthcare: { baseConversion: 0.14, urgencyMultiplier: 1.5, avgTimePerLead: 50 },
+            professional: { baseConversion: 0.12, urgencyMultiplier: 1.3, avgTimePerLead: 45 },
+            technology: { baseConversion: 0.08, urgencyMultiplier: 1.2, avgTimePerLead: 30 },
+            other: { baseConversion: 0.12, urgencyMultiplier: 1.3, avgTimePerLead: 40 }
+        };
+
+        // Response time impact on conversion
+        const responseTimeImpact = {
+            0.25: 1.0,    // 15 minutes (baseline)
+            1: 0.85,      // 1 hour
+            4: 0.60,      // 4 hours
+            12: 0.35,     // 12 hours
+            24: 0.20,     // 24 hours
+            48: 0.10      // 2+ days
+        };
+        
+        function toggleLanguage() {
+            isFrench = !isFrench;
+            const lang = isFrench ? 'fr' : 'en';
+            const t = translations[lang];
+            
+            // Update navigation
+            document.querySelector('.nav-home').textContent = t.navHome;
+            document.querySelector('.nav-demo').textContent = t.navDemo;
+            document.querySelector('.nav-book').textContent = t.navBook;
+            
+            // Update hero section
+            document.querySelector('.hero h1').textContent = t.heroTitle;
+            document.querySelector('.hero > .container > p').textContent = t.heroSubtitle;
+            document.querySelectorAll('.btn-primary')[0].textContent = t.btnBook;
+            document.querySelectorAll('.btn-secondary')[0].textContent = t.btnDemo;
+            
+            // Update problem section
+            document.querySelector('.problem-section .section-title').textContent = t.problemTitle;
+            document.querySelector('.problem-section .section-subtitle').textContent = t.problemSubtitle;
+            
+            const problemCards = document.querySelectorAll('.problem-card');
+            if (problemCards.length >= 3) {
+                problemCards[0].querySelector('h3').textContent = t.problem1;
+                problemCards[0].querySelector('p').textContent = t.problem1Text;
+                problemCards[1].querySelector('h3').textContent = t.problem2;
+                problemCards[1].querySelector('p').textContent = t.problem2Text;
+                problemCards[2].querySelector('h3').textContent = t.problem3;
+                problemCards[2].querySelector('p').textContent = t.problem3Text;
+            }
+            
+            // Update solution section
+            document.querySelector('.solution-section .section-title').textContent = t.solutionTitle;
+            document.querySelector('.solution-section .section-subtitle').textContent = t.solutionSubtitle;
+            
+            const solutionCards = document.querySelectorAll('.solution-card');
+            if (solutionCards.length >= 3) {
+                solutionCards[0].querySelector('h3').textContent = t.solution1;
+                solutionCards[0].querySelector('p').textContent = t.solution1Text;
+                solutionCards[1].querySelector('h3').textContent = t.solution2;
+                solutionCards[1].querySelector('p').textContent = t.solution2Text;
+                solutionCards[2].querySelector('h3').textContent = t.solution3;
+                solutionCards[2].querySelector('p').textContent = t.solution3Text;
+            }
+            
+            // Update calculator section
+            document.querySelector('.calculator-section .section-title').textContent = t.calcTitle;
+            document.querySelector('.calculator-section .section-subtitle').textContent = t.calcSubtitle;
+            document.getElementById('calcLabel1').textContent = t.calcLabel1;
+            document.getElementById('calcLabel2').textContent = t.calcLabel2;
+            document.getElementById('calcLabel3').textContent = t.calcLabel3;
+            document.getElementById('calcLabel4').textContent = t.calcLabel4;
+            document.getElementById('calcHelp1').textContent = t.calcHelp1;
+            document.getElementById('calcHelp2').textContent = t.calcHelp2;
+            document.getElementById('calcHelp3').textContent = t.calcHelp3;
+            document.getElementById('calcHelp4').textContent = t.calcHelp4;
+            document.getElementById('calcResultsTitle').textContent = t.calcResultsTitle;
+            document.getElementById('calcResultsSubtitle').textContent = t.calcResultsSubtitle;
+            document.getElementById('calcLostDealsLabel').textContent = t.calcLostDeals;
+            document.getElementById('calcLostRevenueLabel').textContent = t.calcLostRevenue;
+            document.getElementById('calcWastedTimeLabel').textContent = t.calcWastedTime;
+            document.getElementById('calcConversionRateLabel').textContent = t.calcConversionRate;
+            document.getElementById('calcSolutionTitle').textContent = t.calcSolutionTitle;
+            document.getElementById('calcBenefit1').textContent = t.calcBenefit1;
+            document.getElementById('calcBenefit2').textContent = t.calcBenefit2;
+            document.getElementById('calcBenefit3').textContent = t.calcBenefit3;
+            document.getElementById('calcBenefit4').textContent = t.calcBenefit4;
+            document.getElementById('calcCTA').textContent = t.calcCTA;
+
+            // Update dropdown options
+            updateDropdownOptions('responseTime', lang);
+            updateDropdownOptions('industry', lang);
+            
+            // Update testimonial
+            document.querySelector('.testimonial-text').textContent = t.testimonial;
+            document.querySelector('.testimonial-author').textContent = t.testimonialAuthor;
+            
+            // Update CTA section
+            document.querySelector('.cta-section h2').textContent = t.ctaTitle;
+            document.querySelector('.cta-section p').textContent = t.ctaSubtitle;
+            
+            // Update toggle button
+            document.querySelector('.language-toggle').textContent = isFrench ? 'EN' : 'FR';
+            
+            // Switch video source based on language
+            const video = document.getElementById('demoVideo');
+            const sources = video.querySelectorAll('source');
+            sources.forEach(source => {
+                const lang = source.getAttribute('data-lang');
+                if ((isFrench && lang === 'fr') || (!isFrench && lang === 'en')) {
+                    video.src = source.src;
+                    video.load();
+                }
+            });
+        }
+
+        function updateDropdownOptions(selectId, lang) {
+            const select = document.getElementById(selectId);
+            const options = select.querySelectorAll('option');
+            
+            options.forEach(option => {
+                const text = option.getAttribute('data-' + lang);
+                if (text) {
+                    option.textContent = text;
+                }
+            });
+        }
+
+        function calculateROI() {
+            const leadsPerMonth = parseFloat(document.getElementById('leadsPerMonth').value) || 0;
+            const avgDealValue = parseFloat(document.getElementById('avgDealValue').value) || 0;
+            const responseTime = parseFloat(document.getElementById('responseTime').value);
+            const industry = document.getElementById('industry').value;
+
+            const data = industryData[industry];
+            const responseImpact = responseTimeImpact[responseTime];
+
+            // Calculate current conversion rate
+            const currentConversion = data.baseConversion * responseImpact;
+            
+            // Calculate optimal conversion (with fast response)
+            const optimalConversion = data.baseConversion * 1.0;
+
+            // Calculate deals won vs lost
+            const currentDealsWon = leadsPerMonth * currentConversion;
+            const optimalDealsWon = leadsPerMonth * optimalConversion;
+            const dealsLost = optimalDealsWon - currentDealsWon;
+
+            // Calculate revenue impact
+            const monthlyRevenueLost = dealsLost * avgDealValue;
+            const yearlyRevenueLost = monthlyRevenueLost * 12;
+
+            // Calculate time wasted
+            const timeWastedPerLead = data.avgTimePerLead / 60;
+            const totalTimeWasted = dealsLost * timeWastedPerLead;
+
+            // Update UI
+            document.getElementById('lostDeals').textContent = Math.round(dealsLost);
+            document.getElementById('lostRevenue').textContent = '$' + formatNumber(Math.round(yearlyRevenueLost));
+            document.getElementById('wastedTime').textContent = Math.round(totalTimeWasted);
+            document.getElementById('conversionRate').textContent = (currentConversion * 100).toFixed(1) + '%';
+        }
+
+        function formatNumber(num) {
+            return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+        }
+
+        function handleCalcCTA() {
+            window.location.href = 'https://calendar.app.google/XLKtqbHLLfSvWzdZ9';
+        }
+        
+        function playVideo() {
+            const video = document.getElementById('demoVideo');
+            const thumbnail = document.getElementById('videoThumbnail');
+            
+            video.play();
+            thumbnail.style.display = 'none';
+        }
+
+        // Calculate on page load
+        window.addEventListener('DOMContentLoaded', function() {
+            calculateROI();
+        });
+    </script>
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="container">
+            <div class="header-content">
+                <a href="https://www.aveniraisolutions.ca" class="logo">
+                    <img src="https://www.aveniraisolutions.ca/assets/logo.png" alt="Avenir AI Logo">
+                    Avenir AI
+                </a>
+                <nav>
+                    <ul class="nav-links">
+                        <li><a href="https://www.aveniraisolutions.ca" class="nav-home">Home</a></li>
+                        <li><a href="https://www.aveniraisolutions.ca/fr/demo" class="nav-demo">Demo</a></li>
+                        <li><a href="https://calendar.app.google/XLKtqbHLLfSvWzdZ9" class="nav-book">Book Call</a></li>
+                        <li><button class="language-toggle" onclick="toggleLanguage()">FR</button></li>
+                    </ul>
+                </nav>
+            </div>
+        </div>
+    </header>
+
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="container">
+            <h1>Transform Your Lead Process with AI</h1>
+            <p>Stop wasting time on unqualified leads. Our AI automatically analyzes every contact form submission, scores leads by urgency and intent, and prioritizes your hottest prospects.</p>
+            
+            <!-- Video Section -->
+            <div class="video-section">
+                <div class="video-container">
+                    <video class="video-player" id="demoVideo" preload="metadata" controls>
+                        <source src="./1021.mp4" type="video/mp4" data-lang="en">
+                        <source src="./1021-fr.mp4" type="video/mp4" data-lang="fr">
+                        Your browser doesn't support video playback.
+                    </video>
+                    <div class="video-thumbnail" id="videoThumbnail" onclick="playVideo()">
+                        <div class="play-button">▶</div>
+                    </div>
+                </div>
+                <div class="video-title">See Avenir AI in Action - 2 Minute Demo</div>
+            </div>
+            
+            <div class="cta-buttons">
+                <a href="https://calendar.app.google/XLKtqbHLLfSvWzdZ9" class="btn btn-primary">📅 Book a Call</a>
+                <a href="https://www.aveniraisolutions.ca/fr/demo" class="btn btn-secondary">🎯 View Demo</a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Problem Section -->
+    <section class="problem-section">
+        <div class="container">
+            <h2 class="section-title">The Problem with Traditional Lead Management</h2>
+            <p class="section-subtitle">Most construction and real estate businesses struggle with the same issues when it comes to lead prioritization.</p>
+            
+            <div class="problem-grid">
+                <div class="problem-card">
+                    <h3>❌ Wasted Time on Cold Leads</h3>
+                    <p>Sales teams spend hours calling unqualified prospects who aren't ready to buy, while hot leads go cold waiting for follow-up.</p>
+                </div>
+                <div class="problem-card">
+                    <h3>❌ No Lead Scoring System</h3>
+                    <p>There's no way to know which leads are worth your time. Every lead looks the same, leading to poor prioritization and missed opportunities.</p>
+                </div>
+                <div class="problem-card">
+                    <h3>❌ Manual Process Inefficiency</h3>
+                    <p>Manually reviewing every lead submission is time-consuming and inconsistent. Important signals get missed, and follow-up timing is often wrong.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Solution Section -->
+    <section class="solution-section">
+        <div class="container">
+            <h2 class="section-title">How Avenir AI Solves This</h2>
+            <p class="section-subtitle">Our AI-powered system automatically analyzes every lead in real-time, giving you instant insights to prioritize your sales efforts.</p>
+            
+            <div class="solution-grid">
+                <div class="solution-card">
+                    <div class="solution-icon">🤖</div>
+                    <h3>Real-Time Analysis</h3>
+                    <p>Every contact form submission is instantly analyzed for urgency, intent, and quality. No more guessing which leads are worth your time.</p>
+                </div>
+                <div class="solution-card">
+                    <div class="solution-icon">📊</div>
+                    <h3>Intelligent Scoring</h3>
+                    <p>Our AI scores each lead based on multiple factors: urgency level, purchase intent, budget indicators, and timeline signals.</p>
+                </div>
+                <div class="solution-card">
+                    <div class="solution-icon">⚡</div>
+                    <h3>Instant Prioritization</h3>
+                    <p>Hot prospects are automatically flagged and prioritized. Your team only calls leads that are ready to buy, saving hours of wasted effort.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ROI Calculator Section (Replaces Stats Section) -->
+    <section class="calculator-section">
+        <div class="container">
+            <h2 class="section-title">How Much Revenue Are You Losing?</h2>
+            <p class="section-subtitle">Calculate your real losses in 60 seconds</p>
+            
+            <div class="calculator-container">
+                <div class="input-grid">
+                    <div class="input-field">
+                        <label>
+                            📊 <span id="calcLabel1">Leads Per Month</span>
+                        </label>
+                        <input 
+                            type="number" 
+                            id="leadsPerMonth" 
+                            value="50" 
+                            min="1" 
+                            max="1000"
+                            oninput="calculateROI()"
+                        >
+                        <span class="helper-text" id="calcHelp1">Contact form submissions</span>
+                    </div>
+
+                    <div class="input-field">
+                        <label>
+                            💰 <span id="calcLabel2">Average Deal Value</span>
+                        </label>
+                        <input 
+                            type="number" 
+                            id="avgDealValue" 
+                            value="5000" 
+                            min="100" 
+                            max="1000000"
+                            oninput="calculateROI()"
+                        >
+                        <span class="helper-text" id="calcHelp2">Per closed deal</span>
+                    </div>
+
+                    <div class="input-field">
+                        <label>
+                            ⏱️ <span id="calcLabel3">Current Response Time</span>
+                        </label>
+                        <select id="responseTime" onchange="calculateROI()">
+                            <option value="0.25" data-en="15 minutes" data-fr="15 minutes">15 minutes</option>
+                            <option value="1" data-en="1 hour" data-fr="1 heure">1 hour</option>
+                            <option value="4" data-en="4 hours" data-fr="4 heures" selected>4 hours</option>
+                            <option value="12" data-en="12 hours" data-fr="12 heures">12 hours</option>
+                            <option value="24" data-en="24 hours" data-fr="24 heures">24 hours</option>
+                            <option value="48" data-en="2+ days" data-fr="2+ jours">2+ days</option>
+                        </select>
+                        <span class="helper-text" id="calcHelp3">Time to first contact</span>
+                    </div>
+
+                    <div class="input-field">
+                        <label>
+                            🏢 <span id="calcLabel4">Your Industry</span>
+                        </label>
+                        <select id="industry" onchange="calculateROI()">
+                            <option value="construction" data-en="Construction" data-fr="Construction">Construction</option>
+                            <option value="realestate" data-en="Real Estate" data-fr="Immobilier">Real Estate</option>
+                            <option value="homeservices" data-en="Home Services" data-fr="Services Résidentiels">Home Services</option>
+                            <option value="legal" data-en="Legal Services" data-fr="Services Juridiques">Legal Services</option>
+                            <option value="healthcare" data-en="Healthcare" data-fr="Santé">Healthcare</option>
+                            <option value="professional" data-en="Professional Services" data-fr="Services Professionnels">Professional Services</option>
+                            <option value="technology" data-en="Technology" data-fr="Technologie">Technology</option>
+                            <option value="other" data-en="Other" data-fr="Autre">Other</option>
+                        </select>
+                        <span class="helper-text" id="calcHelp4">For accurate calculations</span>
+                    </div>
+                </div>
+
+                <!-- Results Container -->
+                <div class="results-container">
+                    <div class="results-header">
+                        <h3 id="calcResultsTitle">📉 Your Current Situation</h3>
+                        <p id="calcResultsSubtitle">Based on industry benchmarks</p>
+                    </div>
+
+                    <div class="results-grid">
+                        <div class="result-card">
+                            <div class="result-icon">💸</div>
+                            <div class="result-value" id="lostDeals">0</div>
+                            <div class="result-label" id="calcLostDealsLabel">Deals Lost/Month</div>
+                        </div>
+
+                        <div class="result-card">
+                            <div class="result-icon">💰</div>
+                            <div class="result-value" id="lostRevenue">$0</div>
+                            <div class="result-label" id="calcLostRevenueLabel">Lost/Year</div>
+                        </div>
+
+                        <div class="result-card">
+                            <div class="result-icon">⏰</div>
+                            <div class="result-value" id="wastedTime">0</div>
+                            <div class="result-label" id="calcWastedTimeLabel">Hours Wasted/Month</div>
+                        </div>
+
+                        <div class="result-card">
+                            <div class="result-icon">📉</div>
+                            <div class="result-value" id="conversionRate">0%</div>
+                            <div class="result-label" id="calcConversionRateLabel">Conversion Rate</div>
+                        </div>
+                    </div>
+
+                    <!-- Solution Box -->
+                    <div class="solution-box">
+                        <h4 id="calcSolutionTitle">✅ With Avenir AI: Respond in Under 60 Seconds</h4>
+                        <ul class="benefit-list">
+                            <li>
+                                <span class="checkmark">✅</span>
+                                <span id="calcBenefit1">Capture deals while competitors wait</span>
+                            </li>
+                            <li>
+                                <span class="checkmark">✅</span>
+                                <span id="calcBenefit2">Automatic AI analysis of every lead</span>
+                            </li>
+                            <li>
+                                <span class="checkmark">✅</span>
+                                <span id="calcBenefit3">Bilingual support (English + French)</span>
+                            </li>
+                            <li>
+                                <span class="checkmark">✅</span>
+                                <span id="calcBenefit4">Priority scoring so you call the hottest leads first</span>
+                            </li>
+                        </ul>
+                    </div>
+
+                    <!-- CTA -->
+                    <div class="calculator-cta">
+                        <button class="btn btn-primary" onclick="handleCalcCTA()">
+                            <span id="calcCTA">📅 Book a Free Demo - Stop Losing Deals</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Testimonial Section -->
+    <section class="testimonial-section">
+        <div class="container">
+            <div class="testimonial">
+                <div class="testimonial-text">
+                    "This AI saved our sales team 15+ hours per week. We only call leads that are actually ready to buy now. Our conversion rate increased by 300%."
+                </div>
+                <div class="testimonial-author">
+                    — Construction Company Owner, Toronto
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- CTA Section -->
+    <section class="cta-section">
+        <div class="container">
+            <h2>Ready to Transform Your Lead Process?</h2>
+            <p>See how Avenir AI can help your business close more deals with less effort.</p>
+            <div class="cta-buttons">
+                <a href="https://calendar.app.google/XLKtqbHLLfSvWzdZ9" class="btn btn-primary">📅 Book a Call</a>
+                <a href="https://www.aveniraisolutions.ca/fr/demo" class="btn btn-secondary">🎯 View Demo</a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div>
+                    <ul class="footer-links">
+                        <li><a href="https://www.aveniraisolutions.ca">Home</a></li>
+                        <li><a href="https://www.aveniraisolutions.ca/fr/demo">Demo</a></li>
+                        <li><a href="https://calendar.app.google/XLKtqbHLLfSvWzdZ9">Contact</a></li>
+                    </ul>
+                </div>
+                <div class="footer-branding">
+                    Powered by Avenir AI 🧠
+                </div>
+            </div>
+        </div>
+    </footer>
+</body>
+</html>
+

@@ -1,0 +1,830 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI-Powered Lead Intelligence | Avenir AI Solutions</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            line-height: 1.6;
+            color: #1e293b;
+            background: #f8fafc;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+        
+        /* Header */
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 20px 0;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+        
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .logo {
+            color: white;
+            font-size: 24px;
+            font-weight: 700;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            letter-spacing: -0.5px;
+        }
+        
+        .logo img {
+            height: 36px;
+            width: auto;
+            filter: brightness(0) invert(1);
+        }
+        
+        .nav-links {
+            display: flex;
+            gap: 30px;
+            list-style: none;
+            align-items: center;
+        }
+        
+        .language-toggle {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 6px;
+            padding: 6px 12px;
+            color: white;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            margin-left: 20px;
+        }
+        
+        .language-toggle:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: translateY(-1px);
+        }
+        
+        .nav-links a {
+            color: white;
+            text-decoration: none;
+            font-weight: 500;
+            font-size: 15px;
+            padding: 8px 16px;
+            border-radius: 6px;
+            transition: all 0.2s ease;
+        }
+        
+        .nav-links a:hover {
+            background: rgba(255, 255, 255, 0.1);
+            transform: translateY(-1px);
+        }
+        
+        /* Hero Section */
+        .hero {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 80px 0;
+            text-align: center;
+            color: white;
+        }
+        
+        .hero h1 {
+            font-size: 48px;
+            font-weight: 800;
+            margin-bottom: 20px;
+            line-height: 1.2;
+        }
+        
+        .hero p {
+            font-size: 20px;
+            margin-bottom: 40px;
+            opacity: 0.9;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        
+        .video-section {
+            margin: 50px 0;
+            text-align: center;
+        }
+        
+        .video-container {
+            position: relative;
+            max-width: 800px;
+            margin: 0 auto;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+            background: #000;
+        }
+        
+        .video-player {
+            width: 100%;
+            height: 450px;
+            border: none;
+            outline: none;
+        }
+        
+        .video-thumbnail {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: opacity 0.3s ease;
+        }
+        
+        .video-thumbnail:hover {
+            opacity: 0.9;
+        }
+        
+        .play-button {
+            width: 80px;
+            height: 80px;
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 32px;
+            color: #667eea;
+            transition: all 0.3s ease;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+        }
+        
+        .play-button:hover {
+            transform: scale(1.1);
+            background: white;
+        }
+        
+        .video-title {
+            color: white;
+            font-size: 18px;
+            font-weight: 600;
+            margin-top: 20px;
+            opacity: 0.9;
+        }
+        
+        @media (max-width: 768px) {
+            .video-player {
+                height: 250px;
+            }
+            
+            .play-button {
+                width: 60px;
+                height: 60px;
+                font-size: 24px;
+            }
+        }
+        
+        .cta-buttons {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+        
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 16px 32px;
+            border-radius: 10px;
+            font-weight: 700;
+            font-size: 16px;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: white;
+            border: 2px solid #059669;
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 15px -3px rgba(16, 185, 129, 0.3);
+        }
+        
+        .btn-secondary {
+            background: transparent;
+            color: white;
+            border: 2px solid white;
+        }
+        
+        .btn-secondary:hover {
+            background: white;
+            color: #667eea;
+        }
+        
+        /* Problem Section */
+        .problem-section {
+            padding: 80px 0;
+            background: white;
+        }
+        
+        .section-title {
+            text-align: center;
+            font-size: 36px;
+            font-weight: 700;
+            margin-bottom: 20px;
+            color: #1e293b;
+        }
+        
+        .section-subtitle {
+            text-align: center;
+            font-size: 18px;
+            color: #64748b;
+            margin-bottom: 60px;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        
+        .problem-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+            margin-top: 60px;
+        }
+        
+        .problem-card {
+            background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+            border-left: 4px solid #f59e0b;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px -1px rgba(245, 158, 11, 0.1);
+        }
+        
+        .problem-card h3 {
+            font-size: 20px;
+            font-weight: 700;
+            color: #92400e;
+            margin-bottom: 15px;
+        }
+        
+        .problem-card p {
+            color: #78350f;
+            line-height: 1.6;
+        }
+        
+        /* Solution Section */
+        .solution-section {
+            padding: 80px 0;
+            background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+        }
+        
+        .solution-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+            margin-top: 60px;
+        }
+        
+        .solution-card {
+            background: white;
+            padding: 40px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            border: 2px solid #0284c7;
+        }
+        
+        .solution-icon {
+            font-size: 48px;
+            margin-bottom: 20px;
+        }
+        
+        .solution-card h3 {
+            font-size: 24px;
+            font-weight: 700;
+            color: #1e293b;
+            margin-bottom: 15px;
+        }
+        
+        .solution-card p {
+            color: #64748b;
+            line-height: 1.6;
+        }
+        
+        /* Stats Section */
+        .stats-section {
+            padding: 80px 0;
+            background: white;
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 40px;
+            margin-top: 60px;
+        }
+        
+        .stat-card {
+            text-align: center;
+            padding: 40px 20px;
+            background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+            border-radius: 12px;
+            border: 2px solid #0284c7;
+        }
+        
+        .stat-number {
+            font-size: 48px;
+            font-weight: 800;
+            background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            display: block;
+            margin-bottom: 10px;
+        }
+        
+        .stat-label {
+            font-size: 16px;
+            color: #0c4a6e;
+            font-weight: 600;
+        }
+        
+        /* Testimonial Section */
+        .testimonial-section {
+            padding: 80px 0;
+            background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
+        }
+        
+        .testimonial {
+            max-width: 800px;
+            margin: 0 auto;
+            text-align: center;
+            background: white;
+            padding: 40px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px -1px rgba(16, 185, 129, 0.1);
+        }
+        
+        .testimonial-text {
+            font-size: 20px;
+            font-style: italic;
+            color: #065f46;
+            margin-bottom: 20px;
+            line-height: 1.6;
+        }
+        
+        .testimonial-author {
+            font-size: 16px;
+            color: #047857;
+            font-weight: 700;
+        }
+        
+        /* CTA Section */
+        .cta-section {
+            padding: 80px 0;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            text-align: center;
+            color: white;
+        }
+        
+        .cta-section h2 {
+            font-size: 36px;
+            font-weight: 700;
+            margin-bottom: 20px;
+        }
+        
+        .cta-section p {
+            font-size: 18px;
+            margin-bottom: 40px;
+            opacity: 0.9;
+        }
+        
+        /* Footer */
+        .footer {
+            background: #1e293b;
+            padding: 40px 0;
+            text-align: center;
+            color: #cbd5e1;
+        }
+        
+        .footer-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+        
+        .footer-links {
+            display: flex;
+            gap: 30px;
+            list-style: none;
+        }
+        
+        .footer-links a {
+            color: #cbd5e1;
+            text-decoration: none;
+            transition: color 0.2s;
+        }
+        
+        .footer-links a:hover {
+            color: white;
+        }
+        
+        .footer-branding {
+            color: #667eea;
+            font-weight: 700;
+            font-size: 16px;
+        }
+        
+        @media (max-width: 768px) {
+            .hero h1 {
+                font-size: 36px;
+            }
+            
+            .hero p {
+                font-size: 18px;
+            }
+            
+            .cta-buttons {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            .btn {
+                width: 100%;
+                max-width: 300px;
+            }
+            
+            .nav-links {
+                display: none;
+            }
+            
+            .footer-content {
+                flex-direction: column;
+                text-align: center;
+            }
+        }
+    </style>
+    <script>
+        let isFrench = false;
+        
+        const translations = {
+            en: {
+                navHome: "Home",
+                navDemo: "Demo", 
+                navBook: "Book Call",
+                heroTitle: "Transform Your Lead Process with AI",
+                heroSubtitle: "Stop wasting time on unqualified leads. Our AI automatically analyzes every contact form submission, scores leads by urgency and intent, and prioritizes your hottest prospects.",
+                btnBook: "📅 Book a Call",
+                btnDemo: "🎯 View Demo",
+                problemTitle: "The Problem with Traditional Lead Management",
+                problemSubtitle: "Most construction and real estate businesses struggle with the same issues when it comes to lead prioritization.",
+                problem1: "❌ Wasted Time on Cold Leads",
+                problem1Text: "Sales teams spend hours calling unqualified prospects who aren't ready to buy, while hot leads go cold waiting for follow-up.",
+                problem2: "❌ No Lead Scoring System", 
+                problem2Text: "There's no way to know which leads are worth your time. Every lead looks the same, leading to poor prioritization and missed opportunities.",
+                problem3: "❌ Manual Process Inefficiency",
+                problem3Text: "Manually reviewing every lead submission is time-consuming and inconsistent. Important signals get missed, and follow-up timing is often wrong.",
+                solutionTitle: "How Avenir AI Solves This",
+                solutionSubtitle: "Our AI-powered system automatically analyzes every lead in real-time, giving you instant insights to prioritize your sales efforts.",
+                solution1: "Real-Time Analysis",
+                solution1Text: "Every contact form submission is instantly analyzed for urgency, intent, and quality. No more guessing which leads are worth your time.",
+                solution2: "Intelligent Scoring",
+                solution2Text: "Our AI scores each lead based on multiple factors: urgency level, purchase intent, budget indicators, and timeline signals.",
+                solution3: "Instant Prioritization", 
+                solution3Text: "Hot prospects are automatically flagged and prioritized. Your team only calls leads that are ready to buy, saving hours of wasted effort.",
+                statsTitle: "Proven Results",
+                statsSubtitle: "See how Avenir AI is transforming lead management for construction and real estate businesses.",
+                stat1: "More Qualified Leads",
+                stat2: "Less Wasted Time", 
+                stat3: "Businesses Using It",
+                stat4: "Automatic Analysis",
+                testimonial: "This AI saved our sales team 15+ hours per week. We only call leads that are actually ready to buy now. Our conversion rate increased by 300%.",
+                testimonialAuthor: "— Construction Company Owner, Toronto",
+                ctaTitle: "Ready to Transform Your Lead Process?",
+                ctaSubtitle: "See how Avenir AI can help your business close more deals with less effort."
+            },
+            fr: {
+                navHome: "Accueil",
+                navDemo: "Démo",
+                navBook: "Réserver",
+                heroTitle: "Transformez Votre Processus de Prospects avec l'IA",
+                heroSubtitle: "Arrêtez de perdre du temps sur des prospects non qualifiés. Notre IA analyse automatiquement chaque soumission de formulaire de contact, note les prospects par urgence et intention, et priorise vos prospects les plus chauds.",
+                btnBook: "📅 Réserver un Appel",
+                btnDemo: "🎯 Voir la Démo",
+                problemTitle: "Le Problème avec la Gestion Traditionnelle des Prospects",
+                problemSubtitle: "La plupart des entreprises de construction et d'immobilier luttent avec les mêmes problèmes en matière de priorisation des prospects.",
+                problem1: "❌ Temps Perdu sur les Prospects Froids",
+                problem1Text: "Les équipes commerciales passent des heures à appeler des prospects non qualifiés qui ne sont pas prêts à acheter, pendant que les prospects chauds refroidissent en attendant un suivi.",
+                problem2: "❌ Aucun Système de Notation",
+                problem2Text: "Il n'y a aucun moyen de savoir quels prospects valent votre temps. Chaque prospect semble identique, menant à une mauvaise priorisation et des opportunités manquées.",
+                problem3: "❌ Inefficacité du Processus Manuel",
+                problem3Text: "Examiner manuellement chaque soumission de prospect prend du temps et est incohérent. Des signaux importants sont manqués, et le timing du suivi est souvent mauvais.",
+                solutionTitle: "Comment Avenir AI Résout Ceci",
+                solutionSubtitle: "Notre système alimenté par l'IA analyse automatiquement chaque prospect en temps réel, vous donnant des insights instantanés pour prioriser vos efforts commerciaux.",
+                solution1: "Analyse en Temps Réel",
+                solution1Text: "Chaque soumission de formulaire de contact est instantanément analysée pour l'urgence, l'intention et la qualité. Plus de devinettes sur quels prospects valent votre temps.",
+                solution2: "Notation Intelligente",
+                solution2Text: "Notre IA note chaque prospect basé sur plusieurs facteurs : niveau d'urgence, intention d'achat, indicateurs de budget, et signaux de calendrier.",
+                solution3: "Priorisation Instantanée",
+                solution3Text: "Les prospects chauds sont automatiquement signalés et priorisés. Votre équipe n'appelle que les prospects prêts à acheter, économisant des heures d'effort gaspillé.",
+                statsTitle: "Résultats Prouvés",
+                statsSubtitle: "Voyez comment Avenir AI transforme la gestion des prospects pour les entreprises de construction et d'immobilier.",
+                stat1: "Plus de Prospects Qualifiés",
+                stat2: "Moins de Temps Perdu",
+                stat3: "Entreprises qui l'Utilisent", 
+                stat4: "Analyse Automatique",
+                testimonial: "Cette IA a fait économiser 15+ heures par semaine à notre équipe commerciale. Nous n'appelons que les prospects qui sont vraiment prêts à acheter maintenant. Notre taux de conversion a augmenté de 300%.",
+                testimonialAuthor: "— Propriétaire d'Entreprise de Construction, Toronto",
+                ctaTitle: "Prêt à Transformer Votre Processus de Prospects ?",
+                ctaSubtitle: "Voyez comment Avenir AI peut aider votre entreprise à conclure plus de contrats avec moins d'effort."
+            }
+        };
+        
+        function toggleLanguage() {
+            isFrench = !isFrench;
+            const lang = isFrench ? 'fr' : 'en';
+            const t = translations[lang];
+            
+            // Update navigation
+            document.querySelector('.nav-home').textContent = t.navHome;
+            document.querySelector('.nav-demo').textContent = t.navDemo;
+            document.querySelector('.nav-book').textContent = t.navBook;
+            
+            // Update hero section
+            document.querySelector('.hero h1').textContent = t.heroTitle;
+            document.querySelector('.hero p').textContent = t.heroSubtitle;
+            document.querySelector('.btn-primary').textContent = t.btnBook;
+            document.querySelector('.btn-secondary').textContent = t.btnDemo;
+            
+            // Update problem section
+            document.querySelector('.problem-section .section-title').textContent = t.problemTitle;
+            document.querySelector('.problem-section .section-subtitle').textContent = t.problemSubtitle;
+            
+            // Update solution section
+            document.querySelector('.solution-section .section-title').textContent = t.solutionTitle;
+            document.querySelector('.solution-section .section-subtitle').textContent = t.solutionSubtitle;
+            
+            // Update stats section
+            document.querySelector('.stats-section .section-title').textContent = t.statsTitle;
+            document.querySelector('.stats-section .section-subtitle').textContent = t.statsSubtitle;
+            
+            // Update testimonial
+            document.querySelector('.testimonial-text').textContent = t.testimonial;
+            document.querySelector('.testimonial-author').textContent = t.testimonialAuthor;
+            
+            // Update problem cards
+            const problemCards = document.querySelectorAll('.problem-card');
+            if (problemCards.length >= 3) {
+                problemCards[0].querySelector('h3').textContent = t.problem1;
+                problemCards[0].querySelector('p').textContent = t.problem1Text;
+                problemCards[1].querySelector('h3').textContent = t.problem2;
+                problemCards[1].querySelector('p').textContent = t.problem2Text;
+                problemCards[2].querySelector('h3').textContent = t.problem3;
+                problemCards[2].querySelector('p').textContent = t.problem3Text;
+            }
+            
+            // Update solution cards
+            const solutionCards = document.querySelectorAll('.solution-card');
+            if (solutionCards.length >= 3) {
+                solutionCards[0].querySelector('h3').textContent = t.solution1;
+                solutionCards[0].querySelector('p').textContent = t.solution1Text;
+                solutionCards[1].querySelector('h3').textContent = t.solution2;
+                solutionCards[1].querySelector('p').textContent = t.solution2Text;
+                solutionCards[2].querySelector('h3').textContent = t.solution3;
+                solutionCards[2].querySelector('p').textContent = t.solution3Text;
+            }
+            
+            // Update stat labels
+            const statLabels = document.querySelectorAll('.stat-label');
+            if (statLabels.length >= 4) {
+                statLabels[0].textContent = t.stat1;
+                statLabels[1].textContent = t.stat2;
+                statLabels[2].textContent = t.stat3;
+                statLabels[3].textContent = t.stat4;
+            }
+            
+            // Update CTA section
+            document.querySelector('.cta-section h2').textContent = t.ctaTitle;
+            document.querySelector('.cta-section p').textContent = t.ctaSubtitle;
+            
+            // Update toggle button
+            document.querySelector('.language-toggle').textContent = isFrench ? 'EN' : 'FR';
+            
+            // Switch video source based on language
+            const video = document.getElementById('demoVideo');
+            const sources = video.querySelectorAll('source');
+            sources.forEach(source => {
+                const lang = source.getAttribute('data-lang');
+                if ((isFrench && lang === 'fr') || (!isFrench && lang === 'en')) {
+                    video.src = source.src;
+                    video.load(); // Reload video with new source
+                }
+            });
+        }
+        
+        function playVideo() {
+            const video = document.getElementById('demoVideo');
+            const thumbnail = document.getElementById('videoThumbnail');
+            
+            video.play();
+            thumbnail.style.display = 'none';
+        }
+    </script>
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="container">
+            <div class="header-content">
+                <a href="https://www.aveniraisolutions.ca" class="logo">
+                    <img src="https://www.aveniraisolutions.ca/assets/logo.png" alt="Avenir AI Logo">
+                    Avenir AI
+                </a>
+                <nav>
+                    <ul class="nav-links">
+                        <li><a href="https://www.aveniraisolutions.ca" class="nav-home">Home</a></li>
+                        <li><a href="https://www.aveniraisolutions.ca/fr/demo" class="nav-demo">Demo</a></li>
+                        <li><a href="https://calendar.app.google/XLKtqbHLLfSvWzdZ9" class="nav-book">Book Call</a></li>
+                        <li><button class="language-toggle" onclick="toggleLanguage()">FR</button></li>
+                    </ul>
+                </nav>
+            </div>
+        </div>
+    </header>
+
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="container">
+            <h1>Transform Your Lead Process with AI</h1>
+            <p>Stop wasting time on unqualified leads. Our AI automatically analyzes every contact form submission, scores leads by urgency and intent, and prioritizes your hottest prospects.</p>
+            
+            <!-- Video Section -->
+            <div class="video-section">
+                <div class="video-container">
+                    <video class="video-player" id="demoVideo" preload="metadata" controls>
+                        <source src="./1021.mp4" type="video/mp4" data-lang="en">
+                        <source src="./1021-fr.mp4" type="video/mp4" data-lang="fr">
+                        Your browser doesn't support video playback.
+                    </video>
+                    <div class="video-thumbnail" id="videoThumbnail" onclick="playVideo()">
+                        <div class="play-button">▶</div>
+                    </div>
+                </div>
+                <div class="video-title">See Avenir AI in Action - 2 Minute Demo</div>
+            </div>
+            
+            <div class="cta-buttons">
+                <a href="https://calendar.app.google/XLKtqbHLLfSvWzdZ9" class="btn btn-primary">📅 Book a Call</a>
+                <a href="https://www.aveniraisolutions.ca/fr/demo" class="btn btn-secondary">🎯 View Demo</a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Problem Section -->
+    <section class="problem-section">
+        <div class="container">
+            <h2 class="section-title">The Problem with Traditional Lead Management</h2>
+            <p class="section-subtitle">Most construction and real estate businesses struggle with the same issues when it comes to lead prioritization.</p>
+            
+            <div class="problem-grid">
+                <div class="problem-card">
+                    <h3>❌ Wasted Time on Cold Leads</h3>
+                    <p>Sales teams spend hours calling unqualified prospects who aren't ready to buy, while hot leads go cold waiting for follow-up.</p>
+                </div>
+                <div class="problem-card">
+                    <h3>❌ No Lead Scoring System</h3>
+                    <p>There's no way to know which leads are worth your time. Every lead looks the same, leading to poor prioritization and missed opportunities.</p>
+                </div>
+                <div class="problem-card">
+                    <h3>❌ Manual Process Inefficiency</h3>
+                    <p>Manually reviewing every lead submission is time-consuming and inconsistent. Important signals get missed, and follow-up timing is often wrong.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Solution Section -->
+    <section class="solution-section">
+        <div class="container">
+            <h2 class="section-title">How Avenir AI Solves This</h2>
+            <p class="section-subtitle">Our AI-powered system automatically analyzes every lead in real-time, giving you instant insights to prioritize your sales efforts.</p>
+            
+            <div class="solution-grid">
+                <div class="solution-card">
+                    <div class="solution-icon">🤖</div>
+                    <h3>Real-Time Analysis</h3>
+                    <p>Every contact form submission is instantly analyzed for urgency, intent, and quality. No more guessing which leads are worth your time.</p>
+                </div>
+                <div class="solution-card">
+                    <div class="solution-icon">📊</div>
+                    <h3>Intelligent Scoring</h3>
+                    <p>Our AI scores each lead based on multiple factors: urgency level, purchase intent, budget indicators, and timeline signals.</p>
+                </div>
+                <div class="solution-card">
+                    <div class="solution-icon">⚡</div>
+                    <h3>Instant Prioritization</h3>
+                    <p>Hot prospects are automatically flagged and prioritized. Your team only calls leads that are ready to buy, saving hours of wasted effort.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Stats Section -->
+    <section class="stats-section">
+        <div class="container">
+            <h2 class="section-title">Proven Results</h2>
+            <p class="section-subtitle">See how Avenir AI is transforming lead management for construction and real estate businesses.</p>
+            
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <span class="stat-number">3x</span>
+                    <span class="stat-label">More Qualified Leads</span>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-number">80%</span>
+                    <span class="stat-label">Less Wasted Time</span>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-number">15+</span>
+                    <span class="stat-label">Businesses Using It</span>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-number">24/7</span>
+                    <span class="stat-label">Automatic Analysis</span>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Testimonial Section -->
+    <section class="testimonial-section">
+        <div class="container">
+            <div class="testimonial">
+                <div class="testimonial-text">
+                    "This AI saved our sales team 15+ hours per week. We only call leads that are actually ready to buy now. Our conversion rate increased by 300%."
+                </div>
+                <div class="testimonial-author">
+                    — Construction Company Owner, Toronto
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- CTA Section -->
+    <section class="cta-section">
+        <div class="container">
+            <h2>Ready to Transform Your Lead Process?</h2>
+            <p>See how Avenir AI can help your business close more deals with less effort.</p>
+            <div class="cta-buttons">
+                <a href="https://calendar.app.google/XLKtqbHLLfSvWzdZ9" class="btn btn-primary">📅 Book a Call</a>
+                <a href="https://www.aveniraisolutions.ca/fr/demo" class="btn btn-secondary">🎯 View Demo</a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div>
+                    <ul class="footer-links">
+                        <li><a href="https://www.aveniraisolutions.ca">Home</a></li>
+                        <li><a href="https://www.aveniraisolutions.ca/fr/demo">Demo</a></li>
+                        <li><a href="https://calendar.app.google/XLKtqbHLLfSvWzdZ9">Contact</a></li>
+                    </ul>
+                </div>
+                <div class="footer-branding">
+                    Powered by Avenir AI 🧠
+                </div>
+            </div>
+        </div>
+    </footer>
+</body>
+</html>
