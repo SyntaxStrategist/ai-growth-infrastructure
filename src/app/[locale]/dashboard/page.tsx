@@ -860,12 +860,12 @@ export default function Dashboard() {
         return translated.charAt(0).toUpperCase() + translated.slice(1); // Capitalize first letter
       }
       
-      // If already in French or no mapping, return as-is
-      return tone;
+      // If already in French or no mapping, capitalize and return
+      return tone.charAt(0).toUpperCase() + tone.slice(1);
     }
     
-    // English dashboard - return as-is
-    return tone;
+    // English dashboard - capitalize first letter
+    return tone.charAt(0).toUpperCase() + tone.slice(1);
   };
 
   const tabLabels = {
@@ -1251,7 +1251,9 @@ export default function Dashboard() {
                 <div>
                   <span className="text-white/50 text-xs block mb-1">{t('dashboard.table.intent')}</span>
                   <p className="text-blue-300 font-medium">
-                    {lead.translated_ai?.intent || lead.intent || 'N/A'}
+                    {lead.translated_ai?.intent || lead.intent ? 
+                      (lead.translated_ai?.intent || lead.intent).charAt(0).toUpperCase() + (lead.translated_ai?.intent || lead.intent).slice(1) 
+                      : 'N/A'}
                   </p>
                 </div>
                 <div>
