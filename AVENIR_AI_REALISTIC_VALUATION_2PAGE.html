@@ -1,0 +1,514 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Avenir AI Solutions - Company Valuation</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+        
+        @page {
+            size: A4;
+            margin: 1.5cm;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            line-height: 1.5;
+            color: #1e293b;
+            background: white;
+            font-size: 11pt;
+        }
+        
+        .page {
+            width: 21cm;
+            min-height: 29.7cm;
+            padding: 1.5cm;
+            margin: 0 auto 2cm;
+            background: white;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            page-break-after: always;
+        }
+        
+        .page:last-child {
+            page-break-after: avoid;
+        }
+        
+        .header {
+            border-bottom: 3px solid #667eea;
+            padding-bottom: 12px;
+            margin-bottom: 20px;
+        }
+        
+        .company-name {
+            font-size: 24pt;
+            font-weight: 800;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 4px;
+        }
+        
+        .subtitle {
+            font-size: 10pt;
+            color: #64748b;
+            font-weight: 500;
+        }
+        
+        .date {
+            font-size: 9pt;
+            color: #94a3b8;
+            margin-top: 4px;
+        }
+        
+        h2 {
+            font-size: 14pt;
+            font-weight: 700;
+            color: #1e293b;
+            margin: 16px 0 10px 0;
+            padding-bottom: 6px;
+            border-bottom: 2px solid #e2e8f0;
+        }
+        
+        h3 {
+            font-size: 11pt;
+            font-weight: 700;
+            color: #334155;
+            margin: 12px 0 6px 0;
+        }
+        
+        .exec-summary {
+            background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+            border-left: 4px solid #0284c7;
+            padding: 14px;
+            margin: 12px 0;
+            border-radius: 6px;
+        }
+        
+        .valuation-box {
+            background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
+            border: 2px solid #10b981;
+            padding: 16px;
+            margin: 12px 0;
+            border-radius: 8px;
+            text-align: center;
+        }
+        
+        .valuation-number {
+            font-size: 20pt;
+            font-weight: 800;
+            color: #065f46;
+            margin: 8px 0;
+        }
+        
+        .valuation-label {
+            font-size: 9pt;
+            color: #047857;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .metric-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin: 12px 0;
+        }
+        
+        .metric-card {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            padding: 10px;
+            border-radius: 6px;
+        }
+        
+        .metric-value {
+            font-size: 14pt;
+            font-weight: 700;
+            color: #0284c7;
+            margin-bottom: 2px;
+        }
+        
+        .metric-label {
+            font-size: 8pt;
+            color: #64748b;
+            font-weight: 600;
+        }
+        
+        ul {
+            margin: 8px 0 8px 20px;
+            padding: 0;
+        }
+        
+        li {
+            margin: 4px 0;
+            font-size: 10pt;
+            line-height: 1.4;
+        }
+        
+        .highlight {
+            background: #fef3c7;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-weight: 600;
+            color: #92400e;
+        }
+        
+        .tech-stack {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            padding: 12px;
+            border-radius: 6px;
+            margin: 10px 0;
+        }
+        
+        .tech-item {
+            display: inline-block;
+            background: white;
+            border: 1px solid #cbd5e1;
+            padding: 4px 10px;
+            margin: 3px;
+            border-radius: 4px;
+            font-size: 9pt;
+            font-weight: 500;
+            color: #475569;
+        }
+        
+        .warning-box {
+            background: #fef3c7;
+            border-left: 4px solid #f59e0b;
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 4px;
+        }
+        
+        .warning-title {
+            font-weight: 700;
+            color: #92400e;
+            font-size: 10pt;
+            margin-bottom: 4px;
+        }
+        
+        .warning-text {
+            font-size: 9pt;
+            color: #78350f;
+            line-height: 1.4;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 10px 0;
+            font-size: 9pt;
+        }
+        
+        th {
+            background: #f1f5f9;
+            padding: 8px;
+            text-align: left;
+            font-weight: 700;
+            color: #334155;
+            border-bottom: 2px solid #cbd5e1;
+        }
+        
+        td {
+            padding: 6px 8px;
+            border-bottom: 1px solid #e2e8f0;
+        }
+        
+        .footer {
+            margin-top: 20px;
+            padding-top: 12px;
+            border-top: 1px solid #e2e8f0;
+            font-size: 8pt;
+            color: #94a3b8;
+            text-align: center;
+        }
+        
+        @media print {
+            body {
+                background: white;
+            }
+            
+            .page {
+                box-shadow: none;
+                margin: 0;
+                page-break-after: always;
+            }
+            
+            .page:last-child {
+                page-break-after: avoid;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- PAGE 1 -->
+    <div class="page">
+        <div class="header">
+            <div class="company-name">Avenir AI Solutions</div>
+            <div class="subtitle">Company Valuation Analysis</div>
+            <div class="date">October 2025 • Confidential</div>
+        </div>
+
+        <div class="exec-summary">
+            <strong style="font-size: 10pt;">Executive Summary:</strong> Avenir AI is a pre-revenue B2B SaaS platform providing AI-powered lead intelligence and prospect discovery. The platform is technically sophisticated with bilingual (EN/FR) support and production deployment on Vercel, targeting construction, real estate, and professional services markets in North America.
+        </div>
+
+        <h2>Current Status</h2>
+        <div class="metric-grid">
+            <div class="metric-card">
+                <div class="metric-value">Pre-Revenue</div>
+                <div class="metric-label">Current MRR</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-value">Production</div>
+                <div class="metric-label">Deployment Status</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-value">0-2</div>
+                <div class="metric-label">Paying Clients</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-value">Founder</div>
+                <div class="metric-label">Team Size</div>
+            </div>
+        </div>
+
+        <h2>Technical Asset Value</h2>
+        
+        <h3>Technology Stack</h3>
+        <div class="tech-stack">
+            <span class="tech-item">Next.js 15</span>
+            <span class="tech-item">React 19</span>
+            <span class="tech-item">TypeScript</span>
+            <span class="tech-item">Supabase</span>
+            <span class="tech-item">OpenAI GPT-4o-mini</span>
+            <span class="tech-item">Vercel</span>
+            <span class="tech-item">Tailwind CSS</span>
+            <span class="tech-item">Gmail API</span>
+        </div>
+
+        <h3>Development Investment</h3>
+        <p style="font-size: 10pt; margin: 8px 0;">Estimated development time: <span class="highlight">800-1,200 hours</span> (solo founder)</p>
+        
+        <ul style="font-size: 10pt;">
+            <li>Full-stack development (Next.js, React, TypeScript, API routes)</li>
+            <li>Database design and Supabase integration (15+ tables)</li>
+            <li>OpenAI integration with custom prompting</li>
+            <li>Bilingual internationalization (EN/FR)</li>
+            <li>Client/admin dashboard architecture</li>
+            <li>Email automation system (Gmail API, templates)</li>
+            <li>Prospect intelligence and ICP matching</li>
+            <li>Production deployment and testing</li>
+        </ul>
+
+        <p style="font-size: 10pt; margin: 10px 0;"><strong>Market Rate Development Cost:</strong> $150/hr × 1,000 hrs = <span class="highlight">$150,000 - $180,000</span></p>
+
+        <h3>Production Features</h3>
+        <ul style="font-size: 10pt;">
+            <li><strong>Lead Intelligence:</strong> AI analysis of contact form submissions (intent, urgency, tone, confidence scoring)</li>
+            <li><strong>Client Dashboards:</strong> Multi-tenant system with client/admin separation and RLS</li>
+            <li><strong>Prospect Discovery:</strong> ICP matching, business fit analysis, automated scoring</li>
+            <li><strong>Email Automation:</strong> Tone-based templates (4 styles), bilingual support, Gmail integration</li>
+            <li><strong>Bilingual Platform:</strong> Full EN/FR localization with semantic translation</li>
+            <li><strong>ROI Calculator:</strong> Industry-specific lead response time calculator (8 industries)</li>
+        </ul>
+
+        <h2>Realistic Valuation Range</h2>
+
+        <div class="valuation-box">
+            <div class="valuation-label">Technical Asset Value</div>
+            <div class="valuation-number">$200K - $350K</div>
+            <p style="font-size: 9pt; color: #047857; margin-top: 6px;">Based on development cost + technology premium for AI integration</p>
+        </div>
+
+        <h3>Valuation Methodology</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>Factor</th>
+                    <th>Assessment</th>
+                    <th>Value Impact</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Development Cost</td>
+                    <td>$150K-$180K at market rates</td>
+                    <td>Baseline</td>
+                </tr>
+                <tr>
+                    <td>AI Integration</td>
+                    <td>OpenAI + custom prompting</td>
+                    <td>+30%</td>
+                </tr>
+                <tr>
+                    <td>Production Deployed</td>
+                    <td>Live on Vercel</td>
+                    <td>+25%</td>
+                </tr>
+                <tr>
+                    <td>Bilingual Support</td>
+                    <td>Full EN/FR</td>
+                    <td>+15%</td>
+                </tr>
+                <tr>
+                    <td>Multi-Tenant Architecture</td>
+                    <td>Scalable client system</td>
+                    <td>+20%</td>
+                </tr>
+                <tr>
+                    <td>Pre-Revenue Status</td>
+                    <td>No paying customers yet</td>
+                    <td>-50%</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="footer">
+            Avenir AI Solutions • October 2025 • Confidential • Page 1 of 2
+        </div>
+    </div>
+
+    <!-- PAGE 2 -->
+    <div class="page">
+        <div class="header">
+            <div class="company-name">Avenir AI Solutions</div>
+            <div class="subtitle">Company Valuation Analysis (Continued)</div>
+        </div>
+
+        <h2>Market Opportunity & Positioning</h2>
+        
+        <h3>Target Market</h3>
+        <ul style="font-size: 10pt;">
+            <li><strong>Primary:</strong> Construction, Real Estate, Professional Services (Canada + US)</li>
+            <li><strong>Market Size:</strong> $18B+ (Sales Intelligence & AI Business Tools)</li>
+            <li><strong>ICP:</strong> 10-200 employee companies with manual lead processes</li>
+        </ul>
+
+        <h3>Competitive Landscape</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>Company</th>
+                    <th>Valuation</th>
+                    <th>Key Difference</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Apollo.io</td>
+                    <td>$250M+</td>
+                    <td>Larger, established customer base</td>
+                </tr>
+                <tr>
+                    <td>Outreach.io</td>
+                    <td>$4.4B</td>
+                    <td>Enterprise sales focus, mature product</td>
+                </tr>
+                <tr>
+                    <td>Avenir AI</td>
+                    <td><strong>$200K-$350K</strong></td>
+                    <td>Pre-revenue, bilingual, ICP matching</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h3>Unique Differentiators</h3>
+        <ul style="font-size: 10pt;">
+            <li>✅ <strong>True Bilingual:</strong> Native EN/FR (rare in sales intelligence)</li>
+            <li>✅ <strong>ICP Semantic Matching:</strong> AI-powered business fit analysis</li>
+            <li>✅ <strong>Tone-Adaptive Emails:</strong> 4 communication styles</li>
+            <li>✅ <strong>Integrated Platform:</strong> Lead + Prospect intelligence in one system</li>
+        </ul>
+
+        <h2>Growth Scenarios (12 Months)</h2>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>Scenario</th>
+                    <th>Clients</th>
+                    <th>MRR</th>
+                    <th>ARR</th>
+                    <th>Valuation (3-5x)</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><strong>Conservative</strong></td>
+                    <td>15</td>
+                    <td>$15K</td>
+                    <td>$180K</td>
+                    <td>$540K - $900K</td>
+                </tr>
+                <tr>
+                    <td><strong>Moderate</strong></td>
+                    <td>35</td>
+                    <td>$35K</td>
+                    <td>$420K</td>
+                    <td>$1.3M - $2.1M</td>
+                </tr>
+                <tr>
+                    <td><strong>Optimistic</strong></td>
+                    <td>75</td>
+                    <td>$75K</td>
+                    <td>$900K</td>
+                    <td>$2.7M - $4.5M</td>
+                </tr>
+            </tbody>
+        </table>
+        
+        <p style="font-size: 9pt; color: #64748b; margin-top: 8px;"><em>Assumes $1,000/mo average client value. Multiples based on early-stage B2B SaaS standards.</em></p>
+
+        <h2>Risks & Considerations</h2>
+        
+        <div class="warning-box">
+            <div class="warning-title">⚠️ Key Risks</div>
+            <div class="warning-text">
+                <strong>Pre-Revenue Status:</strong> No proven product-market fit or customer validation yet.<br>
+                <strong>Competitive Market:</strong> Competing against well-funded players (Apollo, Outreach, ZoomInfo).<br>
+                <strong>Solo Founder:</strong> Single point of failure, limited scaling capacity.<br>
+                <strong>API Dependencies:</strong> Reliant on OpenAI, People Data Labs, Apollo APIs.
+            </div>
+        </div>
+
+        <h3>Path to Value Creation</h3>
+        <ul style="font-size: 10pt;">
+            <li><strong>First 10 Clients:</strong> Validate product-market fit, refine ICP, gather testimonials</li>
+            <li><strong>$10K MRR:</strong> Proves monetization, enables part-time help</li>
+            <li><strong>$50K MRR:</strong> Sustainable business, hire first employee, valuation ~$1.5M-$2.5M</li>
+            <li><strong>$100K MRR:</strong> Proven scalability, Series A readiness, valuation ~$3M-$5M</li>
+        </ul>
+
+        <h2>Investment Recommendation</h2>
+        
+        <p style="font-size: 10pt; margin: 10px 0;"><strong>Current Fair Value: $200,000 - $350,000</strong></p>
+        
+        <p style="font-size: 10pt; line-height: 1.5;">
+            <strong>For Investors:</strong> This is an early-stage technical asset with strong potential but no market validation. Appropriate for angel investment or pre-seed round at $300K-$500K pre-money valuation with $100K-$200K raise to fund initial customer acquisition.
+        </p>
+
+        <p style="font-size: 10pt; line-height: 1.5; margin-top: 8px;">
+            <strong>For Acquirers:</strong> Technology acquisition value only ($200K-$350K). Strategic value increases to $500K-$1M with proven traction (10+ paying clients, $10K+ MRR).
+        </p>
+
+        <div class="exec-summary" style="margin-top: 14px;">
+            <strong style="font-size: 10pt;">Bottom Line:</strong> Avenir AI is a well-built technical platform with unique bilingual positioning and solid AI integration. However, without revenue or customers, valuation remains tied to development cost + modest premium. Focus on acquiring first 10-20 paying clients to unlock 5-10x valuation multiple.
+        </div>
+
+        <div class="footer">
+            Avenir AI Solutions • October 2025 • Confidential • Page 2 of 2
+        </div>
+    </div>
+</body>
+</html>
+
