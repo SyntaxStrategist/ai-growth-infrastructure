@@ -1251,9 +1251,10 @@ export default function Dashboard() {
                 <div>
                   <span className="text-white/50 text-xs block mb-1">{t('dashboard.table.intent')}</span>
                   <p className="text-blue-300 font-medium">
-                    {lead.translated_ai?.intent || lead.intent ? 
-                      (lead.translated_ai?.intent || lead.intent).charAt(0).toUpperCase() + (lead.translated_ai?.intent || lead.intent).slice(1) 
-                      : 'N/A'}
+                    {(() => {
+                      const intent = lead.translated_ai?.intent || lead.intent;
+                      return intent ? intent.charAt(0).toUpperCase() + intent.slice(1) : 'N/A';
+                    })()}
                   </p>
                 </div>
                 <div>
