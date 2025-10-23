@@ -455,7 +455,7 @@ export default function Dashboard() {
       };
       
       const validUrgencies = urgencyMap[filter.urgency] || [filter.urgency];
-      const isUrgencyMatch = validUrgencies.includes(urgency);
+      const isUrgencyMatch = urgency ? validUrgencies.includes(urgency) : false;
       
       if (!isUrgencyMatch) return false;
     }
