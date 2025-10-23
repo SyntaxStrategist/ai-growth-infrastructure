@@ -13,7 +13,7 @@
         "description": "Automatically detect, qualify, and score every prospect with AI-powered analysis."
       },
       "conversion": {
-        "title": "Conversion Intelligence",
+        "title": "Conversion Intelligence", 
         "description": "Transform leads into customers with personalized, context-aware outreach."
       },
       "retention": {
