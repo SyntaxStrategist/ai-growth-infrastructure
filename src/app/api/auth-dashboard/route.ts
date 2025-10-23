@@ -1,7 +1,21 @@
 import { NextRequest } from "next/server";
 
 import { handleApiError } from '../../../lib/error-handler';
+import { getClientIP, checkBruteForceProtection, recordFailedAttempt, recordSuccessfulAttempt, createSecurityResponse, loginAttempts } from '../../../lib/security';
 export async function POST(req: NextRequest) {
+  // Security: Brute force protection
+  const clientIP = getClientIP(req);
+  const bruteForceCheck = checkBruteForceProtection(clientIP);
+  
+  if (!bruteForceCheck.allowed) {
+    console.log(`[Dashboard Auth] 🚫 Brute force protection triggered for IP: ${clientIP}`);
+    console.log(`[Auth Tableau] 🚫 Protection contre la force brute déclenchée pour IP: ${clientIP}`);
+    return createSecurityResponse(
+      `Too many failed attempts. Please try again in ${Math.ceil(15 - (Date.now() - (loginAttempts.get(clientIP)?.lastAttempt || 0)) / 60000)} minutes.`,
+      429
+    );
+  }
+  
   try {
     const body = await req.json().catch(() => null);
     
@@ -59,6 +73,10 @@ export async function POST(req: NextRequest) {
       console.log('[Dashboard Auth] ✅ Password match - Access granted');
       console.log('[Auth Tableau] ✅ Mot de passe correct - Accès accordé');
       console.log('============================================');
+      
+      // Security: Record successful attempt
+      recordSuccessfulAttempt(clientIP);
+      
       return new Response(
         JSON.stringify({ success: true, authorized: true }),
         { status: 200, headers: { "Content-Type": "application/json" } }
@@ -70,6 +88,10 @@ export async function POST(req: NextRequest) {
     console.log('[Dashboard Auth] Expected:', correctPassword.substring(0, 3) + '***');
     console.log('[Dashboard Auth] Received:', password.substring(0, 3) + '***');
     console.log('============================================');
+    
+    // Security: Record failed attempt
+    recordFailedAttempt(clientIP);
+    
     return new Response(
       JSON.stringify({ success: false, authorized: false }),
       { status: 401, headers: { "Content-Type": "application/json" } }

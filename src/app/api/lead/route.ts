@@ -10,6 +10,7 @@ import { isTestLead, logTestDetection } from "../../../lib/test-detection";
 import { buildPersonalizedHtmlEmail } from "../../../lib/personalized-email";
 import { trackAiOutcome } from "../../../lib/outcome-tracker";
 import { handleApiError } from '../../../lib/error-handler';
+import { validateRequestSize, createSecurityResponse } from '../../../lib/security';
 
 type LeadPayload = {
 	name?: string;
@@ -134,6 +135,12 @@ export async function OPTIONS(req: NextRequest) {
 export async function POST(req: NextRequest) {
 	// Get origin for CORS headers
 	const requestOrigin = req.headers.get('origin');
+	
+	// Security: Validate request size
+	if (!validateRequestSize(req)) {
+		console.log('[Lead API] ❌ Request too large - rejected');
+		return createSecurityResponse('Request too large', 413);
+	}
 	
 	try {
 		console.log('[Lead API] ============================================');

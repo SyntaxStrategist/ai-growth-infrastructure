@@ -2,11 +2,18 @@ import OpenAI from "openai";
 import { NextRequest } from "next/server";
 
 import { handleApiError } from '../../../lib/error-handler';
+import { validateRequestSize, createSecurityResponse } from '../../../lib/security';
 const openai = new OpenAI({
 	apiKey: process.env.OPENAI_API_KEY,
 });
 
 export async function POST(req: NextRequest) {
+	// Security: Validate request size
+	if (!validateRequestSize(req)) {
+		console.log('[Chat API] ❌ Request too large - rejected');
+		return createSecurityResponse('Request too large', 413);
+	}
+	
 	try {
 		const body = await req.json().catch(() => null);
 		if (!body || typeof body !== "object") {
