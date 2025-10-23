@@ -1,8 +1,8 @@
 {
   "crons": [
     {
-      "path": "/api/cron/daily-prospect-queue",
-      "schedule": "0 12 * * *"
+      "path": "/api/cron/conversion-intelligence",
+      "schedule": "0 2 * * *"
     }
   ]
 }
