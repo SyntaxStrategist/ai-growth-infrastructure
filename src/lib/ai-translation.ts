@@ -87,7 +87,14 @@ async function openAITranslate(text: string, targetLocale: 'en' | 'fr'): Promise
       messages: [
         { 
           role: "system", 
-          content: `You are a translator. Output only ${targetLanguage} text. No commentary. Preserve business context and tone.`
+          content: `You are a professional translator. Translate the following text to ${targetLanguage}. 
+          
+IMPORTANT: 
+- Only translate the existing text, do NOT generate new content
+- Do NOT create email templates or formal letters
+- Do NOT add greetings, signatures, or email formatting
+- Simply translate the provided text while preserving the original meaning and tone
+- Output only the translated text, nothing else`
         },
         { role: "user", content: text },
       ],
