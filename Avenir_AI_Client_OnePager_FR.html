@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Avenir AI Solutions - Une Page Client</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.3;
+            color: #2c3e50;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 15px;
+        }
+        
+        .container {
+            max-width: 100%;
+            height: 100vh;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 25px 50px rgba(0,0,0,0.15);
+            overflow: hidden;
+            display: flex;
+            position: relative;
+        }
+        
+        .container::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(45deg, rgba(52, 152, 219, 0.05) 0%, rgba(231, 76, 60, 0.05) 100%);
+            pointer-events: none;
+        }
+        
+        .left-panel {
+            width: 40%;
+            background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+            color: white;
+            padding: 35px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .left-panel::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grain" width="100" height="100" patternUnits="userSpaceOnUse"><circle cx="50" cy="50" r="1" fill="white" opacity="0.08"/></pattern></defs><rect width="100" height="100" fill="url(%23grain)"/></svg>');
+            opacity: 0.4;
+        }
+        
+        .left-content {
+            position: relative;
+            z-index: 1;
+        }
+        
+        .logo-section {
+            display: flex;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        
+        .logo-img {
+            width: 50px;
+            height: 50px;
+            margin-right: 15px;
+            border-radius: 12px;
+            box-shadow: 0 8px 20px rgba(52, 152, 219, 0.3);
+            filter: brightness(1.1) contrast(1.1);
+        }
+        
+        .logo-text {
+            font-size: 1.8em;
+            font-weight: 700;
+            background: linear-gradient(45deg, #3498db, #e74c3c);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .tagline {
+            font-size: 1em;
+            font-weight: 300;
+            margin-bottom: 25px;
+            opacity: 0.9;
+            color: #bdc3c7;
+        }
+        
+        .hero-title {
+            font-size: 1.7em;
+            font-weight: 700;
+            margin-bottom: 20px;
+            line-height: 1.2;
+        }
+        
+        .hero-subtitle {
+            font-size: 0.95em;
+            opacity: 0.9;
+            line-height: 1.4;
+            color: #ecf0f1;
+        }
+        
+        .right-panel {
+            width: 60%;
+            padding: 35px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            position: relative;
+        }
+        
+        .what-we-do {
+            margin-bottom: 25px;
+        }
+        
+        .what-we-do h2 {
+            font-size: 1.5em;
+            color: #2c3e50;
+            margin-bottom: 20px;
+            font-weight: 700;
+            position: relative;
+        }
+        
+        .what-we-do h2::after {
+            content: '';
+            position: absolute;
+            bottom: -5px;
+            left: 0;
+            width: 50px;
+            height: 3px;
+            background: linear-gradient(45deg, #3498db, #e74c3c);
+            border-radius: 2px;
+        }
+        
+        .services-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 18px;
+            margin-bottom: 25px;
+        }
+        
+        .service {
+            background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
+            padding: 20px;
+            border-radius: 12px;
+            border-left: 4px solid #3498db;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.08);
+            transition: transform 0.2s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .service::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(45deg, rgba(52, 152, 219, 0.02) 0%, rgba(231, 76, 60, 0.02) 100%);
+            pointer-events: none;
+        }
+        
+        .service h3 {
+            color: #2c3e50;
+            font-size: 1.05em;
+            margin-bottom: 10px;
+            font-weight: 600;
+            position: relative;
+            z-index: 1;
+        }
+        
+        .service p {
+            color: #5a6c7d;
+            line-height: 1.4;
+            font-size: 0.9em;
+            position: relative;
+            z-index: 1;
+        }
+        
+        .results-section {
+            background: linear-gradient(135deg, #e8f5e8 0%, #c8e6c9 100%);
+            padding: 25px;
+            border-radius: 15px;
+            border: 2px solid #27ae60;
+            margin-bottom: 25px;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .results-section::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="dots" width="20" height="20" patternUnits="userSpaceOnUse"><circle cx="10" cy="10" r="1" fill="%2327ae60" opacity="0.1"/></pattern></defs><rect width="100" height="100" fill="url(%23dots)"/></svg>');
+            pointer-events: none;
+        }
+        
+        .results-title {
+            font-size: 1.4em;
+            font-weight: 700;
+            color: #2c3e50;
+            text-align: center;
+            margin-bottom: 20px;
+            position: relative;
+            z-index: 1;
+        }
+        
+        .results-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 18px;
+            text-align: center;
+            position: relative;
+            z-index: 1;
+        }
+        
+        .result-item {
+            background: white;
+            padding: 18px;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            transition: transform 0.2s ease;
+        }
+        
+        .result-item:hover {
+            transform: translateY(-2px);
+        }
+        
+        .result-number {
+            font-size: 2em;
+            font-weight: 700;
+            color: #27ae60;
+            margin-bottom: 8px;
+        }
+        
+        .result-label {
+            font-size: 0.85em;
+            color: #5a6c7d;
+            font-weight: 500;
+        }
+        
+        .benefits-section {
+            background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
+            padding: 20px;
+            border-radius: 12px;
+            border: 1px solid #dee2e6;
+            margin-bottom: 20px;
+            position: relative;
+        }
+        
+        .benefits-title {
+            font-size: 1.2em;
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+        
+        .benefits-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            justify-content: center;
+        }
+        
+        .benefit {
+            background: linear-gradient(135deg, #3498db 0%, #e74c3c 100%);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-weight: 500;
+            font-size: 0.85em;
+            box-shadow: 0 3px 10px rgba(52, 152, 219, 0.3);
+            transition: transform 0.2s ease;
+        }
+        
+        .benefit:hover {
+            transform: translateY(-1px);
+        }
+        
+        .contact-info {
+            background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+            color: white;
+            padding: 18px;
+            text-align: center;
+            font-size: 0.95em;
+            border-radius: 10px;
+            box-shadow: 0 8px 25px rgba(44, 62, 80, 0.3);
+        }
+        
+        .contact-info strong {
+            color: #3498db;
+        }
+        
+        @media print {
+            body {
+                background: white;
+                padding: 0;
+            }
+            .container {
+                box-shadow: none;
+                border-radius: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="left-panel">
+            <div class="left-content">
+                <div class="logo-section">
+                    <img src="public/assets/logos/logo.svg" alt="Logo Avenir AI Solutions" class="logo-img">
+                    <div class="logo-text">Avenir AI Solutions</div>
+                </div>
+                <div class="tagline">Votre Partenaire IA Complet</div>
+                <h1 class="hero-title">Nous Transformons Vos Interactions Commerciales en Intelligence Génératrice de Revenus</h1>
+                <p class="hero-subtitle">Arrêtez de perdre des prospects. Commencez à convertir chaque conversation en croissance commerciale actionnable avec notre plateforme d'intelligence alimentée par l'IA.</p>
+            </div>
+        </div>
+        
+        <div class="right-panel">
+            <div class="what-we-do">
+                <h2>Ce Que Nous Faisons Pour Vous</h2>
+                <div class="services-grid">
+                    <div class="service">
+                        <h3>🎯 Intelligence des Prospects</h3>
+                        <p>Analysez instantanément l'intention, l'urgence et le potentiel d'achat de chaque prospect avec 95%+ de précision.</p>
+                    </div>
+                    
+                    <div class="service">
+                        <h3>📧 Approche Intelligente</h3>
+                        <p>Générez automatiquement des emails personnalisés qui transforment les prospects en clients.</p>
+                    </div>
+                    
+                    <div class="service">
+                        <h3>📊 Analytiques de Croissance</h3>
+                        <p>Insights en temps réel sur votre pipeline de ventes, taux de conversion et opportunités de croissance.</p>
+                    </div>
+                    
+                    <div class="service">
+                        <h3>🔄 Automatisation des Processus</h3>
+                        <p>Éliminez le travail manuel avec des flux de travail alimentés par l'IA qui font évoluer vos opérations.</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="results-section">
+                <h2 class="results-title">Vos Résultats d'Entreprise</h2>
+                <div class="results-grid">
+                    <div class="result-item">
+                        <div class="result-number">3x</div>
+                        <div class="result-label">Réponse Plus Rapide</div>
+                    </div>
+                    <div class="result-item">
+                        <div class="result-number">40%</div>
+                        <div class="result-label">Conversion Plus Élevée</div>
+                    </div>
+                    <div class="result-item">
+                        <div class="result-number">95%</div>
+                        <div class="result-label">Précision des Prospects</div>
+                    </div>
+                    <div class="result-item">
+                        <div class="result-number">24/7</div>
+                        <div class="result-label">Surveillance IA</div>
+                    </div>
+                    <div class="result-item">
+                        <div class="result-number">0$</div>
+                        <div class="result-label">Coût d'Installation</div>
+                    </div>
+                    <div class="result-item">
+                        <div class="result-number">ROI</div>
+                        <div class="result-label">300%+</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="benefits-section">
+                <h3 class="benefits-title">Pourquoi Choisir Avenir AI ?</h3>
+                <div class="benefits-list">
+                    <span class="benefit">Aucune Installation</span>
+                    <span class="benefit">Fonctionne en Français & Anglais</span>
+                    <span class="benefit">Sécurité Entreprise</span>
+                    <span class="benefit">Conforme Canada</span>
+                    <span class="benefit">Analyse Temps Réel</span>
+                    <span class="benefit">Support 24/7</span>
+                </div>
+            </div>
+            
+            <div class="contact-info">
+                <strong>Prêt à Tripler Votre Conversion de Prospects ?</strong> | <strong>Contact :</strong> contact@aveniraisolutions.ca | <strong>Commencez Aujourd'hui :</strong> Installation Zéro
+            </div>
+        </div>
+    </div>
+</body>
+</html>

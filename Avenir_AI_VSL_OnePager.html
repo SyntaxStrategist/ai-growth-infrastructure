@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Avenir AI Solutions - VSL One-Pager</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.4;
+            color: #2c3e50;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 8.5in;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+            position: relative;
+        }
+        
+        .header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grain" width="100" height="100" patternUnits="userSpaceOnUse"><circle cx="50" cy="50" r="1" fill="white" opacity="0.1"/></pattern></defs><rect width="100" height="100" fill="url(%23grain)"/></svg>');
+            opacity: 0.3;
+        }
+        
+        .header-content {
+            position: relative;
+            z-index: 1;
+        }
+        
+        .logo {
+            font-size: 2.5em;
+            font-weight: 700;
+            margin-bottom: 10px;
+            background: linear-gradient(45deg, #3498db, #e74c3c);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .tagline {
+            font-size: 1.3em;
+            font-weight: 300;
+            margin-bottom: 20px;
+            opacity: 0.9;
+        }
+        
+        .main-content {
+            padding: 40px;
+        }
+        
+        .hero-section {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+        
+        .hero-title {
+            font-size: 2.2em;
+            font-weight: 700;
+            color: #2c3e50;
+            margin-bottom: 20px;
+            line-height: 1.2;
+        }
+        
+        .hero-subtitle {
+            font-size: 1.3em;
+            color: #7f8c8d;
+            margin-bottom: 30px;
+            line-height: 1.4;
+        }
+        
+        .value-props {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 30px;
+            margin: 40px 0;
+        }
+        
+        .value-prop {
+            background: #f8f9fa;
+            padding: 25px;
+            border-radius: 12px;
+            border-left: 5px solid #3498db;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+        }
+        
+        .value-prop h3 {
+            color: #2c3e50;
+            font-size: 1.3em;
+            margin-bottom: 15px;
+            font-weight: 600;
+        }
+        
+        .value-prop p {
+            color: #5a6c7d;
+            line-height: 1.5;
+        }
+        
+        .results-section {
+            background: linear-gradient(135deg, #e8f5e8 0%, #c8e6c9 100%);
+            padding: 30px;
+            border-radius: 12px;
+            margin: 30px 0;
+            border: 2px solid #27ae60;
+        }
+        
+        .results-title {
+            font-size: 1.8em;
+            font-weight: 700;
+            color: #2c3e50;
+            text-align: center;
+            margin-bottom: 25px;
+        }
+        
+        .results-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+            text-align: center;
+        }
+        
+        .result-item {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+        }
+        
+        .result-number {
+            font-size: 2.5em;
+            font-weight: 700;
+            color: #27ae60;
+            margin-bottom: 10px;
+        }
+        
+        .result-label {
+            font-size: 0.9em;
+            color: #5a6c7d;
+            font-weight: 500;
+        }
+        
+        .tech-stack {
+            background: #f8f9fa;
+            padding: 25px;
+            border-radius: 12px;
+            margin: 30px 0;
+            border: 1px solid #dee2e6;
+        }
+        
+        .tech-title {
+            font-size: 1.4em;
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+        
+        .tech-items {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            justify-content: center;
+        }
+        
+        .tech-item {
+            background: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            border: 2px solid #3498db;
+            color: #2c3e50;
+            font-weight: 500;
+            font-size: 0.9em;
+        }
+        
+        .cta-section {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            border-radius: 12px;
+            text-align: center;
+            margin-top: 30px;
+        }
+        
+        .cta-title {
+            font-size: 1.6em;
+            font-weight: 700;
+            margin-bottom: 15px;
+        }
+        
+        .cta-text {
+            font-size: 1.1em;
+            opacity: 0.9;
+            margin-bottom: 20px;
+        }
+        
+        .contact-info {
+            background: #2c3e50;
+            color: white;
+            padding: 20px;
+            text-align: center;
+            font-size: 1.1em;
+        }
+        
+        .contact-info strong {
+            color: #3498db;
+        }
+        
+        @media print {
+            body {
+                background: white;
+                padding: 0;
+            }
+            .container {
+                box-shadow: none;
+                border-radius: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="header-content">
+                <div class="logo">Avenir AI Solutions</div>
+                <div class="tagline">The Complete AI Growth Infrastructure</div>
+            </div>
+        </div>
+        
+        <div class="main-content">
+            <div class="hero-section">
+                <h1 class="hero-title">Transform Every Business Interaction Into Actionable Intelligence</h1>
+                <p class="hero-subtitle">Beyond chatbots. We build intelligent systems that understand, predict, and act — turning conversations into conversions and data into growth.</p>
+            </div>
+            
+            <div class="value-props">
+                <div class="value-prop">
+                    <h3>🚀 Real-Time AI Analysis</h3>
+                    <p>Instantly analyze lead intent, urgency, and opportunity with 95%+ accuracy. Transform every interaction into actionable intelligence that drives conversions.</p>
+                </div>
+                
+                <div class="value-prop">
+                    <h3>🎯 Complete Growth Infrastructure</h3>
+                    <p>Not just a chatbot — a full business intelligence system with acquisition, conversion, retention, and operational intelligence all in one platform.</p>
+                </div>
+                
+                <div class="value-prop">
+                    <h3>⚡ Enterprise-Grade Security</h3>
+                    <p>Production-ready with CSP, CSRF protection, brute force prevention, and full Canadian regulatory compliance (PIPEDA, AIDA, Quebec Law 25).</p>
+                </div>
+                
+                <div class="value-prop">
+                    <h3>🌍 Multi-Language & Multi-Tenant</h3>
+                    <p>Scalable B2B SaaS architecture supporting English/French with real-time translation and complete client isolation for maximum security.</p>
+                </div>
+            </div>
+            
+            <div class="results-section">
+                <h2 class="results-title">Proven Results & Capabilities</h2>
+                <div class="results-grid">
+                    <div class="result-item">
+                        <div class="result-number">50+</div>
+                        <div class="result-label">API Endpoints</div>
+                    </div>
+                    <div class="result-item">
+                        <div class="result-number">12</div>
+                        <div class="result-label">Core Database Tables</div>
+                    </div>
+                    <div class="result-item">
+                        <div class="result-number">95%+</div>
+                        <div class="result-label">AI Accuracy Rate</div>
+                    </div>
+                    <div class="result-item">
+                        <div class="result-number">99.9%</div>
+                        <div class="result-label">Uptime Guarantee</div>
+                    </div>
+                    <div class="result-item">
+                        <div class="result-number">24/7</div>
+                        <div class="result-label">Real-Time Monitoring</div>
+                    </div>
+                    <div class="result-item">
+                        <div class="result-number">$4.5-11M</div>
+                        <div class="result-label">Platform Valuation</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="tech-stack">
+                <h3 class="tech-title">Enterprise Technology Stack</h3>
+                <div class="tech-items">
+                    <span class="tech-item">Next.js 15.5.4</span>
+                    <span class="tech-item">TypeScript</span>
+                    <span class="tech-item">PostgreSQL</span>
+                    <span class="tech-item">Prisma ORM</span>
+                    <span class="tech-item">OpenAI GPT-4o</span>
+                    <span class="tech-item">Supabase</span>
+                    <span class="tech-item">Edge Runtime</span>
+                    <span class="tech-item">Real-time AI</span>
+                </div>
+            </div>
+            
+            <div class="cta-section">
+                <h2 class="cta-title">Ready to Transform Your Business Growth?</h2>
+                <p class="cta-text">Join the AI revolution with a platform that doesn't just collect data — it creates intelligence that drives real business results.</p>
+            </div>
+        </div>
+        
+        <div class="contact-info">
+            <strong>Contact:</strong> contact@aveniraisolutions.ca | <strong>Platform:</strong> Production-Ready | <strong>Compliance:</strong> Full Canadian Legal Framework
+        </div>
+    </div>
+</body>
+</html>

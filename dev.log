@@ -210,3 +210,12 @@ Image with src "/assets/logos/logo.svg" is using quality "90" which is not confi
 Read more: https://nextjs.org/docs/messages/next-image-unconfigured-qualities
  GET /en 200 in 6906ms
  GET /fr 200 in 6915ms
+ ✓ Compiled in 1991ms (631 modules)
+ ✓ Compiled in 302ms (631 modules)
+ ✓ Compiled in 189ms (631 modules)
+ ✓ Compiled in 1310ms (631 modules)
+ ✓ Compiled in 250ms (631 modules)
+ ✓ Compiled in 3.5s (631 modules)
+ ✓ Compiled in 390ms (631 modules)
+<w> [webpack.cache.PackFileCacheStrategy] Caching failed for pack: Error: ENOENT: no such file or directory, rename '/Users/michaeloni/ai-growth-infrastructure/.next/cache/webpack/client-development/3.pack.gz_' -> '/Users/michaeloni/ai-growth-infrastructure/.next/cache/webpack/client-development/3.pack.gz'
+ ✓ Compiled in 1606ms (631 modules)

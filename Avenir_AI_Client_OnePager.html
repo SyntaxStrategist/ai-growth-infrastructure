@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Avenir AI Solutions - Client One-Pager</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.3;
+            color: #2c3e50;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 15px;
+        }
+        
+        .container {
+            max-width: 100%;
+            height: 100vh;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 15px 30px rgba(0,0,0,0.1);
+            overflow: hidden;
+            display: flex;
+        }
+        
+        .left-panel {
+            width: 40%;
+            background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+            color: white;
+            padding: 30px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            position: relative;
+        }
+        
+        .left-panel::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grain" width="100" height="100" patternUnits="userSpaceOnUse"><circle cx="50" cy="50" r="1" fill="white" opacity="0.1"/></pattern></defs><rect width="100" height="100" fill="url(%23grain)"/></svg>');
+            opacity: 0.3;
+        }
+        
+        .left-content {
+            position: relative;
+            z-index: 1;
+        }
+        
+        .logo {
+            font-size: 2.2em;
+            font-weight: 700;
+            margin-bottom: 15px;
+            background: linear-gradient(45deg, #3498db, #e74c3c);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .tagline {
+            font-size: 1.1em;
+            font-weight: 300;
+            margin-bottom: 25px;
+            opacity: 0.9;
+        }
+        
+        .hero-title {
+            font-size: 1.8em;
+            font-weight: 700;
+            margin-bottom: 20px;
+            line-height: 1.2;
+        }
+        
+        .hero-subtitle {
+            font-size: 1em;
+            opacity: 0.9;
+            line-height: 1.4;
+        }
+        
+        .right-panel {
+            width: 60%;
+            padding: 30px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+        
+        .what-we-do {
+            margin-bottom: 25px;
+        }
+        
+        .what-we-do h2 {
+            font-size: 1.4em;
+            color: #2c3e50;
+            margin-bottom: 15px;
+            font-weight: 700;
+        }
+        
+        .services-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .service {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            border-left: 4px solid #3498db;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.08);
+        }
+        
+        .service h3 {
+            color: #2c3e50;
+            font-size: 1em;
+            margin-bottom: 8px;
+            font-weight: 600;
+        }
+        
+        .service p {
+            color: #5a6c7d;
+            line-height: 1.3;
+            font-size: 0.85em;
+        }
+        
+        .results-section {
+            background: linear-gradient(135deg, #e8f5e8 0%, #c8e6c9 100%);
+            padding: 20px;
+            border-radius: 8px;
+            border: 2px solid #27ae60;
+            margin-bottom: 20px;
+        }
+        
+        .results-title {
+            font-size: 1.3em;
+            font-weight: 700;
+            color: #2c3e50;
+            text-align: center;
+            margin-bottom: 15px;
+        }
+        
+        .results-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            text-align: center;
+        }
+        
+        .result-item {
+            background: white;
+            padding: 12px;
+            border-radius: 6px;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+        }
+        
+        .result-number {
+            font-size: 1.8em;
+            font-weight: 700;
+            color: #27ae60;
+            margin-bottom: 5px;
+        }
+        
+        .result-label {
+            font-size: 0.8em;
+            color: #5a6c7d;
+            font-weight: 500;
+        }
+        
+        .benefits-section {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid #dee2e6;
+            margin-bottom: 15px;
+        }
+        
+        .benefits-title {
+            font-size: 1.1em;
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 10px;
+            text-align: center;
+        }
+        
+        .benefits-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            justify-content: center;
+        }
+        
+        .benefit {
+            background: white;
+            padding: 6px 12px;
+            border-radius: 15px;
+            border: 2px solid #3498db;
+            color: #2c3e50;
+            font-weight: 500;
+            font-size: 0.8em;
+        }
+        
+        .contact-info {
+            background: #2c3e50;
+            color: white;
+            padding: 12px;
+            text-align: center;
+            font-size: 0.9em;
+            border-radius: 6px;
+        }
+        
+        .contact-info strong {
+            color: #3498db;
+        }
+        
+        @media print {
+            body {
+                background: white;
+                padding: 0;
+            }
+            .container {
+                box-shadow: none;
+                border-radius: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="left-panel">
+            <div class="left-content">
+                <div class="logo">Avenir AI Solutions</div>
+                <div class="tagline">Your Complete AI Growth Partner</div>
+                <h1 class="hero-title">We Transform Your Business Interactions Into Revenue-Generating Intelligence</h1>
+                <p class="hero-subtitle">Stop losing leads. Start converting every conversation into actionable business growth with our AI-powered intelligence platform.</p>
+            </div>
+        </div>
+        
+        <div class="right-panel">
+            <div class="what-we-do">
+                <h2>What We Do For You</h2>
+                <div class="services-grid">
+                    <div class="service">
+                        <h3>🎯 Lead Intelligence</h3>
+                        <p>Instantly analyze every lead's intent, urgency, and buying potential with 95%+ accuracy.</p>
+                    </div>
+                    
+                    <div class="service">
+                        <h3>📧 Smart Outreach</h3>
+                        <p>Automatically generate personalized emails that convert leads into customers.</p>
+                    </div>
+                    
+                    <div class="service">
+                        <h3>📊 Growth Analytics</h3>
+                        <p>Real-time insights into your sales pipeline, conversion rates, and growth opportunities.</p>
+                    </div>
+                    
+                    <div class="service">
+                        <h3>🔄 Process Automation</h3>
+                        <p>Eliminate manual work with AI-powered workflows that scale your business operations.</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="results-section">
+                <h2 class="results-title">Your Business Results</h2>
+                <div class="results-grid">
+                    <div class="result-item">
+                        <div class="result-number">3x</div>
+                        <div class="result-label">Faster Lead Response</div>
+                    </div>
+                    <div class="result-item">
+                        <div class="result-number">40%</div>
+                        <div class="result-label">Higher Conversion</div>
+                    </div>
+                    <div class="result-item">
+                        <div class="result-number">95%</div>
+                        <div class="result-label">Lead Accuracy</div>
+                    </div>
+                    <div class="result-item">
+                        <div class="result-number">24/7</div>
+                        <div class="result-label">AI Monitoring</div>
+                    </div>
+                    <div class="result-item">
+                        <div class="result-number">$0</div>
+                        <div class="result-label">Setup Cost</div>
+                    </div>
+                    <div class="result-item">
+                        <div class="result-number">ROI</div>
+                        <div class="result-label">300%+</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="benefits-section">
+                <h3 class="benefits-title">Why Choose Avenir AI?</h3>
+                <div class="benefits-list">
+                    <span class="benefit">No Setup Required</span>
+                    <span class="benefit">Works in English & French</span>
+                    <span class="benefit">Enterprise Security</span>
+                    <span class="benefit">Canadian Compliant</span>
+                    <span class="benefit">Real-time Analysis</span>
+                    <span class="benefit">24/7 Support</span>
+                </div>
+            </div>
+            
+            <div class="contact-info">
+                <strong>Ready to 3x Your Lead Conversion?</strong> | <strong>Contact:</strong> contact@aveniraisolutions.ca | <strong>Start Today:</strong> Zero Setup Required
+            </div>
+        </div>
+    </div>
+</body>
+</html>

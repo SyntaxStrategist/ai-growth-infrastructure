@@ -1,26 +1,36 @@
+const puppeteer = require('puppeteer');
 const fs = require('fs');
 const path = require('path');
 
-// Simple HTML to PDF using browser print functionality
-const htmlContent = fs.readFileSync(path.join(__dirname, 'AVENIR_AI_ARCHITECTURE.html'), 'utf8');
+async function generatePDF() {
+  const browser = await puppeteer.launch();
+  const page = await browser.newPage();
+  
+  // Read the HTML file
+  const htmlPath = path.join(__dirname, 'Avenir_AI_Oct22_Valuation.html');
+  const htmlContent = fs.readFileSync(htmlPath, 'utf8');
+  
+  // Set the content
+  await page.setContent(htmlContent, { waitUntil: 'networkidle0' });
+  
+  // Generate PDF
+  const pdf = await page.pdf({
+    path: 'Avenir_AI_Oct22_Valuation.pdf',
+    format: 'A4',
+    printBackground: true,
+    margin: {
+      top: '20mm',
+      right: '15mm',
+      bottom: '20mm',
+      left: '15mm'
+    },
+    displayHeaderFooter: true,
+    headerTemplate: '<div style="font-size: 10px; text-align: center; width: 100%; color: #666;">Avenir AI Solutions - October 2025 Valuation</div>',
+    footerTemplate: '<div style="font-size: 10px; text-align: center; width: 100%; color: #666;">Page <span class="pageNumber"></span> of <span class="totalPages"></span></div>'
+  });
+  
+  await browser.close();
+  console.log('PDF generated successfully: Avenir_AI_Oct22_Valuation.pdf');
+}
 
-console.log('✅ HTML file loaded successfully');
-console.log('📄 To generate PDF:');
-console.log('');
-console.log('Option 1 (Browser):');
-console.log('  1. Open AVENIR_AI_ARCHITECTURE.html in your browser');
-console.log('  2. Press Cmd+P (Mac) or Ctrl+P (Windows)');
-console.log('  3. Select "Save as PDF"');
-console.log('  4. Choose "Landscape" orientation');
-console.log('  5. Save as "AVENIR_AI_ARCHITECTURE.pdf"');
-console.log('');
-console.log('Option 2 (Chrome Headless):');
-console.log('  Run: npm install -g puppeteer');
-console.log('  Then: node generate-pdf-puppeteer.js');
-console.log('');
-console.log('Option 3 (wkhtmltopdf):');
-console.log('  brew install wkhtmltopdf');
-console.log('  wkhtmltopdf --orientation Landscape AVENIR_AI_ARCHITECTURE.html AVENIR_AI_ARCHITECTURE.pdf');
-console.log('');
-console.log('The HTML file is ready at: AVENIR_AI_ARCHITECTURE.html');
-
+generatePDF().catch(console.error);

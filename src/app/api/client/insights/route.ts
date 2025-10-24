@@ -44,14 +44,54 @@ function normalizeIntent(intent: string): string {
   
   // Common French to English mappings
   const intentMap: Record<string, string> = {
+    // B2B and Partnership
     'partenariat b2b': 'B2B partnership',
     'partenariat B2B': 'B2B partnership',
     'Partenariat B2B': 'B2B partnership',
     'partenariat': 'Partnership',
+    'partenariat pour mise à l\'échelle ia': 'B2B partnership for AI scaling',
+    'partenariat pour services de charpente et cloison sèche': 'B2B partnership for framing and drywall services',
+    
+    // Information and Consultation
     'demande de renseignements': 'Information request',
     'demande d\'information': 'Information request',
+    'consultation': 'Consultation',
+    'question': 'Question',
+    'inquiry': 'Inquiry',
+    
+    // Quote and Pricing
     'devis': 'Quote request',
     'quote': 'Quote request',
+    'tarification': 'Pricing',
+    'demande de coût': 'Cost inquiry',
+    
+    // Sales and Marketing
+    'optimisation du pipeline de vente': 'Sales pipeline optimization',
+    'intérêt pour l\'automatisation marketing': 'Marketing automation interest',
+    'qualification des prospects': 'Lead qualification',
+    'automatisation des ventes': 'Sales automation',
+    
+    // Technical and Support
+    'support technique': 'Technical support',
+    'intégration': 'Integration',
+    'implémentation': 'Implementation',
+    'configuration': 'Setup',
+    
+    // General business
+    'demande commerciale': 'Business inquiry',
+    'demande de service': 'Service inquiry',
+    'demande générale': 'General inquiry',
+    'suivi': 'Follow-up',
+    
+    // AI and Automation specific
+    'intégration ia': 'AI integration',
+    'automatisation ia': 'AI automation',
+    'mise à l\'échelle ia': 'AI scaling',
+    'consultation ia': 'AI consultation',
+    
+    // Default fallbacks
+    'inconnu': 'Unknown',
+    'autre': 'Other'
   };
   
   const normalized = trimmed.toLowerCase();
@@ -94,12 +134,69 @@ function translateTone(tone: string, locale: string): string {
 function translateIntent(intent: string, locale: string): string {
   if (locale === 'fr') {
     const translations: Record<string, string> = {
+      // B2B and Partnership related
+      'B2B partnership': 'Partenariat B2B',
       'B2b partnership': 'Partenariat B2B',
       'Partnership': 'Partenariat',
+      'B2B partnership for AI scaling': 'Partenariat B2B pour mise à l\'échelle IA',
+      'B2B partnership for framing and drywall services': 'Partenariat B2B pour services de charpente et cloison sèche',
+      
+      // Information and Consultation
       'Information request': 'Demande d\'information',
+      'Consultation': 'Consultation',
+      'Inquiry': 'Demande de renseignements',
+      'Question': 'Question',
+      
+      // Quote and Pricing
       'Quote request': 'Devis',
+      'Quote': 'Devis',
+      'Pricing': 'Tarification',
+      'Cost inquiry': 'Demande de coût',
+      
+      // Sales and Marketing
+      'Sales pipeline optimization': 'Optimisation du pipeline de vente',
+      'Marketing automation interest': 'Intérêt pour l\'automatisation marketing',
+      'Lead qualification': 'Qualification des prospects',
+      'Sales automation': 'Automatisation des ventes',
+      
+      // Technical and Support
+      'Technical support': 'Support technique',
+      'Integration': 'Intégration',
+      'Implementation': 'Implémentation',
+      'Setup': 'Configuration',
+      
+      // General business
+      'Business inquiry': 'Demande commerciale',
+      'Service inquiry': 'Demande de service',
+      'General inquiry': 'Demande générale',
+      'Follow-up': 'Suivi',
+      
+      // AI and Automation specific
+      'AI integration': 'Intégration IA',
+      'AI automation': 'Automatisation IA',
+      'AI scaling': 'Mise à l\'échelle IA',
+      'AI consultation': 'Consultation IA',
+      
+      // Default fallback
+      'Unknown': 'Inconnu',
+      'Other': 'Autre'
     };
-    return translations[intent] || intent;
+    
+    // Try exact match first
+    if (translations[intent]) {
+      return translations[intent];
+    }
+    
+    // Try case-insensitive match
+    const lowerIntent = intent.toLowerCase();
+    for (const [key, value] of Object.entries(translations)) {
+      if (key.toLowerCase() === lowerIntent) {
+        return value;
+      }
+    }
+    
+    // If no translation found, return original intent
+    return intent;
   }
   return intent;
 }
