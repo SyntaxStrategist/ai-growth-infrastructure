@@ -107,22 +107,48 @@ export async function enrichLeadWithAI(params: {
     ? `Vous êtes un analyste de croissance IA. Analysez ce lead et retournez SEULEMENT du JSON strict avec ces champs exacts :
 
 {
-  "intent": "description de l'intention du lead (B2B, scaling, partnership, etc.)",
+  "intent": "description de l'intention du lead",
   "tone": "ton de communication (formel, décontracté, urgent, hésitant, confiant, etc.)",
   "urgency": "Low" | "Medium" | "High",
   "confidence_score": nombre entre 0 et 1 (ex: 0.93)
 }
+
+CATÉGORIES D'INTENTION:
+- "Demande de devis" : pour les demandes de prix/estimations (rénovation, construction, services)
+- "Demande de service" : pour les demandes de services (réparation, installation, etc.)
+- "Partenariat B2B" : pour les collaborations d'entreprise, alliances stratégiques
+- "Consultation" : pour les demandes de conseil professionnel
+- "Information générale" : pour les questions générales
+- "Support technique" : pour les problèmes techniques
+
+EXEMPLES:
+- "J'ai besoin d'un devis pour rénovation cuisine" → "Demande de devis"
+- "Nous voulons collaborer avec votre entreprise" → "Partenariat B2B"
+- "J'ai un problème avec mon système" → "Support technique"
 
 Message du lead: "${message}"
 Résumé IA: "${aiSummary}"`
     : `You are an AI growth analyst. Analyze this lead and return ONLY strict JSON with these exact fields:
 
 {
-  "intent": "what the lead wants (B2B partnership, AI scaling, consultation, etc.)",
+  "intent": "what the lead wants",
   "tone": "communication style (formal, casual, urgent, hesitant, confident, etc.)",
   "urgency": "Low" | "Medium" | "High",
   "confidence_score": number between 0 and 1 (e.g. 0.93)
 }
+
+INTENT CATEGORIES:
+- "Quote Request" : for price/estimate requests (renovation, construction, services)
+- "Service Request" : for service requests (repair, installation, etc.)
+- "B2B Partnership" : for business collaborations, strategic alliances
+- "Consultation" : for professional advice requests
+- "General Information" : for general questions
+- "Technical Support" : for technical issues
+
+EXAMPLES:
+- "I need a quote for kitchen renovation" → "Quote Request"
+- "We want to partner with your company" → "B2B Partnership"
+- "I have a problem with my system" → "Technical Support"
 
 Lead message: "${message}"
 AI summary: "${aiSummary}"`;
