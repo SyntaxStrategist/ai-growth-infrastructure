@@ -219,3 +219,9 @@ Read more: https://nextjs.org/docs/messages/next-image-unconfigured-qualities
  ✓ Compiled in 390ms (631 modules)
 <w> [webpack.cache.PackFileCacheStrategy] Caching failed for pack: Error: ENOENT: no such file or directory, rename '/Users/michaeloni/ai-growth-infrastructure/.next/cache/webpack/client-development/3.pack.gz_' -> '/Users/michaeloni/ai-growth-infrastructure/.next/cache/webpack/client-development/3.pack.gz'
  ✓ Compiled in 1606ms (631 modules)
+ ✓ Compiled in 1382ms (631 modules)
+ ✓ Compiled in 466ms (631 modules)
+ ✓ Compiled in 530ms (631 modules)
+ ✓ Compiled in 475ms (631 modules)
+ ✓ Compiled in 3.1s (631 modules)
+ ✓ Compiled in 1578ms (631 modules)

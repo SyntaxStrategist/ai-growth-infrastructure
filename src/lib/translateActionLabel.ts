@@ -15,6 +15,11 @@ export const actionTranslations = {
     "reactivate": "Lead Reactivated",
     "permanent_delete": "Lead Permanently Deleted",
     
+    // Underscore versions for database compatibility
+    "note_added": "Note Added",
+    "note_edited": "Note Edited",
+    "note_deleted": "Note Deleted",
+    
     // Common tag labels
     "New Lead": "New Lead",
     "Lead Updated": "Lead Updated",
@@ -47,6 +52,11 @@ export const actionTranslations = {
     "reactivate": "Lead réactivé",
     "permanent_delete": "Lead supprimé définitivement",
     
+    // Underscore versions for database compatibility
+    "note_added": "Note ajoutée",
+    "note_edited": "Note modifiée",
+    "note_deleted": "Note supprimée",
+    
     // Common tag labels
     "New Lead": "Nouveau lead",
     "Lead Updated": "Lead mis à jour",
@@ -78,7 +88,24 @@ export const actionTranslations = {
  */
 export function translateActionLabel(action: string, locale: Locale): string {
   const translations = actionTranslations[locale];
-  return translations[action as keyof typeof translations] || action;
+  
+  // First try exact match
+  if (translations[action as keyof typeof translations]) {
+    return translations[action as keyof typeof translations];
+  }
+  
+  // Handle underscore to space conversion (e.g., "note_added" -> "Note Added")
+  const normalizedAction = action
+    .split('_')
+    .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+    .join(' ');
+  
+  if (translations[normalizedAction as keyof typeof translations]) {
+    return translations[normalizedAction as keyof typeof translations];
+  }
+  
+  // Fallback to original action
+  return action;
 }
 
 /**

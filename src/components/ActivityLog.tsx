@@ -85,7 +85,7 @@ export default function ActivityLog({ actions, locale }: ActivityLogProps) {
               <div className={`px-2 py-1 rounded text-xs font-medium border ${getActionColor(action.action)}`}>
                 {getActionLabel(action)}
               </div>
-              {action.tag && (
+              {action.tag && action.tag !== getActionLabel(action) && (
                 <span className="px-2 py-1 rounded text-xs font-medium bg-purple-500/20 border border-purple-500/40 text-purple-300">
                   {action.tag}
                 </span>
