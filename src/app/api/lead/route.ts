@@ -27,15 +27,21 @@ const sheetRange = "Sheet1!A:D"; // [Name, Email, Message, Timestamp]
 
 // CORS helper function - allows localhost for testing and demos
 function getCorsHeaders(origin?: string | null): HeadersInit {
-	const allowedOrigins = [
-		'https://www.aveniraisolutions.ca',
-		'https://aveniraisolutions.ca',
-		'http://localhost:3000',
-		'http://localhost:8000',
-		'http://localhost:8001',
-		'http://127.0.0.1:8000',
-		'http://127.0.0.1:3000',
-	];
+	// Security: Only allow localhost in development
+	const allowedOrigins = process.env.NODE_ENV === 'production'
+		? [
+			'https://www.aveniraisolutions.ca',
+			'https://aveniraisolutions.ca',
+		]
+		: [
+			'https://www.aveniraisolutions.ca',
+			'https://aveniraisolutions.ca',
+			'http://localhost:3000',
+			'http://localhost:8000',
+			'http://localhost:8001',
+			'http://127.0.0.1:8000',
+			'http://127.0.0.1:3000',
+		];
 	
 	const originToUse = origin && allowedOrigins.includes(origin) ? origin : allowedOrigins[0];
 	
