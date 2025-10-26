@@ -1020,12 +1020,7 @@ async function translateIntent(rawTopIntent: string, locale: string): Promise<st
             >
               📊 {t.insights}
             </button>
-            <button
-              onClick={() => navigateToPage('/client/prospect-intelligence')}
-              className="px-4 py-2 rounded-lg bg-pink-500/20 border border-pink-500/40 text-pink-400 hover:bg-pink-500/30 transition-all duration-300 text-sm font-medium"
-            >
-              🧠 {t.prospectIntelligence}
-            </button>
+            {/* Prospect Intelligence hidden from client dashboard - admin only feature */}
             <a
               href={`/${locale}/client/settings`}
               className="px-4 py-2 rounded-lg bg-purple-500/20 border border-purple-500/40 text-purple-400 hover:bg-purple-500/30 transition-all duration-300 text-sm font-medium"
@@ -1268,38 +1263,7 @@ async function translateIntent(rawTopIntent: string, locale: string): Promise<st
           </div>
         </motion.div>
 
-        {/* Prospect Intelligence Navigation Card */}
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 0.6, delay: 0.6 }}
-          className="mb-8"
-        >
-          <div className="bg-white/5 backdrop-blur-sm rounded-xl p-6 border border-white/10">
-            <div className="flex items-center justify-between">
-              <div>
-                <h3 className="text-xl font-semibold mb-2 text-pink-400">🧠 {t.prospectIntelligence}</h3>
-                <p className="text-white/60 mb-4">
-                  {isFrench 
-                    ? 'Découvrez et analysez vos prospects idéaux basés sur votre profil client'
-                    : 'Discover and analyze your ideal prospects based on your client profile'
-                  }
-                </p>
-                <div className="flex items-center gap-4 text-sm text-white/60">
-                  <span>• {isFrench ? 'Scan automatique' : 'Automatic scanning'}</span>
-                  <span>• {isFrench ? 'Scoring intelligent' : 'Intelligent scoring'}</span>
-                  <span>• {isFrench ? 'Profil personnalisé' : 'Personalized profile'}</span>
-                </div>
-              </div>
-              <button
-                onClick={() => navigateToPage('/client/prospect-intelligence')}
-                className="px-6 py-3 rounded-lg bg-pink-500/20 border border-pink-500/40 text-pink-400 hover:bg-pink-500/30 transition-all font-medium"
-              >
-                {isFrench ? 'Voir la Prospection' : 'View Intelligence'}
-              </button>
-            </div>
-          </div>
-        </motion.div>
+        {/* Prospect Intelligence Navigation Card - Hidden from client dashboard (admin only feature) */}
 
         {/* Leads Section */}
         <motion.div
