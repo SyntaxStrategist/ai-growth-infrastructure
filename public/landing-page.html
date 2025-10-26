@@ -809,6 +809,7 @@
                 heroSubtitle: "Stop wasting time on unqualified leads. Our AI automatically analyzes every contact form submission, scores leads by urgency and intent, and prioritizes your hottest prospects.",
                 btnBook: "📅 Book a Call",
                 btnDemo: "🎯 View Demo",
+                videoTitle: "See Avenir AI in Action - 2 Minute Demo",
                 predictorTitle: "🎯 Predict Your Success Rate",
                 predictorSubtitle: "See your success probability in 5 minutes - no one else offers this",
                 businessType: "Your Business Type",
@@ -872,10 +873,11 @@
                 navHome: "Accueil",
                 navDemo: "Démo",
                 navBook: "Réserver",
-                heroTitle: "Transformez Votre Processus de Prospects avec l'IA",
+                heroTitle: "Transformez Votre Processus de Prospection avec l'IA",
                 heroSubtitle: "Arrêtez de perdre du temps sur des prospects non qualifiés. Notre IA analyse automatiquement chaque soumission de formulaire de contact, note les prospects par urgence et intention, et priorise vos prospects les plus chauds.",
                 btnBook: "📅 Réserver un Appel",
                 btnDemo: "🎯 Voir la Démo",
+                videoTitle: "Voir Avenir AI en Action - Démo de 2 Minutes",
                 predictorTitle: "🎯 Prédisez Votre Taux de Succès",
                 predictorSubtitle: "Voyez votre probabilité de succès en 5 minutes - personne d'autre n'offre cela",
                 businessType: "Votre Type d'Entreprise",
@@ -974,6 +976,16 @@
             document.querySelector('.hero > .container > p').textContent = t.heroSubtitle;
             document.querySelectorAll('.btn-primary')[0].textContent = t.btnBook;
             document.querySelectorAll('.btn-secondary')[0].textContent = t.btnDemo;
+            
+            // Update video section
+            document.querySelector('.video-title').textContent = t.videoTitle;
+            
+            // Update CTA buttons in video section
+            const ctaButtons = document.querySelectorAll('.cta-buttons a');
+            if (ctaButtons.length >= 2) {
+                ctaButtons[0].textContent = t.btnBook;
+                ctaButtons[1].textContent = t.btnDemo;
+            }
             
             // Update problem section
             document.querySelector('.problem-section .section-title').textContent = t.problemTitle;
@@ -1402,7 +1414,7 @@
             <div class="video-section">
                 <div class="video-container">
                     <video class="video-player" id="demoVideo" preload="metadata" controls>
-                        <source src="./EnglishvslLandingpage.mp4" type="video/mp4" data-lang="en">
+                        <source src="./1021.mp4" type="video/mp4" data-lang="en">
                         <source src="./FrenchVideoLandingPage.mp4" type="video/mp4" data-lang="fr">
                         Your browser doesn't support video playback.
                     </video>
