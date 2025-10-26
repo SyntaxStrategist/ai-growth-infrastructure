@@ -153,6 +153,7 @@ export async function POST(req: NextRequest) {
       email_tone: email_tone,
       followup_speed: followup_speed,
       ai_personalized_reply: true, // Enable AI replies by default
+      status: 'pending_approval', // New signups require admin approval
       // ICP data (optional fields)
       icp_data: {
         target_client_type: target_client_type || null,

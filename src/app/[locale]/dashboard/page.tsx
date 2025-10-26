@@ -959,6 +959,12 @@ export default function Dashboard() {
             >
               ⚙️ {locale === 'fr' ? 'Paramètres' : 'Settings'}
             </a>
+            <a
+              href={`/${locale}/admin/client-approvals`}
+              className="px-4 py-2 rounded-lg bg-yellow-500/20 border border-yellow-500/40 text-yellow-400 hover:bg-yellow-500/30 transition-all duration-300 text-sm font-medium"
+            >
+              ✅ {locale === 'fr' ? 'Approbations' : 'Approvals'}
+            </a>
             <button
               onClick={() => {
                 localStorage.removeItem('admin_auth');

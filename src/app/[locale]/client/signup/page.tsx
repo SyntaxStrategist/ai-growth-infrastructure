@@ -137,9 +137,9 @@ export default function ClientSignup() {
       console.log('[ClientSignup] ✅ Account created:', data.data);
       setSuccess(true);
 
-      // Redirect to login after 2 seconds
+      // Redirect to pending approval page
       setTimeout(() => {
-        router.push(`/${locale}/client/dashboard`);
+        router.push(`/${locale}/client/pending-approval`);
       }, 2000);
 
     } catch (err) {

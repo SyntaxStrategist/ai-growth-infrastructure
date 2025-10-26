@@ -67,6 +67,25 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    // Check account approval status
+    if (client.status && client.status !== 'active') {
+      console.log('[ClientAuth] ❌ Account not approved. Status:', client.status);
+      
+      let errorMessage = '';
+      if (client.status === 'pending_approval') {
+        errorMessage = 'Your account is pending admin approval. Please check your email for updates.';
+      } else if (client.status === 'rejected') {
+        errorMessage = 'Your account has been rejected. Please contact support for more information.';
+      } else {
+        errorMessage = 'Your account is not active. Please contact support.';
+      }
+      
+      return NextResponse.json(
+        { success: false, error: errorMessage, status: client.status },
+        { status: 403 }
+      );
+    }
+
     // Update last_login
     console.log('[E2E-Test] [ClientAuth] Updating last_login timestamp...');
     const { error: updateError } = await supabase

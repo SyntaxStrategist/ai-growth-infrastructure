@@ -54,6 +54,9 @@ model Client {
   // Flags
   isInternal Boolean @default(false) @map("is_internal")
   isTest     Boolean @default(false) @map("is_test")
+  
+  // Account Approval Status
+  status String @default("pending_approval") // pending_approval, active, rejected
 
   // Relations
   leadMemory        LeadMemory[]
@@ -70,6 +73,7 @@ model Client {
   @@index([industryCategory])
   @@index([isInternal])
   @@index([isTest])
+  @@index([status])
   @@map("clients")
 }
 
