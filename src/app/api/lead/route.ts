@@ -9,6 +9,7 @@ import { enrichLeadWithAI } from "../../../lib/ai-enrichment";
 import { isTestLead, logTestDetection } from "../../../lib/test-detection";
 import { buildPersonalizedHtmlEmail } from "../../../lib/personalized-email";
 import { trackAiOutcome } from "../../../lib/outcome-tracker";
+import { sendUrgentLeadAlert } from "../../../lib/email-alerts";
 import { handleApiError } from '../../../lib/error-handler';
 import { validateRequestSize, createSecurityResponse } from '../../../lib/security';
 
@@ -367,6 +368,25 @@ export async function POST(req: NextRequest) {
 				).catch(() => {
 					// Silent failure - don't affect existing functionality
 				});
+				
+				// Send urgent lead alert if high urgency
+				if (clientId && result.leadId) {
+					sendUrgentLeadAlert({
+						id: result.leadId,
+						name,
+						email,
+						message,
+						aiSummary,
+						intent: enrichment.intent,
+						urgency: enrichment.urgency,
+						confidence_score: enrichment.confidence_score,
+						clientId: clientId,
+						timestamp: new Date().toISOString(),
+					}).catch((err) => {
+						console.error('[EmailAlert] Failed to send alert:', err);
+						// Silent failure - don't break lead processing
+					});
+				}
 				
 				// Link to client in lead_actions
 				if (clientId && result.leadId) {

@@ -27,14 +27,7 @@ export default function ClientSignup() {
     customTagline: '',
     emailTone: 'Friendly',
     followupSpeed: 'Instant',
-    // New ICP fields
-    targetClientType: '',
-    averageDealSize: '',
-    mainBusinessGoal: '',
-    biggestChallenge: '',
   });
-
-  const [icpExpanded, setIcpExpanded] = useState(false);
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -72,19 +65,6 @@ export default function ClientSignup() {
     successTitle: isFrench ? 'Compte créé avec succès !' : 'Account Created Successfully!',
     successMessage: isFrench ? 'Vérifiez votre courriel pour vos informations de connexion.' : 'Check your email for your login credentials.',
     redirecting: isFrench ? 'Redirection...' : 'Redirecting...',
-    // ICP section translations
-    icpSectionTitle: isFrench ? '🎯 Aidez Avenir AI à comprendre votre entreprise (optionnel mais puissant)' : '🎯 Help Avenir AI understand your business (optional but powerful)',
-    targetClientType: isFrench ? 'Type de Client Cible' : 'Target Client Type',
-    targetClientTypePlaceholder: isFrench ? 'ex: Petites boutiques en ligne, agents immobiliers' : 'e.g., Small e-commerce stores, real estate agents',
-    targetClientTypeHelper: isFrench ? 'Décrivez vos clients idéaux' : 'Describe your ideal customers',
-    averageDealSize: isFrench ? 'Taille Moyenne des Contrats (optionnel)' : 'Average Deal Size (optional)',
-    averageDealSizePlaceholder: isFrench ? 'ex: 2 000 $ – 5 000 $' : 'e.g., $2,000–$5,000',
-    averageDealSizeHelper: isFrench ? 'Valeur typique des projets ou services' : 'Typical project or service value',
-    mainBusinessGoal: isFrench ? 'Objectif Commercial Principal' : 'Main Business Goal',
-    biggestChallenge: isFrench ? 'Plus Grand Défi Actuel' : 'Biggest Challenge Right Now',
-    biggestChallengePlaceholder: isFrench ? 'ex: Convertir les visiteurs du site en leads' : 'e.g., Converting website visitors into leads',
-    biggestChallengeHelper: isFrench ? 'Quel est votre principal point de douleur ?' : 'What\'s your main pain point?',
-    icpSettingsNote: isFrench ? 'Vous pouvez toujours ajouter ou modifier ces informations plus tard dans vos paramètres de compte.' : 'You can always add or edit this information later in your account settings.',
   };
   
   const toneOptions = [
@@ -98,13 +78,6 @@ export default function ClientSignup() {
     { value: 'Instant', label: isFrench ? 'Instantané' : 'Instant' },
     { value: 'Within 1 hour', label: isFrench ? 'Dans l\'heure' : 'Within 1 hour' },
     { value: 'Same day', label: isFrench ? 'Le jour même' : 'Same day' },
-  ];
-
-  const businessGoalOptions = [
-    { value: 'Generate more qualified leads', label: isFrench ? 'Générer plus de leads qualifiés' : 'Generate more qualified leads' },
-    { value: 'Improve follow-ups and conversions', label: isFrench ? 'Améliorer les suivis et conversions' : 'Improve follow-ups and conversions' },
-    { value: 'Nurture existing clients', label: isFrench ? 'Fidéliser les clients existants' : 'Nurture existing clients' },
-    { value: 'Save time with automation', label: isFrench ? 'Gagner du temps avec l\'automatisation' : 'Save time with automation' },
   ];
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -449,111 +422,6 @@ export default function ClientSignup() {
                   min="0"
                   placeholder="50"
                 />
-              </div>
-
-              {/* ICP Section */}
-              <div className="mt-6 border border-white/10 rounded-lg p-4 bg-white/5">
-                <button 
-                  type="button"
-                  onClick={() => setIcpExpanded(!icpExpanded)}
-                  className="flex items-center justify-between w-full text-left"
-                >
-                  <span className="text-sm font-medium text-white/90">
-                    {t.icpSectionTitle}
-                  </span>
-                  <span className="text-white/40">
-                    {icpExpanded ? '▼' : '▶'}
-                  </span>
-                </button>
-                
-                {icpExpanded && (
-                  <motion.div 
-                    initial={{ opacity: 0, height: 0 }}
-                    animate={{ opacity: 1, height: 'auto' }}
-                    exit={{ opacity: 0, height: 0 }}
-                    transition={{ duration: 0.3 }}
-                    className="mt-4 space-y-4"
-                  >
-                    {/* Target Client Type */}
-                    <div>
-                      <label htmlFor="target_client_type" className="block text-sm font-medium mb-2 text-white/90">
-                        {t.targetClientType}
-                      </label>
-                      <input
-                        id="target_client_type"
-                        name="target_client_type"
-                        type="text"
-                        value={formData.targetClientType}
-                        onChange={(e) => setFormData({ ...formData, targetClientType: e.target.value })}
-                        placeholder={t.targetClientTypePlaceholder}
-                        className="w-full px-4 py-3 rounded-md bg-white/5 border border-white/10 text-white placeholder:text-white/40 focus:border-blue-400/50 focus:outline-none transition-all"
-                      />
-                      <p className="text-xs text-white/50 mt-1">{t.targetClientTypeHelper}</p>
-                    </div>
-
-                    {/* Average Deal Size */}
-                    <div>
-                      <label htmlFor="average_deal_size" className="block text-sm font-medium mb-2 text-white/90">
-                        {t.averageDealSize}
-                      </label>
-                      <input
-                        id="average_deal_size"
-                        name="average_deal_size"
-                        type="text"
-                        value={formData.averageDealSize}
-                        onChange={(e) => setFormData({ ...formData, averageDealSize: e.target.value })}
-                        placeholder={t.averageDealSizePlaceholder}
-                        className="w-full px-4 py-3 rounded-md bg-white/5 border border-white/10 text-white placeholder:text-white/40 focus:border-blue-400/50 focus:outline-none transition-all"
-                      />
-                      <p className="text-xs text-white/50 mt-1">{t.averageDealSizeHelper}</p>
-                    </div>
-
-                    {/* Main Business Goal */}
-                    <div>
-                      <label htmlFor="main_business_goal" className="block text-sm font-medium mb-2 text-white/90">
-                        {t.mainBusinessGoal}
-                      </label>
-                      <select
-                        id="main_business_goal"
-                        name="main_business_goal"
-                        value={formData.mainBusinessGoal}
-                        onChange={(e) => setFormData({ ...formData, mainBusinessGoal: e.target.value })}
-                        className="w-full px-4 py-3 rounded-md bg-white/5 border border-white/10 text-white focus:border-blue-400/50 focus:outline-none transition-all"
-                      >
-                        <option value="">{isFrench ? 'Sélectionnez un objectif...' : 'Select a goal...'}</option>
-                        {businessGoalOptions.map((option) => (
-                          <option key={option.value} value={option.value} className="bg-gray-800">
-                            {option.label}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-
-                    {/* Biggest Challenge */}
-                    <div>
-                      <label htmlFor="biggest_challenge" className="block text-sm font-medium mb-2 text-white/90">
-                        {t.biggestChallenge}
-                      </label>
-                      <input
-                        id="biggest_challenge"
-                        name="biggest_challenge"
-                        type="text"
-                        value={formData.biggestChallenge}
-                        onChange={(e) => setFormData({ ...formData, biggestChallenge: e.target.value })}
-                        placeholder={t.biggestChallengePlaceholder}
-                        className="w-full px-4 py-3 rounded-md bg-white/5 border border-white/10 text-white placeholder:text-white/40 focus:border-blue-400/50 focus:outline-none transition-all"
-                      />
-                      <p className="text-xs text-white/50 mt-1">{t.biggestChallengeHelper}</p>
-                    </div>
-                  </motion.div>
-                )}
-              </div>
-
-              {/* ICP Settings Helper Note */}
-              <div className="mt-3 p-3 bg-blue-500/10 border border-blue-500/20 rounded-lg">
-                <p className="text-sm text-blue-300 text-center">
-                  {t.icpSettingsNote}
-                </p>
               </div>
 
               {/* Error Message */}

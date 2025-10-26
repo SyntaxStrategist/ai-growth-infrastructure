@@ -33,11 +33,7 @@ export default function ClientSettings() {
     language: 'en',
     aiPersonalizedReply: true,
     businessName: '',
-    // ICP fields
-    targetClientType: '',
-    averageDealSize: '',
-    mainBusinessGoal: '',
-    biggestChallenge: '',
+    alertEmail: '',
   });
 
   const [connectionData, setConnectionData] = useState<{
@@ -80,17 +76,6 @@ export default function ClientSettings() {
     backToDashboard: isFrench ? '← Retour au tableau de bord' : '← Back to Dashboard',
     loading: isFrench ? 'Chargement...' : 'Loading...',
     noClientId: isFrench ? 'Aucun ID client trouvé. Veuillez vous reconnecter.' : 'No client ID found. Please log in again.',
-    // ICP translations
-    icpSection: isFrench ? 'Profil Client Idéal (ICP)' : 'Ideal Client Profile (ICP)',
-    targetClientType: isFrench ? 'Type de client cible' : 'Target Client Type',
-    targetClientTypePlaceholder: isFrench ? 'Ex: Petites boutiques en ligne, agents immobiliers' : 'E.g., Small e-commerce stores, real estate agents',
-    averageDealSize: isFrench ? 'Taille moyenne des contrats' : 'Average Deal Size',
-    averageDealSizePlaceholder: isFrench ? 'Ex: 2 000 $ - 5 000 $ (optionnel)' : 'E.g., $2,000 - $5,000 (optional)',
-    mainBusinessGoal: isFrench ? 'Objectif commercial principal' : 'Main Business Goal',
-    biggestChallenge: isFrench ? 'Défi principal actuel' : 'Biggest Challenge Right Now',
-    biggestChallengePlaceholder: isFrench ? 'Ex: Convertir les visiteurs en prospects' : 'E.g., Converting website visitors into leads',
-    icpHelperText: isFrench ? 'Vous pouvez modifier ces informations à tout moment. Avenir AI utilise ces données pour personnaliser vos résultats de prospection.' : 'You can edit these anytime. Avenir AI uses this information to personalize your prospect intelligence results.',
-    icpSuccessToast: isFrench ? '✅ Profil client idéal mis à jour avec succès' : '✅ ICP data updated successfully',
     // Integration Status translations
     integrationStatus: isFrench ? 'Statut de l\'intégration' : 'Integration Status',
     formIntegration: isFrench ? '🔗 Intégration du Formulaire' : '🔗 Form Integration',
@@ -148,24 +133,17 @@ export default function ClientSettings() {
         const data = await res.json();
 
         if (data.success && data.data) {
-          // Extract ICP data from icp_data JSONB column
-          const icpData = data.data.icp_data || {};
-          
           setSettings({
             industryCategory: data.data.industry_category || '',
             primaryService: data.data.primary_service || '',
             bookingLink: data.data.booking_link || '',
+            alertEmail: data.data.alert_email || '',
             customTagline: data.data.custom_tagline || '',
             emailTone: data.data.email_tone || 'Friendly',
             followupSpeed: data.data.followup_speed || 'Instant',
             language: data.data.language || 'en',
             aiPersonalizedReply: data.data.ai_personalized_reply ?? true,
             businessName: data.data.business_name || '',
-            // ICP fields
-            targetClientType: icpData.target_client_type || '',
-            averageDealSize: icpData.average_deal_size || '',
-            mainBusinessGoal: icpData.main_business_goal || '',
-            biggestChallenge: icpData.biggest_challenge || '',
           });
 
           // Set connection data
@@ -320,16 +298,12 @@ export default function ClientSettings() {
         industryCategory: settings.industryCategory,
         primaryService: settings.primaryService,
         bookingLink: settings.bookingLink || null,
+        alertEmail: settings.alertEmail || null,
         customTagline: settings.customTagline || null,
         emailTone: settings.emailTone,
         followupSpeed: settings.followupSpeed,
         language: settings.language,
         aiPersonalizedReply: settings.aiPersonalizedReply,
-        // ICP fields
-        targetClientType: settings.targetClientType,
-        averageDealSize: settings.averageDealSize,
-        mainBusinessGoal: settings.mainBusinessGoal,
-        biggestChallenge: settings.biggestChallenge,
       };
 
       console.log('[ClientSettings] ============================================');
@@ -354,10 +328,7 @@ export default function ClientSettings() {
       if (data.success) {
         console.log('[ClientSettings] ✅ Preferences saved successfully');
         console.log('[ClientSettings] Client ID:', clientId);
-        // Use ICP-specific success message if any ICP fields were updated
-        const hasIcpChanges = settings.targetClientType || settings.averageDealSize || 
-                             settings.mainBusinessGoal || settings.biggestChallenge;
-        setToastMessage(hasIcpChanges ? t.icpSuccessToast : t.successToast);
+        setToastMessage(t.successToast);
         setShowToast(true);
         setHasUnsavedChanges(false);
         setTimeout(() => setShowToast(false), 3000);
@@ -626,66 +597,54 @@ export default function ClientSettings() {
                 placeholder="https://calendly.com/yourname"
               />
             </div>
-          </div>
-        </div>
 
-        {/* Ideal Client Profile (ICP) Section */}
-        <div className="bg-white/5 backdrop-blur-sm rounded-xl p-6 mb-6 border border-white/10">
-          <h2 className="text-xl font-semibold mb-4 text-green-400">{t.icpSection}</h2>
-          
-          <div className="space-y-4">
-            {/* Target Client Type */}
+            {/* Alert Email */}
             <div>
-              <label className="block text-sm font-medium mb-2">{t.targetClientType}</label>
+              <label className="block text-sm font-medium mb-2">
+                🔔 {isFrench ? 'Courriel d\'alerte' : 'Alert Email'}
+              </label>
               <input
-                type="text"
-                value={settings.targetClientType}
-                onChange={(e) => handleFieldChange('targetClientType', e.target.value)}
-                className="w-full px-4 py-3 rounded-md bg-white/5 border border-white/10 text-white placeholder:text-white/40 focus:border-green-400/50 focus:outline-none transition-all"
-                placeholder={t.targetClientTypePlaceholder}
+                type="email"
+                value={settings.alertEmail}
+                onChange={(e) => handleFieldChange('alertEmail', e.target.value)}
+                className="w-full px-4 py-3 rounded-md bg-white/5 border border-white/10 text-white placeholder:text-white/40 focus:border-blue-400/50 focus:outline-none transition-all"
+                placeholder={isFrench ? 'votre@email.com' : 'your@email.com'}
               />
+              <p className="mt-1 text-xs text-white/50">
+                {isFrench ? 'Recevez des alertes par courriel pour les prospects urgents' : 'Get email alerts for urgent leads'}
+              </p>
+              {settings.alertEmail && (
+                <button
+                  onClick={async () => {
+                    try {
+                      const response = await fetch('/api/test-email-alert', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                          clientId,
+                          testEmail: settings.alertEmail,
+                        }),
+                      });
+                      const data = await response.json();
+                      if (data.success) {
+                        setToastMessage(isFrench ? '✅ Courriel de test envoyé!' : '✅ Test email sent!');
+                      } else {
+                        setToastMessage(isFrench ? '❌ Échec de l\'envoi' : '❌ Failed to send');
+                      }
+                      setShowToast(true);
+                      setTimeout(() => setShowToast(false), 3000);
+                    } catch (error) {
+                      setToastMessage(isFrench ? '❌ Erreur' : '❌ Error');
+                      setShowToast(true);
+                      setTimeout(() => setShowToast(false), 3000);
+                    }
+                  }}
+                  className="mt-2 px-4 py-2 bg-green-500/20 border border-green-400/50 text-green-400 rounded-lg text-sm hover:bg-green-500/30 transition-all"
+                >
+                  🧪 {isFrench ? 'Envoyer un courriel de test' : 'Send Test Email'}
+                </button>
+              )}
             </div>
-
-            {/* Average Deal Size */}
-            <div>
-              <label className="block text-sm font-medium mb-2">{t.averageDealSize}</label>
-              <input
-                type="text"
-                value={settings.averageDealSize}
-                onChange={(e) => handleFieldChange('averageDealSize', e.target.value)}
-                className="w-full px-4 py-3 rounded-md bg-white/5 border border-white/10 text-white placeholder:text-white/40 focus:border-green-400/50 focus:outline-none transition-all"
-                placeholder={t.averageDealSizePlaceholder}
-              />
-            </div>
-
-            {/* Main Business Goal */}
-            <div>
-              <label className="block text-sm font-medium mb-2">{t.mainBusinessGoal}</label>
-              <input
-                type="text"
-                value={settings.mainBusinessGoal}
-                onChange={(e) => handleFieldChange('mainBusinessGoal', e.target.value)}
-                className="w-full px-4 py-3 rounded-md bg-white/5 border border-white/10 text-white placeholder:text-white/40 focus:border-green-400/50 focus:outline-none transition-all"
-                placeholder={isFrench ? 'Ex: Augmenter les revenus de 30%' : 'E.g., Increase revenue by 30%'}
-              />
-            </div>
-
-            {/* Biggest Challenge */}
-            <div>
-              <label className="block text-sm font-medium mb-2">{t.biggestChallenge}</label>
-              <input
-                type="text"
-                value={settings.biggestChallenge}
-                onChange={(e) => handleFieldChange('biggestChallenge', e.target.value)}
-                className="w-full px-4 py-3 rounded-md bg-white/5 border border-white/10 text-white placeholder:text-white/40 focus:border-green-400/50 focus:outline-none transition-all"
-                placeholder={t.biggestChallengePlaceholder}
-              />
-            </div>
-          </div>
-
-          {/* Helper Text */}
-          <div className="mt-4 p-3 bg-green-500/10 border border-green-500/20 rounded-lg">
-            <p className="text-sm text-green-300">{t.icpHelperText}</p>
           </div>
         </div>
 

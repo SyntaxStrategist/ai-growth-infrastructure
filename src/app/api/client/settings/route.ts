@@ -17,7 +17,7 @@ export async function GET(req: NextRequest) {
     
     const { data, error } = await supabase
       .from('clients')
-      .select('industry_category, primary_service, booking_link, custom_tagline, email_tone, followup_speed, ai_personalized_reply, language, business_name, icp_data, last_connection, created_at, api_key')
+      .select('industry_category, primary_service, booking_link, alert_email, custom_tagline, email_tone, followup_speed, ai_personalized_reply, language, business_name, icp_data, last_connection, created_at, api_key')
       .eq('client_id', clientId)
       .single();
     
@@ -45,6 +45,7 @@ export async function PUT(req: NextRequest) {
       industryCategory,
       primaryService,
       bookingLink,
+      alertEmail,
       customTagline,
       emailTone,
       followupSpeed,
@@ -105,6 +106,7 @@ export async function PUT(req: NextRequest) {
     if (industryCategory !== undefined) updateData.industry_category = industryCategory;
     if (primaryService !== undefined) updateData.primary_service = primaryService;
     if (bookingLink !== undefined) updateData.booking_link = bookingLink || null;
+    if (alertEmail !== undefined) updateData.alert_email = alertEmail || null;
     if (customTagline !== undefined) updateData.custom_tagline = customTagline || null;
     if (emailTone !== undefined) updateData.email_tone = emailTone;
     if (followupSpeed !== undefined) updateData.followup_speed = followupSpeed;
