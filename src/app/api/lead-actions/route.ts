@@ -449,10 +449,11 @@ export async function GET(req: NextRequest) {
         .order('timestamp', { ascending: false })
         .limit(limit);
     } else {
-      // Admin mode - get all actions including automatic ones
+      // Admin mode - get all actions except duplicate "created" (filter out for cleaner Activity Log)
       query = supabase
         .from('lead_actions')
         .select('*')
+        .neq('action_type', 'created')
         .order('timestamp', { ascending: false })
         .limit(limit);
     }

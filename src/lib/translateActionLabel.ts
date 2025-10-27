@@ -38,6 +38,16 @@ export const actionTranslations = {
     "Archived": "Archived",
     "Deleted": "Deleted",
     
+    // French-to-English reverse mappings
+    "Converti": "Converted",
+    "Contacté": "Contacted",
+    "Haute Valeur": "High Value",
+    "Non Qualifié": "Not Qualified",
+    "Suivi": "Follow-Up",
+    "Actif": "Active",
+    "Archivé": "Archived",
+    "Supprimé": "Deleted",
+    
     // Performed by labels
     "admin": "Admin",
     "AI Copilot": "AI Copilot",
@@ -70,6 +80,16 @@ export const actionTranslations = {
     "Contacted": "Contacté",
     "High Value": "Haute Valeur",
     "Not Qualified": "Non Qualifié",
+    "Follow-Up": "Suivi",
+    "Active": "Actif",
+    "Archived": "Archivé",
+    "Deleted": "Supprimé",
+    
+    // English-to-French reverse mappings (for when English tags are in DB)
+    "Not Qualified": "Non Qualifié",
+    "High Value": "Haute Valeur",
+    "Converted": "Converti",
+    "Contacted": "Contacté",
     "Follow-Up": "Suivi",
     "Active": "Actif",
     "Archived": "Archivé",
