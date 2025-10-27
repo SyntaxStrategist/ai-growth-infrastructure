@@ -210,7 +210,12 @@ export default function RelationshipInsights({ locale, clientId = null }: Relati
       return (value * 100).toFixed(0) + '%';
     }
     
-    return value.toString();
+    // Capitalize first letter for tone and urgency values
+    const str = value.toString();
+    if (str.length > 0) {
+      return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
+    }
+    return str;
   }
 
   if (loading) {

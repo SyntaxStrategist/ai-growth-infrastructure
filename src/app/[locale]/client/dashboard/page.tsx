@@ -35,7 +35,11 @@ const ActivityLog = dynamic(() => import('../../../../components/ActivityLog'), 
   ssr: false,
   loading: () => <LoadingFallback message="Loading activities..." />
 });
-// Note: RelationshipInsights and ClientProspectIntelligence are now accessed via full-page routes
+const RelationshipInsights = dynamic(() => import('../../../../components/RelationshipInsights'), { 
+  ssr: false,
+  loading: () => <LoadingFallback message="Loading insights..." />
+});
+// Note: ClientProspectIntelligence is now accessed via full-page routes
 
 // ClientData type is now imported from session utility
 
@@ -1230,37 +1234,14 @@ async function translateIntent(rawTopIntent: string, locale: string): Promise<st
           <PredictiveGrowthEngine locale={locale} clientId={client?.clientId || null} />
         </motion.div>
 
-        {/* Relationship Insights Navigation Card */}
+        {/* Relationship Insights */}
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 0.6, delay: 0.55 }}
           className="mb-8"
         >
-          <div className="bg-white/5 backdrop-blur-sm rounded-xl p-6 border border-white/10">
-            <div className="flex items-center justify-between">
-              <div>
-                <h3 className="text-xl font-semibold mb-2 text-cyan-400">📊 {t.insights}</h3>
-                <p className="text-white/60 mb-4">
-                  {isFrench 
-                    ? 'Analysez vos données de leads avec des graphiques détaillés et des tendances'
-                    : 'Analyze your lead data with detailed charts and trends'
-                  }
-                </p>
-                <div className="flex items-center gap-4 text-sm text-white/60">
-                  <span>• {isFrench ? 'Distribution des intentions' : 'Intent distribution'}</span>
-                  <span>• {isFrench ? 'Analyse de l\'urgence' : 'Urgency analysis'}</span>
-                  <span>• {isFrench ? 'Tendances temporelles' : 'Temporal trends'}</span>
-                </div>
-              </div>
-              <button
-                onClick={() => navigateToPage('/client/insights')}
-                className="px-6 py-3 rounded-lg bg-cyan-500/20 border border-cyan-500/40 text-cyan-400 hover:bg-cyan-500/30 transition-all font-medium"
-              >
-                {isFrench ? 'Voir les Analyses' : 'View Insights'}
-              </button>
-            </div>
-          </div>
+          <RelationshipInsights locale={locale} clientId={client?.clientId || null} />
         </motion.div>
 
         {/* Prospect Intelligence Navigation Card - Hidden from client dashboard (admin only feature) */}
