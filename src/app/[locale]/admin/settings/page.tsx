@@ -690,13 +690,13 @@ export default function AdminSettings() {
 
             {/* Action Buttons */}
             <div className="grid grid-cols-2 gap-4">
-              <button
-                onClick={() => setShowPreview(true)}
+            <button
+              onClick={() => setShowPreview(true)}
                 className="py-4 rounded-lg bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white font-semibold transition-all transform hover:scale-[1.02] shadow-lg"
-              >
-                {t.previewButton}
-              </button>
-              
+            >
+              {t.previewButton}
+            </button>
+
               <button
                 onClick={() => {
                   setSaving(true);
