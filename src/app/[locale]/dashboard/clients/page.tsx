@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { useLocale } from 'next-intl';
+import UniversalLanguageToggle from "../../../../components/UniversalLanguageToggle";
 import type { ClientRecord } from "../../../../lib/supabase";
 
 export default function ClientsPage() {
@@ -251,6 +252,7 @@ export default function ClientsPage() {
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-black text-white">
+        <UniversalLanguageToggle />
         <div className="text-center">
           <div className="animate-spin h-8 w-8 border-4 border-blue-500 border-t-transparent rounded-full mx-auto mb-4"></div>
           <p>Loading...</p>
@@ -261,6 +263,7 @@ export default function ClientsPage() {
 
   return (
     <div className="min-h-screen p-8 bg-black text-white">
+      <UniversalLanguageToggle />
       <div className="max-w-7xl mx-auto">
         <motion.div
           initial={{ opacity: 0, y: -20 }}
