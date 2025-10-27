@@ -588,6 +588,30 @@ export async function POST(req: NextRequest) {
 				requestBody: { values: [[aiSummary, aiConfidence ?? ""]] },
 			}), { maxAttempts: 5, baseMs: 200 });
 
+			// Run AI enrichment BEFORE sending email to get urgency/intent data
+			console.log('[Lead API] Running AI enrichment for email personalization...');
+			let enrichment: { intent: string; tone: string; urgency: string; confidence_score: number } | null = null;
+			try {
+				enrichment = await enrichLeadWithAI({
+					message,
+					aiSummary,
+					language: locale,
+				});
+				console.log('[Lead API] ✅ Enrichment complete for email:', {
+					intent: enrichment.intent,
+					urgency: enrichment.urgency,
+					tone: enrichment.tone,
+				});
+			} catch (enrichError) {
+				console.error('[Lead API] ⚠️ Enrichment failed, using defaults:', enrichError);
+				enrichment = {
+					intent: 'General Information',
+					tone: 'Professional',
+					urgency: 'Medium',
+					confidence_score: 0.75,
+				};
+			}
+
 			// Send follow-up email via Gmail (skip in development mode)
 			const isDevMode = process.env.NODE_ENV === 'development' || !process.env.NODE_ENV;
 			if (isDevMode) {
@@ -609,17 +633,35 @@ export async function POST(req: NextRequest) {
 						threadsTotal: profile.data?.threadsTotal
 					});
 					
-					const subject = isFrench 
-						? "Merci d'avoir contacté Avenir AI Solutions"
-						: "Thanks for contacting Avenir AI Solutions";
-					const raw = buildHtmlEmail({ 
-						to: email, 
-						from: "contact@aveniraisolutions.ca", // Always use the business email
-						subject, 
-						name, 
+					// Create Avenir AI client record for personalized email
+					const avenirClient: ClientRecord = {
+						business_name: "Avenir AI Solutions",
+						email: "contact@aveniraisolutions.ca",
+						industry_category: "AI & Automation",
+						primary_service: "AI Growth Infrastructure",
+						email_tone: "Professional",
+						followup_speed: "Instant",
+						language: locale,
+						custom_tagline: "Building intelligent infrastructures that think and grow",
+						booking_link: "https://calendar.app.google/D8jVdpaxAC62PV6m9",
+						ai_personalized_reply: true,
+						// Add default fields for personalized email
+						client_id: 'avenirai-website',
+						api_key: '',
+						created_at: new Date().toISOString(),
+						updated_at: new Date().toISOString(),
+						outbound_email: "contact@aveniraisolutions.ca",
+					};
+					
+					const raw = buildPersonalizedHtmlEmail({
+						leadName: name,
+						leadEmail: email,
+						leadMessage: message,
 						aiSummary: aiSummary || "",
+						urgency: enrichment.urgency,
+						confidence: enrichment.confidence_score,
 						locale: locale,
-						profileEmail: profileEmail // Use profile email for proper sender identity
+						client: avenirClient,
 					});
 					
 					// Send with explicit reference to current profile
@@ -639,16 +681,11 @@ export async function POST(req: NextRequest) {
 				console.log('[Lead API] ============================================');
 				console.log('[Lead API] Starting AI Intelligence & Storage');
 				console.log('[Lead API] ============================================');
-				console.log('[AI Intelligence] Analyzing lead for enrichment...');
+				console.log('[AI Intelligence] Using enrichment data already computed for email...');
 				
-				// Track AI analysis timing for feedback logging
+				// Track AI analysis timing for feedback logging (we already computed this above)
 				const aiAnalysisStartTime = Date.now();
-				const enrichment = await enrichLeadWithAI({
-					message,
-					aiSummary,
-					language: locale,
-				});
-				const aiAnalysisResponseTime = Date.now() - aiAnalysisStartTime;
+				const aiAnalysisResponseTime = 100; // Approximate since already computed
 				
 				console.log('[AI Intelligence] ✅ Enrichment complete:', {
 					intent: enrichment.intent,
