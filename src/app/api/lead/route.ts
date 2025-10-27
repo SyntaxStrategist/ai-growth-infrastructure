@@ -4,7 +4,7 @@ import { NextRequest } from "next/server";
 import { google } from "googleapis";
 import OpenAI from "openai";
 import { getAuthorizedGmail, buildHtmlEmail } from "../../../lib/gmail";
-import { supabase, validateApiKey, upsertLeadWithHistory } from "../../../lib/supabase";
+import { supabase, validateApiKey, upsertLeadWithHistory, ClientRecord } from "../../../lib/supabase";
 import { enrichLeadWithAI } from "../../../lib/ai-enrichment";
 import { isTestLead, logTestDetection } from "../../../lib/test-detection";
 import { buildPersonalizedHtmlEmail } from "../../../lib/personalized-email";
