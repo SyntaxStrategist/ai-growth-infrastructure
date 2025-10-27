@@ -633,25 +633,62 @@ export async function POST(req: NextRequest) {
 						threadsTotal: profile.data?.threadsTotal
 					});
 					
-					// Create Avenir AI client record for personalized email
-					const avenirClient: ClientRecord = {
-						business_name: "Avenir AI Solutions",
-						email: "contact@aveniraisolutions.ca",
-						industry_category: "AI & Automation",
-						primary_service: "AI Growth Infrastructure",
-						email_tone: "Professional",
-						followup_speed: "Instant",
-						language: locale,
-						custom_tagline: "Building intelligent infrastructures that think and grow",
-						booking_link: "https://calendar.app.google/D8jVdpaxAC62PV6m9",
-						ai_personalized_reply: true,
-						// Add default fields for personalized email
-						client_id: 'avenirai-website',
-						api_key: '',
-						created_at: new Date().toISOString(),
-						updated_at: new Date().toISOString(),
-						outbound_email: "contact@aveniraisolutions.ca",
-					};
+					// Fetch admin profile from database (if clientId exists)
+					let avenirClient: ClientRecord;
+					if (clientId) {
+						console.log('[Lead API] 🔍 Fetching admin profile from database (client_id:', clientId, ')');
+						const { data: adminProfile, error: profileError } = await supabase
+							.from('clients')
+							.select('*')
+							.eq('client_id', clientId)
+							.single();
+						
+						if (profileError || !adminProfile) {
+							console.warn('[Lead API] ⚠️ Failed to fetch admin profile, using defaults:', profileError);
+							avenirClient = {
+								business_name: "Avenir AI Solutions",
+								email: "contact@aveniraisolutions.ca",
+								industry_category: "AI & Automation",
+								primary_service: "AI Growth Infrastructure",
+								email_tone: "Professional",
+								followup_speed: "Instant",
+								language: locale,
+								custom_tagline: "Building intelligent infrastructures that think and grow",
+								booking_link: "https://calendar.app.google/D8jVdpaxAC62PV6m9",
+								ai_personalized_reply: true,
+								client_id: clientId,
+								api_key: '',
+								created_at: new Date().toISOString(),
+								outbound_email: "contact@aveniraisolutions.ca",
+							};
+						} else {
+							console.log('[Lead API] ✅ Admin profile loaded:', {
+								business_name: adminProfile.business_name,
+								email_tone: adminProfile.email_tone,
+								followup_speed: adminProfile.followup_speed,
+							});
+							avenirClient = adminProfile as ClientRecord;
+						}
+					} else {
+						// No clientId, use defaults
+						console.log('[Lead API] ⚠️ No clientId, using default admin profile');
+						avenirClient = {
+							business_name: "Avenir AI Solutions",
+							email: "contact@aveniraisolutions.ca",
+							industry_category: "AI & Automation",
+							primary_service: "AI Growth Infrastructure",
+							email_tone: "Professional",
+							followup_speed: "Instant",
+							language: locale,
+							custom_tagline: "Building intelligent infrastructures that think and grow",
+							booking_link: "https://calendar.app.google/D8jVdpaxAC62PV6m9",
+							ai_personalized_reply: true,
+							client_id: 'avenirai-website',
+							api_key: '',
+							created_at: new Date().toISOString(),
+							outbound_email: "contact@aveniraisolutions.ca",
+						};
+					}
 					
 					const raw = buildPersonalizedHtmlEmail({
 						leadName: name,
