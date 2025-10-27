@@ -646,8 +646,12 @@ export async function POST(req: NextRequest) {
 						if (profileError || !adminProfile) {
 							console.warn('[Lead API] ⚠️ Failed to fetch admin profile, using defaults:', profileError);
 							avenirClient = {
+								id: clientId || '00000000-0000-0000-0000-000000000001',
+								client_id: clientId || '00000000-0000-0000-0000-000000000001',
+								name: "Avenir AI",
 								business_name: "Avenir AI Solutions",
 								email: "contact@aveniraisolutions.ca",
+								password_hash: '',
 								industry_category: "AI & Automation",
 								primary_service: "AI Growth Infrastructure",
 								email_tone: "Professional",
@@ -656,7 +660,6 @@ export async function POST(req: NextRequest) {
 								custom_tagline: "Building intelligent infrastructures that think and grow",
 								booking_link: "https://calendar.app.google/D8jVdpaxAC62PV6m9",
 								ai_personalized_reply: true,
-								client_id: clientId,
 								api_key: '',
 								created_at: new Date().toISOString(),
 								outbound_email: "contact@aveniraisolutions.ca",
@@ -673,8 +676,12 @@ export async function POST(req: NextRequest) {
 						// No clientId, use defaults
 						console.log('[Lead API] ⚠️ No clientId, using default admin profile');
 						avenirClient = {
+							id: '00000000-0000-0000-0000-000000000001',
+							client_id: '00000000-0000-0000-0000-000000000001',
+							name: "Avenir AI",
 							business_name: "Avenir AI Solutions",
 							email: "contact@aveniraisolutions.ca",
+							password_hash: '',
 							industry_category: "AI & Automation",
 							primary_service: "AI Growth Infrastructure",
 							email_tone: "Professional",
@@ -683,7 +690,6 @@ export async function POST(req: NextRequest) {
 							custom_tagline: "Building intelligent infrastructures that think and grow",
 							booking_link: "https://calendar.app.google/D8jVdpaxAC62PV6m9",
 							ai_personalized_reply: true,
-							client_id: 'avenirai-website',
 							api_key: '',
 							created_at: new Date().toISOString(),
 							outbound_email: "contact@aveniraisolutions.ca",
