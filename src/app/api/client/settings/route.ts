@@ -51,6 +51,15 @@ export async function PUT(req: NextRequest) {
       followupSpeed,
       language,
       aiPersonalizedReply,
+      // AI Precision Enhancement fields
+      typicalDealSize,
+      geographicArea,
+      mainPainPoints,
+      customUrgencyRules,
+      targetCustomerProfile,
+      avgResponseTimeGoal,
+      competitiveBehavior,
+      seasonalPatterns,
       // ICP fields
       targetClientType,
       averageDealSize,
@@ -112,6 +121,16 @@ export async function PUT(req: NextRequest) {
     if (followupSpeed !== undefined) updateData.followup_speed = followupSpeed;
     if (language !== undefined) updateData.language = language;
     if (aiPersonalizedReply !== undefined) updateData.ai_personalized_reply = aiPersonalizedReply;
+    
+    // AI Precision Enhancement fields (commented out until migration runs)
+    // if (typicalDealSize !== undefined) updateData.typical_deal_size = typicalDealSize || null;
+    // if (geographicArea !== undefined) updateData.geographic_area = geographicArea || null;
+    // if (mainPainPoints !== undefined) updateData.main_pain_points = mainPainPoints || null;
+    // if (customUrgencyRules !== undefined) updateData.custom_urgency_rules = customUrgencyRules || null;
+    // if (targetCustomerProfile !== undefined) updateData.target_customer_profile = targetCustomerProfile || null;
+    // if (avgResponseTimeGoal !== undefined) updateData.avg_response_time_goal = avgResponseTimeGoal || null;
+    // if (competitiveBehavior !== undefined) updateData.competitive_behavior = competitiveBehavior || null;
+    // if (seasonalPatterns !== undefined) updateData.seasonal_patterns = seasonalPatterns || null;
     
     // Handle ICP data - build icp_data object if any ICP fields are provided
     const hasIcpData = targetClientType !== undefined || averageDealSize !== undefined || 

@@ -43,6 +43,16 @@ model Client {
   primaryService      String? @map("primary_service")
   bookingLink         String? @map("booking_link")
 
+  // AI Precision Enhancement (Settings Page)
+  typicalDealSize       String? @map("typical_deal_size") @db.Text
+  geographicArea        String? @map("geographic_area") @db.Text
+  mainPainPoints        String? @map("main_pain_points") @db.Text
+  customUrgencyRules    String? @map("custom_urgency_rules") @db.Text
+  targetCustomerProfile String? @map("target_customer_profile") @db.Text
+  avgResponseTimeGoal   String? @map("avg_response_time_goal")
+  competitiveBehavior   String? @map("competitive_behavior") @db.Text
+  seasonalPatterns      String? @map("seasonal_patterns") @db.Text
+
   // SMTP Configuration
   outboundEmail String? @map("outbound_email")
   smtpHost      String? @map("smtp_host")
@@ -54,7 +64,7 @@ model Client {
   // Flags
   isInternal Boolean @default(false) @map("is_internal")
   isTest     Boolean @default(false) @map("is_test")
-  
+
   // Account Approval Status
   status String @default("pending_approval") // pending_approval, active, rejected
 

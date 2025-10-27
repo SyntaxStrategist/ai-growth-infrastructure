@@ -34,6 +34,15 @@ export default function ClientSettings() {
     aiPersonalizedReply: true,
     businessName: '',
     alertEmail: '',
+    // AI Precision Enhancement fields
+    typicalDealSize: '',
+    geographicArea: '',
+    mainPainPoints: '',
+    customUrgencyRules: '',
+    targetCustomerProfile: '',
+    avgResponseTimeGoal: '',
+    competitiveBehavior: '',
+    seasonalPatterns: '',
   });
 
   const [connectionData, setConnectionData] = useState<{
@@ -144,6 +153,15 @@ export default function ClientSettings() {
             language: data.data.language || 'en',
             aiPersonalizedReply: data.data.ai_personalized_reply ?? true,
             businessName: data.data.business_name || '',
+            // AI Precision Enhancement fields
+            typicalDealSize: data.data.typical_deal_size || '',
+            geographicArea: data.data.geographic_area || '',
+            mainPainPoints: data.data.main_pain_points || '',
+            customUrgencyRules: data.data.custom_urgency_rules || '',
+            targetCustomerProfile: data.data.target_customer_profile || '',
+            avgResponseTimeGoal: data.data.avg_response_time_goal || '',
+            competitiveBehavior: data.data.competitive_behavior || '',
+            seasonalPatterns: data.data.seasonal_patterns || '',
           });
 
           // Set connection data
@@ -304,6 +322,15 @@ export default function ClientSettings() {
         followupSpeed: settings.followupSpeed,
         language: settings.language,
         aiPersonalizedReply: settings.aiPersonalizedReply,
+        // AI Precision Enhancement fields
+        typicalDealSize: settings.typicalDealSize || null,
+        geographicArea: settings.geographicArea || null,
+        mainPainPoints: settings.mainPainPoints || null,
+        customUrgencyRules: settings.customUrgencyRules || null,
+        targetCustomerProfile: settings.targetCustomerProfile || null,
+        avgResponseTimeGoal: settings.avgResponseTimeGoal || null,
+        competitiveBehavior: settings.competitiveBehavior || null,
+        seasonalPatterns: settings.seasonalPatterns || null,
       };
 
       console.log('[ClientSettings] ============================================');
@@ -704,6 +731,76 @@ export default function ClientSettings() {
                 <option value="en">English</option>
                 <option value="fr">Français</option>
               </select>
+            </div>
+          </div>
+        </div>
+
+        {/* AI Precision Enhancement Section */}
+        <div className="bg-white/5 backdrop-blur-sm rounded-xl p-6 mb-6 border border-white/10">
+          <h2 className="text-xl font-semibold mb-2 text-yellow-400">
+            🎯 {isFrench ? 'Amélioration de la Précision de l\'IA' : 'AI Precision Enhancement'}
+          </h2>
+          <p className="text-sm text-white/60 mb-4">
+            {isFrench 
+              ? 'Aidez l\'IA à mieux comprendre votre entreprise pour des analyses de leads plus précises.'
+              : 'Help the AI better understand your business for more accurate lead analysis.'}
+          </p>
+          
+          <div className="space-y-4">
+            {/* Typical Deal Size */}
+            <div>
+              <label className="block text-sm font-medium mb-2">
+                💰 {isFrench ? 'Taille de transaction typique' : 'Typical Deal Size'}
+              </label>
+              <input
+                type="text"
+                value={settings.typicalDealSize}
+                onChange={(e) => handleFieldChange('typicalDealSize', e.target.value)}
+                className="w-full px-4 py-3 rounded-md bg-white/5 border border-white/10 text-white placeholder:text-white/40 focus:border-blue-400/50 focus:outline-none transition-all"
+                placeholder={isFrench ? 'Ex: $50,000-$100,000 CAD' : 'e.g., $50,000-$100,000 CAD'}
+              />
+            </div>
+
+            {/* Geographic Area */}
+            <div>
+              <label className="block text-sm font-medium mb-2">
+                📍 {isFrench ? 'Zone géographique' : 'Geographic Area'}
+              </label>
+              <input
+                type="text"
+                value={settings.geographicArea}
+                onChange={(e) => handleFieldChange('geographicArea', e.target.value)}
+                className="w-full px-4 py-3 rounded-md bg-white/5 border border-white/10 text-white placeholder:text-white/40 focus:border-blue-400/50 focus:outline-none transition-all"
+                placeholder={isFrench ? 'Ex: Montréal, Québec, Canada' : 'e.g., Montreal, Quebec, Canada'}
+              />
+            </div>
+
+            {/* Main Pain Points */}
+            <div>
+              <label className="block text-sm font-medium mb-2">
+                ⚠️ {isFrench ? 'Principaux défis' : 'Main Pain Points'}
+              </label>
+              <textarea
+                value={settings.mainPainPoints}
+                onChange={(e) => handleFieldChange('mainPainPoints', e.target.value)}
+                rows={3}
+                className="w-full px-4 py-3 rounded-md bg-white/5 border border-white/10 text-white placeholder:text-white/40 focus:border-blue-400/50 focus:outline-none transition-all resize-none"
+                placeholder={isFrench ? 'Ex: Perdre des leads à cause de réponses lentes, manquer de prioritisation' : 'e.g., Losing leads due to slow responses, lack of prioritization'}
+              />
+            </div>
+
+            {/* Target Customer Profile */}
+            <div>
+              <label className="block text-sm font-medium mb-2">
+                👥 {isFrench ? 'Profil du client cible' : 'Target Customer Profile'}
+              </label>
+              <textarea
+                value={settings.targetCustomerProfile}
+                onChange={(e) => handleFieldChange('targetCustomerProfile', e.target.value)}
+                rows={3}
+                className="w-full px-4 py-3 rounded-md bg-white/5 border border-white/10 text-white placeholder:text-white/40 focus:border-blue-400/50 focus:outline-none transition-all resize-none"
+                placeholder={isFrench ? 'Ex: Propriétaires immobiliers, 30-55 ans, revenu élevé' : 'e.g., Real estate owners, 30-55 years old, high income'}
+              />
             </div>
           </div>
         </div>

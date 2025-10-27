@@ -25,6 +25,7 @@
     "test:fuzzy-matching": "node scripts/test-fuzzy-matching.js",
     "test:feedback-system": "node scripts/test-feedback-system.js",
     "verify:feedback-migration": "node scripts/verify-feedback-migration.js",
+    "apply:status-migration": "node scripts/apply-status-migration.js",
     "generate:icp-pdf": "node generate-icp-pdf.js"
   },
   "dependencies": {
