@@ -102,8 +102,10 @@ export async function storeTokens(tokens: any) {
     if (kv) {
       await kv.set(KV_TOKEN_KEY, serialized);
     }
-    // Log the encrypted token for manual env var update
-    console.log(`GMAIL_REFRESH_TOKEN=${encrypted}`);
+    // Log the encrypted token for manual env var update (dev only)
+    if (process.env.NODE_ENV === 'development') {
+      console.log(`GMAIL_REFRESH_TOKEN=${encrypted}`);
+    }
   } catch {
     // ignore
   }

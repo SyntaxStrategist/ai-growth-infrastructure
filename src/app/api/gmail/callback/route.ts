@@ -13,22 +13,26 @@ export async function GET(req: NextRequest) {
     const { tokens } = await oauth2Client.getToken(code);
     await storeTokens(tokens);
     
-    // Log the encrypted refresh token for manual env var update
-    const { encrypt } = await import("../../../../lib/gmail");
-    const serialized = JSON.stringify(tokens);
-    const encrypted = encrypt(serialized);
-    console.log(`GMAIL_REFRESH_TOKEN=${encrypted}`);
+    // Log the encrypted refresh token for manual env var update (dev only)
+    if (process.env.NODE_ENV === 'development') {
+      const { encrypt } = await import("../../../../lib/gmail");
+      const serialized = JSON.stringify(tokens);
+      const encrypted = encrypt(serialized);
+      console.log(`GMAIL_REFRESH_TOKEN=${encrypted}`);
+    }
     
-    // Fetch and log current Gmail profile for verification
-    try {
-      const profile = await getGmailProfile();
-      console.log('Gmail profile updated:', {
-        email: profile?.emailAddress,
-        messagesTotal: profile?.messagesTotal,
-        threadsTotal: profile?.threadsTotal
-      });
-    } catch (profileError) {
-      console.error('Failed to fetch Gmail profile after OAuth:', profileError);
+    // Fetch and log current Gmail profile for verification (dev only)
+    if (process.env.NODE_ENV === 'development') {
+      try {
+        const profile = await getGmailProfile();
+        console.log('Gmail profile updated:', {
+          email: profile?.emailAddress,
+          messagesTotal: profile?.messagesTotal,
+          threadsTotal: profile?.threadsTotal
+        });
+      } catch (profileError) {
+        console.error('Failed to fetch Gmail profile after OAuth:', profileError);
+      }
     }
     
     return new Response(JSON.stringify({ 
