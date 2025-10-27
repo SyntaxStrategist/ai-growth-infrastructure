@@ -85,16 +85,6 @@ export const actionTranslations = {
     "Archived": "Archivé",
     "Deleted": "Supprimé",
     
-    // English-to-French reverse mappings (for when English tags are in DB)
-    "Not Qualified": "Non Qualifié",
-    "High Value": "Haute Valeur",
-    "Converted": "Converti",
-    "Contacted": "Contacté",
-    "Follow-Up": "Suivi",
-    "Active": "Actif",
-    "Archived": "Archivé",
-    "Deleted": "Supprimé",
-    
     // Performed by labels
     "admin": "Admin",
     "AI Copilot": "Copilote IA",
