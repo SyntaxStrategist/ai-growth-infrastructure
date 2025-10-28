@@ -329,7 +329,7 @@ export async function GET(req: NextRequest) {
       
       query = supabase
         .from('lead_memory')
-        .select('name, email, tone_history, confidence_history, urgency_history, relationship_insight, last_updated')
+        .select('id, name, email, tone_history, confidence_history, urgency_history, relationship_insight, last_updated')
         .in('id', leadIds)
         .eq('archived', false)
         .eq('deleted', false)
@@ -340,7 +340,7 @@ export async function GET(req: NextRequest) {
       // Admin mode - get all leads
       query = supabase
         .from('lead_memory')
-        .select('name, email, tone_history, confidence_history, urgency_history, relationship_insight, last_updated')
+        .select('id, name, email, tone_history, confidence_history, urgency_history, relationship_insight, last_updated')
         .eq('archived', false)
         .eq('deleted', false)
         .not('relationship_insight', 'is', null)
@@ -400,9 +400,8 @@ export async function GET(req: NextRequest) {
     console.log('[LeadsInsightsAPI] ============================================');
     console.log('[LeadsInsightsAPI] Sample data (first lead):');
     if (data[0]) {
-      console.log('[LeadsInsightsAPI]   Name:', data[0].name);
-      console.log('[LeadsInsightsAPI]   Email:', data[0].email);
-      console.log('[LeadsInsightsAPI]   Insight:', data[0].relationship_insight?.substring(0, 80) + '...');
+      console.log('[LeadsInsightsAPI]   Lead ID:', data[0].id);
+      console.log('[LeadsInsightsAPI]   Insight Length:', data[0].relationship_insight?.length || 0);
       console.log('[LeadsInsightsAPI]   Last Updated:', data[0].last_updated);
       console.log('[LeadsInsightsAPI]   Tone History Length:', data[0].tone_history?.length || 0);
       console.log('[LeadsInsightsAPI]   Confidence History Length:', data[0].confidence_history?.length || 0);
@@ -419,8 +418,8 @@ export async function GET(req: NextRequest) {
     console.log('[LeadsInsightsAPI] ============================================');
     console.log('[LeadsInsightsAPI] All leads summary:');
     data.forEach((lead: any, idx: number) => {
-      console.log(`[LeadsInsightsAPI]   ${idx + 1}. ${lead.name} (${lead.email})`);
-      console.log(`[LeadsInsightsAPI]      Insight: ${lead.relationship_insight?.substring(0, 60)}...`);
+      console.log(`[LeadsInsightsAPI]   ${idx + 1}. Lead ID: ${lead.id}`);
+      console.log(`[LeadsInsightsAPI]      Insight Length: ${lead.relationship_insight?.length || 0}`);
       console.log(`[LeadsInsightsAPI]      History lengths: tone=${lead.tone_history?.length || 0}, conf=${lead.confidence_history?.length || 0}, urg=${lead.urgency_history?.length || 0}`);
     });
     console.log('[LeadsInsightsAPI] ============================================');

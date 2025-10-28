@@ -1,8 +1,15 @@
 import { NextRequest } from "next/server";
 
 import { handleApiError } from '../../../lib/error-handler';
-import { getClientIP, checkBruteForceProtection, recordFailedAttempt, recordSuccessfulAttempt, createSecurityResponse, loginAttempts } from '../../../lib/security';
+import { getClientIP, checkBruteForceProtection, recordFailedAttempt, recordSuccessfulAttempt, createSecurityResponse, loginAttempts, validateCSRFProtection } from '../../../lib/security';
 export async function POST(req: NextRequest) {
+  // Security: Validate CSRF protection
+  const csrfValidation = validateCSRFProtection(req);
+  if (!csrfValidation.valid) {
+    console.log('[Dashboard Auth] ❌ CSRF validation failed:', csrfValidation.error);
+    return createSecurityResponse(csrfValidation.error || 'CSRF validation failed', 403);
+  }
+  
   // Security: Brute force protection
   const clientIP = getClientIP(req);
   const bruteForceCheck = checkBruteForceProtection(clientIP);
@@ -85,12 +92,12 @@ export async function POST(req: NextRequest) {
 
     console.log('[Dashboard Auth] ❌ Password mismatch - Access denied');
     console.log('[Auth Tableau] ❌ Mot de passe incorrect - Accès refusé');
-    console.log('[Dashboard Auth] Expected:', correctPassword.substring(0, 3) + '***');
-    console.log('[Dashboard Auth] Received:', password.substring(0, 3) + '***');
+    console.log('[Dashboard Auth] Password length expected:', correctPassword.length);
+    console.log('[Dashboard Auth] Password length received:', password.length);
     console.log('============================================');
     
     // Security: Record failed attempt
-    recordFailedAttempt(clientIP);
+    recordFailedAttempt(clientIP, req);
     
     return new Response(
       JSON.stringify({ success: false, authorized: false }),

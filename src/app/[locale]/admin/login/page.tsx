@@ -50,10 +50,15 @@ export default function AdminLoginPage() {
       console.log('[AdminLogin] Email:', email);
       console.log('[AdminLogin] Locale:', locale);
 
+      // Get CSRF token
+      const csrfResponse = await fetch('/api/csrf-token');
+      const { csrfToken } = await csrfResponse.json();
+
       const response = await fetch('/api/auth-dashboard', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'x-csrf-token': csrfToken
         },
         body: JSON.stringify({ password }),
       });

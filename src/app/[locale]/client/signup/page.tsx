@@ -108,9 +108,16 @@ export default function ClientSignup() {
     setLoading(true);
 
     try {
+      // Get CSRF token
+      const csrfResponse = await fetch('/api/csrf-token');
+      const { csrfToken } = await csrfResponse.json();
+      
       const res = await fetch('/api/client/register', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'x-csrf-token': csrfToken
+        },
         body: JSON.stringify({
           businessName: formData.businessName,
           contactName: formData.contactName,

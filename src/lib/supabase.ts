@@ -222,42 +222,23 @@ export async function saveLeadToSupabase(data: {
       .single();
     
     if (error && (error.code === '42P01' || error.message.includes('schema cache') || error.message.includes('does not exist'))) {
-      // Fallback: Use direct SQL INSERT bypassing REST cache
-      const escapeSql = (str: string) => str.replace(/'/g, "''");
-      const insertSQL = `
-        INSERT INTO public.lead_memory (id, name, email, message, ai_summary, language, timestamp)
-        VALUES (
-          '${escapeSql(id)}',
-          '${escapeSql(data.name)}',
-          '${escapeSql(data.email)}',
-          '${escapeSql(data.message)}',
-          ${data.aiSummary ? `'${escapeSql(data.aiSummary)}'` : 'NULL'},
-          '${escapeSql(data.language)}',
-          '${data.timestamp}'::timestamptz
-        )
-        ON CONFLICT (id) DO NOTHING;
-      `;
-      
-      const sqlEndpoint = `${supabaseUrl}/rest/v1/rpc/exec_sql`;
-      
-      const sqlResponse = await fetch(sqlEndpoint, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'apikey': supabaseKey,
-          'Authorization': `Bearer ${supabaseKey}`,
-        },
-        body: JSON.stringify({ 
-          query: insertSQL 
-        }),
+      // Fallback: Use secure RPC function instead of manual SQL construction
+      const { data: rpcResult, error: rpcError } = await supabase.rpc('insert_lead_memory', {
+        p_id: id,
+        p_name: data.name,
+        p_email: data.email,
+        p_message: data.message,
+        p_ai_summary: data.aiSummary,
+        p_language: data.language,
+        p_timestamp: data.timestamp,
+        p_client_id: data.clientId
       });
       
-      if (!sqlResponse.ok) {
-        const errorText = await sqlResponse.text();
-        throw new Error(`SQL INSERT failed: ${errorText}`);
+      if (rpcError) {
+        throw new Error(`RPC INSERT failed: ${rpcError.message}`);
       }
       
-      console.log('[Supabase] Lead inserted successfully');
+      console.log('[Supabase] Lead inserted successfully via RPC');
       return record;
     } else if (error) {
       throw error;

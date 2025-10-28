@@ -4,9 +4,17 @@ import { generateApiKey, hashPassword, generateClientId } from '../../../../lib/
 import { isTestClient, logTestDetection } from '../../../../lib/test-detection';
 import { google } from 'googleapis';
 import { generatePersonalizedICP } from '../../../../lib/phase3/icp_profile';
+import { validateCSRFProtection, createSecurityResponse } from '../../../../lib/security';
 
 import { handleApiError } from '../../../../lib/error-handler';
 export async function POST(req: NextRequest) {
+  // Security: Validate CSRF protection
+  const csrfValidation = validateCSRFProtection(req);
+  if (!csrfValidation.valid) {
+    console.log('[ClientRegistration] ❌ CSRF validation failed:', csrfValidation.error);
+    return createSecurityResponse(csrfValidation.error || 'CSRF validation failed', 403);
+  }
+  
   try {
     const body = await req.json();
     

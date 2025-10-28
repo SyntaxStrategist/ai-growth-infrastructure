@@ -312,7 +312,7 @@ export default function GrowthCopilot({ locale, clientId = null }: GrowthCopilot
       console.log('[CopilotFilter] Fetching relationship insights');
       console.log('[CopilotFilter] Client ID:', clientId || 'admin (all leads)');
       
-      let relationshipInsights: Array<{ name: string; email: string; insight: string; lastUpdated: string }> = [];
+      let relationshipInsights: Array<{ id: string; name: string; email: string; insight: string; lastUpdated: string }> = [];
       
       try {
         let leadsEndpoint = '';
@@ -338,6 +338,7 @@ export default function GrowthCopilot({ locale, clientId = null }: GrowthCopilot
           relationshipInsights = allLeads
             .filter((lead: any) => lead.relationship_insight && lead.relationship_insight.trim())
             .map((lead: any) => ({
+              id: lead.id,
               name: lead.name,
               email: lead.email,
               insight: lead.relationship_insight,
@@ -351,8 +352,8 @@ export default function GrowthCopilot({ locale, clientId = null }: GrowthCopilot
           if (relationshipInsights.length > 0) {
             console.log('[CopilotFilter] Leads shown in copilot:');
             relationshipInsights.forEach((insight, idx) => {
-              console.log('[CopilotFilter]   ' + (idx + 1) + '. Name:', insight.name, '| Email:', insight.email);
-              console.log('[CopilotFilter]      Insight:', insight.insight.substring(0, 60) + '...');
+              console.log('[CopilotFilter]   ' + (idx + 1) + '. Lead ID:', insight.id);
+              console.log('[CopilotFilter]      Insight Length:', insight.insight.length);
             });
             console.log('[CopilotFilter] ============================================');
           } else {

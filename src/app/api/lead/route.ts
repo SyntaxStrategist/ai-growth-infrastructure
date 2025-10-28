@@ -8,10 +8,10 @@ import { supabase, validateApiKey, upsertLeadWithHistory, ClientRecord } from ".
 import { enrichLeadWithAI } from "../../../lib/ai-enrichment";
 import { isTestLead, logTestDetection } from "../../../lib/test-detection";
 import { buildPersonalizedHtmlEmail } from "../../../lib/personalized-email";
+import { validateRequestSize, createSecurityResponse, getClientIP, checkRateLimit } from "../../../lib/security";
 import { trackAiOutcome } from "../../../lib/outcome-tracker";
 import { sendUrgentLeadAlert } from "../../../lib/email-alerts";
 import { handleApiError } from '../../../lib/error-handler';
-import { validateRequestSize, createSecurityResponse } from '../../../lib/security';
 
 type LeadPayload = {
 	name?: string;
@@ -147,6 +147,22 @@ export async function POST(req: NextRequest) {
 	if (!validateRequestSize(req)) {
 		console.log('[Lead API] ❌ Request too large - rejected');
 		return createSecurityResponse('Request too large', 413);
+	}
+	
+	// Security: Rate limiting
+	const clientIP = getClientIP(req);
+	const rateLimitResult = checkRateLimit(
+		`lead_api:${clientIP}`,
+		{ windowMs: 60 * 1000, maxRequests: 10 }, // 10 requests per minute per IP
+		req
+	);
+	
+	if (!rateLimitResult.allowed) {
+		console.log('[Lead API] ❌ Rate limit exceeded for IP:', clientIP);
+		return createSecurityResponse(
+			`Rate limit exceeded. Try again in ${Math.ceil((rateLimitResult.resetTime - Date.now()) / 1000)} seconds.`,
+			429
+		);
 	}
 	
 	try {
