@@ -11,7 +11,9 @@ export const actionTranslations = {
     // Action types
     "delete": "Lead Deleted",
     "archive": "Lead Archived", 
-    "tag": "Tag Added",
+    "tag": "Priority Added",
+    "tagged": "Priority Added",
+    "contacted": "Lead Contacted",
     "reactivate": "Lead Reactivated",
     "permanent_delete": "Lead Permanently Deleted",
     
@@ -59,7 +61,9 @@ export const actionTranslations = {
     // Action types
     "delete": "Lead supprimé",
     "archive": "Lead archivé",
-    "tag": "Tag ajouté", 
+    "tag": "Priorité ajoutée",
+    "tagged": "Priorité ajoutée", 
+    "contacted": "Lead contacté",
     "reactivate": "Lead réactivé",
     "permanent_delete": "Lead supprimé définitivement",
     

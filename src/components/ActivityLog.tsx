@@ -19,13 +19,14 @@ export default function ActivityLog({ actions, locale }: ActivityLogProps) {
     // Fallback translation (shouldn't be needed with proper API translations)
     const actionType = action.action?.toLowerCase();
     
-    if (actionType === 'delete') return isFrench ? 'Supprimé' : 'Deleted';
-    if (actionType === 'archive') return isFrench ? 'Archivé' : 'Archived';
-    if (actionType === 'tag') return isFrench ? 'Priorité ajoutée' : 'Priority Added';
-    if (actionType === 'reactivate') return isFrench ? 'Réactivé' : 'Reactivated';
+    if (actionType === 'delete') return isFrench ? 'Lead supprimé' : 'Lead Deleted';
+    if (actionType === 'archive') return isFrench ? 'Lead archivé' : 'Lead Archived';
+    if (actionType === 'tag' || actionType === 'tagged') return isFrench ? 'Priorité ajoutée' : 'Priority Added';
+    if (actionType === 'reactivate') return isFrench ? 'Lead réactivé' : 'Lead Reactivated';
     if (actionType === 'note_added') return isFrench ? 'Note ajoutée' : 'Note Added';
     if (actionType === 'note_deleted') return isFrench ? 'Note supprimée' : 'Note Deleted';
     if (actionType === 'insert') return isFrench ? 'Nouveau lead' : 'New Lead';
+    if (actionType === 'contacted') return isFrench ? 'Lead contacté' : 'Lead Contacted';
     if (actionType === 'outcome_update') {
       // Handle outcome updates with user-friendly text
       const outcome = action.tag?.toLowerCase();
@@ -89,15 +90,22 @@ export default function ActivityLog({ actions, locale }: ActivityLogProps) {
             hour12: !isFrench
           });
           
-          // For outcome updates, don't show the tag since it's already in the label
-          // For priority tags, show the tag name
-          const displayText = (action.action?.toLowerCase() === 'outcome_update') 
-            ? actionLabel 
-            : (action.action?.toLowerCase() === 'tag' && action.tag) 
-              ? `${actionLabel}: ${action.tag}`
-              : (action.action?.toLowerCase() === 'insert' && action.tag) 
-                ? action.tag 
-                : (action.tag ? `${actionLabel} - ${action.tag}` : actionLabel);
+          // Format display text based on action type
+          let displayText = actionLabel;
+          
+          if ((action.action?.toLowerCase() === 'tag' || action.action?.toLowerCase() === 'tagged') && action.tag) {
+            // For tagging actions, show "Priority Added: [Tag Name]"
+            displayText = `${actionLabel}: ${action.tag}`;
+          } else if (action.action?.toLowerCase() === 'contacted') {
+            // For contacted actions, just show "Lead Contacted" (no duplicate)
+            displayText = actionLabel;
+          } else if (action.action?.toLowerCase() === 'outcome_update') {
+            // For outcome updates, the label already includes the outcome
+            displayText = actionLabel;
+          } else if (action.action?.toLowerCase() === 'insert' && action.tag) {
+            // For new leads, show the tag as the display text
+            displayText = action.tag;
+          }
           
           return (
             <div key={action.id} className="flex items-center gap-3 px-3 py-2 rounded bg-white/5 hover:bg-white/10 transition-colors">
