@@ -22,6 +22,7 @@ import FallbackUI, { LoadingFallback, ErrorFallback, OfflineFallback } from '../
 import { LeadNotes } from '../../../../components/dashboard';
 import { getConnectionInfo } from '../../../../utils/connection-status';
 import OutcomeTracking from '../../../../components/OutcomeTracking';
+import { useRef } from 'react';
 
 // Dynamic imports to prevent hydration mismatches
 const PredictiveGrowthEngine = dynamic(() => import('../../../../components/PredictiveGrowthEngine'), { 
@@ -116,6 +117,64 @@ export default function ClientDashboard() {
   });
   const [isOffline, setIsOffline] = useState(false);
   const [hasError, setHasError] = useState(false);
+
+  function NotesSummary({ leadId, clientId }: { leadId: string; clientId?: string }) {
+    const [count, setCount] = useState<number | null>(null);
+    const [updatedAt, setUpdatedAt] = useState<string | null>(null);
+    const fetchedRef = useRef(false);
+    useEffect(() => {
+      if (fetchedRef.current) return; // avoid double fetch during fast refresh
+      fetchedRef.current = true;
+      const params = new URLSearchParams({ lead_id: leadId });
+      if (clientId) params.set('client_id', clientId);
+      fetch(`/api/lead-notes?${params.toString()}`)
+        .then(r => r.ok ? r.json() : Promise.reject())
+        .then(data => {
+          const notes = Array.isArray(data?.data) ? data.data : [];
+          setCount(notes.length);
+          if (notes.length > 0) setUpdatedAt(notes[0].updated_at || notes[0].created_at);
+        })
+        .catch(() => {
+          setCount(null); setUpdatedAt(null);
+        });
+    }, [leadId, clientId]);
+
+    const label = isFrench ? 'Notes' : 'Notes';
+    const lastUpdatedLabel = isFrench ? 'dernière mise à jour' : 'last updated';
+    const none = isFrench ? 'Aucune' : 'None';
+    return (
+      <div className="mt-3 text-xs text-white/60">
+        {label}: {count === null ? '—' : count} • {lastUpdatedLabel}: {updatedAt ? new Date(updatedAt).toLocaleString(isFrench ? 'fr-CA' : 'en-US') : none}
+      </div>
+    );
+  }
+
+  function InfoTooltip({ text }: { text: string }) {
+    const [open, setOpen] = useState(false);
+    return (
+      <span className="relative inline-block align-middle">
+        <button
+          type="button"
+          aria-label="Info"
+          onMouseEnter={() => setOpen(true)}
+          onMouseLeave={() => setOpen(false)}
+          onFocus={() => setOpen(true)}
+          onBlur={() => setOpen(false)}
+          onClick={() => setOpen(v => !v)}
+          className="ml-1 inline-flex h-5 w-5 items-center justify-center rounded-full border border-white/20 text-[10px] text-white/80 hover:bg-white/10 focus:outline-none focus:ring-2 focus:ring-blue-500/50"
+        >
+          i
+        </button>
+        {open && (
+          <div role="tooltip" className="absolute left-1/2 z-40 mt-2 w-72 -translate-x-1/2 rounded-md border border-white/10 bg-black/90 p-3 text-xs text-white/80 shadow-xl">
+            {text.split('\n').map((line, i) => (
+              <p key={i} className="mb-1 last:mb-0">{line}</p>
+            ))}
+          </div>
+        )}
+      </span>
+    );
+  }
 
   // Memoized truncation check function for better performance
   const checkTruncation = useCallback(() => {
@@ -1171,7 +1230,13 @@ async function translateIntent(rawTopIntent: string, locale: string): Promise<st
             className="card-base card-hover p-4 bg-gradient-to-br from-blue-500/10 to-purple-500/10"
           >
             <div className="text-muted mb-1">{t.totalLeads}</div>
-            <div className="text-3xl font-bold">{stats.total}</div>
+          <div className="text-3xl font-bold">{stats.total}</div>
+          <div className="mt-1 flex items-center justify-between">
+            <span className="text-xs text-white/50">Δ —</span>
+            <svg width="80" height="20" viewBox="0 0 80 20" className="opacity-60">
+              <path d="M0,10 L80,10" stroke="#64748b" strokeWidth="1.5" fill="none" />
+            </svg>
+          </div>
           </motion.div>
           
           <motion.div
@@ -1180,8 +1245,16 @@ async function translateIntent(rawTopIntent: string, locale: string): Promise<st
             transition={{ duration: 0.4, delay: 0.3 }}
             className="card-base card-hover p-4 bg-gradient-to-br from-blue-500/10 to-purple-500/10"
           >
-            <div className="text-muted mb-1">{t.avgConfidence}</div>
-            <div className="text-3xl font-bold">{(stats.avgConfidence * 100).toFixed(0)}%</div>
+            <div className="text-muted mb-1 flex items-center gap-1">{t.avgConfidence}
+              <InfoTooltip text={isFrench ? 'Échelle: 0–100 (plus élevé = signal plus fort)\nFacteurs: confiance du modèle, urgence, clarté/longueur du message, taux de réponse historique, activité récente\nNote: mélange heuristique; pas une garantie.' : 'Range: 0–100 (higher = stronger signal)\nFactors: model confidence, urgency, message clarity/length, historical reply rate, recent activity\nNote: heuristic blend; not a guarantee.'} />
+            </div>
+          <div className="text-3xl font-bold">{(stats.avgConfidence * 100).toFixed(0)}%</div>
+          <div className="mt-1 flex items-center justify-between">
+            <span className="text-xs text-white/50">Δ —</span>
+            <svg width="80" height="20" viewBox="0 0 80 20" className="opacity-60">
+              <path d="M0,12 L20,8 L40,11 L60,7 L80,9" stroke="#8b5cf6" strokeWidth="1.5" fill="none" />
+            </svg>
+          </div>
           </motion.div>
           
           <motion.div
@@ -1204,6 +1277,11 @@ async function translateIntent(rawTopIntent: string, locale: string): Promise<st
                 </div>
               )}
             </div>
+            <div className="mt-1 flex items-center justify-end">
+              <svg width="80" height="20" viewBox="0 0 80 20" className="opacity-60">
+                <path d="M0,10 L80,10" stroke="#64748b" strokeWidth="1.5" fill="none" />
+              </svg>
+            </div>
           </motion.div>
           
           <motion.div
@@ -1214,6 +1292,12 @@ async function translateIntent(rawTopIntent: string, locale: string): Promise<st
           >
             <div className="text-muted mb-1">{t.highUrgency}</div>
             <div className="text-3xl font-bold text-red-400">{stats.highUrgency}</div>
+          <div className="mt-1 flex items-center justify-between">
+            <span className="text-xs text-white/50">Δ —</span>
+            <svg width="80" height="20" viewBox="0 0 80 20" className="opacity-60">
+              <path d="M0,8 L20,9 L40,10 L60,11 L80,12" stroke="#f87171" strokeWidth="1.5" fill="none" />
+            </svg>
+          </div>
           </motion.div>
         </motion.div>
 
@@ -1264,12 +1348,13 @@ async function translateIntent(rawTopIntent: string, locale: string): Promise<st
           </motion.div>
         )}
 
-        {/* View Tabs */}
+        {/* Sticky Tabs + Filters */}
+        <div className="sticky top-0 z-30 -mx-6 px-6 py-2 bg-black/40 backdrop-blur supports-[backdrop-filter]:bg-black/30">
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 0.6, delay: 0.25 }}
-          className="mb-6 flex gap-2 border-b border-white/10"
+          className="mb-3 flex gap-2 border-b border-white/10"
         >
           {(['active', 'contacted', 'meetings', 'converted', 'no_sale', 'archived', 'deleted'] as const).map(tab => (
             <button
@@ -1304,7 +1389,7 @@ async function translateIntent(rawTopIntent: string, locale: string): Promise<st
           <select
             value={filter.urgency}
             onChange={(e) => setFilter({ ...filter, urgency: e.target.value })}
-            className="px-3 py-2 rounded-md bg-white/5 border border-white/10 text-sm hover:border-blue-400/40 transition-all"
+            className="px-3 py-2 rounded-md bg-white/5 border border-white/10 text-sm hover:border-blue-400/40 transition-all focus:outline-none focus:ring-2 focus:ring-blue-500/50"
           >
             <option value="all">{t.filters.all} {t.filters.urgency}</option>
             <option value={isFrench ? "Élevée" : "High"}>{t.filters.high}</option>
@@ -1315,7 +1400,7 @@ async function translateIntent(rawTopIntent: string, locale: string): Promise<st
           <select
             value={filter.language}
             onChange={(e) => setFilter({ ...filter, language: e.target.value })}
-            className="px-3 py-2 rounded-md bg-white/5 border border-white/10 text-sm hover:border-blue-400/40 transition-all"
+            className="px-3 py-2 rounded-md bg-white/5 border border-white/10 text-sm hover:border-blue-400/40 transition-all focus:outline-none focus:ring-2 focus:ring-blue-500/50"
           >
             <option value="all">{t.filters.all} {t.filters.language}</option>
             <option value="en">English</option>
@@ -1325,7 +1410,7 @@ async function translateIntent(rawTopIntent: string, locale: string): Promise<st
           <select
             value={tagFilter}
             onChange={(e) => setTagFilter(e.target.value)}
-            className="px-3 py-2 rounded-md bg-white/5 border border-white/10 text-sm hover:border-blue-400/40 transition-all"
+            className="px-3 py-2 rounded-md bg-white/5 border border-white/10 text-sm hover:border-blue-400/40 transition-all focus:outline-none focus:ring-2 focus:ring-blue-500/50"
           >
             <option value="all">{isFrench ? 'Toutes les priorités' : 'All Priorities'}</option>
             {tagOptions.map(tag => (
@@ -1348,6 +1433,7 @@ async function translateIntent(rawTopIntent: string, locale: string): Promise<st
             </span>
           </div>
         </motion.div>
+        </div>
 
         {/* Predictive Growth Engine */}
         <motion.div
@@ -1463,7 +1549,9 @@ async function translateIntent(rawTopIntent: string, locale: string): Promise<st
                   </p>
                 </div>
                 <div className="md:col-span-2 lg:col-span-3">
-                  <span className="text-white/50 text-xs block mb-1">{t.confidence}</span>
+                  <span className="text-white/50 text-xs block mb-1 flex items-center gap-1">{t.confidence}
+                    <InfoTooltip text={isFrench ? 'Échelle: 0–100 (plus élevé = signal plus fort)\nFacteurs: confiance du modèle, urgence, clarté/longueur du message, taux de réponse historique, activité récente\nNote: mélange heuristique; pas une garantie.' : 'Range: 0–100 (higher = stronger signal)\nFactors: model confidence, urgency, message clarity/length, historical reply rate, recent activity\nNote: heuristic blend; not a guarantee.'} />
+                  </span>
                   <div className="flex items-center gap-2">
                     <div className="flex-1 h-2 bg-white/10 rounded-full overflow-hidden">
                       <motion.div 
@@ -1474,6 +1562,11 @@ async function translateIntent(rawTopIntent: string, locale: string): Promise<st
                       ></motion.div>
                     </div>
                     <span className="text-xs font-mono">{((lead.confidence_score || 0) * 100).toFixed(0)}%</span>
+                  </div>
+                  <div className="mt-1 flex items-center justify-between text-[10px] text-white/50">
+                    <span>0</span>
+                    <span>0–100</span>
+                    <span>100</span>
                   </div>
                 </div>
                 {lead.relationship_insight && (
@@ -1619,6 +1712,7 @@ async function translateIntent(rawTopIntent: string, locale: string): Promise<st
 
               {/* Lead Notes Section */}
               <div className="mt-4 pt-4 border-t border-white/5">
+                <NotesSummary leadId={lead.id} clientId={client?.clientId} />
                 <LeadNotes 
                   leadId={lead.id} 
                   clientId={client?.clientId}

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { motion } from "framer-motion";
 import { useTranslations, useLocale } from 'next-intl';
 import dynamic from 'next/dynamic';
@@ -91,7 +91,7 @@ export default function Dashboard() {
   const [tagLead, setTagLead] = useState<string | null>(null);
   const [selectedTag, setSelectedTag] = useState<string>('');
   const [isTagging, setIsTagging] = useState(false);
-  const [activeTab, setActiveTab] = useState<'active' | 'archived' | 'deleted' | 'converted'>('active');
+  const [activeTab, setActiveTab] = useState<'active' | 'contacted' | 'meetings' | 'converted' | 'no_sale' | 'archived' | 'deleted'>('active');
   const [tagFilter, setTagFilter] = useState<string>('all');
   const [revertLead, setRevertLead] = useState<string | null>(null);
   const [reversionReason, setReversionReason] = useState<'accident' | 'other'>('accident');
@@ -107,6 +107,62 @@ export default function Dashboard() {
   });
   const [isOffline, setIsOffline] = useState(false);
   const [hasError, setHasError] = useState(false);
+
+  function InfoTooltip({ text }: { text: string }) {
+    const [open, setOpen] = useState(false);
+    return (
+      <span className="relative inline-block align-middle">
+        <button
+          type="button"
+          aria-label="Info"
+          onMouseEnter={() => setOpen(true)}
+          onMouseLeave={() => setOpen(false)}
+          onFocus={() => setOpen(true)}
+          onBlur={() => setOpen(false)}
+          onClick={() => setOpen(v => !v)}
+          className="ml-1 inline-flex h-5 w-5 items-center justify-center rounded-full border border-white/20 text-[10px] text-white/80 hover:bg-white/10 focus:outline-none focus:ring-2 focus:ring-blue-500/50"
+        >
+          i
+        </button>
+        {open && (
+          <div role="tooltip" className="absolute left-1/2 z-40 mt-2 w-72 -translate-x-1/2 rounded-md border border-white/10 bg-black/90 p-3 text-xs text-white/80 shadow-xl">
+            {text.split('\n').map((line, i) => (
+              <p key={i} className="mb-1 last:mb-0">{line}</p>
+            ))}
+          </div>
+        )}
+      </span>
+    );
+  }
+
+  function NotesSummary({ leadId, clientId }: { leadId: string; clientId?: string }) {
+    const [count, setCount] = useState<number | null>(null);
+    const [updatedAt, setUpdatedAt] = useState<string | null>(null);
+    const fetchedRef = useRef(false);
+    useEffect(() => {
+      if (fetchedRef.current) return;
+      fetchedRef.current = true;
+      const params = new URLSearchParams({ lead_id: leadId });
+      if (clientId) params.set('client_id', clientId);
+      fetch(`/api/lead-notes?${params.toString()}`)
+        .then(r => r.ok ? r.json() : Promise.reject())
+        .then(data => {
+          const notes = Array.isArray(data?.data) ? data.data : [];
+          setCount(notes.length);
+          if (notes.length > 0) setUpdatedAt(notes[0].updated_at || notes[0].created_at);
+        })
+        .catch(() => { setCount(null); setUpdatedAt(null); });
+    }, [leadId, clientId]);
+
+    const label = locale === 'fr' ? 'Notes' : 'Notes';
+    const lastUpdatedLabel = locale === 'fr' ? 'dernière mise à jour' : 'last updated';
+    const none = locale === 'fr' ? 'Aucune' : 'None';
+    return (
+      <div className="mt-3 text-xs text-white/60">
+        {label}: {count === null ? '—' : count} • {lastUpdatedLabel}: {updatedAt ? new Date(updatedAt).toLocaleString(locale === 'fr' ? 'fr-CA' : 'en-US') : none}
+      </div>
+    );
+  }
   
   // Pagination state for leads
   const [currentPage, setCurrentPage] = useState(1);
@@ -263,6 +319,12 @@ export default function Dashboard() {
         case 'active':
           endpoint = `/api/leads?limit=100&locale=${locale}`;
           break;
+        case 'contacted':
+        case 'meetings':
+        case 'no_sale':
+          // Fetch base leads; we'll filter client-side by outcome
+          endpoint = `/api/leads?limit=100&locale=${locale}`;
+          break;
         case 'archived':
           endpoint = `/api/leads/archived?limit=100&locale=${locale}`;
           break;
@@ -304,6 +366,14 @@ export default function Dashboard() {
             lead.current_tag === 'Converted' || lead.current_tag === 'Converti'
           );
           console.log(`[Dashboard] After converted filter: ${leadsData.length} leads`);
+        }
+        // For contacted/meetings/no_sale tabs, filter by outcome_status
+        if (activeTab === 'contacted') {
+          leadsData = leadsData.filter((lead: TranslatedLead) => lead.outcome_status === 'contacted');
+        } else if (activeTab === 'meetings') {
+          leadsData = leadsData.filter((lead: TranslatedLead) => lead.outcome_status === 'meeting_booked');
+        } else if (activeTab === 'no_sale') {
+          leadsData = leadsData.filter((lead: TranslatedLead) => lead.outcome_status === 'no_sale');
         }
         
         setLeads(leadsData);
@@ -892,10 +962,13 @@ export default function Dashboard() {
 
   const tabLabels = {
     active: locale === 'fr' ? 'Leads Actifs' : 'Active Leads',
-    archived: locale === 'fr' ? 'Leads Archivés' : 'Archived Leads',
-    deleted: locale === 'fr' ? 'Leads Supprimés' : 'Deleted Leads',
-    converted: locale === 'fr' ? 'Leads Convertis' : 'Converted Leads',
-  };
+    contacted: locale === 'fr' ? 'Contactés' : 'Contacted',
+    meetings: locale === 'fr' ? 'Réunions' : 'Meetings',
+    converted: locale === 'fr' ? 'Convertis' : 'Converted',
+    no_sale: locale === 'fr' ? 'Pas de Vente' : 'No Sale',
+    archived: locale === 'fr' ? 'Archivés' : 'Archived',
+    deleted: locale === 'fr' ? 'Supprimés' : 'Deleted',
+  } as const;
 
   if (loading) {
     return (
@@ -1104,18 +1177,43 @@ export default function Dashboard() {
           <div className="card-base card-hover p-4 bg-gradient-to-br from-blue-500/10 to-purple-500/10">
             <div className="text-muted mb-1">{t('dashboard.stats.totalLeads')}</div>
             <div className="text-3xl font-bold">{stats.total}</div>
+            <div className="mt-1 flex items-center justify-between">
+              <span className="text-xs text-white/50">Δ —</span>
+              <svg width="80" height="20" viewBox="0 0 80 20" className="opacity-60">
+                <path d="M0,10 L80,10" stroke="#64748b" strokeWidth="1.5" fill="none" />
+              </svg>
+            </div>
           </div>
           <div className="card-base card-hover p-4 bg-gradient-to-br from-blue-500/10 to-purple-500/10">
-            <div className="text-muted mb-1">{t('dashboard.stats.avgConfidence')}</div>
+            <div className="text-muted mb-1 flex items-center gap-1">{t('dashboard.stats.avgConfidence')}
+              <InfoTooltip text={safeLocale === 'fr' ? 'Échelle: 0–100 (plus élevé = signal plus fort)\nFacteurs: confiance du modèle, urgence, clarté/longueur du message, taux de réponse historique, activité récente\nNote: mélange heuristique; pas une garantie.' : 'Range: 0–100 (higher = stronger signal)\nFactors: model confidence, urgency, message clarity/length, historical reply rate, recent activity\nNote: heuristic blend; not a guarantee.'} />
+            </div>
             <div className="text-3xl font-bold">{(stats.avgConfidence * 100).toFixed(0)}%</div>
+            <div className="mt-1 flex items-center justify-between">
+              <span className="text-xs text-white/50">Δ —</span>
+              <svg width="80" height="20" viewBox="0 0 80 20" className="opacity-60">
+                <path d="M0,12 L20,8 L40,11 L60,7 L80,9" stroke="#8b5cf6" strokeWidth="1.5" fill="none" />
+              </svg>
+            </div>
           </div>
           <div className="card-base card-hover p-4 bg-gradient-to-br from-blue-500/10 to-purple-500/10">
             <div className="text-muted mb-1">{t('dashboard.stats.topIntent')}</div>
             <div className="text-xl font-semibold truncate">{stats.topIntent}</div>
+            <div className="mt-1 flex items-center justify-end">
+              <svg width="80" height="20" viewBox="0 0 80 20" className="opacity-60">
+                <path d="M0,10 L80,10" stroke="#64748b" strokeWidth="1.5" fill="none" />
+              </svg>
+            </div>
           </div>
           <div className="card-base card-hover p-4 bg-gradient-to-br from-blue-500/10 to-purple-500/10">
             <div className="text-muted mb-1">{t('dashboard.stats.highUrgency')}</div>
             <div className="text-3xl font-bold text-red-400">{stats.highUrgency}</div>
+            <div className="mt-1 flex items-center justify-between">
+              <span className="text-xs text-white/50">Δ —</span>
+              <svg width="80" height="20" viewBox="0 0 80 20" className="opacity-60">
+                <path d="M0,8 L20,9 L40,10 L60,11 L80,12" stroke="#f87171" strokeWidth="1.5" fill="none" />
+              </svg>
+            </div>
           </div>
         </motion.div>
 
@@ -1192,14 +1290,15 @@ export default function Dashboard() {
           })()}
         </motion.div>
 
-        {/* View Tabs */}
+        {/* Sticky Tabs + Filters */}
+        <div className="sticky top-0 z-30 -mx-6 px-6 pt-2 bg-black/40 backdrop-blur supports-[backdrop-filter]:bg-black/30">
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 0.6, delay: 0.25 }}
-          className="mb-6 flex gap-2 border-b border-white/10"
+          className="mb-3 flex gap-2 border-b border-white/10"
         >
-          {(['active', 'archived', 'deleted', 'converted'] as const).map(tab => (
+          {(['active', 'contacted', 'meetings', 'converted', 'no_sale', 'archived', 'deleted'] as const).map(tab => (
             <button
               key={tab}
               onClick={() => setActiveTab(tab)}
@@ -1207,6 +1306,10 @@ export default function Dashboard() {
                 activeTab === tab
                   ? tab === 'converted'
                     ? 'border-green-500 text-green-400 shadow-[0_0_10px_rgba(34,197,94,0.5)]'
+                    : tab === 'no_sale'
+                    ? 'border-red-500 text-red-400 shadow-[0_0_10px_rgba(239,68,68,0.5)]'
+                    : tab === 'meetings'
+                    ? 'border-purple-500 text-purple-400 shadow-[0_0_10px_rgba(147,51,234,0.5)]'
                     : 'border-blue-500 text-blue-400 shadow-[0_0_10px_rgba(59,130,246,0.5)]'
                   : 'border-transparent text-white/60 hover:text-white/80'
               }`}
@@ -1226,7 +1329,7 @@ export default function Dashboard() {
           <select
             value={filter.urgency}
             onChange={(e) => setFilter({ ...filter, urgency: e.target.value })}
-            className="px-3 py-2 rounded-md bg-white/5 border border-white/10 text-sm hover:border-blue-400/40 transition-all"
+            className="px-3 py-2 rounded-md bg-white/5 border border-white/10 text-sm hover:border-blue-400/40 transition-all focus:outline-none focus:ring-2 focus:ring-blue-500/50"
           >
             <option value="all">{t('dashboard.filters.all')} {t('dashboard.filters.urgency')}</option>
             <option value={locale === 'fr' ? "Élevée" : "High"}>{t('dashboard.filters.high')}</option>
@@ -1237,7 +1340,7 @@ export default function Dashboard() {
           <select
             value={filter.language}
             onChange={(e) => setFilter({ ...filter, language: e.target.value })}
-            className="px-3 py-2 rounded-md bg-white/5 border border-white/10 text-sm hover:border-blue-400/40 transition-all"
+            className="px-3 py-2 rounded-md bg-white/5 border border-white/10 text-sm hover:border-blue-400/40 transition-all focus:outline-none focus:ring-2 focus:ring-blue-500/50"
           >
             <option value="all">{t('dashboard.filters.all')} {t('dashboard.filters.language')}</option>
             <option value="en">English</option>
@@ -1247,7 +1350,7 @@ export default function Dashboard() {
           <select
             value={tagFilter}
             onChange={(e) => setTagFilter(e.target.value)}
-            className="px-3 py-2 rounded-md bg-white/5 border border-white/10 text-sm hover:border-blue-400/40 transition-all"
+            className="px-3 py-2 rounded-md bg-white/5 border border-white/10 text-sm hover:border-blue-400/40 transition-all focus:outline-none focus:ring-2 focus:ring-blue-500/50"
           >
             <option value="all">{locale === 'fr' ? 'Toutes les priorités' : 'All Priorities'}</option>
             {tagOptions.map(tag => (
@@ -1270,6 +1373,7 @@ export default function Dashboard() {
             </span>
           </div>
         </motion.div>
+        </div>
 
         {/* Predictive Growth Engine */}
         <motion.div
@@ -1389,7 +1493,9 @@ export default function Dashboard() {
                   </p>
                 </div>
                 <div className="md:col-span-2 lg:col-span-3">
-                  <span className="text-white/50 text-xs block mb-1">{t('dashboard.table.confidence')}</span>
+                  <span className="text-white/50 text-xs block mb-1 flex items-center gap-1">{t('dashboard.table.confidence')}
+                    <InfoTooltip text={safeLocale === 'fr' ? 'Échelle: 0–100 (plus élevé = signal plus fort)\nFacteurs: confiance du modèle, urgence, clarté/longueur du message, taux de réponse historique, activité récente\nNote: mélange heuristique; pas une garantie.' : 'Range: 0–100 (higher = stronger signal)\nFactors: model confidence, urgency, message clarity/length, historical reply rate, recent activity\nNote: heuristic blend; not a guarantee.'} />
+                  </span>
                   <div className="flex items-center gap-2">
                     <div className="flex-1 h-2 bg-white/10 rounded-full overflow-hidden">
                       <motion.div 
@@ -1400,6 +1506,11 @@ export default function Dashboard() {
                       ></motion.div>
                     </div>
                     <span className="text-xs font-mono">{((lead.confidence_score || 0) * 100).toFixed(0)}%</span>
+                  </div>
+                  <div className="mt-1 flex items-center justify-between text-[10px] text-white/50">
+                    <span>0</span>
+                    <span>0–100</span>
+                    <span>100</span>
                   </div>
                 </div>
                 <div className="md:col-span-2 lg:col-span-3">
@@ -1493,6 +1604,7 @@ export default function Dashboard() {
 
               {/* Lead Notes Section */}
               <div className="mt-4 pt-4 border-t border-white/5">
+                <NotesSummary leadId={lead.id} clientId={selectedClientId !== 'all' ? selectedClientId : undefined} />
                 <LeadNotes 
                   leadId={lead.id} 
                   clientId={selectedClientId !== 'all' ? selectedClientId : undefined}
