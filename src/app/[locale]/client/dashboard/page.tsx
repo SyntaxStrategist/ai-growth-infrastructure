@@ -21,6 +21,7 @@ import { getLocalStorageItem, removeLocalStorageItem } from '../../../../lib/saf
 import FallbackUI, { LoadingFallback, ErrorFallback, OfflineFallback } from '../../../../components/FallbackUI';
 import { LeadNotes } from '../../../../components/dashboard';
 import { getConnectionInfo } from '../../../../utils/connection-status';
+import OutcomeTracking from '../../../../components/OutcomeTracking';
 
 // Dynamic imports to prevent hydration mismatches
 const PredictiveGrowthEngine = dynamic(() => import('../../../../components/PredictiveGrowthEngine'), { 
@@ -59,6 +60,12 @@ type Lead = {
   current_tag?: string | null;
   language?: string;
   archived?: boolean;
+  // Outcome tracking fields
+  outcome_status?: string | null;
+  contacted_at?: string | null;
+  meeting_booked_at?: string | null;
+  client_closed_at?: string | null;
+  no_sale_at?: string | null;
   deleted?: boolean;
 };
 
@@ -78,7 +85,8 @@ export default function ClientDashboard() {
   const [recentActions, setRecentActions] = useState<LeadAction[]>([]);
   const [filter, setFilter] = useState({ urgency: 'all', language: 'all', minConfidence: 0 });
   const [tagFilter, setTagFilter] = useState<string>('all');
-  const [activeTab, setActiveTab] = useState<'active' | 'archived' | 'deleted' | 'converted'>('active');
+  const [activeTab, setActiveTab] = useState<'active' | 'contacted' | 'meetings' | 'converted' | 'no_sale' | 'archived' | 'deleted'>('active');
+  const [isUpdatingOutcome, setIsUpdatingOutcome] = useState(false);
   const [toast, setToast] = useState<{ message: string; show: boolean }>({ message: '', show: false });
   const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
   const [confirmPermanentDelete, setConfirmPermanentDelete] = useState<string | null>(null);
@@ -244,9 +252,12 @@ async function translateIntent(rawTopIntent: string, locale: string): Promise<st
     },
     tabs: {
       active: isFrench ? 'Leads Actifs' : 'Active Leads',
-      archived: isFrench ? 'Leads Archivés' : 'Archived Leads',
-      deleted: isFrench ? 'Leads Supprimés' : 'Deleted Leads',
-      converted: isFrench ? 'Leads Convertis' : 'Converted Leads',
+      contacted: isFrench ? 'Contactés' : 'Contacted',
+      meetings: isFrench ? 'Réunions' : 'Meetings',
+      converted: isFrench ? 'Convertis' : 'Converted',
+      no_sale: isFrench ? 'Pas de Vente' : 'No Sale',
+      archived: isFrench ? 'Archivés' : 'Archived',
+      deleted: isFrench ? 'Supprimés' : 'Deleted',
     },
     actions: {
       tag: isFrench ? 'Étiqueter le lead' : 'Tag Lead',
@@ -256,7 +267,7 @@ async function translateIntent(rawTopIntent: string, locale: string): Promise<st
       permanentDelete: isFrench ? 'Supprimer définitivement' : 'Delete Permanently',
       cancel: isFrench ? 'Annuler' : 'Cancel',
       confirm: isFrench ? 'Confirmer' : 'Confirm',
-      selectTag: isFrench ? 'Sélectionner une étiquette' : 'Select a tag',
+      selectTag: isFrench ? 'Ajouter une priorité' : 'Add Priority Tag',
     },
     pagination: {
       previous: isFrench ? 'Précédent' : 'Previous',
@@ -349,7 +360,7 @@ async function translateIntent(rawTopIntent: string, locale: string): Promise<st
       console.log('[ClientDashboard] Locale:', locale);
       
       // Fetch all leads (limit to 1000 to avoid performance issues)
-      const endpoint = `/api/client/leads?clientId=${client.clientId}&locale=${locale}&status=${activeTab}&page=1&limit=1000`;
+      const endpoint = `/api/client/leads?clientId=${client.clientId}&locale=${locale}&status=all&page=1&limit=1000`;
       console.log('[ClientDashboard] Endpoint:', endpoint);
       
       const res = await fetch(endpoint, {
@@ -371,13 +382,7 @@ async function translateIntent(rawTopIntent: string, locale: string): Promise<st
       if (data.success) {
         let leadsData = data.data || [];
         
-        // For converted tab, filter only converted leads
-        if (activeTab === 'converted') {
-          leadsData = leadsData.filter((lead: Lead) => 
-            lead.current_tag === 'Converted' || lead.current_tag === 'Converti'
-          );
-        }
-        
+        // API now handles filtering by outcome status, so no need for client-side filtering
         // Store all leads for client-side pagination
         setAllLeads([...leadsData]);
         
@@ -453,6 +458,31 @@ async function translateIntent(rawTopIntent: string, locale: string): Promise<st
     setStats(calculatedStats);
   }, [isFrench]);
 
+  // Calculate tab-specific counts and percentages
+  const tabStats = useMemo(() => {
+    const total = allLeads.length;
+    if (total === 0) return null;
+
+    const activeCount = allLeads.filter(l => !l.outcome_status && !l.archived && !l.deleted).length;
+    const contactedCount = allLeads.filter(l => l.outcome_status === 'contacted' && !l.archived && !l.deleted).length;
+    const meetingsCount = allLeads.filter(l => l.outcome_status === 'meeting_booked' && !l.archived && !l.deleted).length;
+    const convertedCount = allLeads.filter(l => l.outcome_status === 'client_closed' && !l.archived && !l.deleted).length;
+    const noSaleCount = allLeads.filter(l => l.outcome_status === 'no_sale' && !l.archived && !l.deleted).length;
+    const archivedCount = allLeads.filter(l => l.archived && !l.deleted).length;
+    const deletedCount = allLeads.filter(l => l.deleted).length;
+
+    return {
+      active: { count: activeCount, percentage: Math.round((activeCount / total) * 100) },
+      contacted: { count: contactedCount, percentage: Math.round((contactedCount / total) * 100) },
+      meetings: { count: meetingsCount, percentage: Math.round((meetingsCount / total) * 100) },
+      converted: { count: convertedCount, percentage: Math.round((convertedCount / total) * 100) },
+      noSale: { count: noSaleCount, percentage: Math.round((noSaleCount / total) * 100) },
+      archived: { count: archivedCount, percentage: Math.round((archivedCount / total) * 100) },
+      deleted: { count: deletedCount, percentage: Math.round((deletedCount / total) * 100) },
+      total
+    };
+  }, [allLeads]);
+
 
   // Reset to first page when filters change
   useEffect(() => {
@@ -461,13 +491,13 @@ async function translateIntent(rawTopIntent: string, locale: string): Promise<st
 
   // Fetch leads when tab or locale changes (client-side pagination)
   useEffect(() => {
-    if (authenticated && client) {
+    if (authenticated && client && !isUpdatingOutcome) {
       // Clear leads before fetching new ones to prevent appending
       setAllLeads([]);
       setCurrentPage(1); // Reset to first page when changing tabs
       fetchLeads();
     }
-  }, [authenticated, client, activeTab, fetchLeads]);
+  }, [authenticated, client, activeTab]); // Removed fetchLeads from dependencies
 
   async function handleLogin(e: React.FormEvent) {
     e.preventDefault();
@@ -586,17 +616,17 @@ async function translateIntent(rawTopIntent: string, locale: string): Promise<st
         setTagLead(null);
         setSelectedTag('');
         setIsTagging(false);
-        showToast(isFrench ? `Lead étiqueté comme "${selectedTag}"` : `Lead tagged as "${selectedTag}"`);
+        showToast(isFrench ? `Priorité "${selectedTag}" ajoutée au lead` : `Priority "${selectedTag}" added to lead`);
         fetchLeads();
         fetchRecentActions();
       } else {
         setIsTagging(false);
-        showToast(isFrench ? 'Erreur lors de l\'étiquetage' : 'Tag failed');
+        showToast(isFrench ? 'Erreur lors de l\'ajout de la priorité' : 'Failed to add priority');
       }
     } catch (err) {
       setIsTagging(false);
       console.error('[ClientDashboard] Tag error:', err);
-      showToast(isFrench ? 'Erreur lors de l\'étiquetage' : 'Tag failed');
+      showToast(isFrench ? 'Erreur lors de l\'ajout de la priorité' : 'Failed to add priority');
     }
   }
 
@@ -608,31 +638,67 @@ async function translateIntent(rawTopIntent: string, locale: string): Promise<st
         ? (isFrench ? 'Placé dans convertis par erreur' : 'Placed in converted by accident')
         : `${isFrench ? 'Autre' : 'Other'}: ${customReversionReason}`;
 
-      console.log(`[ClientDashboard] 🔄 Reverting converted lead ${revertLead} to active...`);
+      console.log(`[ClientDashboard] 🔄 Reverting lead ${revertLead} to active...`);
       console.log(`[ClientDashboard] Reversion reason: ${reasonText}`);
 
-      const tagRes = await fetch('/api/lead-actions', {
+      // Clear the outcome status to move lead back to active
+      const outcomeRes = await fetch(`/api/lead/${revertLead}/outcome?clientId=${client?.clientId}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
           lead_id: revertLead, 
-          action: 'tag', 
-          tag: isFrench ? 'Actif' : 'Active',
-          reversion_reason: reasonText,
-          is_reversion: true
+          outcome_status: null // Clear outcome status
         }),
       });
 
-      const tagJson = await tagRes.json();
+      const outcomeJson = await outcomeRes.json();
 
-      if (tagJson.success) {
-        console.log(`[ClientDashboard] ✅ Lead reverted to active successfully`);
+      if (outcomeJson.success) {
+        console.log(`[ClientDashboard] ✅ Lead outcome cleared successfully`);
+        
+        // Also log the reversion action
+        const tagRes = await fetch('/api/lead-actions', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ 
+            lead_id: revertLead, 
+            action: 'revert_outcome', 
+            tag: isFrench ? 'Actif' : 'Active',
+            reversion_reason: reasonText,
+            is_reversion: true
+          }),
+        });
+
         setRevertLead(null);
         setReversionReason('accident');
         setCustomReversionReason('');
+        
+        // Set flag to prevent useEffect from fetching leads
+        setIsUpdatingOutcome(true);
+        
+        setActiveTab('active'); // Switch to active tab
+        
+        // Update the lead in local state immediately
+        setAllLeads(prevLeads => 
+          prevLeads.map(l => 
+            l.id === revertLead 
+              ? { 
+                  ...l, 
+                  outcome_status: null,
+                  contacted_at: null,
+                  meeting_booked_at: null,
+                  client_closed_at: null,
+                  no_sale_at: null,
+                }
+              : l
+          )
+        );
+        
         showToast(isFrench ? 'Lead remis en actif avec succès.' : 'Lead returned to active successfully.');
-        fetchLeads();
-        fetchRecentActions();
+        fetchRecentActions(); // Only fetch recent actions, not all leads
+        
+        // Clear the flag after a short delay
+        setTimeout(() => setIsUpdatingOutcome(false), 100);
       } else {
         showToast(isFrench ? 'Erreur lors du retour' : 'Reversion failed');
       }
@@ -781,6 +847,30 @@ async function translateIntent(rawTopIntent: string, locale: string): Promise<st
   // Client-side filtering and pagination logic
   const filteredLeads = useMemo(() => {
     return allLeads.filter(lead => {
+      // Apply tab-based filtering first
+      if (activeTab === 'active') {
+        // Active leads: no outcome status and not archived/deleted
+        if (lead.outcome_status || lead.archived || lead.deleted) return false;
+      } else if (activeTab === 'contacted') {
+        // Contacted leads: outcome_status is 'contacted' and not archived/deleted
+        if (lead.outcome_status !== 'contacted' || lead.archived || lead.deleted) return false;
+      } else if (activeTab === 'meetings') {
+        // Meeting leads: outcome_status is 'meeting_booked' and not archived/deleted
+        if (lead.outcome_status !== 'meeting_booked' || lead.archived || lead.deleted) return false;
+      } else if (activeTab === 'converted') {
+        // Converted leads: outcome_status is 'client_closed' and not archived/deleted
+        if (lead.outcome_status !== 'client_closed' || lead.archived || lead.deleted) return false;
+      } else if (activeTab === 'no_sale') {
+        // No sale leads: outcome_status is 'no_sale' and not archived/deleted
+        if (lead.outcome_status !== 'no_sale' || lead.archived || lead.deleted) return false;
+      } else if (activeTab === 'archived') {
+        // Archived leads: archived but not deleted
+        if (!lead.archived || lead.deleted) return false;
+      } else if (activeTab === 'deleted') {
+        // Deleted leads: deleted
+        if (!lead.deleted) return false;
+      }
+      
       // Apply urgency filter with bilingual support
       if (filter.urgency !== 'all') {
         // Create urgency mapping for both languages
@@ -810,7 +900,7 @@ async function translateIntent(rawTopIntent: string, locale: string): Promise<st
       
       return true;
     });
-  }, [allLeads, filter, tagFilter]);
+  }, [allLeads, filter, tagFilter, activeTab]);
   
   const totalPages = Math.ceil(filteredLeads.length / leadsPerPage);
   const startIndex = (currentPage - 1) * leadsPerPage;
@@ -845,11 +935,11 @@ async function translateIntent(rawTopIntent: string, locale: string): Promise<st
   }, [pagination.hasNextPage, currentPage]);
 
 
-  // Memoized tag options for better performance
+  // Memoized tag options for better performance - Priority-focused tags
   const tagOptions = useMemo(() => 
     isFrench 
-      ? ['Contacté', 'Haute Valeur', 'Non Qualifié', 'Suivi', 'Converti']
-      : ['Contacted', 'High Value', 'Not Qualified', 'Follow-Up', 'Converted'],
+      ? ['Haute Priorité', 'Référence', 'Suivi Requis']
+      : ['High Priority', 'Referral', 'Follow Up Required'],
     [isFrench]
   );
 
@@ -857,11 +947,9 @@ async function translateIntent(rawTopIntent: string, locale: string): Promise<st
   const getTagBadgeColor = useCallback((tag: string | null | undefined) => {
     if (!tag) return '';
     const tagLower = tag.toLowerCase();
-    if (tagLower.includes('contact')) return 'bg-blue-500/20 border-blue-500/40 text-blue-300';
-    if (tagLower.includes('high') || tagLower.includes('haute')) return 'bg-yellow-500/20 border-yellow-500/40 text-yellow-300';
-    if (tagLower.includes('not') || tagLower.includes('non')) return 'bg-gray-500/20 border-gray-500/40 text-gray-300';
-    if (tagLower.includes('follow') || tagLower.includes('suivi')) return 'bg-purple-500/20 border-purple-500/40 text-purple-300';
-    if (tagLower.includes('convert') || tagLower.includes('converti')) return 'bg-green-500/20 border-green-500/40 text-green-300 shadow-[0_0_10px_rgba(34,197,94,0.3)]';
+    if (tagLower.includes('high') || tagLower.includes('haute') || tagLower.includes('priority') || tagLower.includes('priorité')) return 'bg-red-500/20 border-red-500/40 text-red-300';
+    if (tagLower.includes('referral') || tagLower.includes('référence')) return 'bg-green-500/20 border-green-500/40 text-green-300';
+    if (tagLower.includes('follow') || tagLower.includes('suivi')) return 'bg-blue-500/20 border-blue-500/40 text-blue-300';
     return 'bg-white/10 border-white/20 text-white/60';
   }, []);
 
@@ -1129,6 +1217,53 @@ async function translateIntent(rawTopIntent: string, locale: string): Promise<st
           </motion.div>
         </motion.div>
 
+        {/* Tab-Specific Context */}
+        {tabStats && (
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4, delay: 0.6 }}
+            className="mb-6 p-4 bg-gradient-to-r from-blue-500/5 to-purple-500/5 border border-blue-500/20 rounded-lg"
+          >
+            <div className="flex items-center gap-2 mb-2">
+              <div className="w-2 h-2 bg-blue-400 rounded-full"></div>
+              <h3 className="text-sm font-semibold text-blue-400">
+                {isFrench ? 'Répartition des Leads' : 'Lead Distribution'}
+              </h3>
+            </div>
+            <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-3 text-xs">
+              <div className={`p-2 rounded-md ${activeTab === 'active' ? 'bg-blue-500/20 border border-blue-500/40' : 'bg-white/5'}`}>
+                <div className="font-semibold text-blue-400">{t.tabs.active}</div>
+                <div className="text-white/70">{tabStats.active.count} ({tabStats.active.percentage}%)</div>
+              </div>
+              <div className={`p-2 rounded-md ${activeTab === 'contacted' ? 'bg-blue-500/20 border border-blue-500/40' : 'bg-white/5'}`}>
+                <div className="font-semibold text-blue-400">{t.tabs.contacted}</div>
+                <div className="text-white/70">{tabStats.contacted.count} ({tabStats.contacted.percentage}%)</div>
+              </div>
+              <div className={`p-2 rounded-md ${activeTab === 'meetings' ? 'bg-green-500/20 border border-green-500/40' : 'bg-white/5'}`}>
+                <div className="font-semibold text-green-400">{t.tabs.meetings}</div>
+                <div className="text-white/70">{tabStats.meetings.count} ({tabStats.meetings.percentage}%)</div>
+              </div>
+              <div className={`p-2 rounded-md ${activeTab === 'converted' ? 'bg-purple-500/20 border border-purple-500/40' : 'bg-white/5'}`}>
+                <div className="font-semibold text-purple-400">{t.tabs.converted}</div>
+                <div className="text-white/70">{tabStats.converted.count} ({tabStats.converted.percentage}%)</div>
+              </div>
+              <div className={`p-2 rounded-md ${activeTab === 'no_sale' ? 'bg-red-500/20 border border-red-500/40' : 'bg-white/5'}`}>
+                <div className="font-semibold text-red-400">{t.tabs.no_sale}</div>
+                <div className="text-white/70">{tabStats.noSale.count} ({tabStats.noSale.percentage}%)</div>
+              </div>
+              <div className={`p-2 rounded-md ${activeTab === 'archived' ? 'bg-yellow-500/20 border border-yellow-500/40' : 'bg-white/5'}`}>
+                <div className="font-semibold text-yellow-400">{t.tabs.archived}</div>
+                <div className="text-white/70">{tabStats.archived.count} ({tabStats.archived.percentage}%)</div>
+              </div>
+              <div className={`p-2 rounded-md ${activeTab === 'deleted' ? 'bg-gray-500/20 border border-gray-500/40' : 'bg-white/5'}`}>
+                <div className="font-semibold text-gray-400">{t.tabs.deleted}</div>
+                <div className="text-white/70">{tabStats.deleted.count} ({tabStats.deleted.percentage}%)</div>
+              </div>
+            </div>
+          </motion.div>
+        )}
+
         {/* View Tabs */}
         <motion.div
           initial={{ opacity: 0 }}
@@ -1136,7 +1271,7 @@ async function translateIntent(rawTopIntent: string, locale: string): Promise<st
           transition={{ duration: 0.6, delay: 0.25 }}
           className="mb-6 flex gap-2 border-b border-white/10"
         >
-          {(['active', 'archived', 'deleted', 'converted'] as const).map(tab => (
+          {(['active', 'contacted', 'meetings', 'converted', 'no_sale', 'archived', 'deleted'] as const).map(tab => (
             <button
               key={tab}
               onClick={() => setActiveTab(tab)}
@@ -1144,6 +1279,12 @@ async function translateIntent(rawTopIntent: string, locale: string): Promise<st
                 activeTab === tab
                   ? tab === 'converted'
                     ? 'border-green-500 text-green-400 shadow-[0_0_10px_rgba(34,197,94,0.5)]'
+                    : tab === 'no_sale'
+                    ? 'border-red-500 text-red-400 shadow-[0_0_10px_rgba(239,68,68,0.5)]'
+                    : tab === 'meetings'
+                    ? 'border-purple-500 text-purple-400 shadow-[0_0_10px_rgba(147,51,234,0.5)]'
+                    : tab === 'contacted'
+                    ? 'border-blue-500 text-blue-400 shadow-[0_0_10px_rgba(59,130,246,0.5)]'
                     : 'border-blue-500 text-blue-400 shadow-[0_0_10px_rgba(59,130,246,0.5)]'
                   : 'border-transparent text-white/60 hover:text-white/80'
               }`}
@@ -1186,7 +1327,7 @@ async function translateIntent(rawTopIntent: string, locale: string): Promise<st
             onChange={(e) => setTagFilter(e.target.value)}
             className="px-3 py-2 rounded-md bg-white/5 border border-white/10 text-sm hover:border-blue-400/40 transition-all"
           >
-            <option value="all">{isFrench ? 'Tous les tags' : 'All Tags'}</option>
+            <option value="all">{isFrench ? 'Toutes les priorités' : 'All Priorities'}</option>
             {tagOptions.map(tag => (
               <option key={tag} value={tag}>{tag}</option>
             ))}
@@ -1390,7 +1531,7 @@ async function translateIntent(rawTopIntent: string, locale: string): Promise<st
                       </span>
                     </div>
                   </>
-                ) : activeTab === 'converted' ? (
+                ) : activeTab === 'contacted' || activeTab === 'meetings' || activeTab === 'converted' || activeTab === 'no_sale' ? (
                   <>
                     {/* Return to Active Button */}
                     <button
@@ -1429,6 +1570,52 @@ async function translateIntent(rawTopIntent: string, locale: string): Promise<st
                   </>
                 ) : null}
               </div>
+
+              {/* Outcome Tracking Section */}
+              <OutcomeTracking
+                leadId={lead.id}
+                clientId={client?.clientId}
+                currentOutcome={lead.outcome_status}
+                isFrench={isFrench}
+                onOutcomeUpdate={(outcome) => {
+                  // Set flag to prevent useEffect from fetching leads
+                  setIsUpdatingOutcome(true);
+                  
+                  // Update the lead in the local state immediately
+                  setAllLeads(prevLeads => 
+                    prevLeads.map(l => 
+                      l.id === lead.id 
+                        ? { 
+                            ...l, 
+                            outcome_status: outcome,
+                            // Update the appropriate timestamp
+                            contacted_at: outcome === 'contacted' ? new Date().toISOString() : l.contacted_at,
+                            meeting_booked_at: outcome === 'meeting_booked' ? new Date().toISOString() : l.meeting_booked_at,
+                            client_closed_at: outcome === 'client_closed' ? new Date().toISOString() : l.client_closed_at,
+                            no_sale_at: outcome === 'no_sale' ? new Date().toISOString() : l.no_sale_at,
+                          }
+                        : l
+                    )
+                  );
+                  
+                  // Auto-switch to the appropriate section based on outcome
+                  if (outcome === 'contacted') {
+                    setActiveTab('contacted');
+                  } else if (outcome === 'meeting_booked') {
+                    setActiveTab('meetings');
+                  } else if (outcome === 'client_closed') {
+                    setActiveTab('converted');
+                  } else if (outcome === 'no_sale') {
+                    setActiveTab('no_sale');
+                  }
+                  
+                  // Show success message
+                  showToast(isFrench ? 'Statut mis à jour avec succès!' : 'Status updated successfully!');
+                  
+                  // Clear the flag after a short delay to allow tab switch
+                  setTimeout(() => setIsUpdatingOutcome(false), 100);
+                }}
+              />
 
               {/* Lead Notes Section */}
               <div className="mt-4 pt-4 border-t border-white/5">
@@ -1580,7 +1767,7 @@ async function translateIntent(rawTopIntent: string, locale: string): Promise<st
               onChange={(e) => setSelectedTag(e.target.value)}
               className="w-full px-4 py-2 rounded-md bg-white/5 border border-white/10 mb-4"
             >
-              <option value="">--</option>
+              <option value="">{isFrench ? 'Choisir une priorité...' : 'Choose a priority...'}</option>
               {tagOptions.map(tag => (
                 <option key={tag} value={tag}>{tag}</option>
               ))}

@@ -76,7 +76,11 @@ export async function getClientDataAndLeads(
             relationship_insight,
             tone_history,
             urgency_history,
-            last_updated
+            outcome_status,
+            contacted_at,
+            meeting_booked_at,
+            client_closed_at,
+            no_sale_at
           )
         `)
         .eq('client_id', publicClientId)
@@ -151,7 +155,11 @@ export async function getClientDataAndAllLeads(
             relationship_insight,
             tone_history,
             urgency_history,
-            last_updated
+            outcome_status,
+            contacted_at,
+            meeting_booked_at,
+            client_closed_at,
+            no_sale_at
           )
         `)
         .eq('client_id', publicClientId)
@@ -221,7 +229,11 @@ export async function getLeadsInsightsBatch(
             relationship_insight,
             tone_history,
             urgency_history,
-            last_updated
+            outcome_status,
+            contacted_at,
+            meeting_booked_at,
+            client_closed_at,
+            no_sale_at
           )
         `)
         .eq('client_id', publicClientId)

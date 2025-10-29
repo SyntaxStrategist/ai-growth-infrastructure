@@ -52,12 +52,16 @@ export function validateCSRFProtection(req: NextRequest): { valid: boolean; erro
 // Request Size Limits
 export const MAX_BODY_SIZE = 1024 * 1024; // 1MB
 
-export function validateRequestSize(req: NextRequest): boolean {
+export async function validateRequestSize(req: NextRequest): Promise<{ valid: boolean; error?: string }> {
   const contentLength = req.headers.get('content-length');
-  if (!contentLength) return true; // No size limit for requests without content-length
+  if (!contentLength) return { valid: true }; // No size limit for requests without content-length
   
   const size = parseInt(contentLength, 10);
-  return size <= MAX_BODY_SIZE;
+  if (size > MAX_BODY_SIZE) {
+    return { valid: false, error: 'Request too large' };
+  }
+  
+  return { valid: true };
 }
 
 // Rate Limiting

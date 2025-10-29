@@ -10,6 +10,7 @@ import type { LeadMemoryRecord } from "../../../lib/supabase";
 import type { LeadAction } from "../../api/lead-actions/route";
 import FallbackUI, { LoadingFallback, ErrorFallback, OfflineFallback } from "../../../components/FallbackUI";
 import { LeadNotes } from "../../../components/dashboard";
+import ClientOutcomeAnalytics from "../../../components/ClientOutcomeAnalytics";
 
 // Safe locale detection fallback
 function getSafeLocale(): string {
@@ -489,8 +490,8 @@ export default function Dashboard() {
   }, [activeTab, filter, tagFilter, selectedClientId]);
 
   const tagOptions = locale === 'fr' 
-    ? ['Contacté', 'Haute Valeur', 'Non Qualifié', 'Suivi', 'Converti']
-    : ['Contacted', 'High Value', 'Not Qualified', 'Follow-Up', 'Converted'];
+    ? ['Haute Priorité', 'Référence', 'Suivi Requis']
+    : ['High Priority', 'Referral', 'Follow Up Required'];
 
   async function fetchRecentActions() {
     try {
@@ -601,7 +602,7 @@ export default function Dashboard() {
         setTagLead(null);
         setSelectedTag('');
         setIsTagging(false);
-        showToast(locale === 'fr' ? `Lead étiqueté comme "${selectedTag}" avec succès.` : `Lead tagged as "${selectedTag}" successfully.`);
+        showToast(locale === 'fr' ? `Priorité "${selectedTag}" ajoutée au lead avec succès.` : `Priority "${selectedTag}" added to lead successfully.`);
         fetchLeads(); // Refresh to show tag badge
         fetchRecentActions();
       } else {
@@ -845,10 +846,9 @@ export default function Dashboard() {
   const getTagBadgeColor = (tag: string | null | undefined) => {
     if (!tag) return '';
     const tagLower = tag.toLowerCase();
-    if (tagLower.includes('contact')) return 'bg-blue-500/20 border-blue-500/40 text-blue-300';
-    if (tagLower.includes('high') || tagLower.includes('haute')) return 'bg-yellow-500/20 border-yellow-500/40 text-yellow-300';
-    if (tagLower.includes('not') || tagLower.includes('non')) return 'bg-gray-500/20 border-gray-500/40 text-gray-300';
-    if (tagLower.includes('follow') || tagLower.includes('suivi')) return 'bg-purple-500/20 border-purple-500/40 text-purple-300';
+    if (tagLower.includes('high') || tagLower.includes('haute') || tagLower.includes('priority') || tagLower.includes('priorité')) return 'bg-red-500/20 border-red-500/40 text-red-300';
+    if (tagLower.includes('referral') || tagLower.includes('référence')) return 'bg-green-500/20 border-green-500/40 text-green-300';
+    if (tagLower.includes('follow') || tagLower.includes('suivi')) return 'bg-blue-500/20 border-blue-500/40 text-blue-300';
     return 'bg-white/10 border-white/20 text-white/60';
   };
 
@@ -1119,6 +1119,79 @@ export default function Dashboard() {
           </div>
         </motion.div>
 
+        {/* Lead Distribution Overview */}
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4, delay: 0.6 }}
+          className="mb-6 p-4 bg-gradient-to-r from-blue-500/5 to-purple-500/5 border border-blue-500/20 rounded-lg"
+        >
+          <div className="flex items-center gap-2 mb-2">
+            <div className="w-2 h-2 bg-blue-400 rounded-full"></div>
+            <h3 className="text-sm font-semibold text-blue-400">
+              {locale === 'fr' ? 'Répartition des Leads' : 'Lead Distribution'}
+            </h3>
+          </div>
+          
+          {/* Calculate distribution from all leads */}
+          {(() => {
+            const total = leads.length;
+            if (total === 0) return null;
+
+            const activeCount = leads.filter(l => !l.outcome_status && !l.archived && !l.deleted).length;
+            const contactedCount = leads.filter(l => l.outcome_status === 'contacted' && !l.archived && !l.deleted).length;
+            const meetingsCount = leads.filter(l => l.outcome_status === 'meeting_booked' && !l.archived && !l.deleted).length;
+            const convertedCount = leads.filter(l => l.outcome_status === 'client_closed' && !l.archived && !l.deleted).length;
+            const noSaleCount = leads.filter(l => l.outcome_status === 'no_sale' && !l.archived && !l.deleted).length;
+            const archivedCount = leads.filter(l => l.archived && !l.deleted).length;
+            const deletedCount = leads.filter(l => l.deleted).length;
+
+            const distribution = {
+              active: { count: activeCount, percentage: Math.round((activeCount / total) * 100) },
+              contacted: { count: contactedCount, percentage: Math.round((contactedCount / total) * 100) },
+              meetings: { count: meetingsCount, percentage: Math.round((meetingsCount / total) * 100) },
+              converted: { count: convertedCount, percentage: Math.round((convertedCount / total) * 100) },
+              noSale: { count: noSaleCount, percentage: Math.round((noSaleCount / total) * 100) },
+              archived: { count: archivedCount, percentage: Math.round((archivedCount / total) * 100) },
+              deleted: { count: deletedCount, percentage: Math.round((deletedCount / total) * 100) },
+              total
+            };
+
+            return (
+              <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-3 text-xs">
+                <div className="p-2 rounded-md bg-blue-500/10 border border-blue-500/30">
+                  <div className="font-semibold text-blue-400">{locale === 'fr' ? 'Actifs' : 'Active'}</div>
+                  <div className="text-white/70">{distribution.active.count} ({distribution.active.percentage}%)</div>
+                </div>
+                <div className="p-2 rounded-md bg-blue-500/10 border border-blue-500/30">
+                  <div className="font-semibold text-blue-400">{locale === 'fr' ? 'Contactés' : 'Contacted'}</div>
+                  <div className="text-white/70">{distribution.contacted.count} ({distribution.contacted.percentage}%)</div>
+                </div>
+                <div className="p-2 rounded-md bg-green-500/10 border border-green-500/30">
+                  <div className="font-semibold text-green-400">{locale === 'fr' ? 'Réunions' : 'Meetings'}</div>
+                  <div className="text-white/70">{distribution.meetings.count} ({distribution.meetings.percentage}%)</div>
+                </div>
+                <div className="p-2 rounded-md bg-purple-500/10 border border-purple-500/30">
+                  <div className="font-semibold text-purple-400">{locale === 'fr' ? 'Convertis' : 'Converted'}</div>
+                  <div className="text-white/70">{distribution.converted.count} ({distribution.converted.percentage}%)</div>
+                </div>
+                <div className="p-2 rounded-md bg-red-500/10 border border-red-500/30">
+                  <div className="font-semibold text-red-400">{locale === 'fr' ? 'Pas de Vente' : 'No Sale'}</div>
+                  <div className="text-white/70">{distribution.noSale.count} ({distribution.noSale.percentage}%)</div>
+                </div>
+                <div className="p-2 rounded-md bg-yellow-500/10 border border-yellow-500/30">
+                  <div className="font-semibold text-yellow-400">{locale === 'fr' ? 'Archivés' : 'Archived'}</div>
+                  <div className="text-white/70">{distribution.archived.count} ({distribution.archived.percentage}%)</div>
+                </div>
+                <div className="p-2 rounded-md bg-gray-500/10 border border-gray-500/30">
+                  <div className="font-semibold text-gray-400">{locale === 'fr' ? 'Supprimés' : 'Deleted'}</div>
+                  <div className="text-white/70">{distribution.deleted.count} ({distribution.deleted.percentage}%)</div>
+                </div>
+              </div>
+            );
+          })()}
+        </motion.div>
+
         {/* View Tabs */}
         <motion.div
           initial={{ opacity: 0 }}
@@ -1176,7 +1249,7 @@ export default function Dashboard() {
             onChange={(e) => setTagFilter(e.target.value)}
             className="px-3 py-2 rounded-md bg-white/5 border border-white/10 text-sm hover:border-blue-400/40 transition-all"
           >
-            <option value="all">{locale === 'fr' ? 'Tous les tags' : 'All Tags'}</option>
+            <option value="all">{locale === 'fr' ? 'Toutes les priorités' : 'All Priorities'}</option>
             {tagOptions.map(tag => (
               <option key={tag} value={tag}>{tag}</option>
             ))}
@@ -1216,6 +1289,16 @@ export default function Dashboard() {
           className="mb-8"
         >
           <RelationshipInsights locale={locale} />
+        </motion.div>
+
+        {/* Client Outcome Analytics */}
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.6, delay: 0.6 }}
+          className="mb-8"
+        >
+          <ClientOutcomeAnalytics locale={locale} />
         </motion.div>
 
         {/* Leads Section Header */}
@@ -1619,7 +1702,7 @@ export default function Dashboard() {
               onChange={(e) => setSelectedTag(e.target.value)}
               className="w-full px-4 py-2 rounded-lg bg-white/5 border border-white/10 focus:border-blue-400/50 focus:outline-none mb-6 text-white"
             >
-              <option value="">{locale === 'fr' ? 'Sélectionner une étiquette' : 'Select a tag'}</option>
+              <option value="">{locale === 'fr' ? 'Choisir une priorité...' : 'Choose a priority...'}</option>
               {tagOptions.map(tag => (
                 <option key={tag} value={tag}>{tag}</option>
               ))}

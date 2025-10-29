@@ -19,6 +19,7 @@ export const actionTranslations = {
     "note_added": "Note Added",
     "note_edited": "Note Edited",
     "note_deleted": "Note Deleted",
+    "outcome_update": "Outcome Updated",
     
     // Common tag labels
     "New Lead": "New Lead",
@@ -66,6 +67,7 @@ export const actionTranslations = {
     "note_added": "Note ajoutée",
     "note_edited": "Note modifiée",
     "note_deleted": "Note supprimée",
+    "outcome_update": "Résultat mis à jour",
     
     // Common tag labels
     "New Lead": "Nouveau lead",
@@ -96,8 +98,17 @@ export const actionTranslations = {
 /**
  * Translate an action label based on locale
  */
-export function translateActionLabel(action: string, locale: Locale): string {
+export function translateActionLabel(action: string, locale: Locale, tag?: string): string {
   const translations = actionTranslations[locale];
+  
+  // Special handling for outcome_update with specific outcomes
+  if (action === 'outcome_update' && tag) {
+    const outcome = tag.toLowerCase();
+    if (outcome === 'contacted') return locale === 'fr' ? 'Lead contacté' : 'Lead Contacted';
+    if (outcome === 'meeting_booked') return locale === 'fr' ? 'Réunion réservée' : 'Meeting Booked';
+    if (outcome === 'client_closed') return locale === 'fr' ? 'Client fermé' : 'Client Closed';
+    if (outcome === 'no_sale') return locale === 'fr' ? 'Pas de vente' : 'No Sale';
+  }
   
   // First try exact match
   if (translations[action as keyof typeof translations]) {

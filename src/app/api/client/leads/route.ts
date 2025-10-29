@@ -158,8 +158,19 @@ export async function GET(req: NextRequest) {
         if (!leadMemory) return false;
         
         // Filter by status
-        if (status === 'active') {
-          return !leadMemory.deleted && !leadMemory.archived;
+        if (status === 'all') {
+          // Return all leads (no filtering by status)
+          return true;
+        } else if (status === 'active') {
+          return !leadMemory.deleted && !leadMemory.archived && !leadMemory.outcome_status;
+        } else if (status === 'contacted') {
+          return !leadMemory.deleted && !leadMemory.archived && leadMemory.outcome_status === 'contacted';
+        } else if (status === 'meetings') {
+          return !leadMemory.deleted && !leadMemory.archived && leadMemory.outcome_status === 'meeting_booked';
+        } else if (status === 'converted') {
+          return !leadMemory.deleted && !leadMemory.archived && leadMemory.outcome_status === 'client_closed';
+        } else if (status === 'no_sale') {
+          return !leadMemory.deleted && !leadMemory.archived && leadMemory.outcome_status === 'no_sale';
         } else if (status === 'archived') {
           return leadMemory.archived && !leadMemory.deleted;
         } else if (status === 'deleted') {

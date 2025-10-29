@@ -48,7 +48,11 @@ export default function ClientApprovalsPage() {
   const fetchPendingClients = async () => {
     try {
       setLoading(true);
-      const res = await fetch('/api/admin/client-approvals');
+      const res = await fetch('/api/admin/client-approvals', {
+        headers: {
+          'x-admin-session': 'authenticated'
+        }
+      });
       const data = await res.json();
       
       if (data.success) {
@@ -70,7 +74,10 @@ export default function ClientApprovalsPage() {
       setProcessing(clientId);
       const res = await fetch('/api/admin/approve-client', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'x-admin-session': 'authenticated'
+        },
         body: JSON.stringify({ clientId }),
       });
       
@@ -99,7 +106,10 @@ export default function ClientApprovalsPage() {
       setProcessing(clientId);
       const res = await fetch('/api/admin/reject-client', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'x-admin-session': 'authenticated'
+        },
         body: JSON.stringify({ clientId }),
       });
       

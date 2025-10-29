@@ -29,6 +29,12 @@ export type LeadMemoryRecord = {
   urgency_history?: HistoryEntry[];
   last_updated?: string;
   relationship_insight?: string | null;
+  // Outcome tracking fields
+  outcome_status?: string | null;
+  contacted_at?: string | null;
+  meeting_booked_at?: string | null;
+  client_closed_at?: string | null;
+  no_sale_at?: string | null;
 };
 
 export type ClientRecord = {

@@ -25,7 +25,7 @@ function translateActionData(data: any[], locale: Locale): any[] {
     translatedAction.action = action.action_type || action.action;
     
     // Translate action type
-    translatedAction.action_label = translateActionLabel(translatedAction.action, locale);
+    translatedAction.action_label = translateActionLabel(translatedAction.action, locale, action.tag);
     
     // Translate tag field
     if (action.tag) {
