@@ -108,6 +108,34 @@ export default function Dashboard() {
   const [isOffline, setIsOffline] = useState(false);
   const [hasError, setHasError] = useState(false);
 
+  // UI helper: collapsible section with persisted state (UI-only)
+  function CollapsibleSection({ title, storageKey, defaultOpen = false, children }: { title: string; storageKey: string; defaultOpen?: boolean; children: React.ReactNode }) {
+    const [open, setOpen] = useState<boolean>(defaultOpen);
+    useEffect(() => {
+      try {
+        const saved = localStorage.getItem(storageKey);
+        if (saved === 'open') setOpen(true);
+        if (saved === 'closed') setOpen(false);
+      } catch {}
+    }, [storageKey]);
+    const onToggle = (e: React.SyntheticEvent<HTMLDetailsElement>) => {
+      const isOpen = (e.currentTarget as HTMLDetailsElement).open;
+      setOpen(isOpen);
+      try { localStorage.setItem(storageKey, isOpen ? 'open' : 'closed'); } catch {}
+    };
+    return (
+      <details className="rounded-lg border border-white/10 bg-white/5 p-3" open={open} onToggle={onToggle}>
+        <summary className="cursor-pointer list-none text-sm font-semibold text-white/90 inline-flex items-center gap-2 hover:bg-white/10 rounded-md px-2 py-1 -mx-2 -my-1 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/50" aria-expanded={open} title={open ? '' : 'Click to expand'}>
+          <svg className={`h-3 w-3 transition-transform ${open ? 'rotate-90' : ''}`} viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+            <path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 111.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd" />
+          </svg>
+          <span>{title}</span>
+        </summary>
+        <div className="mt-2">{children}</div>
+      </details>
+    );
+  }
+
   function InfoTooltip({ text }: { text: string }) {
     const [open, setOpen] = useState(false);
     return (
@@ -1385,14 +1413,20 @@ export default function Dashboard() {
           <PredictiveGrowthEngine locale={locale} clientId={null} />
         </motion.div>
 
-        {/* Relationship Insights */}
+        {/* Relationship Insights (collapsible, UI-only) */}
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 0.6, delay: 0.55 }}
           className="mb-8"
         >
-          <RelationshipInsights locale={locale} />
+          <CollapsibleSection
+            title={locale === 'fr' ? 'Insights relationnels' : 'Relationship Insights'}
+            storageKey="admin_rel_insights_open"
+            defaultOpen={false}
+          >
+            <RelationshipInsights locale={locale} />
+          </CollapsibleSection>
         </motion.div>
 
         {/* Client Outcome Analytics */}
