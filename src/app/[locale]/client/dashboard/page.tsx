@@ -580,13 +580,13 @@ async function translateIntent(rawTopIntent: string, locale: string): Promise<st
 
     // Current period (last 7 days)
     const currentPeriodLeads = leadsData.filter(l => {
-      const leadDate = new Date(l.timestamp || l.created_at);
+      const leadDate = new Date(l.timestamp);
       return leadDate >= last7Days && leadDate <= now;
     });
 
     // Previous period (7-14 days ago)
     const previousPeriodLeads = leadsData.filter(l => {
-      const leadDate = new Date(l.timestamp || l.created_at);
+      const leadDate = new Date(l.timestamp);
       return leadDate >= previous7Days && leadDate < last7Days;
     });
 
@@ -629,7 +629,7 @@ async function translateIntent(rawTopIntent: string, locale: string): Promise<st
       const dayEnd = new Date(dayStart.getTime() + 24 * 60 * 60 * 1000);
       
       const dayLeads = leadsData.filter(l => {
-        const leadDate = new Date(l.timestamp || l.created_at);
+        const leadDate = new Date(l.timestamp);
         return leadDate >= dayStart && leadDate < dayEnd;
       });
 
@@ -681,7 +681,7 @@ async function translateIntent(rawTopIntent: string, locale: string): Promise<st
       const dayEnd = new Date(dayStart.getTime() + 24 * 60 * 60 * 1000);
       
       const dayLeads = leadsData.filter(l => {
-        const leadDate = new Date(l.timestamp || l.created_at);
+        const leadDate = new Date(l.timestamp);
         return leadDate >= dayStart && leadDate < dayEnd;
       });
 
