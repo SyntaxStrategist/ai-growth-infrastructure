@@ -12,6 +12,8 @@ import { validateRequestSize, createSecurityResponse, getClientIP, checkRateLimi
 import { trackAiOutcome } from "../../../lib/outcome-tracker";
 import { sendUrgentLeadAlert } from "../../../lib/email-alerts";
 import { handleApiError } from '../../../lib/error-handler';
+import { rateLimit } from '../../../lib/rate-limit';
+import { LeadSubmissionSchema, validateData } from '../../../lib/validation-schemas';
 
 type LeadPayload = {
 	name?: string;
@@ -149,20 +151,16 @@ export async function POST(req: NextRequest) {
 		return createSecurityResponse('Request too large', 413);
 	}
 	
-	// Security: Rate limiting
-	const clientIP = getClientIP(req);
-	const rateLimitResult = checkRateLimit(
-		`lead_api:${clientIP}`,
-		{ windowMs: 60 * 1000, maxRequests: 10 }, // 10 requests per minute per IP
-		req
-	);
+	// Security: Rate limiting (new robust implementation)
+	const rateLimitCheck = await rateLimit(req, {
+		max: 60, // 60 requests per 15 minutes per client/IP
+		windowMs: 15 * 60 * 1000,
+		message: 'Too many lead submissions. Please try again later.',
+	});
 	
-	if (!rateLimitResult.allowed) {
-		console.log('[Lead API] ❌ Rate limit exceeded for IP:', clientIP);
-		return createSecurityResponse(
-			`Rate limit exceeded. Try again in ${Math.ceil((rateLimitResult.resetTime - Date.now()) / 1000)} seconds.`,
-			429
-		);
+	if (!rateLimitCheck.allowed) {
+		console.log('[Lead API] ❌ Rate limit exceeded');
+		return rateLimitCheck.response!;
 	}
 	
 	try {
@@ -252,12 +250,12 @@ export async function POST(req: NextRequest) {
 		}
 		
 		console.log('[Lead API] Parsing request body...');
-		const body = (await req.json().catch((err) => {
+		const rawBody = (await req.json().catch((err) => {
 			console.error('[Lead API] ❌ Failed to parse JSON body:', err);
 			return null;
-		})) as LeadPayload | null;
+		}));
 		
-		if (!body || typeof body !== "object") {
+		if (!rawBody || typeof rawBody !== "object") {
 			console.error('[Lead API] ❌ Invalid or missing JSON body');
 			return new Response(
 				JSON.stringify({ success: false, error: "Invalid JSON body" }),
@@ -265,12 +263,26 @@ export async function POST(req: NextRequest) {
 			);
 		}
 
-		const name = (body.name || "").toString().trim();
-		const email = (body.email || "").toString().trim();
-		const message = (body.message || "").toString().trim();
-		const providedTimestamp = (body.timestamp || "").toString().trim();
-		const locale = (body.locale || "en").toString().trim();
+		// Validate input with Zod schema
+		console.log('[Lead API] Validating input data...');
+		const validation = validateData(LeadSubmissionSchema, rawBody);
+		
+		if (!validation.success) {
+			console.error('[Lead API] ❌ Validation failed:', validation.error);
+			console.error('[Lead API] Validation issues:', validation.issues);
+			return new Response(
+				JSON.stringify({ 
+					success: false, 
+					error: validation.error,
+					details: validation.issues 
+				}),
+				{ status: 400, headers: getCorsHeaders(requestOrigin) }
+			);
+		}
 
+		const { name, email, message, language: locale, timestamp: providedTimestamp } = validation.data;
+
+		console.log('[Lead API] ✅ Input validated successfully');
 		console.log('[Lead API] Request body parsed:', {
 			name,
 			email,
@@ -278,25 +290,8 @@ export async function POST(req: NextRequest) {
 			locale,
 			has_timestamp: !!providedTimestamp,
 		});
-
-		if (!name || !email || !message) {
-			console.error('[Lead API] ❌ Missing required fields');
-			return new Response(
-				JSON.stringify({ success: false, error: "'name', 'email', and 'message' are required" }),
-				{ status: 400, headers: getCorsHeaders(requestOrigin) }
-			);
-		}
-
-		// very light email validation
-		const emailOk = /.+@.+\..+/.test(email);
-		if (!emailOk) {
-			console.error('[Lead API] ❌ Invalid email format:', email);
-			return new Response(
-				JSON.stringify({ success: false, error: "Please provide a valid email" }),
-				{ status: 400, headers: getCorsHeaders(requestOrigin) }
-			);
-		}
 		
+		// Note: Validation already done by Zod schema above
 		console.log('[Lead API] ✅ Validation passed - proceeding with lead processing');
 
 		// Development mode: Skip Gmail/Sheets and go directly to AI enrichment

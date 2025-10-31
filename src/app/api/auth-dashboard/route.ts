@@ -1,7 +1,13 @@
 import { NextRequest } from "next/server";
+import bcrypt from 'bcrypt';
 
 import { handleApiError } from '../../../lib/error-handler';
 import { getClientIP, checkBruteForceProtection, recordFailedAttempt, recordSuccessfulAttempt, createSecurityResponse, loginAttempts, validateCSRFProtection } from '../../../lib/security';
+import { AdminAuthSchema, validateData } from '../../../lib/validation-schemas';
+
+// Force Node.js runtime for bcrypt compatibility
+export const runtime = 'nodejs';
+
 export async function POST(req: NextRequest) {
   // Security: Validate CSRF protection
   const csrfValidation = validateCSRFProtection(req);
@@ -24,19 +30,34 @@ export async function POST(req: NextRequest) {
   }
   
   try {
-    const body = await req.json().catch(() => null);
+    const rawBody = await req.json().catch(() => null);
     
-    if (!body || typeof body !== "object") {
+    if (!rawBody || typeof rawBody !== "object") {
+      recordFailedAttempt(clientIP);
       return new Response(
         JSON.stringify({ error: "Invalid request" }),
         { status: 400, headers: { "Content-Type": "application/json" } }
       );
     }
 
-    const { password } = body as { password?: string };
+    // Validate input with Zod schema
+    const validation = validateData(AdminAuthSchema, rawBody);
     
-    // Load password from environment variable (no fallback)
-    const correctPassword = process.env.ADMIN_PASSWORD;
+    if (!validation.success) {
+      console.error('[Dashboard Auth] ❌ Validation failed:', validation.error);
+      recordFailedAttempt(clientIP);
+      return new Response(
+        JSON.stringify({ success: false, authorized: false, error: validation.error }),
+        { status: 400, headers: { "Content-Type": "application/json" } }
+      );
+    }
+
+    const { password } = validation.data;
+    
+    // Load password hash from environment variable (bcrypt hash)
+    // For backwards compatibility, try ADMIN_PASSWORD_HASH first, then fall back to ADMIN_PASSWORD
+    const passwordHash = process.env.ADMIN_PASSWORD_HASH || process.env.ADMIN_PASSWORD;
+    const isLegacyPassword = !process.env.ADMIN_PASSWORD_HASH && process.env.ADMIN_PASSWORD;
     
     // Bilingual logging / Journalisation bilingue
     console.log('============================================');
@@ -44,16 +65,16 @@ export async function POST(req: NextRequest) {
     console.log('[Auth Tableau] 🔐 Demande d\'authentification admin');
     console.log('============================================');
     
-    if (!correctPassword) {
-      console.error('[Dashboard Auth] ❌ ADMIN_PASSWORD not set in .env.local');
-      console.error('[Auth Tableau] ❌ ADMIN_PASSWORD non défini dans .env.local');
-      console.error('[Dashboard Auth] Please set ADMIN_PASSWORD in your .env.local file');
-      console.error('[Auth Tableau] Veuillez définir ADMIN_PASSWORD dans votre fichier .env.local');
+    if (!passwordHash) {
+      console.error('[Dashboard Auth] ❌ ADMIN_PASSWORD_HASH not set in .env.local');
+      console.error('[Auth Tableau] ❌ ADMIN_PASSWORD_HASH non défini dans .env.local');
+      console.error('[Dashboard Auth] Please set ADMIN_PASSWORD_HASH in your .env.local file');
+      console.error('[Auth Tableau] Veuillez définir ADMIN_PASSWORD_HASH dans votre fichier .env.local');
       return new Response(
         JSON.stringify({ 
           success: false, 
           authorized: false,
-          error: "Admin password not configured. Please contact system administrator to set ADMIN_PASSWORD environment variable.",
+          error: "Admin password not configured. Please contact system administrator to set ADMIN_PASSWORD_HASH environment variable.",
           configError: true
         }),
         { status: 503, headers: { "Content-Type": "application/json" } }
@@ -62,21 +83,31 @@ export async function POST(req: NextRequest) {
     
     console.log('[Dashboard Auth] ✅ Password source: Using .env.local');
     console.log('[Auth Tableau] ✅ Source du mot de passe : Utilisation de .env.local');
-    console.log('[Dashboard Auth] Environment variable: ADMIN_PASSWORD');
-    console.log('[Dashboard Auth] Expected password length:', correctPassword.length);
-    console.log('[Dashboard Auth] Received password length:', password?.length || 0);
+    console.log('[Dashboard Auth] Environment variable:', isLegacyPassword ? 'ADMIN_PASSWORD (legacy)' : 'ADMIN_PASSWORD_HASH');
+    console.log('[Dashboard Auth] Received password length:', password.length);
 
-    if (!password || typeof password !== 'string') {
-      console.log('[Dashboard Auth] ❌ Invalid password format');
-      console.log('[Auth Tableau] ❌ Format de mot de passe invalide');
-      return new Response(
-        JSON.stringify({ success: false, authorized: false }),
-        { status: 400, headers: { "Content-Type": "application/json" } }
-      );
+    // Secure password comparison using bcrypt (timing-safe)
+    let isPasswordValid = false;
+    
+    if (isLegacyPassword) {
+      // Legacy: plain-text comparison (for backwards compatibility during migration)
+      console.warn('[Dashboard Auth] ⚠️ Using legacy plain-text password comparison. Please migrate to ADMIN_PASSWORD_HASH.');
+      isPasswordValid = password === passwordHash;
+    } else {
+      // Secure: bcrypt comparison (timing-safe)
+      try {
+        isPasswordValid = await bcrypt.compare(password, passwordHash);
+      } catch (error) {
+        console.error('[Dashboard Auth] ❌ Bcrypt comparison error:', error);
+        recordFailedAttempt(clientIP);
+        return new Response(
+          JSON.stringify({ success: false, authorized: false, error: 'Authentication error' }),
+          { status: 500, headers: { "Content-Type": "application/json" } }
+        );
+      }
     }
 
-    // Case-sensitive comparison
-    if (password === correctPassword) {
+    if (isPasswordValid) {
       console.log('[Dashboard Auth] ✅ Password match - Access granted');
       console.log('[Auth Tableau] ✅ Mot de passe correct - Accès accordé');
       console.log('============================================');
@@ -92,8 +123,7 @@ export async function POST(req: NextRequest) {
 
     console.log('[Dashboard Auth] ❌ Password mismatch - Access denied');
     console.log('[Auth Tableau] ❌ Mot de passe incorrect - Accès refusé');
-    console.log('[Dashboard Auth] Password length expected:', correctPassword.length);
-    console.log('[Dashboard Auth] Password length received:', password.length);
+    console.log('[Dashboard Auth] Password comparison failed');
     console.log('============================================');
     
     // Security: Record failed attempt
@@ -112,5 +142,3 @@ export async function POST(req: NextRequest) {
     );
   }
 }
-
-export const runtime = "edge";

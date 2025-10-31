@@ -7,9 +7,17 @@ import { NextRequest, NextResponse } from 'next/server';
 import { runProspectPipeline } from '../../../../../prospect-intelligence/prospect_pipeline';
 
 import { handleApiError } from '../../../../lib/error-handler';
+import { strictRateLimit } from '../../../../lib/rate-limit';
 export async function POST(req: NextRequest) {
   console.log('[ProspectAPI] ============================================');
   console.log('[ProspectAPI] Scan request received');
+
+  // Rate limiting for expensive AI operations
+  const rateLimitCheck = await strictRateLimit(req);
+  if (!rateLimitCheck.allowed) {
+    console.log('[ProspectAPI] ❌ Rate limit exceeded');
+    return rateLimitCheck.response!;
+  }
 
   try {
     const body = await req.json();

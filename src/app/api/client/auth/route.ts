@@ -3,22 +3,27 @@ import { supabase } from '../../../../lib/supabase';
 import { verifyPassword } from '../../../../lib/clients';
 
 import { handleApiError } from '../../../../lib/error-handler';
+import { ClientAuthSchema, validateData } from '../../../../lib/validation-schemas';
 export async function POST(req: NextRequest) {
   try {
-    const body = await req.json();
-    const { email, password } = body;
+    const rawBody = await req.json();
 
-    console.log('[E2E-Test] [ClientAuth] Login attempt:', { email });
-    console.log('[E2E-Test] [ClientAuth] Request body:', { email: email, hasPassword: !!password });
+    console.log('[E2E-Test] [ClientAuth] Login attempt');
 
-    // Validation
-    if (!email || !password) {
-      console.error('[E2E-Test] [ClientAuth] ❌ Missing credentials');
+    // Validate input with Zod schema
+    const validation = validateData(ClientAuthSchema, rawBody);
+    
+    if (!validation.success) {
+      console.error('[E2E-Test] [ClientAuth] ❌ Validation failed:', validation.error);
       return NextResponse.json(
-        { success: false, error: 'Email and password required' },
+        { success: false, error: validation.error },
         { status: 400 }
       );
     }
+
+    const { email, password } = validation.data;
+    
+    console.log('[E2E-Test] [ClientAuth] ✅ Input validated:', { email });
 
     // Fetch client by email (matching actual table column)
     console.log('[E2E-Test] [ClientAuth] Querying Supabase for email:', email);
