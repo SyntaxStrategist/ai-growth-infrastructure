@@ -102,7 +102,20 @@ export default function ClientDashboard() {
     avgConfidence: 0,
     topIntent: '',
     rawTopIntent: '',
+    topIntentCount: 0,
     highUrgency: 0,
+    trends: {
+      totalChange: 0,
+      confidenceChange: 0,
+      urgencyChange: 0,
+      topIntentChange: 0,
+    },
+    sparklines: {
+      totalLeads: [] as number[],
+      confidence: [] as number[],
+      urgency: [] as number[],
+      topIntent: [] as number[],
+    }
   });
   const [isIntentTruncated, setIsIntentTruncated] = useState(false);
   const [originalIntentCache, setOriginalIntentCache] = useState<string | null>(null);
@@ -561,6 +574,23 @@ async function translateIntent(rawTopIntent: string, locale: string): Promise<st
     console.log('[ClientDashboard] Calculating statistics');
     console.log('[ClientDashboard] Total leads:', leadsData.length);
     
+    const now = new Date();
+    const last7Days = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+    const previous7Days = new Date(now.getTime() - 14 * 24 * 60 * 60 * 1000);
+
+    // Current period (last 7 days)
+    const currentPeriodLeads = leadsData.filter(l => {
+      const leadDate = new Date(l.timestamp || l.created_at);
+      return leadDate >= last7Days && leadDate <= now;
+    });
+
+    // Previous period (7-14 days ago)
+    const previousPeriodLeads = leadsData.filter(l => {
+      const leadDate = new Date(l.timestamp || l.created_at);
+      return leadDate >= previous7Days && leadDate < last7Days;
+    });
+
+    // Current stats
     const total = leadsData.length;
     const avgConfidence = total > 0
       ? leadsData.reduce((sum, l) => sum + (l.confidence_score || 0), 0) / total
@@ -569,6 +599,50 @@ async function translateIntent(rawTopIntent: string, locale: string): Promise<st
     const highUrgency = leadsData.filter(l => 
       l.urgency === 'High' || l.urgency === 'Élevée'
     ).length;
+
+    // Calculate trends (current vs previous period)
+    const totalChange = currentPeriodLeads.length - previousPeriodLeads.length;
+    
+    const currentAvgConfidence = currentPeriodLeads.length > 0
+      ? currentPeriodLeads.reduce((sum, l) => sum + (l.confidence_score || 0), 0) / currentPeriodLeads.length
+      : 0;
+    const previousAvgConfidence = previousPeriodLeads.length > 0
+      ? previousPeriodLeads.reduce((sum, l) => sum + (l.confidence_score || 0), 0) / previousPeriodLeads.length
+      : 0;
+    const confidenceChange = previousAvgConfidence > 0
+      ? ((currentAvgConfidence - previousAvgConfidence) / previousAvgConfidence) * 100
+      : 0;
+
+    const currentHighUrgency = currentPeriodLeads.filter(l => l.urgency === 'High' || l.urgency === 'Élevée').length;
+    const previousHighUrgency = previousPeriodLeads.filter(l => l.urgency === 'High' || l.urgency === 'Élevée').length;
+    const urgencyChange = currentHighUrgency - previousHighUrgency;
+
+    // Calculate daily sparklines (last 7 days)
+    const sparklines = {
+      totalLeads: [] as number[],
+      confidence: [] as number[],
+      urgency: [] as number[],
+    };
+
+    for (let i = 6; i >= 0; i--) {
+      const dayStart = new Date(now.getTime() - i * 24 * 60 * 60 * 1000);
+      const dayEnd = new Date(dayStart.getTime() + 24 * 60 * 60 * 1000);
+      
+      const dayLeads = leadsData.filter(l => {
+        const leadDate = new Date(l.timestamp || l.created_at);
+        return leadDate >= dayStart && leadDate < dayEnd;
+      });
+
+      sparklines.totalLeads.push(dayLeads.length);
+      sparklines.confidence.push(
+        dayLeads.length > 0
+          ? dayLeads.reduce((sum, l) => sum + (l.confidence_score || 0), 0) / dayLeads.length
+          : 0
+      );
+      sparklines.urgency.push(
+        dayLeads.filter(l => l.urgency === 'High' || l.urgency === 'Élevée').length
+      );
+    }
 
     const intentCounts: Record<string, number> = {};
     leadsData.forEach(l => {
@@ -581,12 +655,57 @@ async function translateIntent(rawTopIntent: string, locale: string): Promise<st
       intentCounts[b] - intentCounts[a]
     )[0] || (isFrench ? 'Aucun' : 'None');
 
+    const topIntentCount = intentCounts[rawTopIntent] || 0;
+
+    // Calculate top intent trend (current period vs previous period)
+    const currentPeriodIntentCounts: Record<string, number> = {};
+    currentPeriodLeads.forEach(l => {
+      if (l.intent) {
+        currentPeriodIntentCounts[l.intent] = (currentPeriodIntentCounts[l.intent] || 0) + 1;
+      }
+    });
+
+    const previousPeriodIntentCounts: Record<string, number> = {};
+    previousPeriodLeads.forEach(l => {
+      if (l.intent) {
+        previousPeriodIntentCounts[l.intent] = (previousPeriodIntentCounts[l.intent] || 0) + 1;
+      }
+    });
+
+    const topIntentChange = (currentPeriodIntentCounts[rawTopIntent] || 0) - (previousPeriodIntentCounts[rawTopIntent] || 0);
+
+    // Calculate daily sparkline for top intent (last 7 days)
+    const topIntentSparkline: number[] = [];
+    for (let i = 6; i >= 0; i--) {
+      const dayStart = new Date(now.getTime() - i * 24 * 60 * 60 * 1000);
+      const dayEnd = new Date(dayStart.getTime() + 24 * 60 * 60 * 1000);
+      
+      const dayLeads = leadsData.filter(l => {
+        const leadDate = new Date(l.timestamp || l.created_at);
+        return leadDate >= dayStart && leadDate < dayEnd;
+      });
+
+      const dayIntentCount = dayLeads.filter(l => l.intent === rawTopIntent).length;
+      topIntentSparkline.push(dayIntentCount);
+    }
+
     const calculatedStats = { 
       total, 
       avgConfidence, 
       topIntent: rawTopIntent, 
-      rawTopIntent: rawTopIntent, // store original English intent here
-      highUrgency 
+      rawTopIntent: rawTopIntent,
+      topIntentCount,
+      highUrgency,
+      trends: {
+        totalChange,
+        confidenceChange: Math.round(confidenceChange),
+        urgencyChange,
+        topIntentChange,
+      },
+      sparklines: {
+        ...sparklines,
+        topIntent: topIntentSparkline,
+      }
     };
     
     console.log('[ClientDashboard] Stats calculated:', {
@@ -594,6 +713,7 @@ async function translateIntent(rawTopIntent: string, locale: string): Promise<st
       avgConfidence: (calculatedStats.avgConfidence * 100).toFixed(1) + '%',
       topIntent: calculatedStats.topIntent,
       highUrgency: calculatedStats.highUrgency,
+      trends: calculatedStats.trends,
     });
     console.log('[ClientDashboard] ============================================');
     
@@ -1318,9 +1438,25 @@ async function translateIntent(rawTopIntent: string, locale: string): Promise<st
             <div className="text-muted mb-1">{t.totalLeads}</div>
           <div className="text-3xl font-bold">{stats.total}</div>
           <div className="mt-1 flex items-center justify-between">
-            <span className="text-xs text-white/50">Δ —</span>
+            <span className={`text-xs font-medium ${stats.trends.totalChange > 0 ? 'text-green-400' : stats.trends.totalChange < 0 ? 'text-red-400' : 'text-white/50'}`}>
+              {stats.trends.totalChange > 0 ? '▲ +' : stats.trends.totalChange < 0 ? '▼ ' : 'Δ '}{Math.abs(stats.trends.totalChange) || '—'}
+            </span>
             <svg width="80" height="20" viewBox="0 0 80 20" className="opacity-60">
-              <path d="M0,10 L80,10" stroke="#64748b" strokeWidth="1.5" fill="none" />
+              {stats.sparklines.totalLeads.length > 0 ? (
+                <polyline
+                  points={stats.sparklines.totalLeads.map((val, i) => {
+                    const max = Math.max(...stats.sparklines.totalLeads, 1);
+                    const x = (i / (stats.sparklines.totalLeads.length - 1)) * 80;
+                    const y = 20 - (val / max) * 15;
+                    return `${x},${y}`;
+                  }).join(' ')}
+                  stroke={stats.trends.totalChange > 0 ? '#4ade80' : stats.trends.totalChange < 0 ? '#f87171' : '#64748b'}
+                  strokeWidth="1.5"
+                  fill="none"
+                />
+              ) : (
+                <path d="M0,10 L80,10" stroke="#64748b" strokeWidth="1.5" fill="none" />
+              )}
             </svg>
           </div>
           </motion.div>
@@ -1336,9 +1472,25 @@ async function translateIntent(rawTopIntent: string, locale: string): Promise<st
             </div>
           <div className="text-3xl font-bold">{(stats.avgConfidence * 100).toFixed(0)}%</div>
           <div className="mt-1 flex items-center justify-between">
-            <span className="text-xs text-white/50">Δ —</span>
+            <span className={`text-xs font-medium ${stats.trends.confidenceChange > 0 ? 'text-green-400' : stats.trends.confidenceChange < 0 ? 'text-red-400' : 'text-white/50'}`}>
+              {stats.trends.confidenceChange > 0 ? '▲ +' : stats.trends.confidenceChange < 0 ? '▼ ' : 'Δ '}{stats.trends.confidenceChange !== 0 ? `${Math.abs(stats.trends.confidenceChange)}%` : '—'}
+            </span>
             <svg width="80" height="20" viewBox="0 0 80 20" className="opacity-60">
-              <path d="M0,12 L20,8 L40,11 L60,7 L80,9" stroke="#8b5cf6" strokeWidth="1.5" fill="none" />
+              {stats.sparklines.confidence.length > 0 ? (
+                <polyline
+                  points={stats.sparklines.confidence.map((val, i) => {
+                    const max = Math.max(...stats.sparklines.confidence, 0.01);
+                    const x = (i / (stats.sparklines.confidence.length - 1)) * 80;
+                    const y = 20 - (val / max) * 15;
+                    return `${x},${y}`;
+                  }).join(' ')}
+                  stroke={stats.trends.confidenceChange > 0 ? '#4ade80' : stats.trends.confidenceChange < 0 ? '#f87171' : '#8b5cf6'}
+                  strokeWidth="1.5"
+                  fill="none"
+                />
+              ) : (
+                <path d="M0,10 L80,10" stroke="#8b5cf6" strokeWidth="1.5" fill="none" />
+              )}
             </svg>
           </div>
           </motion.div>
@@ -1363,9 +1515,29 @@ async function translateIntent(rawTopIntent: string, locale: string): Promise<st
                 </div>
               )}
             </div>
-            <div className="mt-1 flex items-center justify-end">
+            <div className="text-sm text-white/60 mb-1">
+              {stats.topIntentCount} {stats.topIntentCount === 1 ? (isFrench ? 'prospect' : 'lead') : (isFrench ? 'prospects' : 'leads')}
+            </div>
+            <div className="mt-1 flex items-center justify-between">
+              <span className={`text-xs font-medium ${stats.trends.topIntentChange > 0 ? 'text-blue-400' : stats.trends.topIntentChange < 0 ? 'text-orange-400' : 'text-white/50'}`}>
+                {stats.trends.topIntentChange > 0 ? '▲ +' : stats.trends.topIntentChange < 0 ? '▼ ' : 'Δ '}{Math.abs(stats.trends.topIntentChange) || '—'}
+              </span>
               <svg width="80" height="20" viewBox="0 0 80 20" className="opacity-60">
-                <path d="M0,10 L80,10" stroke="#64748b" strokeWidth="1.5" fill="none" />
+                {stats.sparklines.topIntent.length > 0 ? (
+                  <polyline
+                    points={stats.sparklines.topIntent.map((val, i) => {
+                      const max = Math.max(...stats.sparklines.topIntent, 1);
+                      const x = (i / (stats.sparklines.topIntent.length - 1)) * 80;
+                      const y = 20 - (val / max) * 15;
+                      return `${x},${y}`;
+                    }).join(' ')}
+                    stroke={stats.trends.topIntentChange > 0 ? '#60a5fa' : stats.trends.topIntentChange < 0 ? '#fb923c' : '#64748b'}
+                    strokeWidth="1.5"
+                    fill="none"
+                  />
+                ) : (
+                  <path d="M0,10 L80,10" stroke="#64748b" strokeWidth="1.5" fill="none" />
+                )}
               </svg>
             </div>
           </motion.div>
@@ -1379,9 +1551,25 @@ async function translateIntent(rawTopIntent: string, locale: string): Promise<st
             <div className="text-muted mb-1">{t.highUrgency}</div>
             <div className="text-3xl font-bold text-red-400">{stats.highUrgency}</div>
           <div className="mt-1 flex items-center justify-between">
-            <span className="text-xs text-white/50">Δ —</span>
+            <span className={`text-xs font-medium ${stats.trends.urgencyChange > 0 ? 'text-orange-400' : stats.trends.urgencyChange < 0 ? 'text-green-400' : 'text-white/50'}`}>
+              {stats.trends.urgencyChange > 0 ? '▲ +' : stats.trends.urgencyChange < 0 ? '▼ ' : 'Δ '}{Math.abs(stats.trends.urgencyChange) || '—'}
+            </span>
             <svg width="80" height="20" viewBox="0 0 80 20" className="opacity-60">
-              <path d="M0,8 L20,9 L40,10 L60,11 L80,12" stroke="#f87171" strokeWidth="1.5" fill="none" />
+              {stats.sparklines.urgency.length > 0 ? (
+                <polyline
+                  points={stats.sparklines.urgency.map((val, i) => {
+                    const max = Math.max(...stats.sparklines.urgency, 1);
+                    const x = (i / (stats.sparklines.urgency.length - 1)) * 80;
+                    const y = 20 - (val / max) * 15;
+                    return `${x},${y}`;
+                  }).join(' ')}
+                  stroke="#f87171"
+                  strokeWidth="1.5"
+                  fill="none"
+                />
+              ) : (
+                <path d="M0,10 L80,10" stroke="#f87171" strokeWidth="1.5" fill="none" />
+              )}
             </svg>
           </div>
           </motion.div>
