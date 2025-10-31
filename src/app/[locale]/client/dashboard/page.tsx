@@ -146,6 +146,61 @@ export default function ClientDashboard() {
     );
   }
 
+  // Simple welcome message for first-time users (no tour)
+  function WelcomeMessage() {
+    const isPreview = typeof process !== 'undefined' && process.env.NEXT_PUBLIC_UI_PREVIEW === '1';
+    const storageKey = 'client_dashboard_welcome_seen_v1';
+    const [showWelcome, setShowWelcome] = useState(false);
+
+    useEffect(() => {
+      if (!isPreview) return;
+      try {
+        const seen = localStorage.getItem(storageKey) === 'true';
+        if (!seen) setShowWelcome(true);
+      } catch {}
+    }, [isPreview]);
+
+    const dismiss = () => {
+      try { localStorage.setItem(storageKey, 'true'); } catch {}
+      setShowWelcome(false);
+    };
+
+    if (!isPreview || !showWelcome) return null;
+
+    return (
+      <div className="mb-4 rounded-lg border border-blue-500/30 bg-blue-500/10 p-4">
+        <div className="flex items-start justify-between gap-3">
+          <div className="flex-1">
+            <div className="text-base font-semibold mb-1 text-blue-400">
+              {isFrench ? '👋 Bienvenue dans votre tableau de bord client' : '👋 Welcome to your Client Dashboard'}
+            </div>
+            <div className="text-sm text-white/70 space-y-1">
+              <p>{isFrench ? 'Suivez vos leads, leur confiance, urgence et actions en temps réel.' : 'Track your leads, confidence, urgency and actions in real-time.'}</p>
+              <ul className="list-disc list-inside space-y-0.5 text-xs mt-2">
+                <li>{isFrench ? 'Utilisez les onglets pour filtrer par statut' : 'Use tabs to filter by status'}</li>
+                <li>{isFrench ? 'Ajustez les filtres et le score de confiance minimum' : 'Adjust filters and minimum confidence score'}</li>
+                <li>{isFrench ? 'Consultez les insights IA pour voir les tendances' : 'Check AI insights to see trends'}</li>
+                <li>
+                  {isFrench ? (
+                    <>📘 <a href="/fr/client/settings" className="underline hover:text-blue-400">Téléchargez votre Guide Client</a> pour maximiser l'intelligence des prospects</>
+                  ) : (
+                    <>📘 <a href="/en/client/settings" className="underline hover:text-blue-400">Download your Client Guide</a> to maximize lead intelligence</>
+                  )}
+                </li>
+              </ul>
+            </div>
+          </div>
+          <button 
+            className="px-3 py-1.5 text-sm rounded bg-blue-600 hover:bg-blue-500 whitespace-nowrap" 
+            onClick={dismiss}
+          >
+            {isFrench ? 'Compris' : 'Got it'}
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   function NotesSummary({ leadId, clientId }: { leadId: string; clientId?: string }) {
     const [count, setCount] = useState<number | null>(null);
     const [updatedAt, setUpdatedAt] = useState<string | null>(null);
@@ -1221,6 +1276,9 @@ async function translateIntent(rawTopIntent: string, locale: string): Promise<st
           </div>
         </motion.div>
 
+        {/* Preview-only welcome message */}
+        <WelcomeMessage />
+
         {/* Offline Banner */}
         {isOffline && (
           <motion.div
@@ -1464,7 +1522,7 @@ async function translateIntent(rawTopIntent: string, locale: string): Promise<st
         </div>
 
         {/* Predictive Growth Engine */}
-        <motion.div
+        <motion.div id="predictive-growth"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 0.6, delay: 0.5 }}
@@ -1508,7 +1566,7 @@ async function translateIntent(rawTopIntent: string, locale: string): Promise<st
         {/* Prospect Intelligence Navigation Card - Hidden from client dashboard (admin only feature) */}
 
         {/* Leads Section */}
-        <motion.div
+        <motion.div id="leads-header"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 0.6, delay: 0.65 }}
