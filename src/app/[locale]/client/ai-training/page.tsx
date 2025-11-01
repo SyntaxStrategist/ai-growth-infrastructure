@@ -112,9 +112,9 @@ export default function AITrainingPage() {
         </div>
 
         {/* AI Training Progress Component */}
-        {session.client?.id && (
+        {session.client?.clientId && (
           <div className="mb-8">
-            <AITrainingProgress clientId={session.client.id} locale={locale} />
+            <AITrainingProgress clientId={session.client.clientId} locale={locale} />
           </div>
         )}
 
