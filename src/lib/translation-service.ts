@@ -56,6 +56,48 @@ const CONFIG = {
   MIN_CONFIDENCE: 0.8,
 } as const;
 
+// Hardcoded translations for common lead field values (NEVER hits OpenAI)
+const LEAD_FIELD_TRANSLATIONS: Record<string, Record<string, string>> = {
+  // Tone values
+  'formal': { en: 'Formal', fr: 'Formel' },
+  'formel': { en: 'Formal', fr: 'Formel' },
+  'professional': { en: 'Professional', fr: 'Professionnel' },
+  'professionnel': { en: 'Professional', fr: 'Professionnel' },
+  'casual': { en: 'Casual', fr: 'Décontracté' },
+  'décontracté': { en: 'Casual', fr: 'Décontracté' },
+  'urgent': { en: 'Urgent', fr: 'Urgent' },
+  'curious': { en: 'Curious', fr: 'Curieux' },
+  'curieux': { en: 'Curious', fr: 'Curieux' },
+  'direct': { en: 'Direct', fr: 'Direct' },
+  'confident': { en: 'Confident', fr: 'Confiant' },
+  'confiant': { en: 'Confident', fr: 'Confiant' },
+  'strategic': { en: 'Strategic', fr: 'Stratégique' },
+  'stratégique': { en: 'Strategic', fr: 'Stratégique' },
+  'hesitant': { en: 'Hesitant', fr: 'Hésitant' },
+  'hésitant': { en: 'Hesitant', fr: 'Hésitant' },
+  
+  // Intent values
+  'service request': { en: 'Service Request', fr: 'Demande de service' },
+  'demande de service': { en: 'Service Request', fr: 'Demande de service' },
+  'b2b partnership': { en: 'B2B Partnership', fr: 'Partenariat B2B' },
+  'partenariat b2b': { en: 'B2B Partnership', fr: 'Partenariat B2B' },
+  'consultation': { en: 'Consultation', fr: 'Consultation' },
+  'support inquiry': { en: 'Support Inquiry', fr: 'Demande de support' },
+  'demande de support': { en: 'Support Inquiry', fr: 'Demande de support' },
+  'information request': { en: 'Information Request', fr: 'Demande d\'information' },
+  'demande d\'information': { en: 'Information Request', fr: 'Demande d\'information' },
+  
+  // Urgency values
+  'high': { en: 'High', fr: 'Élevée' },
+  'élevée': { en: 'High', fr: 'Élevée' },
+  'élevé': { en: 'High', fr: 'Élevée' },
+  'medium': { en: 'Medium', fr: 'Moyenne' },
+  'moyenne': { en: 'Medium', fr: 'Moyenne' },
+  'moyen': { en: 'Medium', fr: 'Moyenne' },
+  'low': { en: 'Low', fr: 'Faible' },
+  'faible': { en: 'Low', fr: 'Faible' },
+};
+
 // French gender agreement for urgency values
 const URGENCY_GENDER_AGREEMENT: Record<string, string> = {
   'high': 'Élevée',      // Feminine form
@@ -506,6 +548,15 @@ export async function translateText(
   console.log(`🌐 [TranslationService] Starting translation pipeline for "${normalizedText.substring(0, 50)}..." → ${targetLanguage}`);
   
   try {
+    // Layer 0: Hardcoded Lead Field Values (NEVER hits OpenAI)
+    const lookupKey = normalizedText.toLowerCase();
+    if (LEAD_FIELD_TRANSLATIONS[lookupKey]) {
+      const targetLang = targetLanguage === 'fr' ? 'fr' : 'en';
+      const translated = LEAD_FIELD_TRANSLATIONS[lookupKey][targetLang];
+      console.log(`✨ [TranslationService] Hardcoded map served instantly: "${normalizedText}" → "${translated}"`);
+      return translated;
+    }
+    
     // Layer 1: Dictionary Lookup
     const dictionaryResult = await lookupInDictionary(normalizedText, targetLanguage);
     if (dictionaryResult) {
