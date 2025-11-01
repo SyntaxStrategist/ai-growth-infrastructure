@@ -15,11 +15,39 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: 'Client ID required' }, { status: 400 });
     }
 
-    // Fetch all leads for this client
+    // Fetch all leads for this client via lead_actions (proper architecture)
+    // Step 1: Get lead IDs linked to this client
+    const { data: leadActions, error: actionsError } = await supabase
+      .from('lead_actions')
+      .select('lead_id')
+      .eq('client_id', clientId);
+
+    if (actionsError) {
+      console.error('[AI Training Stats] Error fetching lead actions:', actionsError);
+      return NextResponse.json({ error: 'Failed to fetch lead actions' }, { status: 500 });
+    }
+
+    if (!leadActions || leadActions.length === 0) {
+      // No leads linked to this client yet
+      return NextResponse.json({
+        totalLeadsProcessed: 0,
+        daysActive: 0,
+        learningProgress: 0,
+        confidenceImprovement: 0,
+        newPatternsLearned: 0,
+        industryTermsLearned: 0,
+        topDiscoveries: [],
+        timeSavedHours: 0,
+        valueGenerated: 0,
+      });
+    }
+
+    // Step 2: Get lead details from lead_memory
+    const leadIds = leadActions.map(la => la.lead_id);
     const { data: leads, error: leadsError } = await supabase
       .from('lead_memory')
       .select('*')
-      .eq('client_id', clientId)
+      .in('id', leadIds)
       .eq('deleted', false);
 
     if (leadsError) {
