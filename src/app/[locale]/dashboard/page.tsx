@@ -1050,6 +1050,12 @@ export default function Dashboard() {
               {locale === 'fr' ? '📊 Aperçus' : '📊 Insights'}
             </a>
             <a
+              href={`/${locale}/dashboard/ai-intelligence`}
+              className="px-4 py-2 rounded-lg bg-purple-500/20 border border-purple-500/40 text-purple-400 hover:bg-purple-500/30 transition-all duration-300 text-sm font-medium"
+            >
+              {locale === 'fr' ? '🧠 IA Système' : '🧠 AI Intelligence'}
+            </a>
+            <a
               href={`/${locale}/dashboard/outreach`}
               className="px-4 py-2 rounded-lg bg-orange-500/20 border border-orange-500/40 text-orange-400 hover:bg-orange-500/30 transition-all duration-300 text-sm font-medium"
             >
@@ -1059,7 +1065,7 @@ export default function Dashboard() {
               href={`/${locale}/admin/prospect-intelligence`}
               className="px-4 py-2 rounded-lg bg-pink-500/20 border border-pink-500/40 text-pink-400 hover:bg-pink-500/30 transition-all duration-300 text-sm font-medium"
             >
-              {locale === 'fr' ? '🧠 Intelligence' : '🧠 Intelligence'}
+              {locale === 'fr' ? '🔍 Intelligence' : '🔍 Intelligence'}
             </a>
             <a
               href={`/${locale}/admin/settings`}

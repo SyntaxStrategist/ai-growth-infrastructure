@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Avenir AI Solutions - Ce Que Nous Faisons</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 40px 20px;
+        }
+        
+        .container {
+            width: 21cm;
+            height: 29.7cm;
+            background: white;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            border-radius: 20px;
+            overflow: hidden;
+            position: relative;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 50px;
+            text-align: center;
+            position: relative;
+        }
+        
+        .logo {
+            font-size: 48pt;
+            font-weight: 900;
+            color: white;
+            margin-bottom: 15px;
+            text-shadow: 0 4px 12px rgba(0,0,0,0.2);
+        }
+        
+        .tagline {
+            font-size: 16pt;
+            color: rgba(255,255,255,0.95);
+            font-weight: 500;
+        }
+        
+        .main-content {
+            padding: 60px 50px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            min-height: calc(29.7cm - 200px);
+        }
+        
+        .title {
+            font-size: 32pt;
+            font-weight: 800;
+            color: #1e293b;
+            margin-bottom: 40px;
+            text-align: center;
+            line-height: 1.2;
+        }
+        
+        .pitch-box {
+            background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+            border-left: 6px solid #667eea;
+            padding: 50px;
+            border-radius: 16px;
+            box-shadow: 0 8px 24px rgba(102, 126, 234, 0.15);
+            margin: 40px 0;
+        }
+        
+        .pitch-text {
+            font-size: 18pt;
+            line-height: 1.9;
+            color: #1e293b;
+            font-weight: 500;
+            text-align: left;
+        }
+        
+        .highlight {
+            color: #667eea;
+            font-weight: 700;
+        }
+        
+        .stats-row {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 30px;
+            margin-top: 50px;
+        }
+        
+        .stat-box {
+            text-align: center;
+            padding: 25px;
+            background: white;
+            border-radius: 12px;
+            border: 2px solid #e0e7ff;
+        }
+        
+        .stat-number {
+            font-size: 36pt;
+            font-weight: 900;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 5px;
+        }
+        
+        .stat-label {
+            font-size: 11pt;
+            color: #64748b;
+            font-weight: 600;
+        }
+        
+        .footer {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: #f8fafc;
+            padding: 30px 50px;
+            text-align: center;
+            border-top: 1px solid #e2e8f0;
+        }
+        
+        .footer-text {
+            font-size: 11pt;
+            color: #64748b;
+            margin-bottom: 8px;
+        }
+        
+        .footer-text strong {
+            color: #1e293b;
+            font-weight: 700;
+        }
+        
+        @media print {
+            body {
+                background: white;
+                padding: 0;
+            }
+            
+            .container {
+                box-shadow: none;
+                border-radius: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <div class="logo">Avenir AI Solutions</div>
+            <div class="tagline">Infrastructure de Croissance IA pour les Marchés Canadiens</div>
+        </div>
+        
+        <!-- Main Content -->
+        <div class="main-content">
+            <div class="title">Ce Que Nous Faisons</div>
+            
+            <div class="pitch-box">
+                <div class="pitch-text">
+                    Je redonne aux <span class="highlight">entreprises de services canadiennes</span> leur temps et libère leur potentiel de croissance. Pendant que les concurrents lisent manuellement des courriels et manquent des prospects la nuit, mes clients opèrent <span class="highlight">24/7 dans les deux langues officielles</span> avec une IA qui ne dort jamais, ne fait jamais d'erreurs et devient plus intelligente chaque jour. Ils passent de la noyade dans les feuilles de calcul à un <span class="highlight">système d'intelligence unifié</span> qui leur dit exactement qui appeler, ce qu'ils veulent et quand les appeler — économisant <span class="highlight">plus de 10 heures par semaine</span> et convertissant les prospects <span class="highlight">3 fois plus rapidement</span>.
+                </div>
+            </div>
+            
+            <div class="stats-row">
+                <div class="stat-box">
+                    <div class="stat-number">10+</div>
+                    <div class="stat-label">Heures Économisées<br>Par Semaine</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-number">24/7</div>
+                    <div class="stat-label">Opération<br>Bilingue</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-number">3x</div>
+                    <div class="stat-label">Conversion Plus<br>Rapide</div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Footer -->
+        <div class="footer">
+            <div class="footer-text"><strong>Avenir AI Solutions</strong> | www.aveniraisolutions.ca</div>
+            <div class="footer-text">contact@aveniraisolutions.ca | Conçu pour les Marchés Canadiens</div>
+        </div>
+    </div>
+</body>
+</html>
+

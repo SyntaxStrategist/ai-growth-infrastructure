@@ -290,7 +290,7 @@ export async function POST(req: NextRequest) {
 			locale,
 			has_timestamp: !!providedTimestamp,
 		});
-		
+
 		// Note: Validation already done by Zod schema above
 		console.log('[Lead API] ✅ Validation passed - proceeding with lead processing');
 

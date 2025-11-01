@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Solutions Avenir AI - Proposition de valeur</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            line-height: 1.6;
+            color: #1e293b;
+            background: white;
+        }
+        
+        .page {
+            width: 21cm;
+            min-height: 29.7cm;
+            padding: 2cm;
+            margin: 0 auto;
+            background: white;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+            padding-bottom: 20px;
+            border-bottom: 3px solid #667eea;
+        }
+        
+        .logo {
+            font-size: 36pt;
+            font-weight: 800;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 10px;
+        }
+        
+        .tagline {
+            font-size: 18pt;
+            color: #475569;
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+        
+        .subtitle {
+            font-size: 11pt;
+            color: #64748b;
+        }
+        
+        .hero-section {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            border-radius: 16px;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+        
+        .hero-title {
+            font-size: 28pt;
+            font-weight: 800;
+            margin-bottom: 15px;
+            line-height: 1.2;
+        }
+        
+        .hero-subtitle {
+            font-size: 13pt;
+            opacity: 0.95;
+            line-height: 1.6;
+        }
+        
+        .section {
+            margin-bottom: 25px;
+        }
+        
+        h2 {
+            font-size: 18pt;
+            font-weight: 700;
+            color: #667eea;
+            margin-bottom: 15px;
+            padding-bottom: 8px;
+            border-bottom: 2px solid #e0e7ff;
+        }
+        
+        .value-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+            margin-bottom: 25px;
+        }
+        
+        .value-card {
+            background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+            padding: 20px;
+            border-radius: 12px;
+            border-left: 4px solid #0284c7;
+        }
+        
+        .value-card h3 {
+            font-size: 14pt;
+            font-weight: 700;
+            color: #0c4a6e;
+            margin-bottom: 10px;
+        }
+        
+        .value-card p {
+            font-size: 10pt;
+            color: #334155;
+            line-height: 1.6;
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            margin: 20px 0;
+        }
+        
+        .stat-card {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            text-align: center;
+            border: 2px solid #e0e7ff;
+        }
+        
+        .stat-number {
+            font-size: 28pt;
+            font-weight: 800;
+            color: #667eea;
+            margin-bottom: 5px;
+        }
+        
+        .stat-label {
+            font-size: 9pt;
+            color: #64748b;
+            font-weight: 600;
+        }
+        
+        .comparison-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            background: white;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        
+        .comparison-table th {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 12px;
+            font-size: 10pt;
+            font-weight: 600;
+        }
+        
+        .comparison-table td {
+            padding: 12px;
+            border-bottom: 1px solid #e2e8f0;
+            font-size: 10pt;
+        }
+        
+        .comparison-table tr:last-child td {
+            border-bottom: none;
+        }
+        
+        .comparison-table td:first-child {
+            color: #94a3b8;
+        }
+        
+        .comparison-table td:last-child {
+            color: #10b981;
+            font-weight: 600;
+        }
+        
+        .highlight-box {
+            background: #fef3c7;
+            border-left: 4px solid #f59e0b;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+        
+        .highlight-box h3 {
+            font-size: 14pt;
+            font-weight: 700;
+            color: #92400e;
+            margin-bottom: 10px;
+        }
+        
+        .highlight-box p {
+            font-size: 11pt;
+            color: #78350f;
+            line-height: 1.7;
+        }
+        
+        .checklist {
+            list-style: none;
+            margin: 15px 0;
+        }
+        
+        .checklist li {
+            padding: 8px 0;
+            padding-left: 30px;
+            position: relative;
+            font-size: 10pt;
+        }
+        
+        .checklist li::before {
+            content: "✅";
+            position: absolute;
+            left: 0;
+            font-size: 14pt;
+        }
+        
+        .footer {
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 2px solid #e2e8f0;
+            text-align: center;
+            color: #64748b;
+            font-size: 9pt;
+        }
+        
+        .footer strong {
+            color: #1e293b;
+        }
+        
+        @media print {
+            .page {
+                box-shadow: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="page">
+        <!-- Header -->
+        <div class="header">
+            <div class="logo">Solutions Avenir AI</div>
+            <div class="tagline">Infrastructure de Croissance IA pour le Marché Canadien</div>
+            <div class="subtitle">Votre Moteur de Croissance Bilingue 24/7</div>
+        </div>
+        
+        <!-- Hero Section -->
+        <div class="hero-section">
+            <div class="hero-title">Nous Construisons des Infrastructures de Croissance IA<br>Qui Amplifient Votre Impact Pendant Votre Sommeil</div>
+            <div class="hero-subtitle">Transformez chaque interaction commerciale en intelligence exploitable. Pas un chatbot, pas un CRM — la couche intelligente qui fait fonctionner tous vos outils de croissance ensemble.</div>
+        </div>
+        
+        <!-- Value Proposition -->
+        <div class="section">
+            <h2>🎯 La Valeur Que Nous Apportons</h2>
+            <div class="value-grid">
+                <div class="value-card">
+                    <h3>🚀 Capturer & Qualifier</h3>
+                    <p>Analyse de prospects alimentée par l'IA avec évaluation de l'intention, de l'urgence et de l'adéquation. Confiance de 85%+ dans la classification, communication bilingue instantanée.</p>
+                </div>
+                <div class="value-card">
+                    <h3>⚡ Automatiser & Agir</h3>
+                    <p>Sensibilisation personnalisée, réponses automatisées, intelligence relationnelle — tout fonctionne 24/7 sans intervention manuelle.</p>
+                </div>
+                <div class="value-card">
+                    <h3>🎯 Apprendre & Optimiser</h3>
+                    <p>Pipeline auto-apprenant qui s'adapte à votre entreprise, s'améliore à chaque interaction et compose la croissance automatiquement.</p>
+                </div>
+                <div class="value-card">
+                    <h3>🌍 Bilingue par Conception</h3>
+                    <p>Conçu spécialement pour les marchés canadiens avec communication fluide EN ↔ FR, pas seulement de la traduction mais une adaptation culturelle.</p>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Quantifiable Results -->
+        <div class="section">
+            <h2>📊 Résultats Quantifiables</h2>
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-number">10+</div>
+                    <div class="stat-label">Heures Économisées<br>Par Semaine</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number">80%</div>
+                    <div class="stat-label">Réduction du Temps<br>de Réponse</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number">24/7</div>
+                    <div class="stat-label">Opération Sans<br>Coûts de Personnel</div>
+                </div>
+            </div>
+            
+            <ul class="checklist">
+                <li><strong>3x plus rapide</strong> — qualification des prospects avec analyse propulsée par l'IA</li>
+                <li><strong>85% de confiance</strong> — détection et évaluation de l'intention</li>
+                <li><strong>20-50 nouveaux prospects</strong> — par scan automatisé de découverte</li>
+                <li><strong>Communication bilingue instantanée</strong> — sans embaucher de traducteurs</li>
+                <li><strong>Tableau de bord unique</strong> — pour toutes les interactions et analyses clients</li>
+                <li><strong>Enrichissement automatique</strong> — courriels, infos d'entreprise, profils LinkedIn</li>
+            </ul>
+        </div>
+        
+        <!-- Comparison -->
+        <div class="section">
+            <h2>🏆 Ce Qui Nous Distingue</h2>
+            <table class="comparison-table">
+                <thead>
+                    <tr>
+                        <th>Outils Traditionnels</th>
+                        <th>Infrastructure Avenir AI</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Solutions ponctuelles déconnectées</td>
+                        <td>✅ Moteur de croissance unifié</td>
+                    </tr>
+                    <tr>
+                        <td>Saisie manuelle des données</td>
+                        <td>✅ Enrichissement automatique</td>
+                    </tr>
+                    <tr>
+                        <td>Flux de travail statiques</td>
+                        <td>✅ Optimisation auto-apprenante</td>
+                    </tr>
+                    <tr>
+                        <td>Anglais seulement</td>
+                        <td>✅ Bilingue (EN/FR) par conception</td>
+                    </tr>
+                    <tr>
+                        <td>Réactif (attendre les prospects)</td>
+                        <td>✅ Proactif (découvrir les prospects)</td>
+                    </tr>
+                    <tr>
+                        <td>Chat/réponse seulement</td>
+                        <td>✅ Analyser, qualifier, agir</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        
+        <!-- Ideal Client -->
+        <div class="highlight-box">
+            <h3>🎯 Parfait Pour les Entreprises de Services Canadiennes</h3>
+            <p><strong>5-50 employés</strong> dans la construction, l'immobilier, le marketing, les services juridiques ou professionnels avec une présence en ligne active, dépassant les feuilles de calcul et prêts à évoluer sans embaucher. Industries : Entrepreneurs en construction, Courtages immobiliers, Agences de marketing, Cabinets d'avocats, Fournisseurs de soins de santé, Services à domicile, et Services professionnels B2B.</p>
+        </div>
+        
+        <!-- Technical Highlights -->
+        <div class="section">
+            <h2>🔐 Prêt pour la Production et Sécurisé</h2>
+            <ul class="checklist">
+                <li><strong>Cote de sécurité :</strong> A- (90/100) — Niveau entreprise avec bcrypt, RLS, limitation de débit</li>
+                <li><strong>Pile technologique :</strong> Next.js 15, React 19, Supabase, OpenAI GPT-4o-mini</li>
+                <li><strong>SaaS Multi-Locataire :</strong> Isolation complète des clients, authentification par clé API</li>
+                <li><strong>Conformité :</strong> Prêt pour LPRPDE, LIAD, Loi 25 du Québec</li>
+                <li><strong>Données canadiennes :</strong> Hébergé en Amérique du Nord, conforme à la souveraineté des données</li>
+            </ul>
+        </div>
+        
+        <!-- Footer -->
+        <div class="footer">
+            <p><strong>Solutions Avenir AI</strong> | www.aveniraisolutions.ca</p>
+            <p><strong>Contact :</strong> contact@aveniraisolutions.ca | <strong>Évaluation :</strong> 225K$ - 385K$</p>
+            <p style="margin-top: 10px;">© 2025 Solutions Avenir AI. Conçu pour les Marchés Canadiens.</p>
+        </div>
+    </div>
+</body>
+</html>
+

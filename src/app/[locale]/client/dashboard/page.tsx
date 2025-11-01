@@ -1374,6 +1374,12 @@ async function translateIntent(rawTopIntent: string, locale: string): Promise<st
             >
               📊 {t.insights}
             </button>
+            <button
+              onClick={() => navigateToPage('/client/ai-training')}
+              className="px-4 py-2 rounded-lg bg-purple-500/20 border border-purple-500/40 text-purple-400 hover:bg-purple-500/30 transition-all duration-300 text-sm font-medium"
+            >
+              🧠 {isFrench ? 'Intelligence IA' : 'AI Training'}
+            </button>
             {/* Prospect Intelligence hidden from client dashboard - admin only feature */}
             <a
               href={`/${locale}/client/settings`}
