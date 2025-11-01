@@ -4,8 +4,60 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AI-Powered Lead Intelligence | Avenir AI Solutions</title>
+    
+    <!-- Facebook Pixel Code -->
+    <script>
+        !function(f,b,e,v,n,t,s)
+        {if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+        n.callMethod.apply(n,arguments):n.queue.push(arguments)};
+        if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
+        n.queue=[];t=b.createElement(e);t.async=!0;
+        t.src=v;s=b.getElementsByTagName(e)[0];
+        s.parentNode.insertBefore(t,s)}(window, document,'script',
+        'https://connect.facebook.net/en_US/fbevents.js');
+        
+        // Facebook Pixel ID: 2172489416611300
+        // Configured from: Facebook Business Manager > Events Manager
+        fbq('init', '2172489416611300');
+        fbq('track', 'PageView');
+    </script>
+    <noscript>
+        <img height="1" width="1" style="display:none"
+             src="https://www.facebook.com/tr?id=2172489416611300&ev=PageView&noscript=1"/>
+    </noscript>
+    <!-- End Facebook Pixel Code -->
+    
+    <!-- UTM Parameter Tracking -->
+    <script>
+        // Capture UTM parameters from URL and store for tracking
+        (function() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const utmData = {
+                utm_source: urlParams.get('utm_source') || 'direct',
+                utm_medium: urlParams.get('utm_medium') || 'none',
+                utm_campaign: urlParams.get('utm_campaign') || 'none',
+                utm_content: urlParams.get('utm_content') || 'none',
+                utm_term: urlParams.get('utm_term') || 'none',
+                landing_page: window.location.pathname,
+                referrer: document.referrer || 'direct',
+                timestamp: new Date().toISOString()
+            };
+            
+            // Store in sessionStorage for form submissions
+            sessionStorage.setItem('avenir_utm_data', JSON.stringify(utmData));
+            
+            // Log for debugging (remove in production if desired)
+            console.log('[UTM Tracking] Captured:', utmData);
+        })();
+    </script>
+    <!-- End UTM Tracking -->
+    
+    <!-- Google Fonts - Preconnect for performance -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
         
         * {
             margin: 0;
@@ -796,6 +848,128 @@
                 font-size: 28px;
             }
         }
+        
+        /* Exit Intent Popup */
+        .exit-popup-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.85);
+            backdrop-filter: blur(5px);
+            z-index: 9999;
+            animation: fadeIn 0.3s ease;
+        }
+        
+        .exit-popup-overlay.active {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .exit-popup {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 20px;
+            padding: 50px;
+            max-width: 600px;
+            width: 90%;
+            position: relative;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+            animation: slideUp 0.4s ease;
+            text-align: center;
+        }
+        
+        .exit-popup-close {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            color: white;
+            font-size: 24px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .exit-popup-close:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: rotate(90deg);
+        }
+        
+        .exit-popup-icon {
+            font-size: 60px;
+            margin-bottom: 20px;
+        }
+        
+        .exit-popup h2 {
+            color: white;
+            font-size: 32px;
+            margin-bottom: 15px;
+            font-weight: 700;
+        }
+        
+        .exit-popup p {
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 18px;
+            margin-bottom: 30px;
+            line-height: 1.6;
+        }
+        
+        .exit-popup-cta {
+            display: inline-block;
+            padding: 18px 50px;
+            background: white;
+            color: #667eea;
+            text-decoration: none;
+            border-radius: 10px;
+            font-weight: 600;
+            font-size: 18px;
+            transition: all 0.3s ease;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        }
+        
+        .exit-popup-cta:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.3);
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(50px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .exit-popup {
+                padding: 30px 20px;
+            }
+            
+            .exit-popup h2 {
+                font-size: 24px;
+            }
+            
+            .exit-popup p {
+                font-size: 16px;
+            }
+        }
     </style>
     <script>
         let isFrench = false;
@@ -1209,6 +1383,19 @@
             document.getElementById('predictedROI').textContent = roi;
             document.getElementById('timeline').textContent = timeline;
             document.getElementById('riskLevel').textContent = successConfidence;
+            
+            // Facebook Pixel: Track Success Predictor usage
+            if (typeof fbq !== 'undefined') {
+                fbq('track', 'FindLocation', {
+                    content_name: 'Success Predictor Used',
+                    content_category: 'Calculator',
+                    business_type: businessType,
+                    team_size: teamSize,
+                    lead_volume: leadVolume,
+                    deal_value: dealValue,
+                    predicted_success: Math.round(successScore)
+                });
+            }
 
             // Update recommendations
             const recommendationsList = document.getElementById('recommendationsList');
@@ -1322,6 +1509,17 @@
                 timestamp: new Date().toISOString()
             }));
             
+            // Facebook Pixel: Track booking from Success Predictor
+            if (typeof fbq !== 'undefined') {
+                fbq('track', 'Schedule', {
+                    content_name: 'Success Predictor Demo Booking',
+                    predicted_success: successScore,
+                    predicted_roi: roi,
+                    value: 5000, // Average deal value
+                    currency: 'USD'
+                });
+            }
+            
             window.location.href = 'https://calendar.app.google/XLKtqbHLLfSvWzdZ9';
         }
 
@@ -1344,6 +1542,18 @@
             const currentDealsWon = leadsPerMonth * currentConversion;
             const optimalDealsWon = leadsPerMonth * optimalConversion;
             const dealsLost = optimalDealsWon - currentDealsWon;
+            
+            // Facebook Pixel: Track ROI calculator usage
+            if (typeof fbq !== 'undefined') {
+                fbq('track', 'CustomizeProduct', {
+                    content_name: 'ROI Calculator Used',
+                    content_category: 'Calculator',
+                    industry: industry,
+                    leads_per_month: leadsPerMonth,
+                    avg_deal_value: avgDealValue,
+                    response_time: responseTime
+                });
+            }
 
             // Calculate revenue impact
             const monthlyRevenueLost = dealsLost * avgDealValue;
@@ -1365,6 +1575,17 @@
         }
 
         function handleCalcCTA() {
+            // Facebook Pixel: Track booking from ROI Calculator
+            if (typeof fbq !== 'undefined') {
+                const lostRevenue = document.getElementById('yearlyRevenueLost').textContent;
+                fbq('track', 'Schedule', {
+                    content_name: 'ROI Calculator Demo Booking',
+                    estimated_revenue_lost: lostRevenue,
+                    value: 5000, // Average deal value
+                    currency: 'USD'
+                });
+            }
+            
             window.location.href = 'https://calendar.app.google/XLKtqbHLLfSvWzdZ9';
         }
         
@@ -1374,6 +1595,45 @@
             
             video.play();
             thumbnail.style.display = 'none';
+            
+            // Facebook Pixel: Track video play
+            if (typeof fbq !== 'undefined') {
+                fbq('track', 'ViewContent', {
+                    content_name: 'Demo Video Played',
+                    content_type: 'video'
+                });
+            }
+        }
+        
+        // Track hero booking button
+        function trackHeroBooking() {
+            if (typeof fbq !== 'undefined') {
+                fbq('track', 'InitiateCheckout', {
+                    content_name: 'Hero CTA - Book Call',
+                    content_category: 'CTA Button'
+                });
+            }
+        }
+        
+        // Track demo view button
+        function trackDemoView(location) {
+            if (typeof fbq !== 'undefined') {
+                fbq('track', 'ViewContent', {
+                    content_name: 'Demo Page View',
+                    content_category: 'CTA Button',
+                    button_location: location
+                });
+            }
+        }
+        
+        // Track footer booking
+        function trackFooterBooking() {
+            if (typeof fbq !== 'undefined') {
+                fbq('track', 'InitiateCheckout', {
+                    content_name: 'Footer CTA - Book Call',
+                    content_category: 'CTA Button'
+                });
+            }
         }
 
         // Calculate on page load
@@ -1426,8 +1686,8 @@
             </div>
             
             <div class="cta-buttons">
-                <a href="https://calendar.app.google/XLKtqbHLLfSvWzdZ9" class="btn btn-primary">📅 Book a Call</a>
-                <a href="https://www.aveniraisolutions.ca/fr/demo" class="btn btn-secondary">🎯 View Demo</a>
+                <a href="https://calendar.app.google/XLKtqbHLLfSvWzdZ9" class="btn btn-primary" onclick="trackHeroBooking(); return true;">📅 Book a Call</a>
+                <a href="https://www.aveniraisolutions.ca/fr/demo" class="btn btn-secondary" onclick="trackDemoView('hero'); return true;">🎯 View Demo</a>
             </div>
         </div>
     </section>
@@ -1775,8 +2035,8 @@
             <h2>Ready to Transform Your Lead Process?</h2>
             <p>See how Avenir AI can help your business close more deals with less effort.</p>
             <div class="cta-buttons">
-                <a href="https://calendar.app.google/XLKtqbHLLfSvWzdZ9" class="btn btn-primary">📅 Book a Call</a>
-                <a href="https://www.aveniraisolutions.ca/fr/demo" class="btn btn-secondary">🎯 View Demo</a>
+                <a href="https://calendar.app.google/XLKtqbHLLfSvWzdZ9" class="btn btn-primary" onclick="trackFooterBooking(); return true;">📅 Book a Call</a>
+                <a href="https://www.aveniraisolutions.ca/fr/demo" class="btn btn-secondary" onclick="trackDemoView('footer'); return true;">🎯 View Demo</a>
             </div>
         </div>
     </section>
@@ -1798,6 +2058,108 @@
             </div>
         </div>
     </footer>
+    
+    <!-- Exit Intent Popup -->
+    <div class="exit-popup-overlay" id="exitPopup">
+        <div class="exit-popup">
+            <button class="exit-popup-close" onclick="closeExitPopup()">&times;</button>
+            <div class="exit-popup-icon">⏰</div>
+            <h2 id="exitPopupTitle">Wait! Don't Miss Out!</h2>
+            <p id="exitPopupText">Before you go... Get a FREE personalized demo and see exactly how we can 5-10X your sales in the next 90 days.</p>
+            <a href="https://calendly.com/avenir-ai-solutions/strategic-consultation?month=2024-10" 
+               class="exit-popup-cta" 
+               onclick="trackExitPopupClick()"
+               id="exitPopupCTA">
+                Book Your Free Strategy Call →
+            </a>
+        </div>
+    </div>
+    
+    <script>
+        // Exit Intent Detection
+        let exitPopupShown = false;
+        const exitPopupDelay = 500; // milliseconds
+        
+        // Track if user has seen popup this session
+        const hasSeenExitPopup = sessionStorage.getItem('avenir_exit_popup_shown');
+        
+        function showExitPopup() {
+            if (exitPopupShown || hasSeenExitPopup) return;
+            
+            const popup = document.getElementById('exitPopup');
+            popup.classList.add('active');
+            exitPopupShown = true;
+            sessionStorage.setItem('avenir_exit_popup_shown', 'true');
+            
+            // Track Facebook Pixel event
+            if (typeof fbq !== 'undefined') {
+                fbq('track', 'ViewContent', {
+                    content_name: 'Exit Intent Popup',
+                    content_category: 'Retention'
+                });
+            }
+            
+            console.log('[Exit Popup] Displayed');
+        }
+        
+        function closeExitPopup() {
+            const popup = document.getElementById('exitPopup');
+            popup.classList.remove('active');
+            console.log('[Exit Popup] Closed');
+        }
+        
+        function trackExitPopupClick() {
+            // Track Facebook Pixel event
+            if (typeof fbq !== 'undefined') {
+                fbq('track', 'Schedule', {
+                    content_name: 'Exit Popup CTA Click',
+                    content_category: 'Conversion'
+                });
+            }
+            
+            console.log('[Exit Popup] CTA Clicked');
+        }
+        
+        // Detect mouse leaving viewport (desktop)
+        document.addEventListener('mouseleave', (e) => {
+            if (e.clientY <= 0 && !exitPopupShown) {
+                setTimeout(showExitPopup, exitPopupDelay);
+            }
+        });
+        
+        // Close popup when clicking outside
+        document.getElementById('exitPopup').addEventListener('click', (e) => {
+            if (e.target.id === 'exitPopup') {
+                closeExitPopup();
+            }
+        });
+        
+        // Update exit popup text based on language
+        function updateExitPopupLanguage() {
+            const titleElement = document.getElementById('exitPopupTitle');
+            const textElement = document.getElementById('exitPopupText');
+            const ctaElement = document.getElementById('exitPopupCTA');
+            
+            if (isFrench) {
+                titleElement.textContent = 'Attendez! Ne partez pas!';
+                textElement.textContent = 'Avant de partir... Obtenez une démo personnalisée GRATUITE et découvrez comment nous pouvons multiplier vos ventes par 5 à 10X dans les 90 prochains jours.';
+                ctaElement.textContent = 'Réserver Votre Appel Stratégique Gratuit →';
+            } else {
+                titleElement.textContent = 'Wait! Don\'t Miss Out!';
+                textElement.textContent = 'Before you go... Get a FREE personalized demo and see exactly how we can 5-10X your sales in the next 90 days.';
+                ctaElement.textContent = 'Book Your Free Strategy Call →';
+            }
+        }
+        
+        // Hook into existing language toggle if it exists
+        const originalToggleLanguage = window.toggleLanguage;
+        if (typeof originalToggleLanguage === 'function') {
+            window.toggleLanguage = function() {
+                originalToggleLanguage();
+                updateExitPopupLanguage();
+            };
+        }
+    </script>
 </body>
 </html>
 
